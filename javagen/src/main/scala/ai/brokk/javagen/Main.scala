@@ -45,7 +45,7 @@ object Main {
 }
 
 case class Config(
-                   inputPath: Path = Path.of("."),
-                   outputDir: Path = Path.of("./javagen_output").toAbsolutePath,
-                   inputIsCSV: Boolean = false
+  inputPath: Path = Path.of("."),
+  outputDir: Path = Path.of("./javagen_output").toAbsolutePath,
+  inputIsCSV: Boolean = false
 )

@@ -12,13 +12,15 @@ object CloneRepoUtil {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  /**
-   * Runs a shell command in a specified directory, logging its output via SLF4J.
-   *
-   * @param cmd The command sequence (e.g., Seq("git", "fetch"))
-   * @param cwd The working directory (java.io.File)
-   * @return Success(()) if the command succeeds, Failure(exception) otherwise.
-   */
+  /** Runs a shell command in a specified directory, logging its output via SLF4J.
+    *
+    * @param cmd
+    *   The command sequence (e.g., Seq("git", "fetch"))
+    * @param cwd
+    *   The working directory (java.io.File)
+    * @return
+    *   Success(()) if the command succeeds, Failure(exception) otherwise.
+    */
   private def runShellCommand(cmd: Seq[String], cwd: File): Try[Unit] = Try {
     val err = new StringBuilder
     val out = new StringBuilder
@@ -47,17 +49,19 @@ object CloneRepoUtil {
     }
   }
 
-  /**
-   * Processes a single repository (one line from the CSV).
-   *
-   * @param line    The CSV line "repoUrl,commitSha"
-   * @param baseDir The base directory to clone repos into.
-   * @return Success(()) if processing succeeds, Failure(exception) otherwise.
-   */
+  /** Processes a single repository (one line from the CSV).
+    *
+    * @param line
+    *   The CSV line "repoUrl,commitSha"
+    * @param baseDir
+    *   The base directory to clone repos into.
+    * @return
+    *   Success(()) if processing succeeds, Failure(exception) otherwise.
+    */
   def processRepo(line: String, baseDir: Path): Try[Path] = Try {
     line.split(',') match {
       case Array(repoUrlStr, commitShaStr) =>
-        val repoUrl = repoUrlStr.trim
+        val repoUrl   = repoUrlStr.trim
         val commitSha = commitShaStr.trim
 
         if (repoUrl.isEmpty || commitSha.isEmpty) {
@@ -94,7 +98,7 @@ object CloneRepoUtil {
         logger.info(s"Successfully processed $repoName at $commitSha.")
         repoPath
       case _ =>
-       throw new RuntimeException(s"Skipping malformed line: $line")
+        throw new RuntimeException(s"Skipping malformed line: $line")
     }
   }
 

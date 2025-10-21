@@ -11,15 +11,15 @@ import scala.io.{Codec, Source}
 import scala.util.{Failure, Success, Using}
 
 class JavaGen(config: Config) {
-  
+
   private val logger = LoggerFactory.getLogger(getClass)
 
   def run(): Unit = {
-    if config.inputIsCSV 
-      then runCsv(config.inputPath) 
-      else runDir(config.inputPath)
+    if config.inputIsCSV
+    then runCsv(config.inputPath)
+    else runDir(config.inputPath)
   }
-  
+
   private def runCsv(csvPath: Path): Unit = {
     logger.info(s"Reading repositories from: $csvPath")
     Using.resource(Source.fromFile(csvPath.toFile)(Codec.UTF8)) { source =>
@@ -27,17 +27,19 @@ class JavaGen(config: Config) {
         if (line.trim.nonEmpty) { // Skip empty lines
           // Process each line and recover from failures to continue with the next
           CloneRepoUtil.processRepo(line, config.outputDir) match {
-            case Success(path) => runDir(path)
+            case Success(path) =>
+              runDir(path)
             case Failure(e) =>
-              logger.error(s"Failed to process line '$line': ${e.getMessage}", e) 
+              logger.error(s"Failed to process line '$line': ${e.getMessage}", e)
           }
         }
       }
     }
   }
-  
+
   private def runDir(inputPath: Path): Unit = {
-    val usagesFile = config.outputDir.resolve("usages.json")
+    val projectName = inputPath.getFileName
+    val usagesFile  = config.outputDir.resolve(s"$projectName-usages.json")
     if (Files.exists(usagesFile)) {
       logger.info(s"$usagesFile already exists, skipping...")
     } else {
