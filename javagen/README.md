@@ -1,56 +1,21 @@
-Sample standalone applications on top of joern
-=============================================
+# JavaGen
 
-## A program that makes use of Joern to create a CPG and list all method names
+Joern-based tool to extract usages from Java source-code applications.
+
+## Requirements
+
+* sbt
+* git
+* JDK 17+
+
+## Getting Started
 
 ```
 sbt stage
-./standalone
+./javagen --help
+Usage: javagen [options] input-path output-dir
+
+  --help
+  input-path  Input directory of a Java project or CSV file of Git repositories ('git-address','commit-hash')
+  output-dir  Output directory
 ```
-
-## A REPL with some custom cpg steps
-
-```
-sbt stage
-./repl
-
-Welcome to the wonderful world of this sample joern extension!
-joern-sample-ext>
-```
-
-To get started you could try the following commands - then just explore
-```
-// import a cpg that you created previously, e.g. in joern
-importCpg("path/to/some/cpg.bin")
-
-cpg.help  
-==> 
-Available starter steps:
-___________________________________________________________________________________________________________________________
- step               | description                                                                                         |
-==========================================================================================================================|
- .all               | All nodes of the graph                                                                              |
- ...
- .customStarterStep | custom starter step as an example                                                                   |
- ...
- 
-
-cpg.customSta<TAB> // autocompletes
-
-cpg.method.help
-==>
-Available steps for Method:
-_______________________________________________________________________________________
- step                 | description                                                   |
-======================================================================================|
- .address             | Address of the code (for binary code)                         |
- ...
- .customMethodStep    | custom step on method as an example                           |
- ...
-
-
-
-cpg.method.cust<TAB> // autocompletes
-```
-
-Hint: `./repl --verbose` is your friend.
