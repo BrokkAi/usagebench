@@ -48,6 +48,8 @@ class JavaGen(config: Config) {
         val javaConfig = JavaConfig()
           .withInputPath(inputPath.toAbsolutePath.toString)
           .withOutputPath(tempCpgPath.toAbsolutePath.toString)
+          .withDefaultIgnoredFilesRegex(Nil)
+          .withIgnoredFiles(Nil)
         JavaSrc2Cpg().createCpg(javaConfig) match {
           case Success(cpg) =>
             logger.info(s"Created AST for ${config.inputPath}")

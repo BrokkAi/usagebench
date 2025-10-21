@@ -6,8 +6,8 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Logger name="flatgraph" level="warn"/>
-        <Logger name="io.joern" level="warn"/>
+        <Logger name="flatgraph" level="error"/>
+        <Logger name="io.joern" level="error"/>
         <Root level="ERROR">
             <AppenderRef ref="Console"/>
         </Root>

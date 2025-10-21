@@ -18,7 +18,7 @@ object UsageAnalyzers {
   private val FUNCTION = "FUNCTION"
 
   def analyze(cpg: Cpg): ProgramUsages = {
-    val usages = cpg.typeDecl.flatMap(analyzeTypeDecl(cpg, _)).l
+    val usages = cpg.typeDecl.whereNot(_.isLambda).flatMap(analyzeTypeDecl(cpg, _)).l
     ProgramUsages(usages)
   }
 
@@ -41,7 +41,7 @@ object UsageAnalyzers {
               }
           }
           .l
-      case x: Call if x.name == Defines.StaticInitMethodName =>
+      case x: Call if x.name == Defines.ConstructorMethodName || x.name == Defines.StaticInitMethodName =>
         val methodFullName = x.method.fqName
         val lineNo         = x.lineNumber.orElse(x.method.lineNumber).getOrElse(-1)
         UsageLocation(methodFullName, lineNo) :: Nil
@@ -60,14 +60,17 @@ object UsageAnalyzers {
     }.l
 
     // Handle methods
-    val methodUnitUsages = typeDecl.method.flatMap { method =>
-      analyzeMethod(cpg, method) match {
-        case Success(result) => result :: Nil
-        case Failure(e) =>
-          logger.error(s"Unable to analyze usages for method ${method.fullName}", e)
-          Nil
+    val methodUnitUsages = typeDecl.method
+      .whereNot(_.isLambda)
+      .flatMap { method =>
+        analyzeMethod(cpg, method) match {
+          case Success(result) => result :: Nil
+          case Failure(e) =>
+            logger.error(s"Unable to analyze usages for method ${method.fullName}", e)
+            Nil
+        }
       }
-    }.l
+      .l
 
     // Combine results
     typeUnitUsages ++ fieldUnitUsages ++ methodUnitUsages
@@ -109,8 +112,8 @@ object UsageAnalyzers {
       */
     def normalizedName: String = {
       m.name match {
-        case Defines.StaticInitMethodName => m.typeDecl.map(_.name).getOrElse(m.name)
-        case name                         => name
+        case Defines.ConstructorMethodName | Defines.StaticInitMethodName => m.typeDecl.map(_.name).getOrElse(m.name)
+        case name                                                         => name
       }
     }
 
