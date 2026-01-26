@@ -1,14 +1,19 @@
 package ai.brokk.javagen
 
+import io.joern.javasrc2cpg.JavaSrc2Cpg.language
+import io.joern.javasrc2cpg.passes.{AstCreationPass, OuterClassRefPass, TypeInferencePass}
 import io.joern.javasrc2cpg.{JavaSrc2Cpg, Config as JavaConfig}
-import io.joern.x2cpg.X2Cpg
+import io.joern.x2cpg.{SourceFiles, X2Cpg}
+import io.joern.x2cpg.X2Cpg.withNewEmptyCpg
+import io.joern.x2cpg.passes.frontend.{JavaConfigFileCreationPass, MetaDataPass, TypeNodePass}
 import io.shiftleft.codepropertygraph.generated.Cpg
 import org.slf4j.LoggerFactory
 import upickle.default.*
 
 import java.nio.file.{Files, Path, StandardOpenOption}
+import scala.jdk.CollectionConverters.*
 import scala.io.{Codec, Source}
-import scala.util.{Failure, Success, Using}
+import scala.util.{Failure, Success, Try, Using}
 
 class JavaGen(config: Config) {
 
@@ -50,7 +55,7 @@ class JavaGen(config: Config) {
           .withOutputPath(tempCpgPath.toAbsolutePath.toString)
           .withDefaultIgnoredFilesRegex(Nil)
           .withIgnoredFiles(Nil)
-        JavaSrc2Cpg().createCpg(javaConfig) match {
+        createCpg(javaConfig) match {
           case Success(cpg) =>
             logger.info(s"Created AST for ${config.inputPath}")
             X2Cpg.applyDefaultOverlays(cpg)
@@ -67,6 +72,29 @@ class JavaGen(config: Config) {
         case e: Exception => logger.error("Exception encountered while analyzing CPG", e)
       } finally {
         Files.deleteIfExists(tempCpgPath)
+      }
+    }
+  }
+
+  private def createCpg(config: JavaConfig): Try[Cpg] = {
+    withNewEmptyCpg(config.outputPath, config: JavaConfig) { (cpg, config) =>
+      new MetaDataPass(cpg, language, config.inputPath).createAndApply()
+      val sourceFiles = SourceFiles.determine(
+        config.inputPath,
+        JavaSrc2Cpg.sourceFileExtensions,
+        ignoredDefaultRegex = Option(config.defaultIgnoredFilesRegex),
+        ignoredFilesRegex = Option(config.ignoredFilesRegex),
+        ignoredFilesPath = Option(config.ignoredFiles)
+      )
+      val astCreationPass = new AstCreationPass(config, cpg, Some(sourceFiles))
+      astCreationPass.createAndApply()
+      astCreationPass.sourceParser.cleanupDelombokOutput()
+      astCreationPass.clearJavaParserCaches()
+      new OuterClassRefPass(cpg).createAndApply()
+      JavaConfigFileCreationPass(cpg).createAndApply()
+      if (!config.skipTypeInfPass) {
+        TypeNodePass.withRegisteredTypes(astCreationPass.global.usedTypes.keys().asScala.toList, cpg).createAndApply()
+        new TypeInferencePass(cpg).createAndApply()
       }
     }
   }
