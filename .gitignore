@@ -5,3 +5,13 @@
 hs_err_pid*
 
 dataset/java/**
+
+### BROKK'S CONFIGURATION ###
+.brokk/**
+/.brokk/workspace.properties
+/.brokk/sessions/
+/.brokk/dependencies/
+/.brokk/history.zip
+!AGENTS.md
+!.brokk/style.md
+!.brokk/project.properties
