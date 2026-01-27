@@ -18,7 +18,7 @@ object UsageAnalyzers {
   private val FUNCTION = "FUNCTION"
 
   def analyze(cpg: Cpg): ProgramUsages = {
-    val usages = cpg.typeDecl.whereNot(_.isLambda).flatMap(analyzeTypeDecl(cpg, _)).l
+    val usages = cpg.typeDecl.whereNot(_.isLambda).whereNot(_.isExternal(true)).flatMap(analyzeTypeDecl(cpg, _)).l
     ProgramUsages(usages)
   }
 
