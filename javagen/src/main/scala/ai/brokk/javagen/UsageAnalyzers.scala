@@ -75,7 +75,17 @@ object UsageAnalyzers {
     // Combine results
     typeUnitUsages ++ fieldUnitUsages ++ methodUnitUsages
   } match {
-    case Success(result) => result
+    case Success(result) =>
+      // Filter things that should really be avoided
+      def weirdThingFilter(fqName: String): Boolean = fqName.contains("<lambda>") ||
+        fqName.contains("<unresolvedSignature>") || fqName.endsWith("[]")
+
+      result
+        .filterNot { case CodeUnitUsages(fullyQualifiedName, _, _) => weirdThingFilter(fullyQualifiedName) }
+        .map { codeUnitUsages =>
+          // TODO: These hits might ideally like to be transformed to parent class instead
+          codeUnitUsages.copy(usages = codeUnitUsages.usages.filterNot(u => weirdThingFilter(u.fullyQualifiedName)))
+        }
     case Failure(e) =>
       logger.error(s"Unable to analyze usages for type ${typeDecl.fullName}", e)
       Nil
