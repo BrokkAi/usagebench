@@ -83,7 +83,8 @@ object UsageAnalyzers {
     case Success(result) =>
       // Filter things that should really be avoided
       def weirdThingFilter(fqName: String): Boolean = fqName.contains("<lambda>") ||
-        fqName.contains("<unresolvedSignature>") || fqName.endsWith("[]")
+        fqName.contains("<unresolvedSignature>") || fqName.endsWith("[]") ||
+        fqName.matches(".*\\.\\d+(\\..*|$)")
 
       result
         .filterNot { case CodeUnitUsages(fullyQualifiedName, _, _) => weirdThingFilter(fullyQualifiedName) }
@@ -141,7 +142,7 @@ object UsageAnalyzers {
           val typeFullName = definingTypeDecl.fqName
           typeFullName + "." + m.normalizedName
         }
-        .getOrElse(m.fullName)
+        .getOrElse(m.fullName.replace("$", "."))
     }
 
   }
