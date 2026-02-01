@@ -2,18 +2,11 @@ name                     := "javagen"
 ThisBuild / organization := "ai.brokk"
 ThisBuild / scalaVersion := "3.5.2"
 
-// parsed by project/Versions.scala, updated by updateDependencies.sh
-val joernVersion = "4.0.250"
-
 libraryDependencies ++= Seq(
   "com.github.scopt"        %% "scopt"             % Versions.scopt,
   "org.apache.logging.log4j" % "log4j-slf4j2-impl" % Versions.log4j     % Optional,
   "com.lihaoyi"             %% "ujson"             % Versions.ujson,
-  "io.joern"                %% "x2cpg"             % Versions.joern,
-  "io.joern"                %% "javasrc2cpg"       % Versions.joern,
-  "io.joern"                %% "joern-cli"         % Versions.joern,
-  "io.joern"                %% "semanticcpg"       % Versions.joern,
-  "io.joern"                %% "semanticcpg"       % Versions.joern     % Test classifier "tests",
+  "org.eclipse.jdt"          % "org.eclipse.jdt.core" % Versions.jdt,
   "org.scalatest"           %% "scalatest"         % Versions.scalatest % Test
 )
 
