@@ -34,7 +34,14 @@ class MyTest extends AnyWordSpec with Matchers {
       ) { project =>
         val result = UsageAnalyzers.analyze(project.javaSources)
         println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} (${cu.`type`}) -> ${cu.usages.map(_.fullyQualifiedName)}")}")
-        result.codeUnits should not be empty
+
+        val fooConstructor = result.codeUnits.find(_.fullyQualifiedName == "com.example.Foo.Foo")
+          .getOrElse(fail("Foo.Foo constructor not found"))
+        fooConstructor.usages.map(_.fullyQualifiedName) should contain ("com.example.Bar.main")
+
+        val fooClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Foo")
+          .getOrElse(fail("com.example.Foo class not found"))
+        fooClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Bar.main")
       }
     }
 
@@ -64,7 +71,14 @@ class MyTest extends AnyWordSpec with Matchers {
       ) { project =>
         val result = UsageAnalyzers.analyze(project.javaSources)
         println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} (${cu.`type`}) -> ${cu.usages.map(_.fullyQualifiedName)}")}")
-        result.codeUnits should not be empty
+
+        val doWorkMethod = result.codeUnits.find(_.fullyQualifiedName == "com.example.Lib.doWork")
+          .getOrElse(fail("Lib.doWork not found"))
+        doWorkMethod.usages.map(_.fullyQualifiedName) should contain ("com.example.App.run")
+
+        val libClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Lib")
+          .getOrElse(fail("com.example.Lib class not found"))
+        libClass.usages.map(_.fullyQualifiedName) should contain ("com.example.App.run")
       }
     }
 
@@ -92,7 +106,10 @@ class MyTest extends AnyWordSpec with Matchers {
       ) { project =>
         val result = UsageAnalyzers.analyze(project.javaSources)
         println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} (${cu.`type`}) -> ${cu.usages.map(_.fullyQualifiedName)}")}")
-        result.codeUnits should not be empty
+
+        val targetClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target")
+          .getOrElse(fail("com.example.Target not found"))
+        targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Usage.explicit")
       }
     }
 
@@ -173,7 +190,12 @@ class MyTest extends AnyWordSpec with Matchers {
       ) { project =>
         val result = UsageAnalyzers.analyze(project.javaSources)
         println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} (${cu.`type`}) -> ${cu.usages.map(_.fullyQualifiedName)}")}")
-        result.codeUnits should not be empty
+
+        val valueField = result.codeUnits.find(_.fullyQualifiedName == "com.example.Data.value")
+          .getOrElse(fail("com.example.Data.value field not found"))
+
+        val usages = valueField.usages.map(_.fullyQualifiedName)
+        usages.filter(_ == "com.example.Logic.process") should have size 2
       }
     }
   }
