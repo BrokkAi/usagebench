@@ -198,5 +198,40 @@ class MyTest extends AnyWordSpec with Matchers {
         usages.filter(_ == "com.example.Logic.process") should have size 2
       }
     }
+
+    "exclude declarations from test directories" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/Prod.java",
+            """package com.example;
+              |public class Prod {
+              |  public void prodMethod() {}
+              |}
+              |""".stripMargin
+          )
+          .addFile(
+            "test/com/example/TestHelper.java", // Note: path contains /test/
+            """package com.example;
+              |public class TestHelper {
+              |  public void helperMethod() {}
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+        val names = result.codeUnits.map(_.fullyQualifiedName)
+
+        // Prod should be included
+        names should contain("com.example.Prod")
+        names should contain("com.example.Prod.prodMethod")
+
+        // TestHelper should be excluded
+        names should not contain ("com.example.TestHelper")
+        names should not contain ("com.example.TestHelper.helperMethod")
+      }
+    }
   }
 }
