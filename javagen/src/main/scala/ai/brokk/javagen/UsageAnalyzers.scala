@@ -113,6 +113,18 @@ object UsageAnalyzers {
             }
             current = current.getParent
           }
+
+          // If no method or type was found (e.g. in imports), attribute to the first top-level type in the file
+          if (!found) {
+            ast.types().asScala.headOption.collect { case td: TypeDeclaration =>
+              val b = td.resolveBinding()
+              if (b != null) {
+                name = getFqn(b)
+                found = true
+              }
+            }
+          }
+
           val line = ast.getLineNumber(node.getStartPosition)
           UsageLocation(name, line)
         }
@@ -133,6 +145,12 @@ object UsageAnalyzers {
         override def visit(node: VariableDeclarationFragment): Boolean = {
           val b = node.resolveBinding()
           if (b != null && b.isField) recordDef(b.getKey, getVariableFqn(b), FIELD)
+          true
+        }
+
+        override def visit(node: ImportDeclaration): Boolean = {
+          val b = node.resolveBinding()
+          if (b != null) recordUsage(b, node)
           true
         }
 

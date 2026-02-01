@@ -354,5 +354,39 @@ class MyTest extends AnyWordSpec with Matchers {
         doNothingMethod.usages should be (empty)
       }
     }
+
+    "include import statements as usages" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/Target.java",
+            """package com.example;
+              |public class Target {
+              |  public void doWork() {}
+              |}
+              |""".stripMargin
+          )
+          .addFile(
+            "com/example/Importer.java",
+            """package com.example;
+              |import com.example.Target;
+              |public class Importer {
+              |  // Target is imported but not used in code body
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+        println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} (${cu.`type`}) -> ${cu.usages.map(_.fullyQualifiedName)}")}")
+
+        val targetClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target")
+          .getOrElse(fail("com.example.Target class not found"))
+
+        // Import statement should count as a usage - the location will be the Importer class/file
+        targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Importer")
+      }
+    }
   }
 }
