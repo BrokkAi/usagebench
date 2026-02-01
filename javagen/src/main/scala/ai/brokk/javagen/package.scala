@@ -1,13 +1,22 @@
 package ai.brokk
 
-import upickle.default.*
+import upickle.default.{ReadWriter, macroRW}
 
 package object javagen {
 
-  case class ProgramUsages(codeUnits: List[CodeUnitUsages]) derives ReadWriter
+  case class ProgramUsages(codeUnits: List[CodeUnitUsages])
+  object ProgramUsages {
+    given ReadWriter[ProgramUsages] = macroRW
+  }
 
-  case class CodeUnitUsages(fullyQualifiedName: String, `type`: String, usages: List[UsageLocation]) derives ReadWriter
+  case class CodeUnitUsages(fullyQualifiedName: String, `type`: String, usages: List[UsageLocation])
+  object CodeUnitUsages {
+    given ReadWriter[CodeUnitUsages] = macroRW
+  }
 
-  case class UsageLocation(fullyQualifiedName: String, lineNumber: Int) derives ReadWriter
+  case class UsageLocation(fullyQualifiedName: String, lineNumber: Int)
+  object UsageLocation {
+    given ReadWriter[UsageLocation] = macroRW
+  }
 
 }

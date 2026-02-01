@@ -3,11 +3,12 @@ ThisBuild / organization := "ai.brokk"
 ThisBuild / scalaVersion := "3.5.2"
 
 libraryDependencies ++= Seq(
-  "com.github.scopt"        %% "scopt"             % Versions.scopt,
-  "org.apache.logging.log4j" % "log4j-slf4j2-impl" % Versions.log4j     % Optional,
-  "com.lihaoyi"             %% "ujson"             % Versions.ujson,
+  "com.github.scopt"        %% "scopt"               % Versions.scopt,
+  "org.apache.logging.log4j" % "log4j-slf4j2-impl"   % Versions.log4j % Optional,
+  "com.lihaoyi"             %% "ujson"               % Versions.ujson,
+  "com.lihaoyi"             %% "upickle"             % "4.0.2",
   "org.eclipse.jdt"          % "org.eclipse.jdt.core" % Versions.jdt,
-  "org.scalatest"           %% "scalatest"         % Versions.scalatest % Test
+  "org.scalatest"           %% "scalatest"           % Versions.scalatest % Test
 )
 
 assembly / assemblyMergeStrategy := {

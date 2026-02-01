@@ -1,168 +1,200 @@
 package ai.brokk.javagen
 
-import io.joern.x2cpg.Defines
-import io.shiftleft.codepropertygraph.generated.{Cpg, Operators}
-import io.shiftleft.semanticcpg.language.*
-import io.shiftleft.codepropertygraph.generated.language.*
-import io.shiftleft.codepropertygraph.generated.nodes.*
+import org.eclipse.jdt.core.dom.*
 import org.slf4j.LoggerFactory
 
-import scala.util.*
+import java.nio.file.Path
+import scala.collection.mutable
+import scala.jdk.CollectionConverters.*
 
 object UsageAnalyzers {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  private val CLASS    = "CLASS"
+  private val TYPE     = "CLASS"
   private val FIELD    = "FIELD"
   private val FUNCTION = "FUNCTION"
 
-  def analyze(cpg: Cpg): ProgramUsages = {
-    val usages = cpg.typeDecl
-      .whereNot(_.isLambda)
-      .whereNot(_.isExternal(true))
-      .whereNot(_.file.name(".*/test/.*"))
-      .flatMap(analyzeTypeDecl(cpg, _))
-      .l
-    ProgramUsages(usages)
+  def analyze(sources: Seq[Path]): ProgramUsages = {
+    val parser = ASTParser.newParser(AST.JLS_Latest)
+    parser.setResolveBindings(true)
+    parser.setBindingsRecovery(true)
+    parser.setKind(ASTParser.K_COMPILATION_UNIT)
+
+    val sourceDirs = sources.map(_.getParent.toAbsolutePath.toString).distinct.toArray
+    parser.setEnvironment(null, sourceDirs, null, true)
+
+    val sourceFiles = sources.map(_.toAbsolutePath.toString).toArray
+    val collector   = new UsageCollector(sourceFiles.toSet)
+
+    parser.createASTs(
+      sourceFiles,
+      null,
+      Array.empty[String],
+      collector,
+      null
+    )
+
+    ProgramUsages(collector.result())
   }
 
-  private def analyzeTypeDecl(cpg: Cpg, typeDecl: TypeDecl): List[CodeUnitUsages] = Try {
-    // Handle type usages here
-    val typeFullName = typeDecl.fullName
-    val typeUsages: List[UsageLocation] = typeDecl.referencingType.evalTypeIn.flatMap {
-      case x: MethodParameterIn =>
-        val lineNo = x.lineNumber.orElse(x.method.lineNumber).getOrElse(-1)
-        UsageLocation(x.method.fqName, lineNo) :: Nil
-      case x: Local =>
-        x.method
-          .map(_.fqName)
-          .flatMap { methodFullName =>
-            x.referencingIdentifiers
-              .where(i => i.inAssignment.source.typ.fullNameExact(typeFullName))
-              .map { i =>
-                val lineNo = i.lineNumber.orElse(i.method.lineNumber).getOrElse(-1)
-                UsageLocation(methodFullName, lineNo)
-              }
+  private class UsageCollector(inputFiles: Set[String]) extends FileASTRequestor {
+
+    private val definitions = mutable.Map.empty[String, CodeUnitUsages]
+    private val references  = mutable.ListBuffer.empty[(IBinding, UsageLocation)]
+
+    def result(): List[CodeUnitUsages] = {
+      val defMap = definitions.toMap
+      val groupedRefs = references.toList.groupBy(_._1.getKey).view.mapValues(_.map(_._2)).toMap
+
+      defMap.values.map { cu =>
+        val key = cu.`type` match {
+          case TYPE     => cu.fullyQualifiedName
+          case FIELD    => cu.fullyQualifiedName
+          case FUNCTION => cu.fullyQualifiedName
+          case _        => cu.fullyQualifiedName
+        }
+        // Match JDT binding keys if possible, but for now we'll find by FQN if exact match exists
+        // However, a better way is to store the Binding Key during definition phase.
+        cu
+      }.toList
+
+      // Simple implementation: Merge collected references into definitions based on binding keys
+      definitions.values.map { cu =>
+        // This is a simplification. Ideally we'd map binding keys to FQNs.
+        cu
+      }.toList
+
+      // Refined logic:
+      val allDefinitions = definitions.values.toList
+      val bindingKeyToFqn = mutable.Map.empty[String, String]
+
+      // We actually need to track which binding key belongs to which CodeUnitUsages
+      // Let's rewrite the storage logic slightly.
+      finalResult()
+    }
+
+    private val bindingKeyToCodeUnit = mutable.Map.empty[String, CodeUnitUsages]
+    private val collectedUsages      = mutable.Map.empty[String, mutable.ListBuffer[UsageLocation]]
+
+    def finalResult(): List[CodeUnitUsages] = {
+      bindingKeyToCodeUnit.toList.map { case (key, unit) =>
+        val usages = collectedUsages.getOrElse(key, Nil).toList
+        unit.copy(usages = usages)
+      }
+    }
+
+    override def acceptAST(sourceFilePath: String, ast: CompilationUnit): Unit = {
+      val isTest = sourceFilePath.contains("/test/") || sourceFilePath.contains("\\test\\")
+
+      ast.accept(new ASTVisitor() {
+
+        private def getFqn(binding: ITypeBinding): String =
+          binding.getErasure.getQualifiedName.replace("$", ".")
+
+        private def getMethodFqn(binding: IMethodBinding): String =
+          s"${getFqn(binding.getDeclaringClass)}.${if (binding.isConstructor) binding.getDeclaringClass.getName else binding.getName}"
+
+        private def getVariableFqn(binding: IVariableBinding): String =
+          val parent = if (binding.getDeclaringClass != null) getFqn(binding.getDeclaringClass) else "unknown"
+          s"$parent.${binding.getName}"
+
+        private def recordDef(key: String, fqn: String, kind: String): Unit = {
+          if (!isTest) {
+            bindingKeyToCodeUnit.getOrElseUpdate(key, CodeUnitUsages(fqn, kind, Nil))
           }
-          .l
-      case x: Call if x.name == Defines.ConstructorMethodName || x.name == Defines.StaticInitMethodName =>
-        val methodFullName = x.method.fqName
-        val lineNo         = x.lineNumber.orElse(x.method.lineNumber).getOrElse(-1)
-        UsageLocation(methodFullName, lineNo) :: Nil
-      case _ => List.empty[UsageLocation]
-    }.toList
-    val typeUnitUsages = CodeUnitUsages(typeDecl.fqName, CLASS, typeUsages) :: Nil
-
-    // Handle fields
-    val fieldUnitUsages = typeDecl.member.flatMap { member =>
-      analyzeField(cpg, member) match {
-        case Success(result) => result :: Nil
-        case Failure(e) =>
-          logger.error(s"Unable to analyze usages for field ${member.fqName}", e)
-          Nil
-      }
-    }.l
-
-    // Handle methods
-    val methodUnitUsages = typeDecl.method
-      .whereNot(_.isLambda)
-      .flatMap { method =>
-        analyzeMethod(cpg, method) match {
-          case Success(result) => result :: Nil
-          case Failure(e) =>
-            logger.error(s"Unable to analyze usages for method ${method.fullName}", e)
-            Nil
         }
-      }
-      .l
 
-    // Combine results
-    typeUnitUsages ++ fieldUnitUsages ++ methodUnitUsages
-  } match {
-    case Success(result) =>
-      // Filter things that should really be avoided
-      def weirdThingFilter(fqName: String): Boolean = fqName.contains("<lambda>") ||
-        fqName.contains("<unresolvedSignature>") || fqName.endsWith("[]") ||
-        fqName.matches(".*\\.\\d+(\\..*|$)")
+        private def recordUsage(binding: IBinding, node: ASTNode): Unit = {
+          if (binding == null) return
+          val decl = binding match {
+            case b: IMethodBinding   => b.getMethodDeclaration
+            case b: IVariableBinding => b.getVariableDeclaration
+            case b: ITypeBinding     => b.getTypeDeclaration
+            case _                   => binding
+          }
 
-      result
-        .filterNot { case CodeUnitUsages(fullyQualifiedName, _, _) => weirdThingFilter(fullyQualifiedName) }
-        .map { codeUnitUsages =>
-          // TODO: These hits might ideally like to be transformed to parent class instead
-          codeUnitUsages.copy(usages = codeUnitUsages.usages.filterNot(u => weirdThingFilter(u.fullyQualifiedName)))
+          if (decl == null || decl.getJavaElement == null) return
+
+          // Filter: only record references to "Application Code" (files we are parsing)
+          val path = decl.getJavaElement.getPath
+          if (path == null || !inputFiles.contains(path.toOSString)) return
+
+          val location = resolveLocation(node)
+          collectedUsages.getOrElseUpdate(decl.getKey, mutable.ListBuffer.empty) += location
         }
-    case Failure(e) =>
-      logger.error(s"Unable to analyze usages for type ${typeDecl.fullName}", e)
-      Nil
-  }
 
-  private def analyzeField(cpg: Cpg, member: Member): Try[CodeUnitUsages] = Try {
-    val usages = member._refIn
-      .collect { case x: Call if x.name == Operators.fieldAccess => x }
-      .map { fieldAccess =>
-        val methodFullName = fieldAccess.method.fqName
-        val lineNo         = fieldAccess.lineNumber.orElse(fieldAccess.method.lineNumber).getOrElse(-1)
-        UsageLocation(methodFullName, lineNo)
-      }
-      .l
-    CodeUnitUsages(member.fqName, FIELD, usages)
-  }
+        private def resolveLocation(node: ASTNode): UsageLocation = {
+          var current = node
+          var found   = false
+          var name    = "unknown"
 
-  private def analyzeMethod(cpg: Cpg, method: Method): Try[CodeUnitUsages] = Try {
-    val usages = method
-      .callIn(NoResolve)
-      .map { methodCall =>
-        val methodFullName = methodCall.method.fqName
-        val lineNo         = methodCall.lineNumber.orElse(methodCall.method.lineNumber).getOrElse(-1)
-        UsageLocation(methodFullName, lineNo)
-      }
-      .l
-    CodeUnitUsages(method.fqName, FUNCTION, usages)
-  }
+          while (current != null && !found) {
+            current match {
+              case md: MethodDeclaration =>
+                val b = md.resolveBinding()
+                if (b != null && b.getDeclaringClass != null && !b.getDeclaringClass.isAnonymous) {
+                  name = getMethodFqn(b)
+                  found = true
+                }
+              case td: TypeDeclaration =>
+                val b = td.resolveBinding()
+                if (b != null && !b.isAnonymous) {
+                  name = getFqn(b)
+                  found = true
+                }
+              case _ =>
+            }
+            current = current.getParent
+          }
+          val line = ast.getLineNumber(node.getStartPosition)
+          UsageLocation(name, line)
+        }
 
-  extension (m: Method) {
+        override def visit(node: TypeDeclaration): Boolean = {
+          val b = node.resolveBinding()
+          if (b != null && !b.isAnonymous) recordDef(b.getKey, getFqn(b), TYPE)
+          true
+        }
 
-    /** @return
-      *   normalized name, i.e., <code>&ltinit&gt</code> becomes the defining type name.
-      */
-    def normalizedName: String = {
-      m.name match {
-        case Defines.ConstructorMethodName | Defines.StaticInitMethodName => m.typeDecl.map(_.name).getOrElse(m.name)
-        case name                                                         => name
-      }
+        override def visit(node: MethodDeclaration): Boolean = {
+          val b = node.resolveBinding()
+          if (b != null && b.getDeclaringClass != null && !b.getDeclaringClass.isAnonymous)
+            recordDef(b.getKey, getMethodFqn(b), FUNCTION)
+          true
+        }
+
+        override def visit(node: VariableDeclarationFragment): Boolean = {
+          val b = node.resolveBinding()
+          if (b != null && b.isField) recordDef(b.getKey, getVariableFqn(b), FIELD)
+          true
+        }
+
+        // References
+        override def visit(node: SimpleName): Boolean = {
+          val b = node.resolveBinding()
+          if (b != null) recordUsage(b, node)
+          true
+        }
+
+        override def visit(node: MethodInvocation): Boolean = {
+          val b = node.resolveMethodBinding()
+          if (b != null) recordUsage(b, node)
+          true
+        }
+
+        override def visit(node: ClassInstanceCreation): Boolean = {
+          val b = node.resolveConstructorBinding()
+          if (b != null) recordUsage(b, node)
+          true
+        }
+
+        override def visit(node: FieldAccess): Boolean = {
+          val b = node.resolveFieldBinding()
+          if (b != null) recordUsage(b, node)
+          true
+        }
+      })
     }
-
-    /** @return
-      *   normalized fqName as per Brokk's standards for Java.
-      */
-    def fqName: String = {
-      m.typeDecl
-        .map { definingTypeDecl =>
-          val typeFullName = definingTypeDecl.fqName
-          typeFullName + "." + m.normalizedName
-        }
-        .getOrElse(m.fullName.replace("$", "."))
-    }
-
   }
-
-  extension (t: TypeDecl) {
-
-    /** @return
-      *   normalized fqName as per Brokk's standards for Java.
-      */
-    def fqName: String = t.fullName.replace("$", ".")
-
-  }
-
-  extension (m: Member) {
-
-    /** @return
-      *   normalized fqName as per Brokk's standards for Java.
-      */
-    def fqName: String = m.typeDecl.fqName + "." + m.name
-
-  }
-
 }
