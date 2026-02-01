@@ -148,11 +148,6 @@ object UsageAnalyzers {
           true
         }
 
-        override def visit(node: ImportDeclaration): Boolean = {
-          val b = node.resolveBinding()
-          if (b != null) recordUsage(b, node)
-          true
-        }
 
         // References
         // We primarily use SimpleName to catch references to methods, fields, and types.
@@ -163,12 +158,22 @@ object UsageAnalyzers {
             // To avoid double-counting method calls (once as MethodInvocation and once as SimpleName),
             // we skip SimpleNames that are the name part of a method call or declaration.
             val parent = node.getParent
-            val isMethodName = parent match {
+            val isIgnored = parent match {
               case mi: MethodInvocation if mi.getName == node  => true
               case md: MethodDeclaration if md.getName == node => true
               case _                                           => false
             }
-            if (!isMethodName) recordUsage(b, node)
+            // Also check if any ancestor is an ImportDeclaration
+            val isInImport = {
+              var p: ASTNode = node.getParent
+              var found = false
+              while (p != null && !found) {
+                if (p.isInstanceOf[ImportDeclaration]) found = true
+                p = p.getParent
+              }
+              found
+            }
+            if (!isIgnored && !isInImport) recordUsage(b, node)
           }
           true
         }

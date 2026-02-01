@@ -355,7 +355,7 @@ class MyTest extends AnyWordSpec with Matchers {
       }
     }
 
-    "include import statements as usages" in {
+    "exclude import statements from usages" in {
       Using.resource(
         InlineTestProject
           .builder()
@@ -384,8 +384,8 @@ class MyTest extends AnyWordSpec with Matchers {
         val targetClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target")
           .getOrElse(fail("com.example.Target class not found"))
 
-        // Import statement should count as a usage - the location will be the Importer class/file
-        targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Importer")
+        // Import statement should NOT count as a usage
+        targetClass.usages.map(_.fullyQualifiedName) should not contain ("com.example.Importer")
       }
     }
   }
