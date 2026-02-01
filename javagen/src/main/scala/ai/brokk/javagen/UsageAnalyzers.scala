@@ -43,36 +43,7 @@ object UsageAnalyzers {
     private val definitions = mutable.Map.empty[String, CodeUnitUsages]
     private val references  = mutable.ListBuffer.empty[(IBinding, UsageLocation)]
 
-    def result(): List[CodeUnitUsages] = {
-      val defMap = definitions.toMap
-      val groupedRefs = references.toList.groupBy(_._1.getKey).view.mapValues(_.map(_._2)).toMap
-
-      defMap.values.map { cu =>
-        val key = cu.`type` match {
-          case TYPE     => cu.fullyQualifiedName
-          case FIELD    => cu.fullyQualifiedName
-          case FUNCTION => cu.fullyQualifiedName
-          case _        => cu.fullyQualifiedName
-        }
-        // Match JDT binding keys if possible, but for now we'll find by FQN if exact match exists
-        // However, a better way is to store the Binding Key during definition phase.
-        cu
-      }.toList
-
-      // Simple implementation: Merge collected references into definitions based on binding keys
-      definitions.values.map { cu =>
-        // This is a simplification. Ideally we'd map binding keys to FQNs.
-        cu
-      }.toList
-
-      // Refined logic:
-      val allDefinitions = definitions.values.toList
-      val bindingKeyToFqn = mutable.Map.empty[String, String]
-
-      // We actually need to track which binding key belongs to which CodeUnitUsages
-      // Let's rewrite the storage logic slightly.
-      finalResult()
-    }
+    def result(): List[CodeUnitUsages] = finalResult()
 
     private val bindingKeyToCodeUnit = mutable.Map.empty[String, CodeUnitUsages]
     private val collectedUsages      = mutable.Map.empty[String, mutable.ListBuffer[UsageLocation]]

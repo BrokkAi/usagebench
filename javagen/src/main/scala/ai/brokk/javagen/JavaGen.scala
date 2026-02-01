@@ -36,25 +36,27 @@ class JavaGen(config: Config) {
   }
 
   private def runDir(inputPath: Path): Unit = {
-    val projectName = inputPath.getFileName
+    val projectName = inputPath.getFileName.toString
     val usagesFile  = config.outputDir.resolve(s"$projectName-usages.json")
-    if (Files.exists(usagesFile)) {
+
+    if Files.exists(usagesFile) then
       logger.info(s"$usagesFile already exists, skipping...")
-    } else {
-      try {
+    else
+      try
         val sources = findJavaSources(inputPath)
+        if sources.isEmpty then
+          logger.warn(s"No Java source files found in $inputPath")
+        else
+          logger.info(s"Analyzing usages for ${sources.size} source files in $inputPath...")
+          val usages = UsageAnalyzers.analyze(sources)
 
-        logger.info(s"Analyzing usages for ${sources.size} source files in $inputPath...")
-        val usages = UsageAnalyzers.analyze(sources)
-
-        logger.info(s"Usage analysis complete, writing....")
-        val serializedUsages = write(usages, indent = 3, sortKeys = true)
-        Files.writeString(usagesFile, serializedUsages, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
-        logger.info(s"Usage analysis results written to $usagesFile")
-      } catch {
-        case e: Exception => logger.error("Exception encountered while analyzing source files", e)
-      }
-    }
+          logger.info(s"Usage analysis complete, writing to $usagesFile...")
+          val serializedUsages = write(usages, indent = 3, sortKeys = true)
+          Files.writeString(usagesFile, serializedUsages, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+          logger.info(s"Usage analysis results successfully written.")
+      catch
+        case e: Exception =>
+          logger.error(s"Exception encountered while analyzing $inputPath", e)
   }
 
   private def findJavaSources(root: Path): Seq[Path] = {
