@@ -96,12 +96,12 @@ class MyTest extends AnyWordSpec with Matchers {
       }
     }
 
-    "var inference does not create standalone type reference (JDT limitation)" ignore {
-      // JDT limitation: We cannot distinguish 'var' type inference from other type usages.
-      // When using 'var t = new Target()', JDT still sees 'Target' as a SimpleName in
-      // the ClassInstanceCreation, so it appears as a type reference regardless of 'var'.
-      // This test documents the expected behavior if JDT could distinguish them,
-      // but is ignored because JDT cannot make this distinction.
+    "var inference does not create a type reference when the type name is not present" in {
+      // This test documents expected JDT behavior:
+      // When using 'var t = lib.createTarget()', the type 'Target' is purely inferred.
+      // Because 'Target' does not appear in the source code of Usage.java, JDT's AST
+      // correctly does not contain any nodes referencing Target. Consequently,
+      // our analyzer (rightly) does not report a usage of Target from Usage.bar.
       Using.resource(
         InlineTestProject
           .builder()
@@ -112,11 +112,19 @@ class MyTest extends AnyWordSpec with Matchers {
               |""".stripMargin
           )
           .addFile(
+            "com/example/Lib.java",
+            """package com.example;
+              |public class Lib {
+              |  public Target createTarget() { return new Target(); }
+              |}
+              |""".stripMargin
+          )
+          .addFile(
             "com/example/Usage.java",
             """package com.example;
               |public class Usage {
-              |  public void inferred() {
-              |    var t = new Target();
+              |  public void bar(Lib lib) {
+              |    var t = lib.createTarget();
               |  }
               |}
               |""".stripMargin
@@ -124,8 +132,17 @@ class MyTest extends AnyWordSpec with Matchers {
           .build()
       ) { project =>
         val result = UsageAnalyzers.analyze(project.javaSources)
-        println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} (${cu.`type`}) -> ${cu.usages.map(_.fullyQualifiedName)}")}")
-        result.codeUnits should not be empty
+
+        val targetUnit = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target")
+          .getOrElse(fail(s"Target not found in ${result.codeUnits.map(_.fullyQualifiedName)}"))
+        val libMethodUnit = result.codeUnits.find(_.fullyQualifiedName == "com.example.Lib.createTarget")
+          .getOrElse(fail(s"Lib.createTarget not found in ${result.codeUnits.map(_.fullyQualifiedName)}"))
+
+        // Target should NOT be used by Usage.bar because the type name is hidden by 'var'
+        targetUnit.usages.map(_.fullyQualifiedName) should not contain "com.example.Usage.bar"
+
+        // Lib.createTarget SHOULD be used by Usage.bar
+        libMethodUnit.usages.map(_.fullyQualifiedName) should contain ("com.example.Usage.bar")
       }
     }
 

@@ -25,7 +25,7 @@ object UsageAnalyzers {
     parser.setEnvironment(null, sourceDirs, null, true)
 
     val sourceFiles = sources.map(_.toAbsolutePath.toString).toArray
-    val collector   = new UsageCollector(sourceFiles.toSet)
+    val collector   = new UsageCollector(sources.map(_.toAbsolutePath.toString).toSet)
 
     parser.createASTs(
       sourceFiles,
@@ -82,25 +82,15 @@ object UsageAnalyzers {
           if (binding == null) return
 
           // Normalize binding to its declaration to ensure keys match
-          val (declKey, declElement) = binding match {
-            case b: IMethodBinding =>
-              val d = b.getMethodDeclaration
-              (d.getKey, d.getJavaElement)
-            case b: IVariableBinding =>
-              val d = b.getVariableDeclaration
-              (d.getKey, d.getJavaElement)
-            case b: ITypeBinding =>
-              val d = b.getTypeDeclaration
-              (d.getKey, d.getJavaElement)
-            case _ =>
-              (binding.getKey, binding.getJavaElement)
+          val declKey = binding match {
+            case b: IMethodBinding   => b.getMethodDeclaration.getKey
+            case b: IVariableBinding => b.getVariableDeclaration.getKey
+            case b: ITypeBinding     => b.getTypeDeclaration.getKey
+            case _                   => binding.getKey
           }
 
-          if (declElement == null) return
-
-          // Filter: only record references to "Application Code" (files we are parsing)
-          val path = declElement.getPath
-          if (path == null || !inputFiles.contains(path.toOSString)) return
+          // Only record usages for definitions we've seen (i.e., in the input files)
+          if (!bindingKeyToCodeUnit.contains(declKey)) return
 
           val location = resolveLocation(node)
           collectedUsages.getOrElseUpdate(declKey, mutable.ListBuffer.empty) += location
