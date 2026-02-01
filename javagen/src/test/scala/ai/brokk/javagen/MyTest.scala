@@ -233,5 +233,62 @@ class MyTest extends AnyWordSpec with Matchers {
         names should not contain ("com.example.TestHelper.helperMethod")
       }
     }
+
+    "attribute lambda and anonymous class usages to enclosing named declaration" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/Target.java",
+            """package com.example;
+              |public class Target {
+              |  public void doSomething() {}
+              |}
+              |""".stripMargin
+          )
+          .addFile(
+            "com/example/Consumer.java",
+            """package com.example;
+              |import java.util.function.Runnable;
+              |public class Consumer {
+              |  public void usesLambda(Target t) {
+              |    Runnable r = () -> t.doSomething();  // Usage inside lambda
+              |    r.run();
+              |  }
+              |  public void usesAnonymous(Target t) {
+              |    Runnable r = new Runnable() {
+              |      @Override
+              |      public void run() {
+              |        t.doSomething();  // Usage inside anonymous class
+              |      }
+              |    };
+              |    r.run();
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+        println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} -> ${cu.usages}")}")
+
+        val targetMethod = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target.doSomething")
+          .getOrElse(fail("com.example.Target.doSomething not found"))
+
+        val targetClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target")
+          .getOrElse(fail("com.example.Target class not found"))
+
+        val usageFqns = targetMethod.usages.map(_.fullyQualifiedName)
+        val classUsageFqns = targetClass.usages.map(_.fullyQualifiedName)
+
+        // Verify Lambda Attribution
+        usageFqns should contain ("com.example.Consumer.usesLambda")
+        classUsageFqns should contain ("com.example.Consumer.usesLambda")
+
+        // Verify Anonymous Class Attribution
+        usageFqns should contain ("com.example.Consumer.usesAnonymous")
+        classUsageFqns should contain ("com.example.Consumer.usesAnonymous")
+      }
+    }
   }
 }
