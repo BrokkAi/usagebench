@@ -290,5 +290,69 @@ class MyTest extends AnyWordSpec with Matchers {
         classUsageFqns should contain ("com.example.Consumer.usesAnonymous")
       }
     }
+
+    "exclude self-declarations from usages" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/Recursive.java",
+            """package com.example;
+              |public class Recursive {
+              |  public int counter;
+              |
+              |  public void recurse() {
+              |    counter++;        // field access
+              |    if (counter < 10) {
+              |      recurse();      // recursive call - this IS a valid usage
+              |    }
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .addFile(
+            "com/example/Simple.java",
+            """package com.example;
+              |public class Simple {
+              |  public void doNothing() {
+              |    // no self-reference
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+        println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} (${cu.`type`}) -> ${cu.usages.map(_.fullyQualifiedName)}")}")
+
+        // 1. Check Recursive class
+        val recursiveClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Recursive")
+          .getOrElse(fail("com.example.Recursive class not found"))
+        // The class declaration itself should not be a usage of the class
+        recursiveClass.usages.map(_.fullyQualifiedName) should not contain ("com.example.Recursive")
+
+        // 2. Check recurse method
+        val recurseMethod = result.codeUnits.find(_.fullyQualifiedName == "com.example.Recursive.recurse")
+          .getOrElse(fail("com.example.Recursive.recurse not found"))
+        // The recursive CALL is a usage from within the same method
+        recurseMethod.usages.map(_.fullyQualifiedName) should contain ("com.example.Recursive.recurse")
+        // But the declaration line (likely line 6) should not be counted if it's just the name token of the decl
+        // JDT SimpleName visitor usually hits the declaration name too.
+        // If the implementation is correct, there should only be 1 usage (the call on line 9).
+        recurseMethod.usages should have size 1
+
+        // 3. Check counter field
+        val counterField = result.codeUnits.find(_.fullyQualifiedName == "com.example.Recursive.counter")
+          .getOrElse(fail("com.example.Recursive.counter not found"))
+        // Usage should be from the recurse method
+        counterField.usages.map(_.fullyQualifiedName) should contain ("com.example.Recursive.recurse")
+
+        // 4. Check Simple.doNothing
+        val doNothingMethod = result.codeUnits.find(_.fullyQualifiedName == "com.example.Simple.doNothing")
+          .getOrElse(fail("com.example.Simple.doNothing not found"))
+        // Should have NO usages (not even itself)
+        doNothingMethod.usages should be (empty)
+      }
+    }
   }
 }

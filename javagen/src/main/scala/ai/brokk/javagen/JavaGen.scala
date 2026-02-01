@@ -39,20 +39,23 @@ class JavaGen(config: Config) {
     val projectName = inputPath.getFileName.toString
     val usagesFile  = config.outputDir.resolve(s"$projectName-usages.json")
 
-    if Files.exists(usagesFile) then
-      logger.info(s"$usagesFile already exists, skipping...")
+    if Files.exists(usagesFile) then logger.info(s"$usagesFile already exists, skipping...")
     else
       try
         val sources = findJavaSources(inputPath)
-        if sources.isEmpty then
-          logger.warn(s"No Java source files found in $inputPath")
+        if sources.isEmpty then logger.warn(s"No Java source files found in $inputPath")
         else
           logger.info(s"Analyzing usages for ${sources.size} source files in $inputPath...")
           val usages = UsageAnalyzers.analyze(sources)
 
           logger.info(s"Usage analysis complete, writing to $usagesFile...")
           val serializedUsages = write(usages, indent = 3, sortKeys = true)
-          Files.writeString(usagesFile, serializedUsages, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+          Files.writeString(
+            usagesFile,
+            serializedUsages,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.TRUNCATE_EXISTING
+          )
           logger.info(s"Usage analysis results successfully written.")
       catch
         case e: Exception =>

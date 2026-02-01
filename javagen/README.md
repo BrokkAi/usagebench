@@ -1,6 +1,6 @@
 # JavaGen
 
-Joern-based tool to extract usages from Java source-code applications.
+An Eclipse JDT-based tool to extract usages from Java source-code applications.
 
 ## Requirements
 

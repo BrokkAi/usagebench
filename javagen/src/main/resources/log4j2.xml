@@ -6,8 +6,7 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Logger name="flatgraph" level="error"/>
-        <Logger name="io.joern" level="error"/>
+        <Logger name="org.eclipse.jdt" level="error"/>
         <Root level="ERROR">
             <AppenderRef ref="Console"/>
         </Root>

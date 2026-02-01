@@ -11,16 +11,6 @@ libraryDependencies ++= Seq(
   "org.scalatest"           %% "scalatest"           % Versions.scalatest % Test
 )
 
-assembly / assemblyMergeStrategy := {
-  case "log4j2.xml"                                             => MergeStrategy.first
-  case "module-info.class"                                      => MergeStrategy.first
-  case "META-INF/versions/9/module-info.class"                  => MergeStrategy.first
-  case "io/github/retronym/java9rtexport/Export.class"          => MergeStrategy.first
-  case PathList("scala", "collection", "internal", "pprint", _) => MergeStrategy.first
-  case x =>
-    val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
-    oldStrategy(x)
-}
 
 ThisBuild / Compile / scalacOptions ++= Seq("-feature", "-deprecation", "-language:implicitConversions")
 

@@ -16,7 +16,7 @@ object UsageAnalyzers {
   private val FUNCTION = "FUNCTION"
 
   def analyze(sources: Seq[Path]): ProgramUsages = {
-    val parser = ASTParser.newParser(AST.JLS_Latest)
+    val parser = ASTParser.newParser(AST.getJLSLatest)
     parser.setResolveBindings(true)
     parser.setBindingsRecovery(true)
     parser.setKind(ASTParser.K_COMPILATION_UNIT)
@@ -27,13 +27,7 @@ object UsageAnalyzers {
     val sourceFiles = sources.map(_.toAbsolutePath.toString).toArray
     val collector   = new UsageCollector(sources.map(_.toAbsolutePath.toString).toSet)
 
-    parser.createASTs(
-      sourceFiles,
-      null,
-      Array.empty[String],
-      collector,
-      null
-    )
+    parser.createASTs(sourceFiles, null, Array.empty[String], collector, null)
 
     ProgramUsages(collector.result())
   }
@@ -64,7 +58,7 @@ object UsageAnalyzers {
           binding.getErasure.getQualifiedName.replace("$", ".")
 
         private def getMethodFqn(binding: IMethodBinding): String =
-          val decl = binding.getMethodDeclaration
+          val decl    = binding.getMethodDeclaration
           val typeFqn = getFqn(decl.getDeclaringClass)
           s"$typeFqn.${if (decl.isConstructor) decl.getDeclaringClass.getName else decl.getName}"
 
@@ -143,9 +137,21 @@ object UsageAnalyzers {
         }
 
         // References
+        // We primarily use SimpleName to catch references to methods, fields, and types.
+        // JDT's isDeclaration check prevents counting the definition site as a usage.
         override def visit(node: SimpleName): Boolean = {
           val b = node.resolveBinding()
-          if (b != null) recordUsage(b, node)
+          if (b != null && !node.isDeclaration) {
+            // To avoid double-counting method calls (once as MethodInvocation and once as SimpleName),
+            // we skip SimpleNames that are the name part of a method call or declaration.
+            val parent = node.getParent
+            val isMethodName = parent match {
+              case mi: MethodInvocation if mi.getName == node  => true
+              case md: MethodDeclaration if md.getName == node => true
+              case _                                           => false
+            }
+            if (!isMethodName) recordUsage(b, node)
+          }
           true
         }
 
@@ -155,14 +161,10 @@ object UsageAnalyzers {
           true
         }
 
+        // Constructor calls often map to the Type name in SimpleName, 
+        // but we want to ensure the MethodBinding (the constructor) is also recorded.
         override def visit(node: ClassInstanceCreation): Boolean = {
           val b = node.resolveConstructorBinding()
-          if (b != null) recordUsage(b, node)
-          true
-        }
-
-        override def visit(node: FieldAccess): Boolean = {
-          val b = node.resolveFieldBinding()
           if (b != null) recordUsage(b, node)
           true
         }
