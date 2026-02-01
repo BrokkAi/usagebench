@@ -64,7 +64,9 @@ object UsageAnalyzers {
           binding.getErasure.getQualifiedName.replace("$", ".")
 
         private def getMethodFqn(binding: IMethodBinding): String =
-          s"${getFqn(binding.getDeclaringClass)}.${if (binding.isConstructor) binding.getDeclaringClass.getName else binding.getName}"
+          val decl = binding.getMethodDeclaration
+          val typeFqn = getFqn(decl.getDeclaringClass)
+          s"$typeFqn.${if (decl.isConstructor) decl.getDeclaringClass.getName else decl.getName}"
 
         private def getVariableFqn(binding: IVariableBinding): String =
           val parent = if (binding.getDeclaringClass != null) getFqn(binding.getDeclaringClass) else "unknown"
@@ -78,21 +80,30 @@ object UsageAnalyzers {
 
         private def recordUsage(binding: IBinding, node: ASTNode): Unit = {
           if (binding == null) return
-          val decl = binding match {
-            case b: IMethodBinding   => b.getMethodDeclaration
-            case b: IVariableBinding => b.getVariableDeclaration
-            case b: ITypeBinding     => b.getTypeDeclaration
-            case _                   => binding
+
+          // Normalize binding to its declaration to ensure keys match
+          val (declKey, declElement) = binding match {
+            case b: IMethodBinding =>
+              val d = b.getMethodDeclaration
+              (d.getKey, d.getJavaElement)
+            case b: IVariableBinding =>
+              val d = b.getVariableDeclaration
+              (d.getKey, d.getJavaElement)
+            case b: ITypeBinding =>
+              val d = b.getTypeDeclaration
+              (d.getKey, d.getJavaElement)
+            case _ =>
+              (binding.getKey, binding.getJavaElement)
           }
 
-          if (decl == null || decl.getJavaElement == null) return
+          if (declElement == null) return
 
           // Filter: only record references to "Application Code" (files we are parsing)
-          val path = decl.getJavaElement.getPath
+          val path = declElement.getPath
           if (path == null || !inputFiles.contains(path.toOSString)) return
 
           val location = resolveLocation(node)
-          collectedUsages.getOrElseUpdate(decl.getKey, mutable.ListBuffer.empty) += location
+          collectedUsages.getOrElseUpdate(declKey, mutable.ListBuffer.empty) += location
         }
 
         private def resolveLocation(node: ASTNode): UsageLocation = {
