@@ -388,5 +388,96 @@ class MyTest extends AnyWordSpec with Matchers {
         targetClass.usages.map(_.fullyQualifiedName) should not contain ("com.example.Importer")
       }
     }
+
+    "detect constructor usage in a return statement" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/Target.java",
+            """package com.example;
+              |public class Target {
+              |  public Target() {}
+              |}
+              |""".stripMargin
+          )
+          .addFile(
+            "com/example/Lib.java",
+            """package com.example;
+              |public class Lib {
+              |  public Target createTarget() {
+              |    return new Target();
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+        println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} (${cu.`type`}) -> ${cu.usages.map(_.fullyQualifiedName)}")}")
+
+        val targetConstructor = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target.Target")
+          .getOrElse(fail("com.example.Target.Target constructor not found"))
+        targetConstructor.usages.map(_.fullyQualifiedName) should contain ("com.example.Lib.createTarget")
+
+        val targetClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target")
+          .getOrElse(fail("com.example.Target class not found"))
+        targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Lib.createTarget")
+      }
+    }
+
+    "detect constructor usage when returned value is assigned to var" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/Target.java",
+            """package com.example;
+              |public class Target {
+              |  public Target() {}
+              |}
+              |""".stripMargin
+          )
+          .addFile(
+            "com/example/Lib.java",
+            """package com.example;
+              |public class Lib {
+              |  public Target createTarget() {
+              |    return new Target();
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .addFile(
+            "com/example/Usage.java",
+            """package com.example;
+              |public class Usage {
+              |  public void bar(Lib lib) {
+              |    var t = lib.createTarget();
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+        println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} (${cu.`type`}) -> ${cu.usages.map(_.fullyQualifiedName)}")}")
+
+        val targetConstructor = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target.Target")
+          .getOrElse(fail("com.example.Target.Target constructor not found"))
+        targetConstructor.usages.map(_.fullyQualifiedName) should contain ("com.example.Lib.createTarget")
+
+        val targetClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target")
+          .getOrElse(fail("com.example.Target class not found"))
+        targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Lib.createTarget")
+
+        // No explicit type token in Usage.bar
+        targetClass.usages.map(_.fullyQualifiedName) should not contain "com.example.Usage.bar"
+
+        val libMethod = result.codeUnits.find(_.fullyQualifiedName == "com.example.Lib.createTarget")
+          .getOrElse(fail("com.example.Lib.createTarget not found"))
+        libMethod.usages.map(_.fullyQualifiedName) should contain ("com.example.Usage.bar")
+      }
+    }
   }
 }
