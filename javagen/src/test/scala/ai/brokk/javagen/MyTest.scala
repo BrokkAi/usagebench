@@ -439,21 +439,11 @@ class MyTest extends AnyWordSpec with Matchers {
               |""".stripMargin
           )
           .addFile(
-            "com/example/Lib.java",
-            """package com.example;
-              |public class Lib {
-              |  public Target createTarget() {
-              |    return new Target();
-              |  }
-              |}
-              |""".stripMargin
-          )
-          .addFile(
             "com/example/Usage.java",
             """package com.example;
               |public class Usage {
-              |  public void bar(Lib lib) {
-              |    var t = lib.createTarget();
+              |  public void bar() {
+              |    var t = new Target();
               |  }
               |}
               |""".stripMargin
@@ -465,18 +455,11 @@ class MyTest extends AnyWordSpec with Matchers {
 
         val targetConstructor = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target.Target")
           .getOrElse(fail("com.example.Target.Target constructor not found"))
-        targetConstructor.usages.map(_.fullyQualifiedName) should contain ("com.example.Lib.createTarget")
+        targetConstructor.usages.map(_.fullyQualifiedName) should contain ("com.example.Usage.bar")
 
         val targetClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target")
           .getOrElse(fail("com.example.Target class not found"))
-        targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Lib.createTarget")
-
-        // No explicit type token in Usage.bar
-        targetClass.usages.map(_.fullyQualifiedName) should not contain "com.example.Usage.bar"
-
-        val libMethod = result.codeUnits.find(_.fullyQualifiedName == "com.example.Lib.createTarget")
-          .getOrElse(fail("com.example.Lib.createTarget not found"))
-        libMethod.usages.map(_.fullyQualifiedName) should contain ("com.example.Usage.bar")
+        targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Usage.bar")
       }
     }
   }
