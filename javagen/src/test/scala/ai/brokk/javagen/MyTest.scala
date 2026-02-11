@@ -76,10 +76,12 @@ class MyTest extends AnyWordSpec with Matchers {
           .getOrElse(fail("Lib.doWork not found"))
         doWorkMethod.usages.map(_.fullyQualifiedName) should contain ("com.example.App.run")
         
-        // Verify snippet capture
+        // Verify snippet capture and new fields
         val usage = doWorkMethod.usages.find(_.fullyQualifiedName == "com.example.App.run")
           .getOrElse(fail("Usage not found"))
         usage.snippet should include ("lib.doWork();")
+        usage.filePath should endWith ("App.java")
+        usage.syntaxStyle shouldBe "text/java"
 
         val libClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Lib")
           .getOrElse(fail("com.example.Lib class not found"))
@@ -275,7 +277,6 @@ class MyTest extends AnyWordSpec with Matchers {
           .build()
       ) { project =>
         val result = UsageAnalyzers.analyze(project.javaSources)
-        println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} -> ${cu.usages}")}")
 
         val targetMethod = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target.doSomething")
           .getOrElse(fail("com.example.Target.doSomething not found"))

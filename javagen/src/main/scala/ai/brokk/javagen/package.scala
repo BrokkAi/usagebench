@@ -14,7 +14,13 @@ package object javagen {
     given ReadWriter[CodeUnitUsages] = macroRW
   }
 
-  case class UsageLocation(fullyQualifiedName: String, lineNumber: Int, snippet: String)
+  case class UsageLocation(
+    fullyQualifiedName: String,
+    lineNumber: Int,
+    snippet: String,
+    filePath: String,
+    syntaxStyle: String
+  )
   object UsageLocation {
     given ReadWriter[UsageLocation] = macroRW
   }

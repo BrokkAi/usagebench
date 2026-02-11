@@ -99,9 +99,10 @@ object UsageAnalyzers {
         }
 
         private def resolveLocation(node: ASTNode): UsageLocation = {
-          var current = node
-          var found   = false
-          var name    = "unknown"
+          val absolutePath = Path.of(sourceFilePath).toAbsolutePath.toString
+          var current      = node
+          var found        = false
+          var name         = "unknown"
 
           while (current != null && !found) {
             current match {
@@ -133,9 +134,15 @@ object UsageAnalyzers {
             }
           }
 
-          val line = ast.getLineNumber(node.getStartPosition)
+          val line    = ast.getLineNumber(node.getStartPosition)
           val snippet = captureSnippet(line)
-          UsageLocation(name, line, snippet)
+          UsageLocation(
+            fullyQualifiedName = name,
+            lineNumber = line,
+            snippet = snippet,
+            filePath = absolutePath,
+            syntaxStyle = "text/java"
+          )
         }
 
         private def captureSnippet(line: Int): String = {
