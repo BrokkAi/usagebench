@@ -3,7 +3,7 @@ package ai.brokk.javagen
 import org.eclipse.jdt.core.dom.*
 import org.slf4j.LoggerFactory
 
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.*
 
@@ -51,6 +51,14 @@ object UsageAnalyzers {
 
     override def acceptAST(sourceFilePath: String, ast: CompilationUnit): Unit = {
       val isTest = sourceFilePath.contains("/test/") || sourceFilePath.contains("\\test\\")
+
+      val fileLines = try {
+        Files.readAllLines(Path.of(sourceFilePath)).asScala.toIndexedSeq
+      } catch {
+        case e: Exception =>
+          logger.warn(s"Could not read source file for snippets: $sourceFilePath", e)
+          IndexedSeq.empty[String]
+      }
 
       ast.accept(new ASTVisitor() {
 
@@ -126,7 +134,16 @@ object UsageAnalyzers {
           }
 
           val line = ast.getLineNumber(node.getStartPosition)
-          UsageLocation(name, line)
+          val snippet = captureSnippet(line)
+          UsageLocation(name, line, snippet)
+        }
+
+        private def captureSnippet(line: Int): String = {
+          if (fileLines.isEmpty || line <= 0) return ""
+          val zeroBasedLine = line - 1
+          val start = Math.max(0, zeroBasedLine - 3)
+          val end   = Math.min(fileLines.size - 1, zeroBasedLine + 3)
+          fileLines.slice(start, end + 1).mkString("\n")
         }
 
         override def visit(node: TypeDeclaration): Boolean = {
