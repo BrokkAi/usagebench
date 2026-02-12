@@ -9,7 +9,12 @@ package object javagen {
     given ReadWriter[ProgramUsages] = macroRW
   }
 
-  case class CodeUnitUsages(fullyQualifiedName: String, `type`: String, usages: List[UsageLocation])
+  case class CodeUnitUsages(
+    fullyQualifiedName: String,
+    declarationLineNumber: Int,
+    `type`: String,
+    usages: List[UsageLocation]
+  )
   object CodeUnitUsages {
     given ReadWriter[CodeUnitUsages] = macroRW
   }

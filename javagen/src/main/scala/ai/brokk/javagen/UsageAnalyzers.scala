@@ -34,9 +34,6 @@ object UsageAnalyzers {
 
   private class UsageCollector(inputFiles: Set[String]) extends FileASTRequestor {
 
-    private val definitions = mutable.Map.empty[String, CodeUnitUsages]
-    private val references  = mutable.ListBuffer.empty[(IBinding, UsageLocation)]
-
     def result(): List[CodeUnitUsages] = finalResult()
 
     private val bindingKeyToCodeUnit = mutable.Map.empty[String, CodeUnitUsages]
@@ -74,9 +71,9 @@ object UsageAnalyzers {
           val parent = if (binding.getDeclaringClass != null) getFqn(binding.getDeclaringClass) else "unknown"
           s"$parent.${binding.getName}"
 
-        private def recordDef(key: String, fqn: String, kind: String): Unit = {
+        private def recordDef(key: String, fqn: String, kind: String, line: Int): Unit = {
           if (!isTest) {
-            bindingKeyToCodeUnit.getOrElseUpdate(key, CodeUnitUsages(fqn, kind, Nil))
+            bindingKeyToCodeUnit.getOrElseUpdate(key, CodeUnitUsages(fqn, line, kind, Nil))
           }
         }
 
@@ -155,20 +152,22 @@ object UsageAnalyzers {
 
         override def visit(node: TypeDeclaration): Boolean = {
           val b = node.resolveBinding()
-          if (b != null && !b.isAnonymous) recordDef(b.getKey, getFqn(b), TYPE)
+          if (b != null && !b.isAnonymous)
+            recordDef(b.getKey, getFqn(b), TYPE, ast.getLineNumber(node.getStartPosition))
           true
         }
 
         override def visit(node: MethodDeclaration): Boolean = {
           val b = node.resolveBinding()
           if (b != null && b.getDeclaringClass != null && !b.getDeclaringClass.isAnonymous)
-            recordDef(b.getKey, getMethodFqn(b), FUNCTION)
+            recordDef(b.getKey, getMethodFqn(b), FUNCTION, ast.getLineNumber(node.getStartPosition))
           true
         }
 
         override def visit(node: VariableDeclarationFragment): Boolean = {
           val b = node.resolveBinding()
-          if (b != null && b.isField) recordDef(b.getKey, getVariableFqn(b), FIELD)
+          if (b != null && b.isField)
+            recordDef(b.getKey, getVariableFqn(b), FIELD, ast.getLineNumber(node.getStartPosition))
           true
         }
 
