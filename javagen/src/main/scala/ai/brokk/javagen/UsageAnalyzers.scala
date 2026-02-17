@@ -77,19 +77,26 @@ object UsageAnalyzers {
           }
         }
 
+        private def getEnclosingTypeBinding(node: ASTNode): ITypeBinding = {
+          var current = node
+          while (current != null) {
+            current match {
+              case td: TypeDeclaration =>
+                val b = td.resolveBinding()
+                if (b != null && !b.isAnonymous) return b
+              case _ =>
+            }
+            current = current.getParent
+          }
+          null
+        }
+
         private def recordUsage(binding: IBinding, node: ASTNode): Unit = {
           if (binding == null) return
 
           // Normalize binding to its declaration to ensure keys match.
-          // For methods, we specifically check if this is an override that should 
-          // point to the local implementation if the receiver is 'this'.
           val declKey = binding match {
-            case b: IMethodBinding =>
-              val decl = b.getMethodDeclaration
-              // If the binding is for an interface method but we are inside a class 
-              // that implements it, JDT might bind to the interface. 
-              // We want the usage to count towards the implementation.
-              decl.getKey
+            case b: IMethodBinding   => b.getMethodDeclaration.getKey
             case b: IVariableBinding => b.getVariableDeclaration.getKey
             case b: ITypeBinding     => b.getTypeDeclaration.getKey
             case _                   => binding.getKey
@@ -211,10 +218,43 @@ object UsageAnalyzers {
           true
         }
 
-        override def visit(node: MethodInvocation): Boolean = {
+        override def visit(node: MethodInvocation): Boolean =
           val b = node.resolveMethodBinding()
-          if (b != null) recordUsage(b, node)
+          if b != null then
+            val receiver = node.getExpression
+            val bindingToUse =
+              if receiver == null || receiver.isInstanceOf[ThisExpression] then
+                remapToLocalOverride(b, node)
+              else
+                b
+            recordUsage(bindingToUse, node)
           true
+
+        override def visit(node: SuperMethodInvocation): Boolean =
+          val b = node.resolveMethodBinding()
+          if b != null then
+            recordUsage(remapToLocalOverride(b, node), node)
+          true
+
+        private def remapToLocalOverride(binding: IMethodBinding, node: ASTNode): IMethodBinding = {
+          val decl      = binding.getMethodDeclaration
+          val enclosing = getEnclosingTypeBinding(node)
+
+          if (enclosing != null && decl.getDeclaringClass != null) {
+            // If the binding is already declared in the current enclosing class, return it as is.
+            if (decl.getDeclaringClass.getTypeDeclaration.getKey == enclosing.getTypeDeclaration.getKey) {
+              binding
+            } else {
+              // Look for a method in the enclosing class that overrides or matches the signature
+              // of the resolved binding.
+              enclosing.getDeclaredMethods.find { m =>
+                val mDecl = m.getMethodDeclaration
+                mDecl.overrides(decl) || (mDecl.getName == decl.getName && mDecl.isSubsignature(decl))
+              }.getOrElse(binding)
+            }
+          } else {
+            binding
+          }
         }
 
         // Constructor calls often map to the Type name in SimpleName, 
