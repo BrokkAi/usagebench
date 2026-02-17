@@ -117,7 +117,19 @@ object UsageAnalyzers {
               case md: MethodDeclaration =>
                 val b = md.resolveBinding()
                 if (b != null && b.getDeclaringClass != null && !b.getDeclaringClass.isAnonymous) {
-                  name = getMethodFqn(b)
+                  name  = getMethodFqn(b)
+                  found = true
+                }
+              case vdf: VariableDeclarationFragment =>
+                val b = vdf.resolveBinding()
+                if (b != null && b.isField) {
+                  name  = getVariableFqn(b)
+                  found = true
+                }
+              case ecd: EnumConstantDeclaration =>
+                val b = ecd.resolveVariable()
+                if (b != null) {
+                  name  = getVariableFqn(b)
                   found = true
                 }
               case td: TypeDeclaration =>
@@ -179,6 +191,10 @@ object UsageAnalyzers {
           val b = node.resolveBinding()
           if (b != null && b.isField)
             recordDef(b.getKey, getVariableFqn(b), FIELD, ast.getLineNumber(node.getStartPosition))
+          
+          // Visit initializer to catch usages of other fields/methods during assignment
+          val init = node.getInitializer
+          if (init != null) init.accept(this)
           true
         }
 
@@ -187,6 +203,7 @@ object UsageAnalyzers {
           if typeNode != null then
             val b = typeNode.resolveBinding()
             if b != null then recordUsage(b, typeNode)
+          // Return true to ensure initializers (VariableDeclarationFragments) are visited
           true
 
         // References

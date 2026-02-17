@@ -690,5 +690,41 @@ class MyTest extends AnyWordSpec with Matchers {
         factoryMethod.usages.map(_.fullyQualifiedName) should contain("com.example.App.run")
       }
     }
+
+    "detect field usage in field initialization" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/Constants.java",
+            """package com.example;
+              |public class Constants {
+              |  public static final String A = "base";
+              |  public static final String B = A + "-derived";
+              |  
+              |  public enum MyEnum {
+              |    VAL_A(A),
+              |    VAL_B("direct");
+              |    MyEnum(String s) {}
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+
+        val fieldA = result.codeUnits.find(_.fullyQualifiedName == "com.example.Constants.A")
+          .getOrElse(fail("Field A not found"))
+
+        val usagesOfA = fieldA.usages.map(_.fullyQualifiedName)
+        
+        // Usage in Field B initialization
+        usagesOfA should contain ("com.example.Constants.B")
+        
+        // Usage in Enum Constant initialization
+        usagesOfA should contain ("com.example.Constants.MyEnum.VAL_A")
+      }
+    }
   }
 }
