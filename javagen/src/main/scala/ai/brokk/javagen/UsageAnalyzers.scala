@@ -171,6 +171,12 @@ object UsageAnalyzers {
           true
         }
 
+        override def visit(node: FieldDeclaration): Boolean =
+          val typeNode = node.getType
+          if typeNode != null then
+            val b = typeNode.resolveBinding()
+            if b != null then recordUsage(b, typeNode)
+          true
 
         // References
         // We primarily use SimpleName to catch references to methods, fields, and types.

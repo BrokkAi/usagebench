@@ -469,5 +469,33 @@ class MyTest extends AnyWordSpec with Matchers {
         targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Usage.bar")
       }
     }
+
+    "detect type usage in field declarations" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/Target.java",
+            """package com.example;
+              |public class Target {}
+              |""".stripMargin
+          )
+          .addFile(
+            "com/example/Holder.java",
+            """package com.example;
+              |public class Holder {
+              |  private Target myField;
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+        val targetClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target")
+          .getOrElse(fail(s"com.example.Target not found in ${result.codeUnits.map(_.fullyQualifiedName)}"))
+
+        targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Holder")
+      }
+    }
   }
 }
