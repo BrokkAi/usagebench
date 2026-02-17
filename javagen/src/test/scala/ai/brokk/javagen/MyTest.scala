@@ -629,6 +629,7 @@ class MyTest extends AnyWordSpec with Matchers {
               |    }
               |
               |    public void internalCall() throws IOException {
+              |        // Unqualified call to an interface-implemented method
               |        read(ByteBuffer.allocate(1));
               |    }
               |
@@ -641,10 +642,16 @@ class MyTest extends AnyWordSpec with Matchers {
       ) { project =>
         val result = UsageAnalyzers.analyze(project.javaSources)
         
+        // Ensure the implementation method is detected as a code unit
         val readMethod = result.codeUnits.find(_.fullyQualifiedName == "com.example.Impl.read")
-          .getOrElse(fail("com.example.Impl.read not found"))
+          .getOrElse(fail(s"com.example.Impl.read not found in ${result.codeUnits.map(_.fullyQualifiedName)}"))
 
+        // Ensure the internal call is recorded as a usage of the implementation, not the interface
         readMethod.usages.map(_.fullyQualifiedName) should contain ("com.example.Impl.internalCall")
+        
+        // Ensure the usage snippet is correct
+        val usage = readMethod.usages.find(_.fullyQualifiedName == "com.example.Impl.internalCall").get
+        usage.snippet should include ("read(ByteBuffer.allocate(1));")
       }
     }
 

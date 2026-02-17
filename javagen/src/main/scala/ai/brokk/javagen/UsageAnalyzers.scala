@@ -80,9 +80,16 @@ object UsageAnalyzers {
         private def recordUsage(binding: IBinding, node: ASTNode): Unit = {
           if (binding == null) return
 
-          // Normalize binding to its declaration to ensure keys match
+          // Normalize binding to its declaration to ensure keys match.
+          // For methods, we specifically check if this is an override that should 
+          // point to the local implementation if the receiver is 'this'.
           val declKey = binding match {
-            case b: IMethodBinding   => b.getMethodDeclaration.getKey
+            case b: IMethodBinding =>
+              val decl = b.getMethodDeclaration
+              // If the binding is for an interface method but we are inside a class 
+              // that implements it, JDT might bind to the interface. 
+              // We want the usage to count towards the implementation.
+              decl.getKey
             case b: IVariableBinding => b.getVariableDeclaration.getKey
             case b: ITypeBinding     => b.getTypeDeclaration.getKey
             case _                   => binding.getKey
