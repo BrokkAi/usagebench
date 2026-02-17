@@ -500,5 +500,44 @@ class MyTest extends AnyWordSpec with Matchers {
         targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Holder")
       }
     }
+
+    "detect method usage in test file" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "src/main/java/org/apache/commons/crypto/cipher/CryptoCipherFactory.java",
+            """package org.apache.commons.crypto.cipher;
+              |public class CryptoCipherFactory {
+              |  public static class CipherProvider {
+              |    public String getClassName() { return ""; }
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .addFile(
+            "src/test/java/org/apache/commons/crypto/utils/EnumTest.java",
+            """package org.apache.commons.crypto.utils;
+              |import org.apache.commons.crypto.cipher.CryptoCipherFactory.CipherProvider;
+              |public class EnumTest {
+              |  private void checkImplClass(CipherProvider value) {
+              |    value.getClassName();
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+
+        val getClassNameMethod = result.codeUnits
+          .find(_.fullyQualifiedName == "org.apache.commons.crypto.cipher.CryptoCipherFactory.CipherProvider.getClassName")
+          .getOrElse(fail("Method getClassName not found"))
+
+        getClassNameMethod.usages.map(_.fullyQualifiedName) should contain(
+          "org.apache.commons.crypto.utils.EnumTest.checkImplClass"
+        )
+      }
+    }
   }
 }
