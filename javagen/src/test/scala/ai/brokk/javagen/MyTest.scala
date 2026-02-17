@@ -647,5 +647,41 @@ class MyTest extends AnyWordSpec with Matchers {
         readMethod.usages.map(_.fullyQualifiedName) should contain ("com.example.Impl.internalCall")
       }
     }
+
+    "detect static method usages" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/CryptoCipherFactory.java",
+            """package com.example;
+              |public class CryptoCipherFactory {
+              |  public static Object getCryptoCipher(String algo) {
+              |    return null;
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .addFile(
+            "com/example/App.java",
+            """package com.example;
+              |public class App {
+              |  public void run() {
+              |    CryptoCipherFactory.getCryptoCipher("X");
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+
+        val factoryMethod = result.codeUnits
+          .find(_.fullyQualifiedName == "com.example.CryptoCipherFactory.getCryptoCipher")
+          .getOrElse(fail("Static method getCryptoCipher not found"))
+
+        factoryMethod.usages.map(_.fullyQualifiedName) should contain("com.example.App.run")
+      }
+    }
   }
 }
