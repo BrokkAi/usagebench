@@ -610,5 +610,42 @@ class MyTest extends AnyWordSpec with Matchers {
         targetMethod.usages.map(_.fullyQualifiedName) should contain ("com.example.AUsage.use")
       }
     }
+
+    "detect internal interface method implementation usage" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/Impl.java",
+            """package com.example;
+              |import java.nio.ByteBuffer;
+              |import java.nio.channels.ReadableByteChannel;
+              |import java.io.IOException;
+              |
+              |public class Impl implements ReadableByteChannel {
+              |    @Override
+              |    public int read(ByteBuffer dst) throws IOException {
+              |        return 0;
+              |    }
+              |
+              |    public void internalCall() throws IOException {
+              |        read(ByteBuffer.allocate(1));
+              |    }
+              |
+              |    @Override public boolean isOpen() { return true; }
+              |    @Override public void close() throws IOException {}
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+        
+        val readMethod = result.codeUnits.find(_.fullyQualifiedName == "com.example.Impl.read")
+          .getOrElse(fail("com.example.Impl.read not found"))
+
+        readMethod.usages.map(_.fullyQualifiedName) should contain ("com.example.Impl.internalCall")
+      }
+    }
   }
 }
