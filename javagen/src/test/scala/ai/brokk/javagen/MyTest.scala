@@ -539,5 +539,40 @@ class MyTest extends AnyWordSpec with Matchers {
         )
       }
     }
+
+    "detect type usage in try-with-resources" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/Resource.java",
+            """package com.example;
+              |public class Resource implements AutoCloseable {
+              |  public void close() {}
+              |}
+              |""".stripMargin
+          )
+          .addFile(
+            "com/example/Usage.java",
+            """package com.example;
+              |public class Usage {
+              |  public void use() {
+              |    try (Resource r = new Resource()) {
+              |      // do nothing
+              |    }
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+
+        val resourceClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Resource")
+          .getOrElse(fail("com.example.Resource class not found"))
+
+        resourceClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Usage.use")
+      }
+    }
   }
 }
