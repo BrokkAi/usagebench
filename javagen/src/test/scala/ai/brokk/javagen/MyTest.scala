@@ -491,9 +491,12 @@ class MyTest extends AnyWordSpec with Matchers {
           .build()
       ) { project =>
         val result = UsageAnalyzers.analyze(project.javaSources)
+        println(s"Result: ${result.codeUnits.map(cu => s"${cu.fullyQualifiedName} (${cu.`type`}) -> ${cu.usages.map(_.fullyQualifiedName)}")}")
+
         val targetClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.Target")
           .getOrElse(fail(s"com.example.Target not found in ${result.codeUnits.map(_.fullyQualifiedName)}"))
 
+        // The usage of Target in Holder's field should be attributed to the Holder class
         targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Holder")
       }
     }
