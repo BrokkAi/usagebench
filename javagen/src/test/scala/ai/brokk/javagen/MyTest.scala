@@ -574,5 +574,41 @@ class MyTest extends AnyWordSpec with Matchers {
         resourceClass.usages.map(_.fullyQualifiedName) should contain ("com.example.Usage.use")
       }
     }
+
+    "detect usages regardless of file parsing order" in {
+      Using.resource(
+        InlineTestProject
+          .builder()
+          .addFile(
+            "com/example/AUsage.java",
+            """package com.example;
+              |public class AUsage {
+              |  public void use(ZTarget target) {
+              |    target.doSomething();
+              |  }
+              |}
+              |""".stripMargin
+          )
+          .addFile(
+            "com/example/ZTarget.java",
+            """package com.example;
+              |public class ZTarget {
+              |  public void doSomething() {}
+              |}
+              |""".stripMargin
+          )
+          .build()
+      ) { project =>
+        val result = UsageAnalyzers.analyze(project.javaSources)
+
+        val targetClass = result.codeUnits.find(_.fullyQualifiedName == "com.example.ZTarget")
+          .getOrElse(fail("com.example.ZTarget class not found"))
+        targetClass.usages.map(_.fullyQualifiedName) should contain ("com.example.AUsage.use")
+
+        val targetMethod = result.codeUnits.find(_.fullyQualifiedName == "com.example.ZTarget.doSomething")
+          .getOrElse(fail("com.example.ZTarget.doSomething method not found"))
+        targetMethod.usages.map(_.fullyQualifiedName) should contain ("com.example.AUsage.use")
+      }
+    }
   }
 }
