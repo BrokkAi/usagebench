@@ -102,6 +102,10 @@ object UsageAnalyzers {
             case _                   => binding.getKey
           }
 
+          // Only record usages for definitions we've seen (i.e., in the input files)
+          // or those that have been remapped to a local definition.
+          if (!bindingKeyToCodeUnit.contains(declKey)) return
+
           val location = resolveLocation(node)
           collectedUsages.getOrElseUpdate(declKey, mutable.ListBuffer.empty) += location
         }
@@ -187,16 +191,11 @@ object UsageAnalyzers {
           true
         }
 
-        override def visit(node: VariableDeclarationFragment): Boolean = {
+        override def visit(node: VariableDeclarationFragment): Boolean =
           val b = node.resolveBinding()
           if (b != null && b.isField)
             recordDef(b.getKey, getVariableFqn(b), FIELD, ast.getLineNumber(node.getStartPosition))
-          
-          // Visit initializer to catch usages of other fields/methods during assignment
-          val init = node.getInitializer
-          if (init != null) init.accept(this)
           true
-        }
 
         override def visit(node: FieldDeclaration): Boolean =
           val typeNode = node.getType
@@ -253,26 +252,33 @@ object UsageAnalyzers {
             recordUsage(remapToLocalOverride(b, node), node)
           true
 
-        private def remapToLocalOverride(binding: IMethodBinding, node: ASTNode): IMethodBinding = {
+        private def remapToLocalOverride(binding: IMethodBinding, node: ASTNode): IMethodBinding =
           val decl      = binding.getMethodDeclaration
           val enclosing = getEnclosingTypeBinding(node)
 
-          if (enclosing != null && decl.getDeclaringClass != null) {
+          if enclosing != null && decl.getDeclaringClass != null then
+            val declaringClass = decl.getDeclaringClass.getTypeDeclaration
+
             // If the binding is already declared in the current enclosing class, return it as is.
-            if (decl.getDeclaringClass.getTypeDeclaration.getKey == enclosing.getTypeDeclaration.getKey) {
+            if declaringClass.getKey == enclosing.getTypeDeclaration.getKey then
               binding
-            } else {
-              // Look for a method in the enclosing class that overrides or matches the signature
-              // of the resolved binding.
-              enclosing.getDeclaredMethods.find { m =>
-                val mDecl = m.getMethodDeclaration
-                mDecl.overrides(decl) || (mDecl.getName == decl.getName && mDecl.isSubsignature(decl))
-              }.getOrElse(binding)
-            }
-          } else {
+            else
+              // A class is "external" for remapping purposes if it's not from source
+              // OR if it's an interface (we want to remap interface calls to local implementations).
+              val isExternalOrInterface = !declaringClass.isFromSource() || declaringClass.isInterface()
+
+              if isExternalOrInterface then
+                // Look for a method in the enclosing class that overrides or matches the signature
+                // of the resolved binding.
+                enclosing.getDeclaredMethods.find { m =>
+                  val mDecl = m.getMethodDeclaration
+                  mDecl.overrides(decl) || (mDecl.getName == decl.getName && mDecl.isSubsignature(decl))
+                }.getOrElse(binding)
+              else
+                // If local and NOT an interface, we preserve the original binding (e.g. Sub extends Base).
+                binding
+          else
             binding
-          }
-        }
 
         // Constructor calls often map to the Type name in SimpleName, 
         // but we want to ensure the MethodBinding (the constructor) is also recorded.
