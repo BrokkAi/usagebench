@@ -41,7 +41,7 @@ object UsageAnalyzers {
 
     def finalResult(): List[CodeUnitUsages] = {
       bindingKeyToCodeUnit.toList.map { case (key, unit) =>
-        val usages = collectedUsages.getOrElse(key, Nil).toList
+        val usages = collectedUsages.getOrElse(key, Nil).toSet
         unit.copy(usages = usages)
       }
     }
@@ -73,7 +73,7 @@ object UsageAnalyzers {
 
         private def recordDef(key: String, fqn: String, kind: String, line: Int): Unit = {
           if (!isTest) {
-            bindingKeyToCodeUnit.getOrElseUpdate(key, CodeUnitUsages(fqn, line, kind, Nil))
+            bindingKeyToCodeUnit.getOrElseUpdate(key, CodeUnitUsages(fqn, line, kind, Set.empty))
           }
         }
 
@@ -87,9 +87,6 @@ object UsageAnalyzers {
             case b: ITypeBinding     => b.getTypeDeclaration.getKey
             case _                   => binding.getKey
           }
-
-          // Only record usages for definitions we've seen (i.e., in the input files)
-          if (!bindingKeyToCodeUnit.contains(declKey)) return
 
           val location = resolveLocation(node)
           collectedUsages.getOrElseUpdate(declKey, mutable.ListBuffer.empty) += location

@@ -203,7 +203,7 @@ class MyTest extends AnyWordSpec with Matchers {
           .getOrElse(fail("com.example.Data.value field not found"))
 
         val usages = valueField.usages.map(_.fullyQualifiedName)
-        usages.filter(_ == "com.example.Logic.process") should have size 2
+        usages.filter(_ == "com.example.Logic.process") should have size 1
       }
     }
 

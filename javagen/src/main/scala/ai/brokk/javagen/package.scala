@@ -13,7 +13,7 @@ package object javagen {
     fullyQualifiedName: String,
     declarationLineNumber: Int,
     `type`: String,
-    usages: List[UsageLocation]
+    usages: Set[UsageLocation]
   )
   object CodeUnitUsages {
     given ReadWriter[CodeUnitUsages] = macroRW
