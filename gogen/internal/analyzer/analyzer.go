@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"go/types"
+	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"gogen/internal/schema"
@@ -47,7 +50,24 @@ func captureSnippet(path string, line int) string {
 	return strings.Join(lines, "\n")
 }
 
+func prepareModule(projectPath string) {
+	modFile := filepath.Join(projectPath, "go.mod")
+	if _, err := os.Stat(modFile); os.IsNotExist(err) {
+		return
+	}
+
+	log.Printf("Preparing dependencies in %s...", projectPath)
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Dir = projectPath
+	if output, err := cmd.CombinedOutput(); err != nil {
+		log.Printf("Warning: 'go mod tidy' failed in %s: %v\nOutput: %s", projectPath, err, string(output))
+		// We proceed anyway as some analysis might still be possible or local files might be sufficient.
+	}
+}
+
 func Analyze(projectPath string) (*schema.ProgramUsages, error) {
+	prepareModule(projectPath)
+
 	cfg := &packages.Config{
 		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
 		Dir:  projectPath,
