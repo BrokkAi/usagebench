@@ -1,0 +1,4 @@
+https://github.com/gin-gonic/gin.git, v1.9.1
+https://github.com/sirupsen/logrus.git, v1.9.3
+https://github.com/spf13/cobra.git, v1.8.0
+https://github.com/go-yaml/yaml.git, v3.0.1
