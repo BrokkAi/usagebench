@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"gogen/internal/schema"
 )
 
 func TestAnalyze(t *testing.T) {
@@ -99,13 +101,7 @@ func main() {
 	}
 }
 
-func hasUsage(usages []struct {
-	FullyQualifiedName string `json:"fullyQualifiedName"`
-	LineNumber         int    `json:"lineNumber"`
-	Snippet            string `json:"snippet"`
-	FilePath           string `json:"filePath"`
-	SyntaxStyle        string `json:"syntaxStyle"`
-}, pkgPath string) bool {
+func hasUsage(usages []schema.UsageLocation, pkgPath string) bool {
 	for _, u := range usages {
 		if u.FullyQualifiedName == pkgPath {
 			return true
