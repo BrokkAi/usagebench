@@ -15,3 +15,5 @@ dataset/java/**
 !AGENTS.md
 !.brokk/style.md
 !.brokk/project.properties
+
+**/.DS_Store
