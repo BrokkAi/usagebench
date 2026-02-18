@@ -49,13 +49,14 @@ object UsageAnalyzers {
     override def acceptAST(sourceFilePath: String, ast: CompilationUnit): Unit = {
       val isTest = sourceFilePath.contains("/test/") || sourceFilePath.contains("\\test\\")
 
-      val fileLines = try {
-        Files.readAllLines(Path.of(sourceFilePath)).asScala.toIndexedSeq
-      } catch {
-        case e: Exception =>
-          logger.warn(s"Could not read source file for snippets: $sourceFilePath", e)
-          IndexedSeq.empty[String]
-      }
+      val fileLines =
+        try {
+          Files.readAllLines(Path.of(sourceFilePath)).asScala.toIndexedSeq
+        } catch {
+          case e: Exception =>
+            logger.warn(s"Could not read source file for snippets: $sourceFilePath", e)
+            IndexedSeq.empty[String]
+        }
 
       ast.accept(new ASTVisitor() {
 
@@ -117,19 +118,19 @@ object UsageAnalyzers {
               case md: MethodDeclaration =>
                 val b = md.resolveBinding()
                 if (b != null && b.getDeclaringClass != null && !b.getDeclaringClass.isAnonymous) {
-                  name  = getMethodFqn(b)
+                  name = getMethodFqn(b)
                   found = true
                 }
               case vdf: VariableDeclarationFragment =>
                 val b = vdf.resolveBinding()
                 if (b != null && b.isField) {
-                  name  = getVariableFqn(b)
+                  name = getVariableFqn(b)
                   found = true
                 }
               case ecd: EnumConstantDeclaration =>
                 val b = ecd.resolveVariable()
                 if (b != null) {
-                  name  = getVariableFqn(b)
+                  name = getVariableFqn(b)
                   found = true
                 }
               case td: TypeDeclaration =>
@@ -168,8 +169,8 @@ object UsageAnalyzers {
         private def captureSnippet(line: Int): String = {
           if (fileLines.isEmpty || line <= 0) return ""
           val zeroBasedLine = line - 1
-          val start = Math.max(0, zeroBasedLine - 3)
-          val end   = Math.min(fileLines.size - 1, zeroBasedLine + 3)
+          val start         = Math.max(0, zeroBasedLine - 3)
+          val end           = Math.min(fileLines.size - 1, zeroBasedLine + 3)
           fileLines.slice(start, end + 1).mkString("\n")
         }
 
@@ -191,7 +192,7 @@ object UsageAnalyzers {
           val b = node.resolveBinding()
           if (b != null && b.isField)
             recordDef(b.getKey, getVariableFqn(b), FIELD, ast.getLineNumber(node.getStartPosition))
-          
+
           // Visit initializer to catch usages of other fields/methods during assignment
           val init = node.getInitializer
           if (init != null) init.accept(this)
@@ -223,7 +224,7 @@ object UsageAnalyzers {
             // Also check if any ancestor is an ImportDeclaration
             val isInImport = {
               var p: ASTNode = node.getParent
-              var found = false
+              var found      = false
               while (p != null && !found) {
                 if (p.isInstanceOf[ImportDeclaration]) found = true
                 p = p.getParent
@@ -240,17 +241,14 @@ object UsageAnalyzers {
           if b != null then
             val receiver = node.getExpression
             val bindingToUse =
-              if receiver == null || receiver.isInstanceOf[ThisExpression] then
-                remapToLocalOverride(b, node)
-              else
-                b
+              if receiver == null || receiver.isInstanceOf[ThisExpression] then remapToLocalOverride(b, node)
+              else b
             recordUsage(bindingToUse, node)
           true
 
         override def visit(node: SuperMethodInvocation): Boolean =
           val b = node.resolveMethodBinding()
-          if b != null then
-            recordUsage(remapToLocalOverride(b, node), node)
+          if b != null then recordUsage(remapToLocalOverride(b, node), node)
           true
 
         private def remapToLocalOverride(binding: IMethodBinding, node: ASTNode): IMethodBinding = {
@@ -264,17 +262,19 @@ object UsageAnalyzers {
             } else {
               // Look for a method in the enclosing class that overrides or matches the signature
               // of the resolved binding.
-              enclosing.getDeclaredMethods.find { m =>
-                val mDecl = m.getMethodDeclaration
-                mDecl.overrides(decl) || (mDecl.getName == decl.getName && mDecl.isSubsignature(decl))
-              }.getOrElse(binding)
+              enclosing.getDeclaredMethods
+                .find { m =>
+                  val mDecl = m.getMethodDeclaration
+                  mDecl.overrides(decl) || (mDecl.getName == decl.getName && mDecl.isSubsignature(decl))
+                }
+                .getOrElse(binding)
             }
           } else {
             binding
           }
         }
 
-        // Constructor calls often map to the Type name in SimpleName, 
+        // Constructor calls often map to the Type name in SimpleName,
         // but we want to ensure the MethodBinding (the constructor) is also recorded.
         override def visit(node: ClassInstanceCreation): Boolean = {
           val b = node.resolveConstructorBinding()
