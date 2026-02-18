@@ -18,3 +18,5 @@ dataset/**
 !.brokk/project.properties
 
 **/.DS_Store
+
+/gogen/gogen
