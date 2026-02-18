@@ -17,28 +17,9 @@ const (
 	FIELD    = "FIELD"
 )
 
-func getObjectFQN(pkgPath string, obj types.Object) string {
-	switch t := obj.(type) {
-	case *types.Func:
-		sig := t.Type().(*types.Signature)
-		if sig.Recv() != nil {
-			recvType := sig.Recv().Type()
-			if ptr, ok := recvType.(*types.Pointer); ok {
-				recvType = ptr.Elem()
-			}
-			if named, ok := recvType.(*types.Named); ok {
-				return pkgPath + "." + named.Obj().Name() + "." + obj.Name()
-			}
-		}
-	case *types.Var:
-		if t.IsField() {
-			// In Go, fields are often accessed via the struct. 
-			// For FQN consistency with the scala logic, we'd ideally want Type.Field.
-			// This is a simplified version.
-			return pkgPath + "." + obj.Name()
-		}
-	}
-	return pkgPath + "." + obj.Name()
+func getObjectFQN(pkg *types.Package, obj types.Object) string {
+	pkgName := pkg.Name()
+	return pkgName + "." + obj.Name()
 }
 
 func captureSnippet(path string, line int) string {
@@ -115,7 +96,7 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 				continue
 			}
 
-			fqn := getObjectFQN(pkg.PkgPath, obj)
+			fqn := getObjectFQN(pkg.Types, obj)
 			unit := &schema.CodeUnitUsages{
 				FullyQualifiedName:    fqn,
 				DeclarationLineNumber: pos.Line,
@@ -148,7 +129,7 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 					// or resolve the nearest enclosing object if available.
 					
 					meta.usages[locKey] = schema.UsageLocation{
-						FullyQualifiedName: pkg.PkgPath, // Simplified: should ideally find enclosing func
+						FullyQualifiedName: pkg.Name,
 						LineNumber:         pos.Line,
 						Snippet:            captureSnippet(pos.Filename, pos.Line),
 						FilePath:           pos.Filename,

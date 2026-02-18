@@ -61,49 +61,49 @@ func main() {
 
 	for _, unit := range usages.CodeUnits {
 		switch unit.FullyQualifiedName {
-		case "testproj/lib.Data":
+		case "lib.Data":
 			foundData = true
 			if unit.Type != CLASS {
 				t.Errorf("Expected Type CLASS for lib.Data, got %s", unit.Type)
 			}
-			if !hasUsage(unit.Usages, "testproj") {
-				t.Errorf("Expected usage of lib.Data in testproj/main")
+			if !hasUsage(unit.Usages, "main") {
+				t.Errorf("Expected usage of lib.Data in main")
 			}
 
-		case "testproj/lib.DoWork":
+		case "lib.DoWork":
 			foundDoWork = true
 			if unit.Type != FUNCTION {
 				t.Errorf("Expected Type FUNCTION for lib.DoWork, got %s", unit.Type)
 			}
-			if !hasUsage(unit.Usages, "testproj") {
-				t.Errorf("Expected usage of lib.DoWork in testproj/main")
+			if !hasUsage(unit.Usages, "main") {
+				t.Errorf("Expected usage of lib.DoWork in main")
 			}
 
-		case "testproj/lib.Value": // Based on current getObjectFQN implementation for fields
+		case "lib.Value":
 			foundValue = true
 			if unit.Type != FIELD {
 				t.Errorf("Expected Type FIELD for lib.Value, got %s", unit.Type)
 			}
-			if !hasUsage(unit.Usages, "testproj") {
-				t.Errorf("Expected usage of lib.Value in testproj/main")
+			if !hasUsage(unit.Usages, "main") {
+				t.Errorf("Expected usage of lib.Value in main")
 			}
 		}
 	}
 
 	if !foundData {
-		t.Error("testproj/lib.Data not found in results")
+		t.Error("lib.Data not found in results")
 	}
 	if !foundDoWork {
-		t.Error("testproj/lib.DoWork not found in results")
+		t.Error("lib.DoWork not found in results")
 	}
 	if !foundValue {
-		t.Error("testproj/lib.Value field not found in results")
+		t.Error("lib.Value field not found in results")
 	}
 }
 
-func hasUsage(usages []schema.UsageLocation, pkgPath string) bool {
+func hasUsage(usages []schema.UsageLocation, pkgName string) bool {
 	for _, u := range usages {
-		if u.FullyQualifiedName == pkgPath {
+		if u.FullyQualifiedName == pkgName {
 			return true
 		}
 	}
