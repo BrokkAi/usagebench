@@ -1,3 +1,7 @@
-module ai/brokk/gogen
+package main
 
-go 1.25.2
+import "fmt"
+
+func main() {
+	fmt.Println("Gogen initialized")
+}
