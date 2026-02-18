@@ -1,7 +1,3 @@
-package main
+module gogen
 
-import "fmt"
-
-func main() {
-	fmt.Println("Gogen initialized")
-}
+go 1.21
