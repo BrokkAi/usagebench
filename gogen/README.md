@@ -20,3 +20,44 @@ Usage of ./gogen:
 ```
 
 The tool accepts either a local directory containing Go source code or a CSV file containing a list of Git repositories and specific commit hashes to analyze.
+
+## Development
+
+If you encounter dependency errors or missing `go.sum` entries, run:
+```bash
+cd gogen && go mod tidy
+```
+
+### Build
+To build the project:
+```bash
+cd gogen && go build .
+```
+
+### Test
+To run all tests:
+```bash
+cd gogen && go test ./...
+```
+
+To run a specific test:
+```bash
+cd gogen && go test -run <TestNameRegex> ./...
+```
+
+### Build
+To build the project:
+```bash
+cd gogen && go build .
+```
+
+### Test
+To run all tests:
+```bash
+cd gogen && go test ./...
+```
+
+To run a specific test:
+```bash
+cd gogen && go test -run <TestNameRegex> ./...
+```
