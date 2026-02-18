@@ -80,6 +80,9 @@ func main() {
 			}
 
 		case "lib.Value":
+			// In Go, struct fields are usually identified by the type they belong to or just the field name.
+			// Based on getObjectFQN (pkg.Name + "." + obj.Name), fields of 'Data' in package 'lib' 
+			// appear as 'lib.Value'.
 			foundValue = true
 			if unit.Type != FIELD {
 				t.Errorf("Expected Type FIELD for lib.Value, got %s", unit.Type)
