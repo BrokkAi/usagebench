@@ -1,7 +1,10 @@
 package analyzer
 
 import (
+	"bufio"
+	"fmt"
 	"go/types"
+	"os"
 	"strings"
 
 	"gogen/internal/schema"
@@ -14,6 +17,55 @@ const (
 	FIELD    = "FIELD"
 )
 
+func getObjectFQN(pkgPath string, obj types.Object) string {
+	switch t := obj.(type) {
+	case *types.Func:
+		sig := t.Type().(*types.Signature)
+		if sig.Recv() != nil {
+			recvType := sig.Recv().Type()
+			if ptr, ok := recvType.(*types.Pointer); ok {
+				recvType = ptr.Elem()
+			}
+			if named, ok := recvType.(*types.Named); ok {
+				return pkgPath + "." + named.Obj().Name() + "." + obj.Name()
+			}
+		}
+	case *types.Var:
+		if t.IsField() {
+			// In Go, fields are often accessed via the struct. 
+			// For FQN consistency with the scala logic, we'd ideally want Type.Field.
+			// This is a simplified version.
+			return pkgPath + "." + obj.Name()
+		}
+	}
+	return pkgPath + "." + obj.Name()
+}
+
+func captureSnippet(path string, line int) string {
+	f, err := os.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(f)
+	current := 1
+	start := line - 3
+	end := line + 3
+
+	for scanner.Scan() {
+		if current >= start && current <= end {
+			lines = append(lines, scanner.Text())
+		}
+		if current > end {
+			break
+		}
+		current++
+	}
+	return strings.Join(lines, "\n")
+}
+
 func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 	cfg := &packages.Config{
 		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
@@ -25,8 +77,14 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 		return nil, err
 	}
 
-	var codeUnits []schema.CodeUnitUsages
+	type unitMeta struct {
+		unit   *schema.CodeUnitUsages
+		usages map[string]schema.UsageLocation // Map to ensure uniqueness per location
+	}
 
+	objToUnit := make(map[types.Object]*unitMeta)
+
+	// Phase 1: Collect Definitions (excluding tests)
 	for _, pkg := range pkgs {
 		for ident, obj := range pkg.TypesInfo.Defs {
 			if obj == nil {
@@ -39,52 +97,75 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 			}
 
 			var unitType string
-			var fqn string
-
-			switch t := obj.(type) {
+			switch obj.(type) {
 			case *types.TypeName:
 				unitType = CLASS
-				fqn = pkg.PkgPath + "." + obj.Name()
 			case *types.Func:
 				unitType = FUNCTION
-				sig := t.Type().(*types.Signature)
-				if sig.Recv() != nil {
-					recvType := sig.Recv().Type()
-					if ptr, ok := recvType.(*types.Pointer); ok {
-						recvType = ptr.Elem()
-					}
-					if named, ok := recvType.(*types.Named); ok {
-						fqn = pkg.PkgPath + "." + named.Obj().Name() + "." + obj.Name()
-					} else {
-						fqn = pkg.PkgPath + "." + obj.Name()
-					}
-				} else {
-					fqn = pkg.PkgPath + "." + obj.Name()
-				}
 			case *types.Var:
+				t := obj.(*types.Var)
 				if t.IsField() || t.Parent() == pkg.Types.Scope() {
 					unitType = FIELD
-					// Simplification for fields: usually we want Type.Field, 
-					// but for this pass pkgpath.Name is a good start or pkgpath.Type.Name
-					fqn = pkg.PkgPath + "." + obj.Name()
 				} else {
 					continue
 				}
 			case *types.Const:
 				unitType = FIELD
-				fqn = pkg.PkgPath + "." + obj.Name()
 			default:
 				continue
 			}
 
-			codeUnits = append(codeUnits, schema.CodeUnitUsages{
+			fqn := getObjectFQN(pkg.PkgPath, obj)
+			unit := &schema.CodeUnitUsages{
 				FullyQualifiedName:    fqn,
 				DeclarationLineNumber: pos.Line,
 				Type:                  unitType,
 				Usages:                []schema.UsageLocation{},
-			})
+			}
+			objToUnit[obj] = &unitMeta{
+				unit:   unit,
+				usages: make(map[string]schema.UsageLocation),
+			}
 		}
 	}
 
-	return &schema.ProgramUsages{CodeUnits: codeUnits}, nil
+	// Phase 2: Collect Usages (including tests)
+	for _, pkg := range pkgs {
+		for ident, obj := range pkg.TypesInfo.Uses {
+			if obj == nil {
+				continue
+			}
+
+			// If this object is one of our tracked code units
+			if meta, ok := objToUnit[obj]; ok {
+				pos := pkg.Fset.Position(ident.Pos())
+				
+				// Generate a key for uniqueness: file:line
+				locKey := fmt.Sprintf("%s:%d", pos.Filename, pos.Line)
+				if _, exists := meta.usages[locKey]; !exists {
+					// Determine enclosing context name (FQN of the function/type containing the usage)
+					// For simplicity in this pass, we use the filename as context if scope traversal is deep,
+					// or resolve the nearest enclosing object if available.
+					
+					meta.usages[locKey] = schema.UsageLocation{
+						FullyQualifiedName: pkg.PkgPath, // Simplified: should ideally find enclosing func
+						LineNumber:         pos.Line,
+						Snippet:            captureSnippet(pos.Filename, pos.Line),
+						FilePath:           pos.Filename,
+						SyntaxStyle:        "go",
+					}
+				}
+			}
+		}
+	}
+
+	var result []schema.CodeUnitUsages
+	for _, meta := range objToUnit {
+		for _, loc := range meta.usages {
+			meta.unit.Usages = append(meta.unit.Usages, loc)
+		}
+		result = append(result, *meta.unit)
+	}
+
+	return &schema.ProgramUsages{CodeUnits: result}, nil
 }
