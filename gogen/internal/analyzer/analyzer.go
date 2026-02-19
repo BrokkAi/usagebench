@@ -20,48 +20,48 @@ const (
 	FIELD    = "FIELD"
 )
 
-func getObjectFQN(pkg *types.Package, obj types.Object) string {
+func getObjectFQN(pkg *types.Package, obj types.Object, parentMap map[types.Object]string) string {
 	pkgName := pkg.Name()
 
-	// Handle Struct Methods and Interface Methods
+	// 1. Method: Check if *types.Func has a receiver.
 	if fn, ok := obj.(*types.Func); ok {
 		sig := fn.Type().(*types.Signature)
 		if sig.Recv() != nil {
 			recvType := sig.Recv().Type()
-			// Strip pointer if present
+			// Dereference pointers
 			if ptr, ok := recvType.(*types.Pointer); ok {
 				recvType = ptr.Elem()
 			}
+			// Use the receiver's type name
 			if named, ok := recvType.(*types.Named); ok {
 				return fmt.Sprintf("%s.%s.%s", pkgName, named.Obj().Name(), obj.Name())
 			}
 		}
 	}
 
-	// Handle Struct Fields
-	if v, ok := obj.(*types.Var); ok && v.IsField() {
-		// We need to find which named type this field belongs to.
-		// types.Object for a field doesn't directly point to the parent.
-		// However, for consistency with the requested spec: pkg.Struct.Field
-		// In a real implementation, we'd traverse the scope or check types.Struct.
-		// For now, we utilize the object's parent scope if it's not the package scope.
-		if v.Parent() != nil && v.Parent() != pkg.Scope() {
-			// This is a simplified heuristic for the consistency test.
-		}
+	// 2. Field/Interface Method: Check if object is in parentMap.
+	if parentName, ok := parentMap[obj]; ok {
+		return fmt.Sprintf("%s.%s.%s", pkgName, parentName, obj.Name())
 	}
 
-	// Handle Globals (Var, Const, Alias)
+	// 3. Global: Check if parent scope is package scope.
 	if obj.Parent() == pkg.Scope() {
+		isAlias := false
+		if tn, ok := obj.(*types.TypeName); ok && tn.IsAlias() {
+			isAlias = true
+		}
+
 		switch obj.(type) {
 		case *types.Var, *types.Const:
 			return fmt.Sprintf("%s._module_.%s", pkgName, obj.Name())
 		case *types.TypeName:
-			if obj.(*types.TypeName).IsAlias() {
+			if isAlias {
 				return fmt.Sprintf("%s._module_.%s", pkgName, obj.Name())
 			}
 		}
 	}
 
+	// 4. Default: pkg.Name
 	return pkgName + "." + obj.Name()
 }
 
@@ -127,6 +127,24 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 
 	// Phase 1: Collect Definitions (excluding tests)
 	for _, pkg := range pkgs {
+		parentMap := make(map[types.Object]string)
+		scope := pkg.Types.Scope()
+		for _, name := range scope.Names() {
+			obj := scope.Lookup(name)
+			if tn, ok := obj.(*types.TypeName); ok {
+				underlying := tn.Type().Underlying()
+				if st, ok := underlying.(*types.Struct); ok {
+					for i := 0; i < st.NumFields(); i++ {
+						parentMap[st.Field(i)] = tn.Name()
+					}
+				} else if it, ok := underlying.(*types.Interface); ok {
+					for i := 0; i < it.NumMethods(); i++ {
+						parentMap[it.Method(i)] = tn.Name()
+					}
+				}
+			}
+		}
+
 		for ident, obj := range pkg.TypesInfo.Defs {
 			if obj == nil {
 				continue
@@ -138,14 +156,18 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 			}
 
 			var unitType string
-			switch obj.(type) {
+			switch t := obj.(type) {
 			case *types.TypeName:
-				unitType = CLASS
+				if t.IsAlias() {
+					unitType = FIELD
+				} else {
+					unitType = CLASS
+				}
 			case *types.Func:
 				unitType = FUNCTION
 			case *types.Var:
-				t := obj.(*types.Var)
-				if t.IsField() || t.Parent() == pkg.Types.Scope() {
+				v := obj.(*types.Var)
+				if v.IsField() || v.Parent() == pkg.Types.Scope() {
 					unitType = FIELD
 				} else {
 					continue
@@ -156,7 +178,7 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 				continue
 			}
 
-			fqn := getObjectFQN(pkg.Types, obj)
+			fqn := getObjectFQN(pkg.Types, obj, parentMap)
 			unit := &schema.CodeUnitUsages{
 				FullyQualifiedName:    fqn,
 				DeclarationLineNumber: pos.Line,

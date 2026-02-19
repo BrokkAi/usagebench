@@ -79,16 +79,13 @@ func main() {
 				t.Errorf("Expected usage of lib.DoWork in main")
 			}
 
-		case "lib.Value":
-			// In Go, struct fields are usually identified by the type they belong to or just the field name.
-			// Based on getObjectFQN (pkg.Name + "." + obj.Name), fields of 'Data' in package 'lib' 
-			// appear as 'lib.Value'.
+		case "lib.Data.Value":
 			foundValue = true
 			if unit.Type != FIELD {
-				t.Errorf("Expected Type FIELD for lib.Value, got %s", unit.Type)
+				t.Errorf("Expected Type FIELD for lib.Data.Value, got %s", unit.Type)
 			}
 			if !hasUsage(unit.Usages, "main") {
-				t.Errorf("Expected usage of lib.Value in main")
+				t.Errorf("Expected usage of lib.Data.Value in main")
 			}
 		}
 	}
@@ -100,7 +97,7 @@ func main() {
 		t.Error("lib.DoWork not found in results")
 	}
 	if !foundValue {
-		t.Error("lib.Value field not found in results")
+		t.Error("lib.Data.Value field not found in results")
 	}
 }
 
