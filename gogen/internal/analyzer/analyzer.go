@@ -3,6 +3,8 @@ package analyzer
 import (
 	"bufio"
 	"fmt"
+	"go/ast"
+	"go/token"
 	"go/types"
 	"log"
 	"os"
@@ -194,31 +196,53 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 
 	// Phase 2: Collect Usages (including tests)
 	for _, pkg := range pkgs {
-		for ident, obj := range pkg.TypesInfo.Uses {
-			if obj == nil {
-				continue
-			}
+		for _, file := range pkg.Syntax {
+			var currentContextFQN string
 
-			// If this object is one of our tracked code units
-			if meta, ok := objToUnit[obj]; ok {
-				pos := pkg.Fset.Position(ident.Pos())
-				
-				// Generate a key for uniqueness: file:line
-				locKey := fmt.Sprintf("%s:%d", pos.Filename, pos.Line)
-				if _, exists := meta.usages[locKey]; !exists {
-					// Determine enclosing context name (FQN of the function/type containing the usage)
-					// For simplicity in this pass, we use the filename as context if scope traversal is deep,
-					// or resolve the nearest enclosing object if available.
-					
-					meta.usages[locKey] = schema.UsageLocation{
-						FullyQualifiedName: pkg.Name,
-						LineNumber:         pos.Line,
-						Snippet:            captureSnippet(pos.Filename, pos.Line),
-						FilePath:           pos.Filename,
-						SyntaxStyle:        "go",
+			ast.Inspect(file, func(n ast.Node) bool {
+				switch node := n.(type) {
+				case *ast.FuncDecl:
+					if obj, ok := pkg.TypesInfo.Defs[node.Name]; ok && obj != nil {
+						currentContextFQN = getObjectFQN(pkg.Types, obj, nil)
+					}
+				case *ast.GenDecl:
+					if node.Tok == token.VAR || node.Tok == token.CONST {
+						for _, spec := range node.Specs {
+							if vs, ok := spec.(*ast.ValueSpec); ok {
+								for _, name := range vs.Names {
+									if obj, ok := pkg.TypesInfo.Defs[name]; ok && obj != nil {
+										currentContextFQN = getObjectFQN(pkg.Types, obj, nil)
+										break // Use first variable in block as context
+									}
+								}
+							}
+						}
+					}
+				case *ast.Ident:
+					if obj, ok := pkg.TypesInfo.Uses[node]; ok && obj != nil {
+						if meta, exists := objToUnit[obj]; exists {
+							pos := pkg.Fset.Position(node.Pos())
+							locKey := fmt.Sprintf("%s:%d", pos.Filename, pos.Line)
+
+							if _, seen := meta.usages[locKey]; !seen {
+								contextFQN := currentContextFQN
+								if contextFQN == "" {
+									contextFQN = pkg.Name
+								}
+
+								meta.usages[locKey] = schema.UsageLocation{
+									FullyQualifiedName: contextFQN,
+									LineNumber:         pos.Line,
+									Snippet:            captureSnippet(pos.Filename, pos.Line),
+									FilePath:           pos.Filename,
+									SyntaxStyle:        "go",
+								}
+							}
+						}
 					}
 				}
-			}
+				return true
+			})
 		}
 	}
 
