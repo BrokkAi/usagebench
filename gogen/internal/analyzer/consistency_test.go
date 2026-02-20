@@ -306,3 +306,100 @@ func main() {
 		t.Errorf("Usage of %s in %s was not detected", expectedFQN, expectedUsageContext)
 	}
 }
+
+func TestNameCollision(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// 1. Create go.mod
+	goMod := `module collision
+go 1.21
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(goMod), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 2. Create collision.go
+	code := `package collision
+
+type Thing struct{}
+
+// Method
+func (t *Thing) Run() {}
+
+// Function with same name
+func Run() {}
+
+func Use() {
+    t := &Thing{}
+    t.Run() // Usage of Method
+    Run()   // Usage of Function
+}
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "collision.go"), []byte(code), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3. Run Analyze
+	usages, err := Analyze(tempDir)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// 4. Assertions
+	methodFQN := "collision.Thing.Run"
+	functionFQN := "collision.Run"
+
+	var methodUnit, functionUnit *schema.CodeUnitUsages
+	for _, unit := range usages.CodeUnits {
+		u := unit
+		if u.FullyQualifiedName == methodFQN {
+			methodUnit = &u
+		}
+		if u.FullyQualifiedName == functionFQN {
+			functionUnit = &u
+		}
+	}
+
+	if methodUnit == nil {
+		t.Fatalf("Method %s not found", methodFQN)
+	}
+	if functionUnit == nil {
+		t.Fatalf("Function %s not found", functionFQN)
+	}
+
+	if methodUnit.Type != FUNCTION {
+		t.Errorf("Expected type FUNCTION for %s, got %s", methodFQN, methodUnit.Type)
+	}
+	if functionUnit.Type != FUNCTION {
+		t.Errorf("Expected type FUNCTION for %s, got %s", functionFQN, functionUnit.Type)
+	}
+
+	// Verify they are distinct units
+	if methodUnit.FullyQualifiedName == functionUnit.FullyQualifiedName {
+		t.Errorf("Method and Function have same FQN: %s", methodUnit.FullyQualifiedName)
+	}
+
+	// Verify usage of Method in Use
+	foundMethodUsage := false
+	for _, usage := range methodUnit.Usages {
+		if usage.FullyQualifiedName == "collision.Use" && usage.LineNumber == 14 {
+			foundMethodUsage = true
+			break
+		}
+	}
+	if !foundMethodUsage {
+		t.Errorf("Expected usage of %s in Use() at line 14 was not detected", methodFQN)
+	}
+
+	// Verify usage of Function in Use
+	foundFunctionUsage := false
+	for _, usage := range functionUnit.Usages {
+		if usage.FullyQualifiedName == "collision.Use" && usage.LineNumber == 15 {
+			foundFunctionUsage = true
+			break
+		}
+	}
+	if !foundFunctionUsage {
+		t.Errorf("Expected usage of %s in Use() at line 15 was not detected", functionFQN)
+	}
+}
