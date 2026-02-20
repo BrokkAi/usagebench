@@ -166,8 +166,10 @@ func UseCommand() {
 	for _, usage := range methodUnit.Usages {
 		if filepath.Base(usage.FilePath) == "usage.go" {
 			foundUsage = true
-			if usage.FullyQualifiedName != "testpkg" {
-				t.Errorf("Expected usage FQN to be 'testpkg', got '%s'", usage.FullyQualifiedName)
+			// The usage is inside func UseCommand() in testpkg
+			expectedUsageFQN := "testpkg.UseCommand"
+			if usage.FullyQualifiedName != expectedUsageFQN {
+				t.Errorf("Expected usage FQN to be '%s', got '%s'", expectedUsageFQN, usage.FullyQualifiedName)
 			}
 		}
 	}
