@@ -245,3 +245,64 @@ func TestHello(t *testing.T) {
 		t.Error("Usage from lib_test.go was not captured")
 	}
 }
+
+func TestMapKeyUsage(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// 1. Create go.mod
+	goMod := `module mapkey
+go 1.21
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(goMod), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 2. Create main.go
+	code := `package main
+const MyKey = "some-key"
+func main() {
+    m := make(map[string]string)
+    // Usage as map key
+    m[MyKey] = "val"
+}
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "main.go"), []byte(code), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3. Run Analyze
+	usages, err := Analyze(tempDir)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// 4. Verify main._module_.MyKey unit exists and has a usage in main.main
+	var keyUnit *schema.CodeUnitUsages
+	expectedFQN := "main._module_.MyKey"
+	for _, unit := range usages.CodeUnits {
+		if unit.FullyQualifiedName == expectedFQN {
+			keyUnit = &unit
+			break
+		}
+	}
+
+	if keyUnit == nil {
+		t.Fatalf("Code unit %s not found", expectedFQN)
+	}
+
+	foundUsage := false
+	expectedUsageContext := "main.main"
+	for _, usage := range keyUnit.Usages {
+		if usage.FullyQualifiedName == expectedUsageContext {
+			foundUsage = true
+			// verify snippet or line number if needed, but FQN match is the primary requirement
+			if usage.LineNumber != 6 {
+				t.Errorf("Expected usage on line 6, got %d", usage.LineNumber)
+			}
+		}
+	}
+
+	if !foundUsage {
+		t.Errorf("Usage of %s in %s was not detected", expectedFQN, expectedUsageContext)
+	}
+}
