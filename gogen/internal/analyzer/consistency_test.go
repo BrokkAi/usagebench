@@ -97,3 +97,82 @@ func MyFunc() {}
 		}
 	}
 }
+
+func TestCrossFileMethodUsage(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// 1. Create go.mod
+	goMod := `module crossfile
+go 1.21
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(goMod), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 2. Create types.go
+	typesCode := `package testpkg
+
+type Command struct {
+    Name string
+}
+
+func (c *Command) MarkFlagFilename(name string) error {
+    return nil
+}
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "types.go"), []byte(typesCode), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3. Create usage.go
+	usageCode := `package testpkg
+
+func UseCommand() {
+    cmd := &Command{}
+    cmd.MarkFlagFilename("file")
+}
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "usage.go"), []byte(usageCode), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 4. Run Analyze
+	usages, err := Analyze(tempDir)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// 5. Assertions
+	var methodUnit *schema.CodeUnitUsages
+	expectedFQN := "testpkg.Command.MarkFlagFilename"
+
+	for _, unit := range usages.CodeUnits {
+		if unit.FullyQualifiedName == expectedFQN {
+			methodUnit = &unit
+			break
+		}
+	}
+
+	if methodUnit == nil {
+		t.Fatalf("Method %s not found in results", expectedFQN)
+	}
+
+	if methodUnit.Type != FUNCTION {
+		t.Errorf("Expected type FUNCTION for %s, got %s", expectedFQN, methodUnit.Type)
+	}
+
+	// Verify usage is detected from usage.go
+	foundUsage := false
+	for _, usage := range methodUnit.Usages {
+		if filepath.Base(usage.FilePath) == "usage.go" {
+			foundUsage = true
+			if usage.FullyQualifiedName != "testpkg" {
+				t.Errorf("Expected usage FQN to be 'testpkg', got '%s'", usage.FullyQualifiedName)
+			}
+		}
+	}
+
+	if !foundUsage {
+		t.Errorf("Expected usage of %s in usage.go was not detected", expectedFQN)
+	}
+}
