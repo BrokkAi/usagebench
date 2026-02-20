@@ -178,3 +178,70 @@ func UseCommand() {
 		t.Errorf("Expected usage of %s in usage.go was not detected", expectedFQN)
 	}
 }
+
+func TestInternalTestUsage(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// 1. Create go.mod
+	goMod := `module internaltest
+go 1.21
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(goMod), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 2. Create lib.go
+	libCode := `package lib
+func Hello() {}
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "lib.go"), []byte(libCode), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3. Create lib_test.go
+	testCode := `package lib
+import "testing"
+func TestHello(t *testing.T) {
+    Hello()
+}
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "lib_test.go"), []byte(testCode), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 4. Run Analyze
+	usages, err := Analyze(tempDir)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// 5. Verify lib.Hello unit exists and has usages
+	var helloUnit *schema.CodeUnitUsages
+	expectedFQN := "lib.Hello"
+	for _, unit := range usages.CodeUnits {
+		if unit.FullyQualifiedName == expectedFQN {
+			helloUnit = &unit
+			break
+		}
+	}
+
+	if helloUnit == nil {
+		t.Fatalf("Code unit %s not found", expectedFQN)
+	}
+
+	// 6. Verify usage FQN matches expected context (lib.TestHello)
+	foundUsage := false
+	expectedUsageContext := "lib.TestHello"
+	for _, usage := range helloUnit.Usages {
+		if filepath.Base(usage.FilePath) == "lib_test.go" {
+			foundUsage = true
+			if usage.FullyQualifiedName != expectedUsageContext {
+				t.Errorf("Expected usage context %s, got %s", expectedUsageContext, usage.FullyQualifiedName)
+			}
+		}
+	}
+
+	if !foundUsage {
+		t.Error("Usage from lib_test.go was not captured")
+	}
+}
