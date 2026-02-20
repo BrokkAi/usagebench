@@ -403,3 +403,86 @@ func Use() {
 		t.Errorf("Expected usage of %s in Use() at line 15 was not detected", functionFQN)
 	}
 }
+
+func TestCobraRegression(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// 1. Create go.mod
+	goMod := `module cobratest
+go 1.21
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(goMod), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 2. Create defs.go
+	defsCode := `package cobratest
+type Command struct{}
+func (c *Command) Foo() {}
+func Foo() {}
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "defs.go"), []byte(defsCode), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3. Create defs_test.go
+	testCode := `package cobratest
+import "testing"
+func TestFoo(t *testing.T) {
+    c := &Command{}
+    c.Foo()
+}
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "defs_test.go"), []byte(testCode), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 4. Run Analyze
+	usages, err := Analyze(tempDir)
+	if err != nil {
+		t.Fatalf("Analyze failed: %v", err)
+	}
+
+	// 5. Assertions
+	methodFQN := "cobratest.Command.Foo"
+	globalFQN := "cobratest.Foo"
+
+	var methodUnit, globalUnit *schema.CodeUnitUsages
+	for _, unit := range usages.CodeUnits {
+		u := unit
+		if u.FullyQualifiedName == methodFQN {
+			methodUnit = &u
+		}
+		if u.FullyQualifiedName == globalFQN {
+			globalUnit = &u
+		}
+	}
+
+	if methodUnit == nil {
+		t.Fatalf("Method %s not found", methodFQN)
+	}
+	if globalUnit == nil {
+		t.Fatalf("Global function %s not found", globalFQN)
+	}
+
+	// 6. Verify usage of Method in TestFoo
+	foundMethodUsage := false
+	for _, usage := range methodUnit.Usages {
+		if usage.FullyQualifiedName == "cobratest.TestFoo" {
+			foundMethodUsage = true
+			if filepath.Base(usage.FilePath) != "defs_test.go" {
+				t.Errorf("Expected usage file to be defs_test.go, got %s", usage.FilePath)
+			}
+		}
+	}
+	if !foundMethodUsage {
+		t.Errorf("Expected usage of %s in TestFoo was not detected", methodFQN)
+	}
+
+	// 7. Verify Global Foo has NO usages in TestFoo
+	for _, usage := range globalUnit.Usages {
+		if usage.FullyQualifiedName == "cobratest.TestFoo" {
+			t.Errorf("Global %s incorrectly has usage in TestFoo", globalFQN)
+		}
+	}
+}
