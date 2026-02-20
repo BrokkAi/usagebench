@@ -66,8 +66,8 @@ func main() {
 			if unit.Type != CLASS {
 				t.Errorf("Expected Type CLASS for lib.Data, got %s", unit.Type)
 			}
-			if !hasUsage(unit.Usages, "main") {
-				t.Errorf("Expected usage of lib.Data in main")
+			if !hasUsage(unit.Usages, "main.main") {
+				t.Errorf("Expected usage of lib.Data in main.main")
 			}
 
 		case "lib.DoWork":
@@ -75,8 +75,8 @@ func main() {
 			if unit.Type != FUNCTION {
 				t.Errorf("Expected Type FUNCTION for lib.DoWork, got %s", unit.Type)
 			}
-			if !hasUsage(unit.Usages, "main") {
-				t.Errorf("Expected usage of lib.DoWork in main")
+			if !hasUsage(unit.Usages, "main.main") {
+				t.Errorf("Expected usage of lib.DoWork in main.main")
 			}
 
 		case "lib.Data.Value":
@@ -84,8 +84,8 @@ func main() {
 			if unit.Type != FIELD {
 				t.Errorf("Expected Type FIELD for lib.Data.Value, got %s", unit.Type)
 			}
-			if !hasUsage(unit.Usages, "main") {
-				t.Errorf("Expected usage of lib.Data.Value in main")
+			if !hasUsage(unit.Usages, "main.main") {
+				t.Errorf("Expected usage of lib.Data.Value in main.main")
 			}
 		}
 	}
@@ -101,9 +101,9 @@ func main() {
 	}
 }
 
-func hasUsage(usages []schema.UsageLocation, pkgName string) bool {
+func hasUsage(usages []schema.UsageLocation, fqn string) bool {
 	for _, u := range usages {
-		if u.FullyQualifiedName == pkgName {
+		if u.FullyQualifiedName == fqn {
 			return true
 		}
 	}
