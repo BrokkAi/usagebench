@@ -111,8 +111,9 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 	prepareModule(projectPath)
 
 	cfg := &packages.Config{
-		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
-		Dir:  projectPath,
+		Mode:  packages.NeedName | packages.NeedFiles | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
+		Dir:   projectPath,
+		Tests: true,
 	}
 
 	pkgs, err := packages.Load(cfg, "./...")
@@ -126,6 +127,7 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 	}
 
 	objToUnit := make(map[types.Object]*unitMeta)
+	locToUnit := make(map[string]*unitMeta)
 
 	// Phase 1: Collect Definitions (excluding tests)
 	for _, pkg := range pkgs {
@@ -180,6 +182,12 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 				continue
 			}
 
+			locKey := fmt.Sprintf("%s:%d:%d", pos.Filename, pos.Line, pos.Column)
+			if meta, exists := locToUnit[locKey]; exists {
+				objToUnit[obj] = meta
+				continue
+			}
+
 			fqn := getObjectFQN(pkg.Types, obj, parentMap)
 			unit := &schema.CodeUnitUsages{
 				FullyQualifiedName:    fqn,
@@ -187,10 +195,12 @@ func Analyze(projectPath string) (*schema.ProgramUsages, error) {
 				Type:                  unitType,
 				Usages:                []schema.UsageLocation{},
 			}
-			objToUnit[obj] = &unitMeta{
+			meta := &unitMeta{
 				unit:   unit,
 				usages: make(map[string]schema.UsageLocation),
 			}
+			objToUnit[obj] = meta
+			locToUnit[locKey] = meta
 		}
 	}
 
