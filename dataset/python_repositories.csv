@@ -1,0 +1,4 @@
+https://github.com/psf/requests.git, v2.31.0
+https://github.com/pallets/flask.git, 3.0.0
+https://github.com/django/django.git, 5.0
+https://github.com/numpy/numpy.git, v1.26.0
