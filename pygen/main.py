@@ -3,11 +3,11 @@ import sys
 import logging
 from pathlib import Path
 
-# Ensure we can import from local modules
-sys.path.append(str(Path(__file__).parent.parent))
+# Ensure we can import from local modules (current directory)
+sys.path.append(str(Path(__file__).parent))
 
-from pygen.clone_util import process_repo
-from pygen.analyzer import analyze
+from clone_util import process_repo
+from analyzer import analyze
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("pygen")

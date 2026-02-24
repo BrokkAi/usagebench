@@ -2,7 +2,17 @@ import unittest
 import tempfile
 import shutil
 from pathlib import Path
-from pygen.analyzer import analyze
+import sys
+import os
+from pathlib import Path
+
+# Ensure the parent directory is in sys.path so 'analyzer' can be imported
+# regardless of where the test is invoked from.
+parent_dir = str(Path(__file__).parent.parent)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from analyzer import analyze
 
 class TestPyGen(unittest.TestCase):
     def setUp(self):

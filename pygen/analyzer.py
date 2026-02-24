@@ -2,7 +2,7 @@ import jedi
 import logging
 from pathlib import Path
 from typing import List, Set, Dict, Optional
-from .models import ProgramUsages, CodeUnitUsages, UsageLocation
+from models import ProgramUsages, CodeUnitUsages, UsageLocation
 
 logger = logging.getLogger(__name__)
 

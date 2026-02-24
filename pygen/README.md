@@ -33,13 +33,14 @@ pip install -r requirements.txt
 
 ### Test All
 ```bash
-cd pygen && python3 -m unittest discover -v
+# From the root of the repo:
+python3 -m unittest discover -s pygen/tests -p 'test_*.py' -v
 ```
 
 ### Test Some
 Run specific tests using mustache variables for filtering.
-This command uses `pytest` to filter tests by name.
+This command uses `pytest` to filter tests by class or method name.
 
 ```bash
-cd pygen && pytest -v -k "{{#fqclasses}}{{value}} or {{/fqclasses}}False"
+cd pygen && pytest -v -k "{{#classes}}{{value}} or {{/classes}}{{#fqclasses}}{{value}} or {{/fqclasses}}ConstraintToPreventEmpty"
 ```
