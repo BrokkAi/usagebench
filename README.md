@@ -36,12 +36,9 @@ Repository for creating and running benchmarks around the static analysis task o
 1. Install dependencies:
    ```bash
    cd pygen
-   python3 -m venv .venv
-   source .venv/bin/activate  # On Windows use `.venv\Scripts\activate`
-   pip install -r requirements.txt
+   uv sync
    ```
 2. Build Python usages from `dataset/python_repositories.csv`:
    ```bash
-   source pygen/.venv/bin/activate
-   python3 pygen/main.py dataset/python_repositories.csv dataset/python
+   uv run main.py ../dataset/python_repositories.csv ../dataset/python
    ```
