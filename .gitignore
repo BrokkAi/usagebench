@@ -24,3 +24,5 @@ dataset/**
 /pygen/.venv
 /pygen/__pycache__
 /pygen/.pytest_cache
+
+/.vscode
