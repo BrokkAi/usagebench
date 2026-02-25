@@ -15,7 +15,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-          cache-dependency-glob: "pygen/uv.lock"
+          cache-dependency-glob: "pygen/pyproject.toml"
       - name: Install dependencies
         working-directory: pygen
         run: uv sync
@@ -33,8 +33,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'sbt'
-      - name: Setup sbt
-        uses: sbt/setup-sbt@v1
+      - uses: sbt/setup-sbt@v1
       - name: Run tests
         working-directory: javagen
         run: sbt test
