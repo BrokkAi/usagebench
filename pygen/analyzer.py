@@ -32,9 +32,8 @@ def analyze(root_path: Path) -> ProgramUsages:
             # get_context returns the definition (class/func) containing the position
             context = script.get_context(line=line, column=col)
             
-            # If we are exactly on a class/function definition line, get_context might 
-            # return that definition itself. We want the name.
             if context:
+                # context.full_name is preferred for the usage's enclosing scope
                 return context.full_name or context.name or "unknown"
             return "unknown"
         except Exception:
@@ -62,16 +61,27 @@ def analyze(root_path: Path) -> ProgramUsages:
                 
                 # Definition info
                 decl_line = name.line
-                decl_type = name.type.upper() # CLASS or FUNCTION
+                
+                # Determine if it's a METHOD or FUNCTION
+                if name.type == 'function':
+                    # If the parent is a class, it's a method
+                    parent = name.parent()
+                    if parent and parent.type == 'class':
+                        decl_type = "METHOD"
+                    else:
+                        decl_type = "FUNCTION"
+                else:
+                    decl_type = "CLASS"
+
                 fqn = name.full_name
                 
                 if not fqn:
                     continue
 
                 # Find references project-wide. 
-                # name.goto() ensures we are looking for references of the actual definition.
                 try:
-                    references = name.get_references()
+                    # include_builtins=False to avoid noise, though usually not an issue here
+                    references = name.get_references(include_builtins=False)
                 except Exception as e:
                     logger.warning(f"Failed to get references for {fqn}: {e}")
                     references = []

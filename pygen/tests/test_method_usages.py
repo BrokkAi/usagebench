@@ -46,7 +46,7 @@ def main():
         # Verify instance_method
         inst_method = next((u for u in usages.codeUnits if u.fullyQualifiedName == "methods.MyClass.instance_method"), None)
         self.assertIsNotNone(inst_method, "methods.MyClass.instance_method not found")
-        self.assertEqual(inst_method.type, "FUNCTION")
+        self.assertEqual(inst_method.type, "METHOD")
         
         inst_usage_files = [Path(u.filePath).name for u in inst_method.usages]
         self.assertIn("caller.py", inst_usage_files)
@@ -54,6 +54,7 @@ def main():
         # Verify static_method
         stat_method = next((u for u in usages.codeUnits if u.fullyQualifiedName == "methods.MyClass.static_method"), None)
         self.assertIsNotNone(stat_method, "methods.MyClass.static_method not found")
+        self.assertEqual(stat_method.type, "METHOD")
         
         stat_usage_files = [Path(u.filePath).name for u in stat_method.usages]
         self.assertIn("caller.py", stat_usage_files)
