@@ -55,8 +55,8 @@ def analyze(root_path: Path) -> ProgramUsages:
             names = script.get_names(all_scopes=True, definitions=True, references=False)
             
             for name in names:
-                # Jedi marks methods as 'function', variables as 'statement'
-                if name.type not in ('class', 'function', 'statement'):
+                # Jedi marks methods as 'function', variables as 'statement' or 'param'
+                if name.type not in ('class', 'function', 'statement', 'param'):
                     continue
                 
                 # Definition info
@@ -64,22 +64,27 @@ def analyze(root_path: Path) -> ProgramUsages:
                 
                 # Determine CodeUnit type
                 parent = name.parent()
-                is_in_class = parent and parent.type == 'class'
+                
+                # Traverse up to see if we are inside a class (for FIELD vs VARIABLE)
+                is_in_class = False
+                curr = parent
+                while curr:
+                    if curr.type == 'class':
+                        is_in_class = True
+                        break
+                    # If we hit a module before a class, it's not a field
+                    if curr.type == 'module':
+                        break
+                    curr = curr.parent()
 
                 if name.type == 'function':
                     decl_type = "METHOD" if is_in_class else "FUNCTION"
                 elif name.type == 'class':
                     decl_type = "CLASS"
-                elif name.type == 'statement':
+                elif name.type in ('statement', 'param'):
                     # Variables or Fields
-                    # We check if it's inside a class or a method within a class
-                    is_field = is_in_class
-                    if not is_field and parent and parent.type == 'function':
-                        grandparent = parent.parent()
-                        if grandparent and grandparent.type == 'class':
-                            is_field = True
-                    
-                    decl_type = "FIELD" if is_field else "VARIABLE"
+                    # If it's defined at the class level OR inside a method of a class, it's a FIELD
+                    decl_type = "FIELD" if is_in_class else "VARIABLE"
                 else:
                     continue
 
