@@ -30,3 +30,15 @@ Repository for creating and running benchmarks around the static analysis task o
    ```
    ./gogen/gogen --input dataset/go_repositories.csv --output dataset/go
    ```
+
+## Generating Python Usages
+
+1. Install dependencies:
+   ```bash
+   cd pygen
+   uv sync
+   ```
+2. Build Python usages from `dataset/python_repositories.csv`:
+   ```bash
+   uv run main.py ../dataset/python_repositories.csv ../dataset/python
+   ```
