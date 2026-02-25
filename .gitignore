@@ -20,3 +20,7 @@ dataset/**
 **/.DS_Store
 
 /gogen/gogen
+
+/pygen/.venv
+/pygen/__pycache__
+/pygen/.pytest_cache
