@@ -51,10 +51,12 @@ def analyze(root_path: Path) -> ProgramUsages:
                 continue
 
             script = get_script(str(file_path))
-            # definitions=True finds classes and functions defined in this file
+            # definitions=True finds classes and functions defined in this file.
+            # all_scopes=True includes names defined inside classes/functions.
             names = script.get_names(all_scopes=True, definitions=True, references=False)
             
             for name in names:
+                # Jedi marks methods as 'function' type.
                 if name.type not in ('class', 'function'):
                     continue
                 
