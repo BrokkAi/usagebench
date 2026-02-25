@@ -88,8 +88,26 @@ def analyze(root_path: Path) -> ProgramUsages:
                 else:
                     continue
 
-                fqn = name.full_name
+                # Build custom FQN to handle Brokk's $ separator for nested/local classes
+                # and to strip __init__ from package-level classes/functions.
+                parts = []
+                curr = name
+                while curr and curr.type != 'module':
+                    parts.append((curr.name, curr.type))
+                    curr = curr.parent()
                 
+                if not curr: # Should not happen with Jedi names
+                    continue
+                
+                module_fqn = curr.full_name
+                if module_fqn.endswith(".__init__"):
+                    module_fqn = module_fqn[:-9]
+                
+                fqn = module_fqn
+                for name_part, type_part in reversed(parts):
+                    separator = "$" if type_part == "class" else "."
+                    fqn += separator + name_part
+
                 if not fqn:
                     continue
 
