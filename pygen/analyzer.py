@@ -102,12 +102,19 @@ def analyze(root_path: Path) -> ProgramUsages:
                 # Build custom FQN to handle Brokk's $ separator for nested/local classes
                 fqn = construct_fqn(name)
 
-                # Find references project-wide. 
+                # Find references project-wide.
+                # Name objects don't have get_references, we must use the script at the definition point.
                 try:
-                    # include_builtins=False to avoid noise, though usually not an issue here
-                    references = name.get_references(include_builtins=False)
+                    # We use the script for the file where the name is defined.
+                    # line and column are 1-based and 0-based respectively in Jedi.
+                    def_script = get_script(str(file_path))
+                    references = def_script.get_references(
+                        line=name.line,
+                        column=name.column,
+                        include_builtins=False
+                    )
                 except Exception as e:
-                    logger.warning(f"Failed to get references for {fqn}: {e}")
+                    logger.warning(f"Failed to get references for {fqn} at {file_path}:{name.line}: {e}")
                     references = []
 
                 usages: Set[UsageLocation] = set()
