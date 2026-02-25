@@ -26,16 +26,27 @@ def analyze(root_path: Path) -> ProgramUsages:
         end = min(len(lines), idx + 4)
         return "\n".join(lines[start:end])
 
+    def construct_fqn(name: jedi.api.classes.Name) -> str:
+        parent = name.parent()
+        if parent.type == 'module':
+            module_fqn = parent.full_name
+            if module_fqn.endswith(".__init__"):
+                module_fqn = module_fqn[:-9]
+            return f"{module_fqn}.{name.name}"
+        
+        parent_fqn = construct_fqn(parent)
+        separator = "$" if name.type == 'class' else "."
+        return f"{parent_fqn}{separator}{name.name}"
+
     def find_enclosing_context(file_path: str, line: int, col: int) -> str:
         try:
             script = get_script(file_path)
             # get_context returns the definition (class/func) containing the position
             context = script.get_context(line=line, column=col)
             
-            if context:
-                # context.full_name is preferred for the usage's enclosing scope
-                return context.full_name or context.name or "unknown"
-            return "unknown"
+            if context and context.type != 'module':
+                return construct_fqn(context)
+            return context.full_name if context else "unknown"
         except Exception:
             return "unknown"
 
@@ -89,27 +100,7 @@ def analyze(root_path: Path) -> ProgramUsages:
                     continue
 
                 # Build custom FQN to handle Brokk's $ separator for nested/local classes
-                # and to strip __init__ from package-level classes/functions.
-                parts = []
-                curr = name
-                while curr and curr.type != 'module':
-                    parts.append((curr.name, curr.type))
-                    curr = curr.parent()
-                
-                if not curr: # Should not happen with Jedi names
-                    continue
-                
-                module_fqn = curr.full_name
-                if module_fqn.endswith(".__init__"):
-                    module_fqn = module_fqn[:-9]
-                
-                fqn = module_fqn
-                for name_part, type_part in reversed(parts):
-                    separator = "$" if type_part == "class" else "."
-                    fqn += separator + name_part
-
-                if not fqn:
-                    continue
+                fqn = construct_fqn(name)
 
                 # Find references project-wide. 
                 try:
