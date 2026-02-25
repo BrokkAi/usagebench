@@ -31,7 +31,12 @@ def analyze(root_path: Path) -> ProgramUsages:
             script = get_script(file_path)
             # get_context returns the definition (class/func) containing the position
             context = script.get_context(line=line, column=col)
-            return context.full_name or "unknown"
+            
+            # If we are exactly on a class/function definition line, get_context might 
+            # return that definition itself. We want the name.
+            if context:
+                return context.full_name or context.name or "unknown"
+            return "unknown"
         except Exception:
             return "unknown"
 
@@ -41,10 +46,12 @@ def analyze(root_path: Path) -> ProgramUsages:
     for file_path in python_files:
         try:
             # Skip tests for definitions (consistent with javagen)
-            if "/test/" in str(file_path).replace("\\", "/") or "/tests/" in str(file_path).replace("\\", "/"):
+            file_path_str = str(file_path).replace("\\", "/")
+            if "/test/" in file_path_str or "/tests/" in file_path_str:
                 continue
 
             script = get_script(str(file_path))
+            # definitions=True finds classes and functions defined in this file
             names = script.get_names(all_scopes=True, definitions=True, references=False)
             
             for name in names:
@@ -59,9 +66,10 @@ def analyze(root_path: Path) -> ProgramUsages:
                 if not fqn:
                     continue
 
-                # Find references project-wide
+                # Find references project-wide. 
+                # name.goto() ensures we are looking for references of the actual definition.
                 try:
-                    references = script.get_references(line=decl_line, column=name.column)
+                    references = name.get_references()
                 except Exception as e:
                     logger.warning(f"Failed to get references for {fqn}: {e}")
                     references = []
