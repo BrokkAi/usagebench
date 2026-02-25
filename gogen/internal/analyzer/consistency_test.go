@@ -318,8 +318,8 @@ go 1.21
 		t.Fatal(err)
 	}
 
-	// 2. Create collision.go
-	code := `package collision
+	// 2. Create defs.go
+	defsCode := `package collision
 
 type Thing struct{}
 
@@ -328,6 +328,13 @@ func (t *Thing) Run() {}
 
 // Function with same name
 func Run() {}
+`
+	if err := os.WriteFile(filepath.Join(tempDir, "defs.go"), []byte(defsCode), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3. Create usage.go
+	usageCode := `package collision
 
 func Use() {
     t := &Thing{}
@@ -335,17 +342,17 @@ func Use() {
     Run()   // Usage of Function
 }
 `
-	if err := os.WriteFile(filepath.Join(tempDir, "collision.go"), []byte(code), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tempDir, "usage.go"), []byte(usageCode), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	// 3. Run Analyze
+	// 4. Run Analyze
 	usages, err := Analyze(tempDir)
 	if err != nil {
 		t.Fatalf("Analyze failed: %v", err)
 	}
 
-	// 4. Assertions
+	// 5. Assertions
 	methodFQN := "collision.Thing.Run"
 	functionFQN := "collision.Run"
 
@@ -382,25 +389,25 @@ func Use() {
 	// Verify usage of Method in Use
 	foundMethodUsage := false
 	for _, usage := range methodUnit.Usages {
-		if usage.FullyQualifiedName == "collision.Use" && usage.LineNumber == 14 {
+		if usage.FullyQualifiedName == "collision.Use" && usage.LineNumber == 5 {
 			foundMethodUsage = true
 			break
 		}
 	}
 	if !foundMethodUsage {
-		t.Errorf("Expected usage of %s in Use() at line 14 was not detected", methodFQN)
+		t.Errorf("Expected usage of %s in Use() at line 5 was not detected", methodFQN)
 	}
 
 	// Verify usage of Function in Use
 	foundFunctionUsage := false
 	for _, usage := range functionUnit.Usages {
-		if usage.FullyQualifiedName == "collision.Use" && usage.LineNumber == 15 {
+		if usage.FullyQualifiedName == "collision.Use" && usage.LineNumber == 6 {
 			foundFunctionUsage = true
 			break
 		}
 	}
 	if !foundFunctionUsage {
-		t.Errorf("Expected usage of %s in Use() at line 15 was not detected", functionFQN)
+		t.Errorf("Expected usage of %s in Use() at line 6 was not detected", functionFQN)
 	}
 }
 
