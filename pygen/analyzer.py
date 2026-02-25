@@ -55,23 +55,33 @@ def analyze(root_path: Path) -> ProgramUsages:
             names = script.get_names(all_scopes=True, definitions=True, references=False)
             
             for name in names:
-                # Jedi marks methods as 'function' type.
-                if name.type not in ('class', 'function'):
+                # Jedi marks methods as 'function', variables as 'statement'
+                if name.type not in ('class', 'function', 'statement'):
                     continue
                 
                 # Definition info
                 decl_line = name.line
                 
-                # Determine if it's a METHOD or FUNCTION
+                # Determine CodeUnit type
+                parent = name.parent()
+                is_in_class = parent and parent.type == 'class'
+
                 if name.type == 'function':
-                    # If the parent is a class, it's a method
-                    parent = name.parent()
-                    if parent and parent.type == 'class':
-                        decl_type = "METHOD"
-                    else:
-                        decl_type = "FUNCTION"
-                else:
+                    decl_type = "METHOD" if is_in_class else "FUNCTION"
+                elif name.type == 'class':
                     decl_type = "CLASS"
+                elif name.type == 'statement':
+                    # Variables or Fields
+                    # We check if it's inside a class or a method within a class
+                    is_field = is_in_class
+                    if not is_field and parent and parent.type == 'function':
+                        grandparent = parent.parent()
+                        if grandparent and grandparent.type == 'class':
+                            is_field = True
+                    
+                    decl_type = "FIELD" if is_field else "VARIABLE"
+                else:
+                    continue
 
                 fqn = name.full_name
                 
