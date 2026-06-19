@@ -21,6 +21,8 @@ dataset/**
 
 /gogen/gogen
 
+/target
+
 /pygen/.venv
 /pygen/__pycache__
 /pygen/.pytest_cache

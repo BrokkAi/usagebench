@@ -1,0 +1,93 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/java/basic
+language: java
+cases:
+  - id: java-service-method-basic
+    declaration:
+      location:
+        uri: benchmark://source/src/main/java/example/Service.java
+        range:
+          start:
+            line: 4
+            character: 16
+          end:
+            line: 4
+            character: 23
+      kind: method
+      displayName: execute
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/test/java/example/ServiceTest.java
+          range:
+            start:
+              line: 8
+              character: 20
+            end:
+              line: 8
+              character: 27
+        kind: method
+        displayName: execute
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/src/main/java/example/Service.java
+          range:
+            start:
+              line: 4
+              character: 16
+            end:
+              line: 4
+              character: 23
+        kind: method
+        displayName: execute
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/test/java/example/ServiceTest.java
+            range:
+              start:
+                line: 8
+                character: 20
+              end:
+                line: 8
+                character: 27
+          kind: method
+          displayName: execute
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/main/java/example/Service.java
+            range:
+              start:
+                line: 4
+                character: 16
+              end:
+                line: 4
+                character: 23
+          kind: method
+          displayName: execute
+    verification:
+      method: manual_inspection
+      notes: Minimal example case for schema validation; not part of the scored baseline.
+  - id: java-line-only-future-case
+    declaration:
+      location:
+        uri: benchmark://source/src/main/java/example/Service.java
+        range:
+          start:
+            line: 4
+            character: 0
+          end:
+            line: 4
+            character: 0
+      kind: method
+      displayName: execute
+      disambiguation: first_matching_symbol
+    expectedUsages: []
+    usageLookups: []
+    unsupported:
+      reason: Retained to demonstrate unsupported line-only case authoring.
+    verification:
+      method: manual_inspection
+      notes: Zero-width range requires first_matching_symbol disambiguation.
