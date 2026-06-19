@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
-    path::{Path, PathBuf},
+    path::{Component, Path, PathBuf},
 };
 use url::Url;
 
@@ -231,8 +231,26 @@ fn validate_file(file: &Path, compiled_schema: &jsonschema::JSONSchema) -> Resul
 
 impl BenchmarkDocument {
     pub fn validate(&self) -> Result<()> {
+        self.validate_with_base(Path::new("."))
+    }
+
+    fn validate_with_base(&self, base_dir: &Path) -> Result<()> {
+        let fixture_root = match &self.source {
+            Source::Fixture { path } => {
+                let fixture_root = base_dir.join(path);
+                if !fixture_root.is_dir() {
+                    bail!(
+                        "fixture source path {} does not exist or is not a directory",
+                        fixture_root.display()
+                    );
+                }
+                Some(fixture_root)
+            }
+            Source::Git { .. } => None,
+        };
+
         for case in &self.cases {
-            case.validate()?;
+            case.validate(fixture_root.as_deref())?;
         }
 
         Ok(())
@@ -240,31 +258,31 @@ impl BenchmarkDocument {
 }
 
 impl BenchmarkCase {
-    fn validate(&self) -> Result<()> {
+    fn validate(&self, fixture_root: Option<&Path>) -> Result<()> {
         self.declaration
-            .validate()
+            .validate(fixture_root)
             .with_context(|| format!("case {} declaration", self.id))?;
 
         for usage in &self.expected_usages {
             usage
-                .validate()
+                .validate(fixture_root)
                 .with_context(|| format!("case {} expectedUsages", self.id))?;
         }
 
         for usage in &self.allowed_extra_usages {
             usage
-                .validate()
+                .validate(fixture_root)
                 .with_context(|| format!("case {} allowedExtraUsages", self.id))?;
         }
 
         for lookup in &self.usage_lookups {
             lookup
                 .usage
-                .validate()
+                .validate(fixture_root)
                 .with_context(|| format!("case {} usageLookups usage", self.id))?;
             lookup
                 .expected_declaration
-                .validate()
+                .validate(fixture_root)
                 .with_context(|| format!("case {} usageLookups expectedDeclaration", self.id))?;
         }
 
@@ -273,7 +291,7 @@ impl BenchmarkCase {
 }
 
 impl SymbolLocation {
-    fn validate(&self) -> Result<()> {
+    fn validate(&self, fixture_root: Option<&Path>) -> Result<()> {
         if !self.location.uri.scheme().eq_ignore_ascii_case("benchmark")
             || self.location.uri.host_str() != Some("source")
         {
@@ -291,7 +309,59 @@ impl SymbolLocation {
             }
         }
 
+        if let Some(fixture_root) = fixture_root {
+            self.location.validate_fixture_range(fixture_root)?;
+            if !self.location.range.is_zero_width() {
+                let selected_text = self.location.fixture_range_text(fixture_root)?;
+                if selected_text != self.display_name {
+                    bail!(
+                        "range for {} selected {:?}, expected displayName {:?}",
+                        self.location.uri,
+                        selected_text,
+                        self.display_name
+                    );
+                }
+            }
+        }
+
         Ok(())
+    }
+}
+
+impl Location {
+    fn validate_fixture_range(&self, fixture_root: &Path) -> Result<()> {
+        let source_path = self.fixture_source_path(fixture_root)?;
+        let source = fs::read_to_string(&source_path)
+            .with_context(|| format!("read {}", source_path.display()))?;
+        self.range
+            .validate_with_source_text(&source)
+            .with_context(|| format!("range for {} in {}", self.uri, source_path.display()))?;
+
+        Ok(())
+    }
+
+    fn fixture_range_text(&self, fixture_root: &Path) -> Result<String> {
+        let source_path = self.fixture_source_path(fixture_root)?;
+        let source = fs::read_to_string(&source_path)
+            .with_context(|| format!("read {}", source_path.display()))?;
+        self.range
+            .text_from_source(&source)
+            .with_context(|| format!("range for {} in {}", self.uri, source_path.display()))
+    }
+
+    fn fixture_source_path(&self, fixture_root: &Path) -> Result<PathBuf> {
+        let relative_path = benchmark_source_path(&self.uri)?;
+        let source_path = fixture_root.join(&relative_path);
+
+        if !source_path.is_file() {
+            bail!(
+                "location uri {} maps to missing fixture file {}",
+                self.uri,
+                source_path.display()
+            );
+        }
+
+        Ok(source_path)
     }
 }
 
@@ -304,14 +374,95 @@ impl Range {
         Ok(())
     }
 
+    fn validate_with_source_text(&self, source: &str) -> Result<()> {
+        validate_position_with_source_text(&self.start, source).context("range start")?;
+        validate_position_with_source_text(&self.end, source).context("range end")?;
+        Ok(())
+    }
+
+    fn text_from_source(&self, source: &str) -> Result<String> {
+        if self.start.line != self.end.line {
+            bail!("symbol ranges in fixture cases must stay on a single line");
+        }
+
+        let line = source
+            .split('\n')
+            .nth(self.start.line as usize)
+            .ok_or_else(|| anyhow!("line {} is outside the file", self.start.line))?;
+        let line = line.strip_suffix('\r').unwrap_or(line);
+        let start = byte_index_for_utf16_position(line, self.start.character)
+            .context("range start character")?;
+        let end = byte_index_for_utf16_position(line, self.end.character)
+            .context("range end character")?;
+
+        Ok(line[start..end].to_string())
+    }
+
     fn is_zero_width(&self) -> bool {
         self.start == self.end
+    }
+}
+
+fn benchmark_source_path(uri: &Url) -> Result<PathBuf> {
+    let path = uri.path().trim_start_matches('/');
+    if path.is_empty() {
+        bail!("location uri {uri} must include a source-relative path");
+    }
+
+    let path = Path::new(path);
+    if path
+        .components()
+        .any(|component| matches!(component, Component::ParentDir))
+    {
+        bail!("location uri {uri} must not contain parent directory segments");
+    }
+
+    Ok(path.to_path_buf())
+}
+
+fn validate_position_with_source_text(position: &Position, source: &str) -> Result<()> {
+    let Some(line) = source.split('\n').nth(position.line as usize) else {
+        bail!("line {} is outside the file", position.line);
+    };
+    let line = line.strip_suffix('\r').unwrap_or(line);
+    let line_len = line.encode_utf16().count() as u32;
+
+    if position.character > line_len {
+        bail!(
+            "character {} is outside line {} with length {}",
+            position.character,
+            position.line,
+            line_len
+        );
+    }
+
+    Ok(())
+}
+
+fn byte_index_for_utf16_position(line: &str, character: u32) -> Result<usize> {
+    let mut utf16_offset = 0;
+
+    for (byte_index, ch) in line.char_indices() {
+        if utf16_offset == character {
+            return Ok(byte_index);
+        }
+        utf16_offset += ch.len_utf16() as u32;
+        if utf16_offset > character {
+            bail!("character {character} splits a UTF-16 surrogate pair");
+        }
+    }
+
+    if utf16_offset == character {
+        Ok(line.len())
+    } else {
+        bail!("character {character} is outside line with length {utf16_offset}")
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
 
     #[test]
     fn default_position_encoding_is_utf16() {
@@ -334,5 +485,71 @@ cases: []
         let files = validate_path("benchmarks/cases").unwrap();
 
         assert!(!files.is_empty());
+    }
+
+    #[test]
+    fn fixture_validation_rejects_missing_source_files() {
+        let tempdir = tempfile::tempdir().unwrap();
+        fs::create_dir(tempdir.path().join("fixture")).unwrap();
+        let document = serde_yaml::from_str::<BenchmarkDocument>(
+            r#"
+schemaVersion: 1
+source:
+  kind: fixture
+  path: fixture
+language: text
+cases:
+  - id: missing-file
+    declaration:
+      location:
+        uri: benchmark://source/src/missing.txt
+        range:
+          start: { line: 0, character: 0 }
+          end: { line: 0, character: 5 }
+      kind: variable
+      displayName: value
+    expectedUsages: []
+    usageLookups: []
+"#,
+        )
+        .unwrap();
+
+        let error = document.validate_with_base(tempdir.path()).unwrap_err();
+
+        assert!(format!("{error:#}").contains("missing fixture file"));
+    }
+
+    #[test]
+    fn fixture_validation_rejects_display_name_mismatches() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let fixture = tempdir.path().join("fixture/src");
+        fs::create_dir_all(&fixture).unwrap();
+        fs::write(fixture.join("sample.txt"), "let value = 1\n").unwrap();
+        let document = serde_yaml::from_str::<BenchmarkDocument>(
+            r#"
+schemaVersion: 1
+source:
+  kind: fixture
+  path: fixture
+language: text
+cases:
+  - id: mismatch
+    declaration:
+      location:
+        uri: benchmark://source/src/sample.txt
+        range:
+          start: { line: 0, character: 4 }
+          end: { line: 0, character: 9 }
+      kind: variable
+      displayName: other
+    expectedUsages: []
+    usageLookups: []
+"#,
+        )
+        .unwrap();
+
+        let error = document.validate_with_base(tempdir.path()).unwrap_err();
+
+        assert!(format!("{error:#}").contains("expected displayName"));
     }
 }
