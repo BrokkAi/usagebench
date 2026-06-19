@@ -57,6 +57,8 @@ pub struct BenchmarkCase {
     #[serde(default)]
     pub usage_lookups: Vec<UsageLookup>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expected_failure: Option<ExpectedFailure>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unsupported: Option<UnsupportedReason>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub verification: Option<Verification>,
@@ -119,6 +121,12 @@ pub enum Disambiguation {
 pub struct UsageLookup {
     pub usage: SymbolLocation,
     pub expected_declaration: SymbolLocation,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ExpectedFailure {
+    pub reason: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]

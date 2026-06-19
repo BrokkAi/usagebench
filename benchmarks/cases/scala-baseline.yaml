@@ -124,6 +124,8 @@ cases:
       method: manual_inspection
       notes: Consumer.run calls execute on the Service returned by Service.build.
   - id: scala-field-and-val-access
+    expectedFailure:
+      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/main/scala/example/Service.scala

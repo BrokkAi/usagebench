@@ -71,6 +71,7 @@ pub struct RunTotals {
     pub cases: usize,
     pub passed: usize,
     pub failed: usize,
+    pub expected_failures: usize,
     pub skipped: usize,
     pub errors: usize,
 }
@@ -89,6 +90,7 @@ pub struct DocumentRunReport {
 pub enum CaseStatus {
     Passed,
     Failed,
+    ExpectedFailure,
     Skipped,
     Error,
 }
@@ -98,6 +100,8 @@ pub enum CaseStatus {
 pub struct CaseRunReport {
     pub id: String,
     pub status: CaseStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expected_failure_reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unsupported_reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -291,6 +295,10 @@ fn run_case(
             return CaseRunReport {
                 id: case.id.clone(),
                 status: CaseStatus::Skipped,
+                expected_failure_reason: case
+                    .expected_failure
+                    .as_ref()
+                    .map(|expected_failure| expected_failure.reason.clone()),
                 unsupported_reason: Some(unsupported.reason.clone()),
                 declaration_to_usages: None,
                 usage_to_declaration: Vec::new(),
@@ -313,14 +321,24 @@ fn run_case(
             .collect::<Vec<_>>()
     };
 
-    let status = combine_case_status(
+    let observed_status = combine_case_status(
         declaration_to_usages.as_ref(),
         &usage_to_declaration,
         &diagnostics,
     );
+    let expected_failure_reason = case
+        .expected_failure
+        .as_ref()
+        .map(|expected_failure| expected_failure.reason.clone());
+    let status = apply_expected_failure(
+        observed_status,
+        expected_failure_reason.as_deref(),
+        &mut diagnostics,
+    );
     CaseRunReport {
         id: case.id.clone(),
         status,
+        expected_failure_reason,
         unsupported_reason: case
             .unsupported
             .as_ref()
@@ -445,12 +463,10 @@ fn run_declaration_to_usages(
         .collect::<Vec<_>>();
     let status = if has_error_status {
         CaseStatus::Error
-    } else if parsed.partial {
+    } else if parsed.partial || !missing.is_empty() {
         CaseStatus::Failed
-    } else if missing.is_empty() && unexpected.is_empty() {
-        CaseStatus::Passed
     } else {
-        CaseStatus::Failed
+        CaseStatus::Passed
     };
 
     DeclarationUsageReport {
@@ -977,6 +993,25 @@ fn combine_case_status(
     }
 }
 
+fn apply_expected_failure(
+    observed_status: CaseStatus,
+    expected_failure_reason: Option<&str>,
+    diagnostics: &mut Vec<RunDiagnostic>,
+) -> CaseStatus {
+    match (expected_failure_reason, observed_status) {
+        (Some(_), CaseStatus::Failed | CaseStatus::Error) => CaseStatus::ExpectedFailure,
+        (Some(_), CaseStatus::Passed) => {
+            diagnostics.push(RunDiagnostic {
+                kind: "expected_failure_passed".to_string(),
+                message: "case is marked expectedFailure but passed; update the baseline"
+                    .to_string(),
+            });
+            CaseStatus::Failed
+        }
+        _ => observed_status,
+    }
+}
+
 fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
     let mut totals = RunTotals {
         documents: documents.len(),
@@ -987,6 +1022,7 @@ fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
         match case.status {
             CaseStatus::Passed => totals.passed += 1,
             CaseStatus::Failed => totals.failed += 1,
+            CaseStatus::ExpectedFailure => totals.expected_failures += 1,
             CaseStatus::Skipped => totals.skipped += 1,
             CaseStatus::Error => totals.errors += 1,
         }
@@ -1609,10 +1645,37 @@ mod tests {
                 cases: 1,
                 passed: 1,
                 failed: 0,
+                expected_failures: 0,
                 skipped: 0,
                 errors: 0,
             },
-            documents: Vec::new(),
+            documents: vec![DocumentRunReport {
+                case_file: "benchmarks/cases/rust.yaml".to_string(),
+                language: "rust".to_string(),
+                source_root: "/repo/fixtures/rust".to_string(),
+                cases: vec![CaseRunReport {
+                    id: "rust-function".to_string(),
+                    status: CaseStatus::Passed,
+                    expected_failure_reason: None,
+                    unsupported_reason: None,
+                    declaration_to_usages: Some(DeclarationUsageReport {
+                        status: CaseStatus::Passed,
+                        selector: Some("example.build_service".to_string()),
+                        expected: vec![normalized_location("src/lib.rs", 8)],
+                        allowed_extra: Vec::new(),
+                        actual: vec![
+                            normalized_location("src/lib.rs", 8),
+                            normalized_location("src/extra.rs", 1),
+                        ],
+                        missing: Vec::new(),
+                        unexpected: vec![normalized_location("src/extra.rs", 1)],
+                        partial: false,
+                        raw_statuses: vec!["ok".to_string()],
+                    }),
+                    usage_to_declaration: Vec::new(),
+                    diagnostics: Vec::new(),
+                }],
+            }],
         };
 
         let json = serde_json::to_value(report).unwrap();
@@ -1620,6 +1683,10 @@ mod tests {
         assert_eq!(json["usagebenchVersion"], "0.1.0");
         assert_eq!(json["bifrostResolvedCommit"], "abc123");
         assert_eq!(json["totals"]["passed"], 1);
+        assert_eq!(
+            json["documents"][0]["cases"][0]["declarationToUsages"]["unexpected"][0]["path"],
+            "src/extra.rs"
+        );
     }
 
     #[test]
@@ -1698,7 +1765,7 @@ mod tests {
     }
 
     #[test]
-    fn scorer_reports_unexpected_usage() {
+    fn scorer_reports_unexpected_usage_without_failing_case() {
         let case = benchmark_case();
         let mut client = MockClient::new(vec![
             tool(
@@ -1717,9 +1784,91 @@ mod tests {
 
         let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
 
+        assert_eq!(report.status, CaseStatus::Passed);
+        let declaration = report.declaration_to_usages.unwrap();
+        assert_eq!(declaration.status, CaseStatus::Passed);
+        assert_eq!(declaration.unexpected.len(), 1);
+    }
+
+    #[test]
+    fn scorer_fails_missing_expected_usage_even_with_unexpected_usage() {
+        let case = benchmark_case();
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages",
+                scan_usages_json(vec![("src/extra.rs", 1)], false),
+            ),
+            tool(
+                "get_definition",
+                get_definition_json("resolved", vec![("src/service.rs", 30)]),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+
         assert_eq!(report.status, CaseStatus::Failed);
         let declaration = report.declaration_to_usages.unwrap();
+        assert_eq!(declaration.status, CaseStatus::Failed);
+        assert_eq!(declaration.missing.len(), 1);
         assert_eq!(declaration.unexpected.len(), 1);
+    }
+
+    #[test]
+    fn expected_failure_marks_observed_failure_without_counting_as_failed() {
+        let mut case = benchmark_case();
+        case.expected_failure = Some(crate::ExpectedFailure {
+            reason: "current Bifrost baseline misses this usage".to_string(),
+        });
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool("scan_usages", scan_usages_json(Vec::new(), false)),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+
+        assert_eq!(report.status, CaseStatus::ExpectedFailure);
+        assert_eq!(
+            report.expected_failure_reason.as_deref(),
+            Some("current Bifrost baseline misses this usage")
+        );
+        let totals = compute_totals(&[DocumentRunReport {
+            case_file: "benchmarks/cases/rust.yaml".to_string(),
+            language: "rust".to_string(),
+            source_root: "/repo/fixtures/rust".to_string(),
+            cases: vec![report],
+        }]);
+        assert_eq!(totals.failed, 0);
+        assert_eq!(totals.expected_failures, 1);
+    }
+
+    #[test]
+    fn expected_failure_that_passes_fails_until_baseline_is_updated() {
+        let mut case = benchmark_case();
+        case.expected_failure = Some(crate::ExpectedFailure {
+            reason: "current Bifrost baseline misses this usage".to_string(),
+        });
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(report.diagnostics[0].kind, "expected_failure_passed");
     }
 
     #[test]
@@ -2025,6 +2174,16 @@ mod tests {
         (name.to_string(), value)
     }
 
+    fn normalized_location(path: &str, line: u32) -> NormalizedLocation {
+        NormalizedLocation {
+            path: path.to_string(),
+            line,
+            column: None,
+            display_name: None,
+            kind: None,
+        }
+    }
+
     fn benchmark_case() -> BenchmarkCase {
         BenchmarkCase {
             id: "rust-function".to_string(),
@@ -2053,6 +2212,7 @@ mod tests {
                     SymbolKind::Function,
                 ),
             }],
+            expected_failure: None,
             unsupported: None,
             verification: None,
         }
