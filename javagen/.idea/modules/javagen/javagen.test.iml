@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.linked.project.id="javagen:test [file:///Users/dave/Workspace/BrokkAi/usagebench/javagen/]" external.linked.project.path="$MODULE_DIR$/../../.." external.root.project.path="$MODULE_DIR$/../../.." external.system.id="SBT" external.system.module.type="sbtSourceSet" type="JAVA_MODULE" version="4">
+  <component name="DisplayModuleName">
+    <option name="name" value="javagen.test" />
+  </component>
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_21">
+    <output-test url="file://$MODULE_DIR$/../../../target/scala-3.5.2/test-classes" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../../src/test">
+      <sourceFolder url="file://$MODULE_DIR$/../../../src/test/scala" isTestSource="true" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../../target/scala-3.5.2/resource_managed/test" />
+    <content url="file://$MODULE_DIR$/../../../target/scala-3.5.2/src_managed/test" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="sbt: scala-sdk-3.5.2" level="project" />
+    <orderEntry type="module" module-name="javagen.main" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala3-library_3:3.5.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.github.scopt:scopt_3:4.1.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.apache.logging.log4j:log4j-slf4j2-impl:2.24.3:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.lihaoyi:ujson_3:4.4.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.lihaoyi:upickle_3:4.0.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.jdt:org.eclipse.jdt.core:3.44.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.13.14:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.apache.logging.log4j:log4j-api:2.24.3:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.slf4j:slf4j-api:2.0.16:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.apache.logging.log4j:log4j-core:2.24.3:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.lihaoyi:upickle-core_3:4.4.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.lihaoyi:upack_3:4.0.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.lihaoyi:upickle-implicits_3:4.0.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.core.resources:3.23.100:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.core.runtime:3.34.100:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.core.filesystem:1.11.400:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.text:3.14.500:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.jdt:ecj:3.44.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-core_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-featurespec_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-flatspec_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-freespec_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-funsuite_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-funspec_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-propspec_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-refspec_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-wordspec_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-diagrams_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-matchers-core_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-shouldmatchers_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-mustmatchers_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.lihaoyi:geny_3:1.1.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.core.expressions:3.9.500:jar" level="project" />
+    <orderEntry type="library" name="sbt: net.java.dev.jna:jna:5.18.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.osgi:3.24.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.equinox.common:3.20.300:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.core.jobs:3.15.700:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.equinox.registry:3.12.600:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.equinox.preferences:3.12.100:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.core.contenttype:3.9.800:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.equinox.app:1.7.500:jar" level="project" />
+    <orderEntry type="library" name="sbt: net.java.dev.jna:jna-platform:5.18.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.platform:org.eclipse.core.commands:3.12.500:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalactic:scalactic_3:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scalatest:scalatest-compatible:3.2.19:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-xml_3:2.1.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.osgi:org.osgi.service.prefs:1.1.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.osgi:osgi.annotation:8.0.1:jar" level="project" />
+  </component>
+  <component name="TestModuleProperties" production-module="javagen.main" />
+</module>

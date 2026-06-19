@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="sbt: org.eclipse.platform:org.eclipse.core.filesystem:1.11.400:jar" type="java-imported" external-system-id="SBT">
+    <properties groupId="org.eclipse.platform" artifactId="org.eclipse.core.filesystem" version="1.11.400" baseVersion="1.11.400" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/org/eclipse/platform/org.eclipse.core.filesystem/1.11.400/org.eclipse.core.filesystem-1.11.400.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/org/eclipse/platform/org.eclipse.core.filesystem/1.11.400/org.eclipse.core.filesystem-1.11.400-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

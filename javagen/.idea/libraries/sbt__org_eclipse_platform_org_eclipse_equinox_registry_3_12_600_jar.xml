@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="sbt: org.eclipse.platform:org.eclipse.equinox.registry:3.12.600:jar" type="java-imported" external-system-id="SBT">
+    <properties groupId="org.eclipse.platform" artifactId="org.eclipse.equinox.registry" version="3.12.600" baseVersion="3.12.600" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/org/eclipse/platform/org.eclipse.equinox.registry/3.12.600/org.eclipse.equinox.registry-3.12.600.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/org/eclipse/platform/org.eclipse.equinox.registry/3.12.600/org.eclipse.equinox.registry-3.12.600-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

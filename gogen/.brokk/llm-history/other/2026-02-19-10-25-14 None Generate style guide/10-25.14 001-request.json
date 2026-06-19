@@ -1,0 +1,18 @@
+{
+  "model" : "gemini-3-flash-preview",
+  "messages" : [ {
+    "role" : "system",
+    "content" : "You are an expert software engineer. Your task is to extract a concise coding style guide from the provided code examples."
+  }, {
+    "role" : "user",
+    "content" : "Based on these code examples, create a concise, clear coding style guide in Markdown format\nthat captures the conventions used in this codebase, particularly the ones that leverage new or uncommon features.\nDO NOT repeat what are simply common best practices.\n\n<file path=\".brokk/project.properties\">\n#Brokk project configuration\n#Thu Feb 19 10:25:14 SAST 2026\ndataRetentionPolicy=MINIMAL\n\n</file>\n\n"
+  } ],
+  "stream" : true,
+  "stream_options" : {
+    "include_usage" : true
+  },
+  "max_completion_tokens" : 65535,
+  "user" : "a6bc7de0-e574-44a8-963d-0ae5b7d3a7d3",
+  "reasoning_effort" : "disable",
+  "prompt_cache_key" : "gemini-3-flash-previewa6bc7de0-e574-44a8-963d-0ae5b7d3a7d3"
+}

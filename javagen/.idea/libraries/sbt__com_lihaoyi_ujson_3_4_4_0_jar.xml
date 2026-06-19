@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="sbt: com.lihaoyi:ujson_3:4.4.0:jar" type="java-imported" external-system-id="SBT">
+    <properties groupId="com.lihaoyi" artifactId="ujson_3" version="4.4.0" baseVersion="4.4.0" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/com/lihaoyi/ujson_3/4.4.0/ujson_3-4.4.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/com/lihaoyi/ujson_3/4.4.0/ujson_3-4.4.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

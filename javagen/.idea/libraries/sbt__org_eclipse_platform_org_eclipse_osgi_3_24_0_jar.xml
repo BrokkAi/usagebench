@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="sbt: org.eclipse.platform:org.eclipse.osgi:3.24.0:jar" type="java-imported" external-system-id="SBT">
+    <properties groupId="org.eclipse.platform" artifactId="org.eclipse.osgi" version="3.24.0" baseVersion="3.24.0" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/org/eclipse/platform/org.eclipse.osgi/3.24.0/org.eclipse.osgi-3.24.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/org/eclipse/platform/org.eclipse.osgi/3.24.0/org.eclipse.osgi-3.24.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

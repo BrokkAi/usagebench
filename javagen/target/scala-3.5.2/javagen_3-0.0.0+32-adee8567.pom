@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ai.brokk</groupId>
+    <artifactId>javagen_3</artifactId>
+    <packaging>jar</packaging>
+    <description>javagen</description>
+    <version>0.0.0+32-adee8567</version>
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>javagen</name>
+    <organization>
+        <name>ai.brokk</name>
+    </organization>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala3-library_3</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.scopt</groupId>
+            <artifactId>scopt_3</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
+            <version>2.24.3</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>ujson_3</artifactId>
+            <version>4.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>upickle_3</artifactId>
+            <version>4.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jdt</groupId>
+            <artifactId>org.eclipse.jdt.core</artifactId>
+            <version>3.44.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_3</artifactId>
+            <version>3.2.19</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <repositories>
+        <repository>
+            <id>Sonatype OSS</id>
+            <name>Sonatype OSS</name>
+            <url>https://oss.sonatype.org/content/repositories/public/</url>
+            <layout>default</layout>
+        </repository>
+        <repository>
+            <id>Atlassian</id>
+            <name>Atlassian</name>
+            <url>https://packages.atlassian.com/mvn/maven-atlassian-external/</url>
+            <layout>default</layout>
+        </repository>
+        <repository>
+            <id>Gradle Releases</id>
+            <name>Gradle Releases</name>
+            <url>https://repo.gradle.org/gradle/libs-releases/</url>
+            <layout>default</layout>
+        </repository>
+    </repositories>
+</project>

@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="sbt: com.lihaoyi:upickle-core_3:4.4.0:jar" type="java-imported" external-system-id="SBT">
+    <properties groupId="com.lihaoyi" artifactId="upickle-core_3" version="4.4.0" baseVersion="4.4.0" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/com/lihaoyi/upickle-core_3/4.4.0/upickle-core_3-4.4.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/com/lihaoyi/upickle-core_3/4.4.0/upickle-core_3-4.4.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,49 +1,80 @@
-# Scala 3 Coding Style Guide
+# usagebench Agent Notes
 
-This guide outlines the specific conventions used in the `brokk-javagen` codebase, focusing on Scala 3 features and Joern-specific patterns.
+`usagebench` is a Rust CLI and curated benchmark corpus for evaluating static
+analysis usage lookup. The active benchmark format is analyzer-neutral and
+source-location based: cases point at declarations and usages with
+LSP-shaped ranges rather than analyzer-specific symbol IDs.
 
-## 1. Modern Scala Syntax (Scala 3)
+## Repository Layout
 
-The codebase utilizes the new "quiet" indentation-based syntax and other Scala 3 improvements.
+* `src/` contains the Rust CLI, schema model, validator, and Bifrost runner.
+* `benchmarks/cases/` contains authored YAML benchmark case documents.
+* `benchmarks/README.md` documents the YAML format and authoring rules.
+* `fixtures/` contains small checked-in source corpora used by baseline cases.
+* `schema/benchmark-case.schema.json` is the checked-in JSON Schema contract.
+* `docs/` contains execution plans and design notes.
 
-*   **Significant Indentation:** Prefer indentation over braces for control flow.
-    *   Use `then` for `if` statements.
-    *   Omit braces for `class`, `object`, and `def` when possible.
-*   **Wildcard Imports:** Use `*` instead of `_` for wildcard imports (e.g., `import upickle.default.*`).
-*   **Explicit Imports:** When aliasing or importing multiple specific members, use the new `as` and `{}` syntax (e.g., `import io.joern.javasrc2cpg.{JavaSrc2Cpg, Config as JavaConfig}`).
+The old broad generator paths such as `pygen`, `javagen`, and `gogen` are not
+part of the active benchmark path. If they appear in a local checkout, treat
+them as legacy or local artifacts unless the task explicitly asks about them.
 
-## 2. Domain Modeling & Extensions
+## Common Commands
 
-*   **Extensions:** Use `extension` blocks to add domain-specific logic to external library classes (e.g., Joern's `Method`, `TypeDecl`, and `Member` nodes). This keeps analysis logic clean and readable.
-*   **Opaque Constants:** Define internal string constants in uppercase (e.g., `private val CLASS = "CLASS"`) within objects to act as simple enums for serialized output.
+Run the normal validation path before considering benchmark edits complete:
 
-## 3. Control Flow & Functional Patterns
+```bash
+cargo test
+cargo run -- validate benchmarks/cases
+```
 
-*   **Pattern Matching on Types:** Use Scala 3's simplified pattern matching for type casting in `flatMap` and `collect` operations.
-*   **Try/Match for Error Recovery:** Wrap risky analysis blocks in `Try` and handle `Success`/`Failure` explicitly, logging errors instead of crashing the pipeline.
-    ```scala
-    analyzeMethod(cpg, method) match {
-      case Success(result) => result :: Nil
-      case Failure(e) =>
-        logger.error(s"message", e)
-        Nil
-    }
-    ```
-*   **The `.l` Suffix:** When working with Joern's `overflowdb` traversals, explicitly use `.l` to convert traversals to lists when the pipeline transitions from lazy evaluation to eager processing.
+For Rust code edits, also run formatting:
 
-## 4. Resource Management
+```bash
+cargo fmt
+```
 
-*   **Using.resource:** Use `scala.util.Using` for safe handling of `Closeable` resources like `Source.fromFile`.
-*   **Temporary Files:** Always use `try...finally` blocks to ensure temporary resources (like `tempCpgPath`) are deleted regardless of execution success.
+The CI workflow runs `cargo test` and `cargo run -- validate benchmarks/cases`.
+There is no Gradle build in this repository.
 
-## 5. Formatting & Naming
+Useful CLI entry points:
 
-*   **Vertical Alignment:** Align assignment operators (`=`) and arrows (`=>`) in significant blocks (like `scopt` configurations or complex `match` cases) to improve readability.
-*   **Fluent API Chaining:** When configuring builders, place the period at the start of the new line (e.g., `.withInputPath(...)`).
-*   **Extension Method Naming:** Use descriptive names like `fqName` (Fully Qualified Name) for extension methods that normalize external library properties.
+```bash
+cargo run -- schema
+cargo run -- bifrost-report-schema
+cargo run -- run-bifrost benchmarks/cases --bifrost-repo ../bifrost
+```
 
-## 6. CLI & Configuration
+Use `run-bifrost` when changing Bifrost execution, result normalization, or
+scoring behavior. It may fetch, build, or create temporary worktrees under
+`target/usagebench`.
 
-*   **Scopt Integration:** Use `OParser.builder` for declarative CLI argument parsing.
-*   **Validation:** Perform side effects (like directory creation) or complex validation directly within the `validate` block of the argument parser to fail fast.
-*   **Path Handling:** Prefer `java.nio.file.Path` over `String` or `File` for filesystem paths. Use `.toAbsolutePath.normalize()` to ensure path consistency.
+## Benchmark Case Authoring
+
+* Use portable `benchmark://source/...` URIs, never checkout-specific absolute
+  paths.
+* Ranges are LSP-shaped and zero-based; range end positions are exclusive.
+* `positionEncoding` defaults to `utf-16`, matching LSP defaults.
+* Fixture-backed cases use `source.kind: fixture` and a `source.path` resolved
+  relative to the repository root.
+* Expected locations should be verified against checked-in fixture source and
+  recorded with `verification.method: manual_inspection`.
+* Non-zero fixture ranges should select text equal to the location's
+  `displayName`.
+* Use `allowedExtraUsages`, `expectedFailure`, and `unsupported` to document
+  known analyzer behavior without weakening the source-location contract.
+
+Keep benchmark cases small and reviewed. Prefer adding focused fixture source
+over reviving generator-heavy corpora.
+
+## Rust Style
+
+Follow the existing Rust style in `src/`:
+
+* Use `anyhow::Context` for errors that cross file, process, or analyzer
+  boundaries.
+* Keep validation failures precise and tied to the case file or source URI.
+* Prefer structured model changes in `src/lib.rs` plus schema updates over
+  ad hoc YAML handling.
+* Keep CLI output stable enough for CI and automation consumers.
+* Avoid broad refactors when adjusting benchmark data or runner behavior.
+

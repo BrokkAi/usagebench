@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuite hostname="Davids-MacBook-M4-Pro.local" name="ai.brokk.javagen.MyTest" tests="18" errors="0" failures="0" skipped="0" time="0.981" timestamp="2026-02-27T07:10:09">
+          <properties>
+      <property name="java.specification.version" value="21"/><property name="sun.jnu.encoding" value="UTF-8"/><property name="sun.arch.data.model" value="64"/><property name="java.vendor.url" value="https://adoptium.net/"/><property name="jline.terminal" value="none"/><property name="sun.boot.library.path" value="/Users/dave/.sdkman/candidates/java/21.0.8-tem/lib"/><property name="sun.java.command" value="/Users/dave/.sdkman/candidates/sbt/1.11.7/bin/sbt-launch.jar test"/><property name="jdk.debug" value="release"/><property name="java.specification.vendor" value="Oracle Corporation"/><property name="java.version.date" value="2025-07-15"/><property name="java.home" value="/Users/dave/.sdkman/candidates/java/21.0.8-tem"/><property name="file.separator" value="/"/><property name="java.vm.compressedOopsMode" value="Zero based"/><property name="line.separator" value="
+"/><property name="java.vm.specification.vendor" value="Oracle Corporation"/><property name="java.specification.name" value="Java Platform API Specification"/><property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/><property name="java.runtime.version" value="21.0.8+9-LTS"/><property name="user.name" value="dave"/><property name="log4j.ignoreTCL" value="true"/><property name="file.encoding" value="UTF-8"/><property name="java.vendor.version" value="Temurin-21.0.8+9"/><property name="java.io.tmpdir" value="/var/folders/t1/k_27wjcd4095w9w121dm92_w0000gn/T/"/><property name="java.version" value="21.0.8"/><property name="java.vm.specification.name" value="Java Virtual Machine Specification"/><property name="native.encoding" value="UTF-8"/><property name="java.library.path" value="/Users/dave/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/><property name="stderr.encoding" value="UTF-8"/><property name="java.vendor" value="Eclipse Adoptium"/><property name="scala.ext.dirs" value="/Users/dave/.sbt/1.0/java9-rt-ext-eclipse_adoptium_21_0_8"/><property name="sun.io.unicode.encoding" value="UnicodeBig"/><property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/><property name="java.class.path" value="/Users/dave/.sdkman/candidates/sbt/1.11.7/bin/sbt-launch.jar"/><property name="java.vm.vendor" value="Eclipse Adoptium"/><property name="jline.shutdownhook" value="false"/><property name="user.timezone" value="Africa/Johannesburg"/><property name="java.vm.specification.version" value="21"/><property name="os.name" value="Mac OS X"/><property name="sun.java.launcher" value="SUN_STANDARD"/><property name="user.country" value="ZA"/><property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/><property name="sun.cpu.endian" value="little"/><property name="user.home" value="/Users/dave"/><property name="user.language" value="en"/><property name="sbt.script" value="/Users/dave/.sdkman/candidates/sbt/current/bin/sbt"/><property name="sbt.ipcsocket.tmpdir" value="/var/folders/t1/k_27wjcd4095w9w121dm92_w0000gn/T/.sbte7b7a902/ipcsocket"/><property name="swoval.tmpdir" value="/var/folders/t1/k_27wjcd4095w9w121dm92_w0000gn/T/.sbte7b7a902/swoval"/><property name="apple.awt.application.name" value="Boot"/><property name="jline.esc.timeout" value="0"/><property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/><property name="stdout.encoding" value="UTF-8"/><property name="path.separator" value=":"/><property name="os.version" value="26.3"/><property name="jna.nosys" value="true"/><property name="java.runtime.name" value="OpenJDK Runtime Environment"/><property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/><property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/><property name="user.dir" value="/Users/dave/Workspace/BrokkAi/usagebench/javagen"/><property name="os.arch" value="aarch64"/><property name="java.vm.info" value="mixed mode, sharing"/><property name="java.vm.version" value="21.0.8+9-LTS"/><property name="java.class.version" value="65.0"/>
+    </properties>
+          <testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect constructor usages" time="0.781">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect method usages" time="0.016">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect explicit type references" time="0.009">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should var inference does not create a type reference when the type name is not present" time="0.015">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect field loads and stores" time="0.015">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should exclude declarations from test directories" time="0.007">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should attribute lambda and anonymous class usages to enclosing named declaration" time="0.039">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should exclude self-declarations from usages" time="0.012">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should exclude import statements from usages" time="0.006">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect constructor usage in a return statement" time="0.006">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect constructor usage when returned value is assigned to var" time="0.007">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect type usage in field declarations" time="0.006">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect method usage in test file" time="0.013">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect type usage in try-with-resources" time="0.011">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect usages regardless of file parsing order" time="0.005">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect internal interface method implementation usage" time="0.01">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect static method usages" time="0.007">
+                      
+                    </testcase><testcase classname="ai.brokk.javagen.MyTest" name="UsageAnalyzers should detect field usage in field initialization" time="0.016">
+                      
+                    </testcase>
+          <system-out><![CDATA[]]></system-out>
+          <system-err><![CDATA[]]></system-err>
+        </testsuite>
