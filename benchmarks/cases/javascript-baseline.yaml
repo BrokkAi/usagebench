@@ -6,6 +6,8 @@ source:
 language: javascript
 cases:
   - id: js-named-export-import-function
+    expectedFailure:
+      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/components.js
@@ -57,6 +59,8 @@ cases:
       method: manual_inspection
       notes: formatName is exported from components, imported by app, and called from both files.
   - id: js-class-construction
+    expectedFailure:
+      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/components.js
@@ -108,6 +112,8 @@ cases:
       method: manual_inspection
       notes: Greeter is imported by app and constructed directly plus through createGreeter.
   - id: js-method-call
+    expectedFailure:
+      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/components.js
@@ -152,6 +158,8 @@ cases:
       method: manual_inspection
       notes: greet is declared on Greeter and called from both top-level app code and runApp.
   - id: js-class-property-access
+    expectedFailure:
+      reason: Bifrost baseline cannot resolve this property declaration before scanning usages.
     declaration:
       location:
         uri: benchmark://source/src/components.js

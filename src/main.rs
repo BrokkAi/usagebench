@@ -1,7 +1,9 @@
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
-use usagebench::bifrost_runner::{run_bifrost, RunBifrostOptions};
+use usagebench::bifrost_runner::{
+    run_bifrost, BifrostRunReport, CaseStatus, NormalizedLocation, RunBifrostOptions,
+};
 
 #[derive(Debug, Parser)]
 #[command(name = "usagebench")]
@@ -87,13 +89,15 @@ fn main() -> Result<()> {
             options.keep_worktrees = keep_worktrees;
             let report = run_bifrost(options)?;
             println!(
-                "ran {} case(s): {} passed, {} failed, {} skipped, {} error(s)",
+                "ran {} case(s): {} passed, {} failed, {} expected failure(s), {} skipped, {} error(s)",
                 report.totals.cases,
                 report.totals.passed,
                 report.totals.failed,
+                report.totals.expected_failures,
                 report.totals.skipped,
                 report.totals.errors
             );
+            print_run_details(&report);
             if report.totals.failed > 0 || report.totals.errors > 0 {
                 bail!(
                     "Bifrost benchmark run failed: {} failed, {} error(s)",
@@ -105,4 +109,112 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn print_run_details(report: &BifrostRunReport) {
+    for document in &report.documents {
+        for case in &document.cases {
+            let Some(declaration) = &case.declaration_to_usages else {
+                if matches!(
+                    case.status,
+                    CaseStatus::Failed | CaseStatus::ExpectedFailure | CaseStatus::Error
+                ) {
+                    println!(
+                        "{} {}: {}",
+                        status_label(case.status),
+                        safe_display(&case.id),
+                        safe_display(&document.case_file)
+                    );
+                }
+                continue;
+            };
+
+            if declaration.missing.is_empty()
+                && declaration.unexpected.is_empty()
+                && !matches!(
+                    case.status,
+                    CaseStatus::Failed | CaseStatus::ExpectedFailure | CaseStatus::Error
+                )
+            {
+                continue;
+            }
+
+            println!(
+                "{} {}: {} missing, {} extra ({})",
+                status_label(case.status),
+                safe_display(&case.id),
+                declaration.missing.len(),
+                declaration.unexpected.len(),
+                safe_display(&document.case_file)
+            );
+            print_locations("missing", &declaration.missing);
+            print_locations("extra", &declaration.unexpected);
+        }
+    }
+}
+
+fn print_locations(label: &str, locations: &[NormalizedLocation]) {
+    if locations.is_empty() {
+        return;
+    }
+    let rendered = locations
+        .iter()
+        .map(format_location)
+        .collect::<Vec<_>>()
+        .join(", ");
+    println!("  {label}: {rendered}");
+}
+
+fn format_location(location: &NormalizedLocation) -> String {
+    match location.column {
+        Some(column) => format!(
+            "{}:{}:{}",
+            safe_display(&location.path),
+            location.line,
+            column
+        ),
+        None => format!("{}:{}", safe_display(&location.path), location.line),
+    }
+}
+
+fn safe_display(value: &str) -> String {
+    value.escape_debug().to_string()
+}
+
+fn status_label(status: CaseStatus) -> &'static str {
+    match status {
+        CaseStatus::Passed => "PASS",
+        CaseStatus::Failed => "FAIL",
+        CaseStatus::ExpectedFailure => "XFAIL",
+        CaseStatus::Skipped => "SKIP",
+        CaseStatus::Error => "ERROR",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn summary_locations_escape_control_characters() {
+        let location = NormalizedLocation {
+            path: "src/\u{1b}[31mspoof\nPASS.rs".to_string(),
+            line: 7,
+            column: Some(3),
+            display_name: None,
+            kind: None,
+        };
+
+        let rendered = format_location(&location);
+
+        assert_eq!(rendered, "src/\\u{1b}[31mspoof\\nPASS.rs:7:3");
+    }
+
+    #[test]
+    fn safe_display_leaves_plain_text_readable() {
+        assert_eq!(
+            safe_display("benchmarks/cases/rust.yaml"),
+            "benchmarks/cases/rust.yaml"
+        );
+    }
 }

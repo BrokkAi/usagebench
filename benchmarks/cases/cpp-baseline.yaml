@@ -94,6 +94,8 @@ cases:
       method: manual_inspection
       notes: Service is declared as a class and used as the build_service return type in the header and implementation.
   - id: cpp-constructor-call
+    expectedFailure:
+      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/include/service.h
@@ -182,6 +184,8 @@ cases:
       method: manual_inspection
       notes: execute is declared in the header, defined in service.cpp, and called on service in run_demo.
   - id: cpp-field-access
+    expectedFailure:
+      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/include/service.h

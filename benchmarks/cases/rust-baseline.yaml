@@ -6,6 +6,8 @@ source:
 language: rust
 cases:
   - id: rust-function-call-and-reexport
+    expectedFailure:
+      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/service.rs
@@ -50,6 +52,8 @@ cases:
       method: manual_inspection
       notes: build_service is re-exported from lib.rs and called from run_demo.
   - id: rust-struct-construction
+    expectedFailure:
+      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/service.rs

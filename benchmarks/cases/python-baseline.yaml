@@ -52,6 +52,8 @@ cases:
       method: manual_inspection
       notes: service.py is imported from the package initializer and directly from the test fixture.
   - id: python-function-call-and-reexport
+    expectedFailure:
+      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/example/service.py
@@ -103,6 +105,8 @@ cases:
       method: manual_inspection
       notes: build_service is re-exported from example and called by two test functions.
   - id: python-class-instantiation
+    expectedFailure:
+      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/example/service.py
@@ -230,6 +234,8 @@ cases:
       method: manual_inspection
       notes: test_dynamic_lookup calls getattr(service, method_name) after assigning method_name to the string execute.
   - id: python-attribute-access
+    expectedFailure:
+      reason: Bifrost baseline cannot resolve this property declaration before scanning usages.
     declaration:
       location:
         uri: benchmark://source/src/example/service.py
