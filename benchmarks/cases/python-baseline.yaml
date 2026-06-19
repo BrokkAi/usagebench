@@ -153,7 +153,7 @@ cases:
     verification:
       method: manual_inspection
       notes: Service is re-exported, imported by tests, and instantiated by build_service.
-  - id: python-method-call-and-dynamic-unsupported
+  - id: python-method-call
     declaration:
       location:
         uri: benchmark://source/src/example/service.py
@@ -187,11 +187,48 @@ cases:
               end: { line: 14, character: 15 }
           kind: method
           displayName: execute
-    unsupported:
-      reason: Dynamic getattr call in test_dynamic_lookup is intentionally documented but excluded from scoring.
     verification:
       method: manual_inspection
-      notes: Direct execute call is visible in test_service_execution; dynamic getattr stores the method name as a string.
+      notes: Direct execute call is visible in test_service_execution.
+  - id: python-dynamic-getattr-unsupported
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.py
+        range:
+          start: { line: 14, character: 8 }
+          end: { line: 14, character: 15 }
+      kind: method
+      displayName: execute
+    expectedUsages:
+      - location:
+          uri: benchmark://source/tests/test_service.py
+          range:
+            start: { line: 15, character: 19 }
+            end: { line: 15, character: 26 }
+        kind: method
+        displayName: execute
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/tests/test_service.py
+            range:
+              start: { line: 15, character: 19 }
+              end: { line: 15, character: 26 }
+          kind: method
+          displayName: execute
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.py
+            range:
+              start: { line: 14, character: 8 }
+              end: { line: 14, character: 15 }
+          kind: method
+          displayName: execute
+    unsupported:
+      reason: Dynamic getattr stores the method name as a string, so this is retained but excluded from scoring.
+    verification:
+      method: manual_inspection
+      notes: test_dynamic_lookup calls getattr(service, method_name) after assigning method_name to the string execute.
   - id: python-attribute-access
     declaration:
       location:

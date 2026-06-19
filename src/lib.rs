@@ -18,7 +18,7 @@ pub struct BenchmarkDocument {
     pub cases: Vec<BenchmarkCase>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub enum PositionEncoding {
     #[serde(rename = "utf-8")]
     Utf8,
@@ -147,6 +147,7 @@ pub fn generated_schema_json() -> Result<String> {
 
 pub fn validate_path(path: impl AsRef<Path>) -> Result<Vec<PathBuf>> {
     let path = path.as_ref();
+    let repo_root = find_repo_root_for_path(path)?;
     let schema: serde_json::Value =
         serde_json::from_str(include_str!("../schema/benchmark-case.schema.json"))
             .context("parse bundled benchmark schema")?;
@@ -165,10 +166,33 @@ pub fn validate_path(path: impl AsRef<Path>) -> Result<Vec<PathBuf>> {
     }
 
     for file in &files {
-        validate_file(file, &compiled_schema)?;
+        validate_file(file, &compiled_schema, &repo_root)?;
     }
 
     Ok(files)
+}
+
+fn find_repo_root_for_path(path: &Path) -> Result<PathBuf> {
+    let absolute_path = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        std::env::current_dir()
+            .context("read current directory")?
+            .join(path)
+    };
+    let search_start = if absolute_path.is_file() {
+        absolute_path.parent().unwrap_or(&absolute_path)
+    } else {
+        absolute_path.as_path()
+    };
+
+    for ancestor in search_start.ancestors() {
+        if ancestor.join("Cargo.toml").is_file() && ancestor.join("schema").is_dir() {
+            return Ok(ancestor.to_path_buf());
+        }
+    }
+
+    bail!("could not find usagebench repo root for {}", path.display());
 }
 
 fn collect_case_files(path: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
@@ -203,7 +227,11 @@ fn is_yaml_file(path: &Path) -> bool {
     )
 }
 
-fn validate_file(file: &Path, compiled_schema: &jsonschema::JSONSchema) -> Result<()> {
+fn validate_file(
+    file: &Path,
+    compiled_schema: &jsonschema::JSONSchema,
+    repo_root: &Path,
+) -> Result<()> {
     let yaml = fs::read_to_string(file).with_context(|| format!("read {}", file.display()))?;
     let document: serde_yaml::Value =
         serde_yaml::from_str(&yaml).with_context(|| format!("parse YAML {}", file.display()))?;
@@ -224,7 +252,7 @@ fn validate_file(file: &Path, compiled_schema: &jsonschema::JSONSchema) -> Resul
 
     serde_yaml::from_str::<BenchmarkDocument>(&yaml)
         .with_context(|| format!("deserialize benchmark document {}", file.display()))?
-        .validate()
+        .validate_with_base(repo_root)
         .with_context(|| format!("validate benchmark semantics {}", file.display()))?;
     Ok(())
 }
@@ -237,6 +265,7 @@ impl BenchmarkDocument {
     fn validate_with_base(&self, base_dir: &Path) -> Result<()> {
         let fixture_root = match &self.source {
             Source::Fixture { path } => {
+                validate_fixture_source_path(path)?;
                 let fixture_root = base_dir.join(path);
                 if !fixture_root.is_dir() {
                     bail!(
@@ -244,13 +273,27 @@ impl BenchmarkDocument {
                         fixture_root.display()
                     );
                 }
-                Some(fixture_root)
+                let canonical_base = base_dir
+                    .canonicalize()
+                    .with_context(|| format!("canonicalize {}", base_dir.display()))?;
+                let canonical_fixture = fixture_root
+                    .canonicalize()
+                    .with_context(|| format!("canonicalize {}", fixture_root.display()))?;
+                let allowed_root = canonical_base.join("fixtures");
+                if !canonical_fixture.starts_with(&allowed_root) {
+                    bail!(
+                        "fixture source path {} must stay under {}",
+                        fixture_root.display(),
+                        allowed_root.display()
+                    );
+                }
+                Some(canonical_fixture)
             }
             Source::Git { .. } => None,
         };
 
         for case in &self.cases {
-            case.validate(fixture_root.as_deref())?;
+            case.validate(fixture_root.as_deref(), self.position_encoding)?;
         }
 
         Ok(())
@@ -258,31 +301,31 @@ impl BenchmarkDocument {
 }
 
 impl BenchmarkCase {
-    fn validate(&self, fixture_root: Option<&Path>) -> Result<()> {
+    fn validate(&self, fixture_root: Option<&Path>, encoding: PositionEncoding) -> Result<()> {
         self.declaration
-            .validate(fixture_root)
+            .validate(fixture_root, encoding)
             .with_context(|| format!("case {} declaration", self.id))?;
 
         for usage in &self.expected_usages {
             usage
-                .validate(fixture_root)
+                .validate(fixture_root, encoding)
                 .with_context(|| format!("case {} expectedUsages", self.id))?;
         }
 
         for usage in &self.allowed_extra_usages {
             usage
-                .validate(fixture_root)
+                .validate(fixture_root, encoding)
                 .with_context(|| format!("case {} allowedExtraUsages", self.id))?;
         }
 
         for lookup in &self.usage_lookups {
             lookup
                 .usage
-                .validate(fixture_root)
+                .validate(fixture_root, encoding)
                 .with_context(|| format!("case {} usageLookups usage", self.id))?;
             lookup
                 .expected_declaration
-                .validate(fixture_root)
+                .validate(fixture_root, encoding)
                 .with_context(|| format!("case {} usageLookups expectedDeclaration", self.id))?;
         }
 
@@ -291,7 +334,7 @@ impl BenchmarkCase {
 }
 
 impl SymbolLocation {
-    fn validate(&self, fixture_root: Option<&Path>) -> Result<()> {
+    fn validate(&self, fixture_root: Option<&Path>, encoding: PositionEncoding) -> Result<()> {
         if !self.location.uri.scheme().eq_ignore_ascii_case("benchmark")
             || self.location.uri.host_str() != Some("source")
         {
@@ -310,14 +353,14 @@ impl SymbolLocation {
         }
 
         if let Some(fixture_root) = fixture_root {
-            self.location.validate_fixture_range(fixture_root)?;
+            self.location
+                .validate_fixture_range(fixture_root, encoding)?;
             if !self.location.range.is_zero_width() {
-                let selected_text = self.location.fixture_range_text(fixture_root)?;
+                let selected_text = self.location.fixture_range_text(fixture_root, encoding)?;
                 if selected_text != self.display_name {
                     bail!(
-                        "range for {} selected {:?}, expected displayName {:?}",
+                        "range for {} does not select displayName {:?}",
                         self.location.uri,
-                        selected_text,
                         self.display_name
                     );
                 }
@@ -329,23 +372,31 @@ impl SymbolLocation {
 }
 
 impl Location {
-    fn validate_fixture_range(&self, fixture_root: &Path) -> Result<()> {
+    fn validate_fixture_range(
+        &self,
+        fixture_root: &Path,
+        encoding: PositionEncoding,
+    ) -> Result<()> {
         let source_path = self.fixture_source_path(fixture_root)?;
         let source = fs::read_to_string(&source_path)
             .with_context(|| format!("read {}", source_path.display()))?;
         self.range
-            .validate_with_source_text(&source)
+            .validate_with_source_text(&source, encoding)
             .with_context(|| format!("range for {} in {}", self.uri, source_path.display()))?;
 
         Ok(())
     }
 
-    fn fixture_range_text(&self, fixture_root: &Path) -> Result<String> {
+    fn fixture_range_text(
+        &self,
+        fixture_root: &Path,
+        encoding: PositionEncoding,
+    ) -> Result<String> {
         let source_path = self.fixture_source_path(fixture_root)?;
         let source = fs::read_to_string(&source_path)
             .with_context(|| format!("read {}", source_path.display()))?;
         self.range
-            .text_from_source(&source)
+            .text_from_source(&source, encoding)
             .with_context(|| format!("range for {} in {}", self.uri, source_path.display()))
     }
 
@@ -374,13 +425,13 @@ impl Range {
         Ok(())
     }
 
-    fn validate_with_source_text(&self, source: &str) -> Result<()> {
-        validate_position_with_source_text(&self.start, source).context("range start")?;
-        validate_position_with_source_text(&self.end, source).context("range end")?;
+    fn validate_with_source_text(&self, source: &str, encoding: PositionEncoding) -> Result<()> {
+        validate_position_with_source_text(&self.start, source, encoding).context("range start")?;
+        validate_position_with_source_text(&self.end, source, encoding).context("range end")?;
         Ok(())
     }
 
-    fn text_from_source(&self, source: &str) -> Result<String> {
+    fn text_from_source(&self, source: &str, encoding: PositionEncoding) -> Result<String> {
         if self.start.line != self.end.line {
             bail!("symbol ranges in fixture cases must stay on a single line");
         }
@@ -390,9 +441,9 @@ impl Range {
             .nth(self.start.line as usize)
             .ok_or_else(|| anyhow!("line {} is outside the file", self.start.line))?;
         let line = line.strip_suffix('\r').unwrap_or(line);
-        let start = byte_index_for_utf16_position(line, self.start.character)
+        let start = byte_index_for_position(line, self.start.character, encoding)
             .context("range start character")?;
-        let end = byte_index_for_utf16_position(line, self.end.character)
+        let end = byte_index_for_position(line, self.end.character, encoding)
             .context("range end character")?;
 
         Ok(line[start..end].to_string())
@@ -401,6 +452,27 @@ impl Range {
     fn is_zero_width(&self) -> bool {
         self.start == self.end
     }
+}
+
+fn validate_fixture_source_path(path: &str) -> Result<()> {
+    let path = Path::new(path);
+    if path.is_absolute() {
+        bail!("fixture source path must be relative");
+    }
+    let mut components = path.components();
+    if !matches!(components.next(), Some(Component::Normal(first)) if first == "fixtures") {
+        bail!("fixture source path must start with fixtures/");
+    }
+    if components.any(|component| {
+        matches!(
+            component,
+            Component::ParentDir | Component::RootDir | Component::Prefix(_)
+        )
+    }) {
+        bail!("fixture source path must not contain parent or root components");
+    }
+
+    Ok(())
 }
 
 fn benchmark_source_path(uri: &Url) -> Result<PathBuf> {
@@ -420,12 +492,16 @@ fn benchmark_source_path(uri: &Url) -> Result<PathBuf> {
     Ok(path.to_path_buf())
 }
 
-fn validate_position_with_source_text(position: &Position, source: &str) -> Result<()> {
+fn validate_position_with_source_text(
+    position: &Position,
+    source: &str,
+    encoding: PositionEncoding,
+) -> Result<()> {
     let Some(line) = source.split('\n').nth(position.line as usize) else {
         bail!("line {} is outside the file", position.line);
     };
     let line = line.strip_suffix('\r').unwrap_or(line);
-    let line_len = line.encode_utf16().count() as u32;
+    let line_len = line_len_for_encoding(line, encoding);
 
     if position.character > line_len {
         bail!(
@@ -439,24 +515,73 @@ fn validate_position_with_source_text(position: &Position, source: &str) -> Resu
     Ok(())
 }
 
-fn byte_index_for_utf16_position(line: &str, character: u32) -> Result<usize> {
-    let mut utf16_offset = 0;
+fn line_len_for_encoding(line: &str, encoding: PositionEncoding) -> u32 {
+    match encoding {
+        PositionEncoding::Utf8 => line.len() as u32,
+        PositionEncoding::Utf16 => line.encode_utf16().count() as u32,
+        PositionEncoding::Utf32 => line.chars().count() as u32,
+    }
+}
 
+fn byte_index_for_position(
+    line: &str,
+    character: u32,
+    encoding: PositionEncoding,
+) -> Result<usize> {
+    match encoding {
+        PositionEncoding::Utf8 => byte_index_for_utf8_position(line, character),
+        PositionEncoding::Utf16 => byte_index_for_utf16_position(line, character),
+        PositionEncoding::Utf32 => byte_index_for_utf32_position(line, character),
+    }
+}
+
+fn byte_index_for_utf8_position(line: &str, character: u32) -> Result<usize> {
+    let byte_index = character as usize;
+    if byte_index > line.len() {
+        bail!(
+            "character {character} is outside line with length {}",
+            line.len()
+        );
+    }
+    if !line.is_char_boundary(byte_index) {
+        bail!("character {character} does not align to a UTF-8 character boundary");
+    }
+
+    Ok(byte_index)
+}
+
+fn byte_index_for_utf16_position(line: &str, character: u32) -> Result<usize> {
+    let mut offset = 0;
     for (byte_index, ch) in line.char_indices() {
-        if utf16_offset == character {
+        if offset == character {
             return Ok(byte_index);
         }
-        utf16_offset += ch.len_utf16() as u32;
-        if utf16_offset > character {
+        offset += ch.len_utf16() as u32;
+        if offset > character {
             bail!("character {character} splits a UTF-16 surrogate pair");
         }
     }
 
-    if utf16_offset == character {
+    if offset == character {
         Ok(line.len())
     } else {
-        bail!("character {character} is outside line with length {utf16_offset}")
+        bail!("character {character} is outside line with length {offset}")
     }
+}
+
+fn byte_index_for_utf32_position(line: &str, character: u32) -> Result<usize> {
+    if character == line.chars().count() as u32 {
+        return Ok(line.len());
+    }
+    line.char_indices()
+        .nth(character as usize)
+        .map(|(byte_index, _)| byte_index)
+        .ok_or_else(|| {
+            anyhow!(
+                "character {character} is outside line with length {}",
+                line.chars().count()
+            )
+        })
 }
 
 #[cfg(test)]
@@ -490,13 +615,13 @@ cases: []
     #[test]
     fn fixture_validation_rejects_missing_source_files() {
         let tempdir = tempfile::tempdir().unwrap();
-        fs::create_dir(tempdir.path().join("fixture")).unwrap();
+        fs::create_dir_all(tempdir.path().join("fixtures/fixture")).unwrap();
         let document = serde_yaml::from_str::<BenchmarkDocument>(
             r#"
 schemaVersion: 1
 source:
   kind: fixture
-  path: fixture
+  path: fixtures/fixture
 language: text
 cases:
   - id: missing-file
@@ -522,7 +647,7 @@ cases:
     #[test]
     fn fixture_validation_rejects_display_name_mismatches() {
         let tempdir = tempfile::tempdir().unwrap();
-        let fixture = tempdir.path().join("fixture/src");
+        let fixture = tempdir.path().join("fixtures/fixture/src");
         fs::create_dir_all(&fixture).unwrap();
         fs::write(fixture.join("sample.txt"), "let value = 1\n").unwrap();
         let document = serde_yaml::from_str::<BenchmarkDocument>(
@@ -530,7 +655,7 @@ cases:
 schemaVersion: 1
 source:
   kind: fixture
-  path: fixture
+  path: fixtures/fixture
 language: text
 cases:
   - id: mismatch
@@ -550,6 +675,103 @@ cases:
 
         let error = document.validate_with_base(tempdir.path()).unwrap_err();
 
-        assert!(format!("{error:#}").contains("expected displayName"));
+        assert!(format!("{error:#}").contains("does not select displayName"));
+    }
+
+    #[test]
+    fn fixture_validation_rejects_absolute_source_paths() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let document = serde_yaml::from_str::<BenchmarkDocument>(
+            r#"
+schemaVersion: 1
+source:
+  kind: fixture
+  path: /tmp
+language: text
+cases: []
+"#,
+        )
+        .unwrap();
+
+        let error = document.validate_with_base(tempdir.path()).unwrap_err();
+
+        assert!(format!("{error:#}").contains("fixture source path must be relative"));
+    }
+
+    #[test]
+    fn validates_utf8_fixture_positions() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let fixture = tempdir.path().join("fixtures/fixture/src");
+        fs::create_dir_all(&fixture).unwrap();
+        fs::write(fixture.join("sample.txt"), "let café = 1\n").unwrap();
+        let document = serde_yaml::from_str::<BenchmarkDocument>(
+            r#"
+schemaVersion: 1
+positionEncoding: utf-8
+source:
+  kind: fixture
+  path: fixtures/fixture
+language: text
+cases:
+  - id: utf8
+    declaration:
+      location:
+        uri: benchmark://source/src/sample.txt
+        range:
+          start: { line: 0, character: 4 }
+          end: { line: 0, character: 9 }
+      kind: variable
+      displayName: café
+    expectedUsages: []
+    usageLookups: []
+"#,
+        )
+        .unwrap();
+
+        document.validate_with_base(tempdir.path()).unwrap();
+    }
+
+    #[test]
+    fn validate_path_resolves_fixtures_from_repo_root() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let repo_root = tempdir.path();
+        fs::write(
+            repo_root.join("Cargo.toml"),
+            "[package]\nname = \"fixture\"\n",
+        )
+        .unwrap();
+        fs::create_dir(repo_root.join("schema")).unwrap();
+        let fixture = repo_root.join("fixtures/fixture/src");
+        fs::create_dir_all(&fixture).unwrap();
+        fs::write(fixture.join("sample.txt"), "let value = 1\n").unwrap();
+        let cases = repo_root.join("benchmarks/cases");
+        fs::create_dir_all(&cases).unwrap();
+        fs::write(
+            cases.join("sample.yaml"),
+            r#"
+schemaVersion: 1
+source:
+  kind: fixture
+  path: fixtures/fixture
+language: text
+cases:
+  - id: value
+    declaration:
+      location:
+        uri: benchmark://source/src/sample.txt
+        range:
+          start: { line: 0, character: 4 }
+          end: { line: 0, character: 9 }
+      kind: variable
+      displayName: value
+    expectedUsages: []
+    usageLookups: []
+"#,
+        )
+        .unwrap();
+
+        let files = validate_path(&cases).unwrap();
+
+        assert_eq!(files, vec![cases.join("sample.yaml")]);
     }
 }
