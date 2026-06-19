@@ -1,6 +1,6 @@
 use crate::{
-    benchmark_source_path, collect_case_files, find_repo_root_for_path, BenchmarkCase,
-    BenchmarkDocument, Location, PositionEncoding, Source, SymbolKind, SymbolLocation,
+    benchmark_source_path, find_repo_root_for_path, BenchmarkCase, BenchmarkDocument, Location,
+    PositionEncoding, Source, SymbolKind, SymbolLocation,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use schemars::JsonSchema;
@@ -12,12 +12,16 @@ use std::{
     hash::{Hash, Hasher},
     io::{BufRead, BufReader, Read, Write},
     path::{Path, PathBuf},
-    process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio},
-    time::{SystemTime, UNIX_EPOCH},
+    process::{Child, ChildStdin, Command, Stdio},
+    sync::mpsc::{self, Receiver},
+    thread,
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
-use url::Url;
+use url::{Host, Url};
 
 const DEFAULT_BIFROST_COMMIT: &str = "origin/master";
+const COMMAND_TIMEOUT: Duration = Duration::from_secs(10 * 60);
+const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(5 * 60);
 
 #[derive(Debug, Clone)]
 pub struct RunBifrostOptions {
@@ -27,6 +31,7 @@ pub struct RunBifrostOptions {
     pub work_dir: PathBuf,
     pub output: Option<PathBuf>,
     pub include_unsupported: bool,
+    pub include_definition_lookups: bool,
     pub keep_worktrees: bool,
 }
 
@@ -39,6 +44,7 @@ impl RunBifrostOptions {
             work_dir: PathBuf::from("target/usagebench"),
             output: None,
             include_unsupported: false,
+            include_definition_lookups: false,
             keep_worktrees: false,
         }
     }
@@ -169,27 +175,17 @@ pub fn generated_bifrost_report_schema_json() -> Result<String> {
     serde_json::to_string_pretty(&schema).context("serialize generated Bifrost report schema")
 }
 
-pub fn default_bifrost_repo() -> PathBuf {
-    let local_sibling = PathBuf::from("../bifrost");
-    if local_sibling.is_dir() {
-        local_sibling
-    } else {
-        PathBuf::from("/Users/dave/Workspace/BrokkAi/bifrost")
-    }
+pub fn default_bifrost_repo(repo_root: &Path) -> Option<PathBuf> {
+    repo_root
+        .parent()
+        .map(|parent| parent.join("bifrost"))
+        .filter(|path| path.is_dir())
 }
 
 pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     let started_at = unix_seconds_now()?;
     let repo_root = find_repo_root_for_path(&options.case_path)?;
-    let mut case_files = Vec::new();
-    collect_case_files(&options.case_path, &mut case_files)?;
-    case_files.sort();
-    if case_files.is_empty() {
-        bail!(
-            "no benchmark case YAML files found under {}",
-            options.case_path.display()
-        );
-    }
+    let case_files = crate::validate_path(&options.case_path)?;
 
     let work_dir = if options.work_dir.is_absolute() {
         options.work_dir.clone()
@@ -197,20 +193,15 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         repo_root.join(&options.work_dir)
     };
     fs::create_dir_all(&work_dir).with_context(|| format!("create {}", work_dir.display()))?;
+    let _source_cleanup = CleanupGuard::new(work_dir.join("sources"), !options.keep_worktrees);
 
-    let bifrost_repo = options
-        .bifrost_repo
-        .clone()
-        .unwrap_or_else(default_bifrost_repo);
-    let bifrost_repo = if bifrost_repo.is_absolute() {
-        bifrost_repo
-    } else {
-        repo_root.join(bifrost_repo)
-    };
-    prepare_bifrost_repo(&bifrost_repo, &options.bifrost_commit)?;
-    let bifrost_resolved_commit = git_output(&bifrost_repo, ["rev-parse", "HEAD"])?;
-    build_bifrost(&bifrost_repo)?;
-    let bifrost_binary = bifrost_binary_path(&bifrost_repo);
+    let bifrost_source_repo =
+        resolve_bifrost_source_repo(&repo_root, options.bifrost_repo.as_ref())?;
+    let bifrost_checkout =
+        prepare_bifrost_checkout(&bifrost_source_repo, &options.bifrost_commit, &work_dir)?;
+    let bifrost_resolved_commit = git_output(&bifrost_checkout, ["rev-parse", "HEAD"])?;
+    build_bifrost(&bifrost_checkout)?;
+    let bifrost_binary = bifrost_binary_path(&bifrost_checkout);
 
     let mut documents = Vec::new();
     for case_file in &case_files {
@@ -224,6 +215,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             &source_root,
             &bifrost_binary,
             options.include_unsupported,
+            options.include_definition_lookups,
         )
         .with_context(|| format!("run benchmark cases {}", case_file.display()))?;
         documents.push(DocumentRunReport {
@@ -234,17 +226,10 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         });
     }
 
-    if !options.keep_worktrees {
-        let git_sources = work_dir.join("sources");
-        if git_sources.is_dir() {
-            let _ = fs::remove_dir_all(&git_sources);
-        }
-    }
-
     let finished_at = unix_seconds_now()?;
     let mut report = BifrostRunReport {
         usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
-        bifrost_repo: display_path(&bifrost_repo),
+        bifrost_repo: display_path(&bifrost_source_repo),
         bifrost_commit: options.bifrost_commit,
         bifrost_resolved_commit,
         started_at_unix_seconds: started_at,
@@ -276,6 +261,7 @@ fn run_document_cases(
     source_root: &Path,
     bifrost_binary: &Path,
     include_unsupported: bool,
+    include_definition_lookups: bool,
 ) -> Result<Vec<CaseRunReport>> {
     let mut session = McpSession::start(bifrost_binary, source_root)?;
     session.initialize()?;
@@ -287,6 +273,7 @@ fn run_document_cases(
             document.position_encoding,
             &mut session,
             include_unsupported,
+            include_definition_lookups,
         ));
     }
     Ok(reports)
@@ -297,6 +284,7 @@ fn run_case(
     encoding: PositionEncoding,
     session: &mut impl SearchToolsClient,
     include_unsupported: bool,
+    include_definition_lookups: bool,
 ) -> CaseRunReport {
     if let Some(unsupported) = &case.unsupported {
         if !include_unsupported {
@@ -313,11 +301,17 @@ fn run_case(
 
     let mut diagnostics = Vec::new();
     let declaration_to_usages = Some(run_declaration_to_usages(case, session, &mut diagnostics));
-    let usage_to_declaration = case
-        .usage_lookups
-        .iter()
-        .map(|lookup| run_usage_to_declaration(lookup, encoding, session))
-        .collect::<Vec<_>>();
+    let usage_to_declaration = if include_definition_lookups {
+        case.usage_lookups
+            .iter()
+            .map(|lookup| run_usage_to_declaration(lookup, encoding, session))
+            .collect::<Vec<_>>()
+    } else {
+        case.usage_lookups
+            .iter()
+            .map(skipped_definition_lookup)
+            .collect::<Vec<_>>()
+    };
 
     let status = combine_case_status(
         declaration_to_usages.as_ref(),
@@ -451,6 +445,8 @@ fn run_declaration_to_usages(
         .collect::<Vec<_>>();
     let status = if has_error_status {
         CaseStatus::Error
+    } else if parsed.partial {
+        CaseStatus::Failed
     } else if missing.is_empty() && unexpected.is_empty() {
         CaseStatus::Passed
     } else {
@@ -560,6 +556,36 @@ fn run_usage_to_declaration(
     }
 }
 
+fn skipped_definition_lookup(lookup: &crate::UsageLookup) -> UsageDefinitionReport {
+    let usage = normalize_symbol_location(&lookup.usage).unwrap_or_else(|_| NormalizedLocation {
+        path: "<invalid>".to_string(),
+        line: 0,
+        column: None,
+        display_name: Some(lookup.usage.display_name.clone()),
+        kind: Some(symbol_kind_name(&lookup.usage.kind).to_string()),
+    });
+    let expected_declaration = normalize_symbol_location(&lookup.expected_declaration)
+        .unwrap_or_else(|_| NormalizedLocation {
+            path: "<invalid>".to_string(),
+            line: 0,
+            column: None,
+            display_name: Some(lookup.expected_declaration.display_name.clone()),
+            kind: Some(symbol_kind_name(&lookup.expected_declaration.kind).to_string()),
+        });
+    UsageDefinitionReport {
+        status: CaseStatus::Skipped,
+        usage,
+        expected_declaration,
+        actual_declarations: Vec::new(),
+        raw_status: "definition_lookups_disabled".to_string(),
+        diagnostics: vec![RunDiagnostic {
+            kind: "definition_lookups_disabled".to_string(),
+            message: "get_definition is not part of the default released runner surface yet"
+                .to_string(),
+        }],
+    }
+}
+
 fn resolve_declaration_selector(
     session: &mut impl SearchToolsClient,
     declaration: &SymbolLocation,
@@ -590,8 +616,23 @@ fn resolve_declaration_selector(
         })
         .collect::<Vec<_>>();
 
-    match candidates.as_slice() {
-        [(path, hit)] => {
+    let selected = match candidates.as_slice() {
+        [(path, hit)] => Some((path, hit)),
+        [] => None,
+        _ if declaration.disambiguation == Some(crate::Disambiguation::FirstMatchingSymbol) => {
+            candidates.first().map(|(path, hit)| (path, hit))
+        }
+        _ => bail!(
+            "multiple Bifrost symbols matched {}:{} `{}` ({})",
+            expected_path,
+            expected_line,
+            declaration.display_name,
+            symbol_kind_name(&declaration.kind)
+        ),
+    };
+
+    match selected {
+        Some((path, hit)) => {
             let selector = if count_symbol_occurrences(&result, &hit.symbol) > 1 {
                 format!("{path}#{}", hit.symbol)
             } else {
@@ -599,15 +640,8 @@ fn resolve_declaration_selector(
             };
             Ok(ResolvedSelector { selector })
         }
-        [] => bail!(
+        None => bail!(
             "no Bifrost symbol matched {}:{} `{}` ({})",
-            expected_path,
-            expected_line,
-            declaration.display_name,
-            symbol_kind_name(&declaration.kind)
-        ),
-        _ => bail!(
-            "multiple Bifrost symbols matched {}:{} `{}` ({})",
             expected_path,
             expected_line,
             declaration.display_name,
@@ -645,10 +679,8 @@ struct SearchSymbolsFile {
 impl SearchSymbolsFile {
     fn hits_for_kind(&self, kind: &SymbolKind) -> Vec<SearchSymbolHit> {
         match kind {
-            SymbolKind::Class
-            | SymbolKind::Constructor
-            | SymbolKind::Interface
-            | SymbolKind::Type => self.classes.clone(),
+            SymbolKind::Class | SymbolKind::Interface | SymbolKind::Type => self.classes.clone(),
+            SymbolKind::Constructor => self.functions.clone(),
             SymbolKind::Method | SymbolKind::Function => self.functions.clone(),
             SymbolKind::Field
             | SymbolKind::Variable
@@ -770,6 +802,9 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
         .and_then(|summary| summary.get("partial"))
         .and_then(Value::as_bool)
         .unwrap_or(false);
+    if partial && !raw_statuses.iter().any(|status| status == "partial") {
+        raw_statuses.push("partial".to_string());
+    }
 
     ParsedScanUsages {
         locations: locations.into_iter().collect(),
@@ -882,10 +917,13 @@ struct OneBasedPosition {
     column: u32,
 }
 
-fn one_based_position(
-    location: &Location,
-    _encoding: PositionEncoding,
-) -> Result<OneBasedPosition> {
+fn one_based_position(location: &Location, encoding: PositionEncoding) -> Result<OneBasedPosition> {
+    if encoding != PositionEncoding::Utf16 {
+        bail!(
+            "definition lookups currently require utf-16 benchmark positions; got {:?}",
+            encoding
+        );
+    }
     Ok(OneBasedPosition {
         line: location.range.start.line + 1,
         column: location.range.start.character + 1,
@@ -956,38 +994,85 @@ fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
     totals
 }
 
-fn prepare_bifrost_repo(repo: &Path, commit: &str) -> Result<()> {
+fn resolve_bifrost_source_repo(repo_root: &Path, explicit: Option<&PathBuf>) -> Result<PathBuf> {
+    let repo = match explicit {
+        Some(path) if path.is_absolute() => path.clone(),
+        Some(path) => repo_root.join(path),
+        None => default_bifrost_repo(repo_root).ok_or_else(|| {
+            anyhow!("could not find sibling Bifrost checkout; pass --bifrost-repo")
+        })?,
+    };
     if !repo.join(".git").exists() {
         bail!(
             "Bifrost repo {} does not exist or is not a git checkout",
             repo.display()
         );
     }
-    let status = git_output(repo, ["status", "--porcelain"])?;
+    Ok(repo)
+}
+
+fn prepare_bifrost_checkout(source_repo: &Path, commit: &str, work_dir: &Path) -> Result<PathBuf> {
+    let checkout = work_dir.join("bifrost");
+    if checkout.join(".git").exists() {
+        run_command(
+            Command::new("git")
+                .arg("-C")
+                .arg(&checkout)
+                .arg("fetch")
+                .arg("origin"),
+        )
+        .with_context(|| format!("fetch isolated Bifrost checkout {}", checkout.display()))?;
+    } else {
+        if let Some(parent) = checkout.parent() {
+            fs::create_dir_all(parent).with_context(|| format!("create {}", parent.display()))?;
+        }
+        run_command(
+            Command::new("git")
+                .arg("clone")
+                .arg(source_repo)
+                .arg(&checkout),
+        )
+        .with_context(|| format!("clone Bifrost repo {}", source_repo.display()))?;
+    }
+
+    if let Ok(origin_url) = git_output(source_repo, ["remote", "get-url", "origin"]) {
+        run_command(
+            Command::new("git")
+                .arg("-C")
+                .arg(&checkout)
+                .arg("remote")
+                .arg("set-url")
+                .arg("origin")
+                .arg(origin_url),
+        )
+        .with_context(|| format!("set isolated Bifrost remote for {}", checkout.display()))?;
+        run_command(
+            Command::new("git")
+                .arg("-C")
+                .arg(&checkout)
+                .arg("fetch")
+                .arg("origin"),
+        )
+        .with_context(|| format!("fetch Bifrost origin for {}", checkout.display()))?;
+    }
+
+    let status = git_output(&checkout, ["status", "--porcelain"])?;
     if !status.trim().is_empty() {
         bail!(
-            "Bifrost repo {} has uncommitted changes; refusing to checkout {commit}",
-            repo.display()
+            "isolated Bifrost checkout {} has uncommitted changes; refusing to checkout {commit}",
+            checkout.display()
         );
     }
     run_command(
         Command::new("git")
             .arg("-C")
-            .arg(repo)
-            .arg("fetch")
-            .arg("origin"),
-    )
-    .with_context(|| format!("fetch Bifrost repo {}", repo.display()))?;
-    run_command(
-        Command::new("git")
-            .arg("-C")
-            .arg(repo)
+            .arg(&checkout)
             .arg("checkout")
             .arg("--detach")
             .arg(commit),
     )
     .with_context(|| format!("checkout Bifrost commit {commit}"))?;
-    Ok(())
+    Ok(checkout)
 }
 
 fn build_bifrost(repo: &Path) -> Result<()> {
@@ -1019,13 +1104,28 @@ fn prepare_source_root(source: &Source, repo_root: &Path, work_dir: &Path) -> Re
                     source_root.display()
                 );
             }
-            Ok(source_root)
+            let canonical_repo = repo_root
+                .canonicalize()
+                .with_context(|| format!("canonicalize {}", repo_root.display()))?;
+            let canonical_source = source_root
+                .canonicalize()
+                .with_context(|| format!("canonicalize {}", source_root.display()))?;
+            let allowed_root = canonical_repo.join("fixtures");
+            if !canonical_source.starts_with(&allowed_root) {
+                bail!(
+                    "fixture source root {} must stay under {}",
+                    source_root.display(),
+                    allowed_root.display()
+                );
+            }
+            Ok(canonical_source)
         }
         Source::Git { repo, commit } => prepare_git_source(repo, commit, work_dir),
     }
 }
 
 fn prepare_git_source(repo: &Url, commit: &str, work_dir: &Path) -> Result<PathBuf> {
+    validate_git_source_url(repo)?;
     let source_dir = work_dir
         .join("sources")
         .join(format!("{:016x}", stable_hash(&(repo.as_str(), commit))));
@@ -1037,7 +1137,7 @@ fn prepare_git_source(repo: &Url, commit: &str, work_dir: &Path) -> Result<PathB
                 .arg("fetch")
                 .arg("origin"),
         )
-        .with_context(|| format!("fetch source repo {}", repo))?;
+        .with_context(|| format!("fetch source repo {}", redacted_url(repo)))?;
     } else {
         if let Some(parent) = source_dir.parent() {
             fs::create_dir_all(parent).with_context(|| format!("create {}", parent.display()))?;
@@ -1048,7 +1148,7 @@ fn prepare_git_source(repo: &Url, commit: &str, work_dir: &Path) -> Result<PathB
                 .arg(repo.as_str())
                 .arg(&source_dir),
         )
-        .with_context(|| format!("clone source repo {}", repo))?;
+        .with_context(|| format!("clone source repo {}", redacted_url(repo)))?;
     }
     run_command(
         Command::new("git")
@@ -1062,13 +1162,62 @@ fn prepare_git_source(repo: &Url, commit: &str, work_dir: &Path) -> Result<PathB
     Ok(source_dir)
 }
 
+fn validate_git_source_url(repo: &Url) -> Result<()> {
+    if !repo.username().is_empty() || repo.password().is_some() {
+        bail!("git source URLs must not contain embedded credentials");
+    }
+
+    match repo.scheme() {
+        "https" => {}
+        other => bail!("git source URL scheme `{other}` is not allowed; use https"),
+    }
+
+    let Some(host) = repo.host() else {
+        bail!("git source URL must include a host");
+    };
+    if is_private_or_local_host(&host) {
+        bail!("git source URL host `{host}` is not allowed");
+    }
+
+    Ok(())
+}
+
+fn is_private_or_local_host(host: &Host<&str>) -> bool {
+    match host {
+        Host::Domain(domain) => {
+            let domain = domain.trim_end_matches('.').to_ascii_lowercase();
+            domain == "localhost" || domain.ends_with(".localhost")
+        }
+        Host::Ipv4(addr) => {
+            addr.is_private()
+                || addr.is_loopback()
+                || addr.is_link_local()
+                || addr.is_broadcast()
+                || addr.is_documentation()
+                || addr.octets()[0] == 0
+        }
+        Host::Ipv6(addr) => {
+            addr.is_loopback()
+                || addr.is_unspecified()
+                || addr.is_unique_local()
+                || addr.is_unicast_link_local()
+        }
+    }
+}
+
+fn redacted_url(url: &Url) -> String {
+    let mut redacted = url.clone();
+    let _ = redacted.set_username("");
+    let _ = redacted.set_password(None);
+    redacted.to_string()
+}
+
 fn git_output<const N: usize>(repo: &Path, args: [&str; N]) -> Result<String> {
-    let output = Command::new("git")
-        .arg("-C")
-        .arg(repo)
-        .args(args)
-        .output()
-        .with_context(|| format!("run git in {}", repo.display()))?;
+    let output = command_output_with_timeout(
+        Command::new("git").arg("-C").arg(repo).args(args),
+        COMMAND_TIMEOUT,
+    )
+    .with_context(|| format!("run git in {}", repo.display()))?;
     if !output.status.success() {
         bail!(
             "git command failed in {}: {}",
@@ -1080,11 +1229,91 @@ fn git_output<const N: usize>(repo: &Path, args: [&str; N]) -> Result<String> {
 }
 
 fn run_command(command: &mut Command) -> Result<()> {
-    let output = command.output().context("spawn command")?;
+    let output = command_output_with_timeout(command, COMMAND_TIMEOUT)?;
     if !output.status.success() {
         bail!("{}", String::from_utf8_lossy(&output.stderr));
     }
     Ok(())
+}
+
+fn command_output_with_timeout(
+    command: &mut Command,
+    timeout: Duration,
+) -> Result<std::process::Output> {
+    let mut child = command
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .context("spawn command")?;
+    let stdout = child.stdout.take().context("missing command stdout pipe")?;
+    let stderr = child.stderr.take().context("missing command stderr pipe")?;
+    let stdout_reader = read_pipe(stdout);
+    let stderr_reader = read_pipe(stderr);
+    let deadline = Instant::now() + timeout;
+    let status = loop {
+        if let Some(exit_status) = child.try_wait().context("poll command")? {
+            break exit_status;
+        }
+        if Instant::now() >= deadline {
+            let _ = child.kill();
+            let _ = child.wait().context("wait for timed-out command")?;
+            let stdout = join_pipe_reader(stdout_reader, "stdout")?;
+            let stderr = join_pipe_reader(stderr_reader, "stderr")?;
+            bail!(
+                "command timed out after {} seconds\nstdout:\n{}\nstderr:\n{}",
+                timeout.as_secs(),
+                String::from_utf8_lossy(&stdout),
+                String::from_utf8_lossy(&stderr)
+            );
+        }
+        thread::sleep(Duration::from_millis(100));
+    };
+
+    let stdout = join_pipe_reader(stdout_reader, "stdout")?;
+    let stderr = join_pipe_reader(stderr_reader, "stderr")?;
+    Ok(std::process::Output {
+        status,
+        stdout,
+        stderr,
+    })
+}
+
+fn read_pipe(mut pipe: impl Read + Send + 'static) -> thread::JoinHandle<Result<Vec<u8>, String>> {
+    thread::spawn(move || {
+        let mut output = Vec::new();
+        pipe.read_to_end(&mut output)
+            .map(|_| output)
+            .map_err(|error| error.to_string())
+    })
+}
+
+fn join_pipe_reader(
+    reader: thread::JoinHandle<Result<Vec<u8>, String>>,
+    stream_name: &str,
+) -> Result<Vec<u8>> {
+    reader
+        .join()
+        .map_err(|_| anyhow!("command {stream_name} reader panicked"))?
+        .map_err(|error| anyhow!("read command {stream_name}: {error}"))
+}
+
+struct CleanupGuard {
+    path: PathBuf,
+    enabled: bool,
+}
+
+impl CleanupGuard {
+    fn new(path: PathBuf, enabled: bool) -> Self {
+        Self { path, enabled }
+    }
+}
+
+impl Drop for CleanupGuard {
+    fn drop(&mut self) {
+        if self.enabled && self.path.is_dir() {
+            let _ = fs::remove_dir_all(&self.path);
+        }
+    }
 }
 
 fn unix_seconds_now() -> Result<u64> {
@@ -1118,8 +1347,7 @@ trait SearchToolsClient {
 struct McpSession {
     child: Child,
     stdin: ChildStdin,
-    reader: BufReader<ChildStdout>,
-    stderr: ChildStderr,
+    stdout_lines: Receiver<Result<String, String>>,
     next_id: u64,
 }
 
@@ -1132,17 +1360,37 @@ impl McpSession {
             .arg("searchtools")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+            .stderr(Stdio::null())
             .spawn()
             .with_context(|| format!("spawn Bifrost MCP server {}", bifrost_binary.display()))?;
         let stdin = child.stdin.take().context("missing Bifrost stdin")?;
         let stdout = child.stdout.take().context("missing Bifrost stdout")?;
-        let stderr = child.stderr.take().context("missing Bifrost stderr")?;
+        let (sender, stdout_lines) = mpsc::channel();
+        thread::spawn(move || {
+            let mut reader = BufReader::new(stdout);
+            loop {
+                let mut line = String::new();
+                match reader.read_line(&mut line) {
+                    Ok(0) => {
+                        let _ = sender.send(Err("Bifrost MCP server closed stdout".to_string()));
+                        break;
+                    }
+                    Ok(_) => {
+                        if sender.send(Ok(line)).is_err() {
+                            break;
+                        }
+                    }
+                    Err(error) => {
+                        let _ = sender.send(Err(format!("read MCP response: {error}")));
+                        break;
+                    }
+                }
+            }
+        });
         Ok(Self {
             child,
             stdin,
-            reader: BufReader::new(stdout),
-            stderr,
+            stdout_lines,
             next_id: 1,
         })
     }
@@ -1171,8 +1419,12 @@ impl McpSession {
     }
 
     fn request(&mut self, payload: Value) -> Result<Value> {
+        let expected_id = payload
+            .get("id")
+            .cloned()
+            .context("JSON-RPC request missing id")?;
         self.write_line(&payload)?;
-        self.read_line()
+        self.read_response(expected_id)
     }
 
     fn notify(&mut self, payload: Value) -> Result<()> {
@@ -1185,24 +1437,36 @@ impl McpSession {
             .context("write MCP request")
     }
 
-    fn read_line(&mut self) -> Result<Value> {
-        let mut line = String::new();
-        let bytes = self
-            .reader
-            .read_line(&mut line)
-            .context("read MCP response")?;
-        if bytes == 0 {
-            let mut stderr = String::new();
-            let _ = self.stderr.read_to_string(&mut stderr);
-            bail!("Bifrost MCP server closed early; stderr:\n{stderr}");
-        }
-        serde_json::from_str(&line).with_context(|| format!("parse MCP JSON response: {line}"))
+    fn read_response(&mut self, expected_id: Value) -> Result<Value> {
+        read_json_rpc_response(&self.stdout_lines, expected_id)
     }
 
     fn take_id(&mut self) -> u64 {
         let next = self.next_id;
         self.next_id += 1;
         next
+    }
+}
+
+fn read_json_rpc_response(
+    stdout_lines: &Receiver<Result<String, String>>,
+    expected_id: Value,
+) -> Result<Value> {
+    loop {
+        let line = stdout_lines
+            .recv_timeout(MCP_REQUEST_TIMEOUT)
+            .with_context(|| {
+                format!(
+                    "timed out after {} seconds waiting for Bifrost MCP response",
+                    MCP_REQUEST_TIMEOUT.as_secs()
+                )
+            })?
+            .map_err(|message| anyhow!(message))?;
+        let response: Value = serde_json::from_str(&line)
+            .with_context(|| format!("parse MCP JSON response: {line}"))?;
+        if response.get("id") == Some(&expected_id) {
+            return Ok(response);
+        }
     }
 }
 
@@ -1295,7 +1559,39 @@ mod tests {
 
         let root = prepare_source_root(&source, tempdir.path(), tempdir.path()).unwrap();
 
-        assert_eq!(root, tempdir.path().join("fixtures/rust/baseline"));
+        assert_eq!(
+            root,
+            tempdir
+                .path()
+                .join("fixtures/rust/baseline")
+                .canonicalize()
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn fixture_source_root_rejects_paths_outside_fixtures() {
+        let tempdir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(tempdir.path().join("fixtures")).unwrap();
+        fs::create_dir_all(tempdir.path().join("outside")).unwrap();
+        let source = Source::Fixture {
+            path: "outside".to_string(),
+        };
+
+        let error = prepare_source_root(&source, tempdir.path(), tempdir.path()).unwrap_err();
+
+        assert!(format!("{error:#}").contains("must stay under"));
+    }
+
+    #[test]
+    fn default_bifrost_repo_uses_repo_root_sibling() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let repo_root = tempdir.path().join("usagebench");
+        let bifrost = tempdir.path().join("bifrost");
+        fs::create_dir_all(&repo_root).unwrap();
+        fs::create_dir_all(&bifrost).unwrap();
+
+        assert_eq!(default_bifrost_repo(&repo_root), Some(bifrost));
     }
 
     #[test]
@@ -1344,7 +1640,7 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false);
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
 
         assert_eq!(report.status, CaseStatus::Passed);
     }
@@ -1364,7 +1660,7 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false);
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
 
         assert_eq!(report.status, CaseStatus::Failed);
         let declaration = report.declaration_to_usages.unwrap();
@@ -1396,7 +1692,7 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false);
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
 
         assert_eq!(report.status, CaseStatus::Passed);
     }
@@ -1419,7 +1715,7 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false);
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
 
         assert_eq!(report.status, CaseStatus::Failed);
         let declaration = report.declaration_to_usages.unwrap();
@@ -1434,7 +1730,7 @@ mod tests {
         });
         let mut client = MockClient::new(Vec::new());
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false);
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
 
         assert_eq!(report.status, CaseStatus::Skipped);
         assert_eq!(
@@ -1461,7 +1757,7 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false);
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
 
         assert_eq!(report.status, CaseStatus::Failed);
         assert_eq!(report.usage_to_declaration[0].status, CaseStatus::Failed);
@@ -1480,6 +1776,83 @@ mod tests {
 
         assert_eq!(report.status, CaseStatus::Failed);
         assert_eq!(report.raw_status, "unsupported_tool");
+    }
+
+    #[test]
+    fn definition_lookups_are_skipped_by_default() {
+        let case = benchmark_case();
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(report.usage_to_declaration[0].status, CaseStatus::Skipped);
+        assert_eq!(
+            report.usage_to_declaration[0].raw_status,
+            "definition_lookups_disabled"
+        );
+    }
+
+    #[test]
+    fn partial_scan_usages_result_fails_case() {
+        let case = benchmark_case();
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages",
+                scan_usages_json(vec![("src/lib.rs", 8)], true),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        let declaration = report.declaration_to_usages.unwrap();
+        assert!(declaration.partial);
+        assert!(declaration.raw_statuses.contains(&"partial".to_string()));
+    }
+
+    #[test]
+    fn constructor_declarations_resolve_from_functions_bucket() {
+        let mut case = benchmark_case();
+        case.declaration =
+            symbol_location("src/service.rs", 29, 7, "Service", SymbolKind::Constructor);
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                json!({
+                    "files": [{
+                        "path": "src/service.rs",
+                        "loc": 10,
+                        "classes": [{"symbol": "example.Service", "signature": "", "line": 30}],
+                        "functions": [{"symbol": "example.Service", "signature": "", "line": 30}],
+                        "fields": [],
+                        "modules": [],
+                        "macros": []
+                    }]
+                }),
+            ),
+            tool(
+                "scan_usages",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+
+        assert_eq!(report.status, CaseStatus::Passed);
     }
 
     #[test]
@@ -1509,10 +1882,113 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false);
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
 
         assert_eq!(report.status, CaseStatus::Failed);
         assert_eq!(report.diagnostics[0].kind, "symbol_resolution_failed");
+    }
+
+    #[test]
+    fn first_matching_symbol_disambiguation_selects_first_candidate() {
+        let mut case = benchmark_case();
+        case.declaration.disambiguation = Some(crate::Disambiguation::FirstMatchingSymbol);
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                json!({
+                    "files": [{
+                        "path": "src/service.rs",
+                        "loc": 10,
+                        "classes": [],
+                        "functions": [
+                            {"symbol": "a.build_service", "signature": "", "line": 30},
+                            {"symbol": "b.build_service", "signature": "", "line": 30}
+                        ],
+                        "fields": [],
+                        "modules": [],
+                        "macros": []
+                    }]
+                }),
+            ),
+            tool(
+                "scan_usages",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+
+        assert_eq!(report.status, CaseStatus::Passed);
+    }
+
+    #[test]
+    fn git_source_url_policy_rejects_unsafe_inputs() {
+        validate_git_source_url(&Url::parse("https://github.com/BrokkAi/bifrost.git").unwrap())
+            .unwrap();
+
+        for url in [
+            "file:///tmp/repo",
+            "ssh://github.com/BrokkAi/bifrost.git",
+            "git://github.com/BrokkAi/bifrost.git",
+            "https://user:secret@example.com/repo.git",
+            "https://localhost/repo.git",
+            "https://127.0.0.1/repo.git",
+            "https://169.254.169.254/latest/meta-data",
+            "https://[::1]/repo.git",
+        ] {
+            assert!(
+                validate_git_source_url(&Url::parse(url).unwrap()).is_err(),
+                "{url} should be rejected"
+            );
+        }
+    }
+
+    #[test]
+    fn redacted_url_removes_embedded_credentials() {
+        let url = Url::parse("https://user:secret@example.com/repo.git").unwrap();
+
+        let redacted = redacted_url(&url);
+
+        assert_eq!(redacted, "https://example.com/repo.git");
+        assert!(!redacted.contains("secret"));
+    }
+
+    #[test]
+    fn command_output_with_timeout_drains_large_output() {
+        let output = command_output_with_timeout(
+            Command::new("sh").arg("-c").arg(
+                "i=0; while [ $i -lt 20000 ]; do printf 'abcdefghijklmnopqrstuvwxyz\\n'; i=$((i+1)); done",
+            ),
+            Duration::from_secs(10),
+        )
+        .unwrap();
+
+        assert!(output.status.success());
+        assert!(output.stdout.len() > 500_000);
+    }
+
+    #[test]
+    fn json_rpc_response_reader_skips_notifications_and_other_ids() {
+        let (sender, receiver) = mpsc::channel();
+        sender
+            .send(Ok(
+                json!({"jsonrpc": "2.0", "method": "progress"}).to_string()
+            ))
+            .unwrap();
+        sender
+            .send(Ok(
+                json!({"jsonrpc": "2.0", "id": 1, "result": "wrong"}).to_string()
+            ))
+            .unwrap();
+        sender
+            .send(Ok(
+                json!({"jsonrpc": "2.0", "id": 2, "result": "right"}).to_string()
+            ))
+            .unwrap();
+
+        let response = read_json_rpc_response(&receiver, json!(2)).unwrap();
+
+        assert_eq!(response["result"], "right");
     }
 
     struct MockClient {
