@@ -7,6 +7,8 @@ use std::{
 };
 use url::Url;
 
+pub mod bifrost_runner;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BenchmarkDocument {
