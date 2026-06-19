@@ -999,7 +999,7 @@ fn apply_expected_failure(
     diagnostics: &mut Vec<RunDiagnostic>,
 ) -> CaseStatus {
     match (expected_failure_reason, observed_status) {
-        (Some(_), CaseStatus::Failed | CaseStatus::Error) => CaseStatus::ExpectedFailure,
+        (Some(_), CaseStatus::Failed) => CaseStatus::ExpectedFailure,
         (Some(_), CaseStatus::Passed) => {
             diagnostics.push(RunDiagnostic {
                 kind: "expected_failure_passed".to_string(),
@@ -1846,6 +1846,20 @@ mod tests {
         }]);
         assert_eq!(totals.failed, 0);
         assert_eq!(totals.expected_failures, 1);
+    }
+
+    #[test]
+    fn expected_failure_does_not_mask_runner_errors() {
+        let mut diagnostics = Vec::new();
+
+        let status = apply_expected_failure(
+            CaseStatus::Error,
+            Some("current Bifrost baseline misses this usage"),
+            &mut diagnostics,
+        );
+
+        assert_eq!(status, CaseStatus::Error);
+        assert!(diagnostics.is_empty());
     }
 
     #[test]

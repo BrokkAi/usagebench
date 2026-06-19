@@ -122,8 +122,8 @@ fn print_run_details(report: &BifrostRunReport) {
                     println!(
                         "{} {}: {}",
                         status_label(case.status),
-                        case.id,
-                        document.case_file
+                        safe_display(&case.id),
+                        safe_display(&document.case_file)
                     );
                 }
                 continue;
@@ -142,10 +142,10 @@ fn print_run_details(report: &BifrostRunReport) {
             println!(
                 "{} {}: {} missing, {} extra ({})",
                 status_label(case.status),
-                case.id,
+                safe_display(&case.id),
                 declaration.missing.len(),
                 declaration.unexpected.len(),
-                document.case_file
+                safe_display(&document.case_file)
             );
             print_locations("missing", &declaration.missing);
             print_locations("extra", &declaration.unexpected);
@@ -167,9 +167,18 @@ fn print_locations(label: &str, locations: &[NormalizedLocation]) {
 
 fn format_location(location: &NormalizedLocation) -> String {
     match location.column {
-        Some(column) => format!("{}:{}:{}", location.path, location.line, column),
-        None => format!("{}:{}", location.path, location.line),
+        Some(column) => format!(
+            "{}:{}:{}",
+            safe_display(&location.path),
+            location.line,
+            column
+        ),
+        None => format!("{}:{}", safe_display(&location.path), location.line),
     }
+}
+
+fn safe_display(value: &str) -> String {
+    value.escape_debug().to_string()
 }
 
 fn status_label(status: CaseStatus) -> &'static str {
@@ -179,5 +188,33 @@ fn status_label(status: CaseStatus) -> &'static str {
         CaseStatus::ExpectedFailure => "XFAIL",
         CaseStatus::Skipped => "SKIP",
         CaseStatus::Error => "ERROR",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn summary_locations_escape_control_characters() {
+        let location = NormalizedLocation {
+            path: "src/\u{1b}[31mspoof\nPASS.rs".to_string(),
+            line: 7,
+            column: Some(3),
+            display_name: None,
+            kind: None,
+        };
+
+        let rendered = format_location(&location);
+
+        assert_eq!(rendered, "src/\\u{1b}[31mspoof\\nPASS.rs:7:3");
+    }
+
+    #[test]
+    fn safe_display_leaves_plain_text_readable() {
+        assert_eq!(
+            safe_display("benchmarks/cases/rust.yaml"),
+            "benchmarks/cases/rust.yaml"
+        );
     }
 }
