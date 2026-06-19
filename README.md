@@ -32,8 +32,9 @@ cargo run -- validate benchmarks/cases
 
 ## Baseline Corpus
 
-The initial corpus uses small checked-in fixtures for Java, Go, Python, and
-TypeScript. These fixtures are the source of truth for issue #8; the older broad
+The initial corpus uses small checked-in fixtures for the Bifrost-covered
+language set: Java, Go, Python, TypeScript, JavaScript, Rust, Scala, C#, PHP,
+and C++. These fixtures are the source of truth for issue #8; the older broad
 Java/Go/Python generator stack has been removed from the active benchmark path.
 
 Each fixture case records `verification.method: manual_inspection` with a short

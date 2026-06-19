@@ -93,8 +93,8 @@ repositories. The initial matrix should cover:
 - TypeScript/JavaScript: exported functions/classes, methods, object properties,
   default/named imports, JSX/TSX component references where supported by
   Bifrost.
-- Rust or C# as a follow-up only if Bifrost support is ready enough to avoid
-  spending the first milestone on harness plumbing.
+- Rust, C#, Scala, PHP, and C++ expand the baseline once the fixture-only path is
+  in place, keeping the corpus aligned with Bifrost's supported languages.
 
 Each language should start with a handful of cases from stable repositories or
 small in-repo fixtures. Public repository cases should pin commits.
@@ -109,9 +109,9 @@ small in-repo fixtures. Public repository cases should pin commits.
 
 2. Create the first curated baseline corpus.
 
-   Select a small number of cases across Java, Go, Python, and TypeScript. For
-   each case, verify expected results by LSP and/or manual source inspection.
-   Keep notes about how each baseline was verified.
+   Select a small number of fixture cases across Bifrost-supported languages.
+   For each case, verify expected results by LSP and/or manual source
+   inspection. Keep notes about how each baseline was verified.
 
 3. Build a Bifrost runner.
 
