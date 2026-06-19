@@ -1,13 +1,18 @@
 # usagebench
 
-Repository for creating and running benchmarks around the static analysis task of discovering usages of certain code units.
+Repository for curated benchmarks around the static analysis task of
+discovering usages of source symbols.
+
+The benchmark corpus is authored by source location instead of by an
+analyzer-specific symbol ID. Each case points at a declaration, expected usage
+sites, and reverse usage-to-declaration probes using LSP-shaped ranges.
 
 ## Directory Structure
 
-* `benchmarks`: Authored benchmark case files and schema documentation.
-* `javagen`: A Joern-based Java usage extractor.
-* `gogen`: A Go-based usage extractor.
-* `pygen`: A Python usage extractor.
+* `benchmarks`: Authored benchmark case files and corpus documentation.
+* `fixtures`: Small in-repository source corpora used by the baseline cases.
+* `schema`: JSON Schema for benchmark case documents.
+* `src`: Rust validation CLI and schema model.
 
 ## Validating Benchmark Cases
 
@@ -18,38 +23,19 @@ them with:
 cargo run -- validate benchmarks/cases
 ```
 
-## Generating Java Usages
+CI runs the same Rust test and validation path:
 
-1. Build `javagen`:
-   ```
-   cd javagen
-   sbt stage
-   ```
-2. Build Java usages from `dataset/java_repositories.csv`
-   ```
-   ./javagen/javagen dataset/java_repositories.csv dataset/java
-   ```
+```bash
+cargo test
+cargo run -- validate benchmarks/cases
+```
 
-## Generating Go Usages
+## Baseline Corpus
 
-1. Build `gogen`:
-   ```
-   cd gogen
-   go build -o gogen
-   ```
-2. Build Go usages from `dataset/go_repositories.csv`
-   ```
-   ./gogen/gogen --input dataset/go_repositories.csv --output dataset/go
-   ```
+The initial corpus uses small checked-in fixtures for the Bifrost-covered
+language set: Java, Go, Python, TypeScript, JavaScript, Rust, Scala, C#, PHP,
+and C++. These fixtures are the source of truth for issue #8; the older broad
+Java/Go/Python generator stack has been removed from the active benchmark path.
 
-## Generating Python Usages
-
-1. Install dependencies:
-   ```bash
-   cd pygen
-   uv sync
-   ```
-2. Build Python usages from `dataset/python_repositories.csv`:
-   ```bash
-   uv run main.py ../dataset/python_repositories.csv ../dataset/python
-   ```
+Each fixture case records `verification.method: manual_inspection` with a short
+note explaining how the expected declaration and usage locations were checked.

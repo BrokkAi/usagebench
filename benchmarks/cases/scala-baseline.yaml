@@ -1,0 +1,220 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/scala/baseline
+language: scala
+cases:
+  - id: scala-class-construction
+    declaration:
+      location:
+        uri: benchmark://source/src/main/scala/example/Service.scala
+        range:
+          start: { line: 15, character: 6 }
+          end: { line: 15, character: 13 }
+      kind: class
+      displayName: Service
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main/scala/example/Service.scala
+          range:
+            start: { line: 23, character: 37 }
+            end: { line: 23, character: 44 }
+        kind: class
+        displayName: Service
+      - location:
+          uri: benchmark://source/src/main/scala/example/Service.scala
+          range:
+            start: { line: 23, character: 51 }
+            end: { line: 23, character: 58 }
+        kind: constructor
+        displayName: Service
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main/scala/example/Service.scala
+            range:
+              start: { line: 23, character: 51 }
+              end: { line: 23, character: 58 }
+          kind: constructor
+          displayName: Service
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/main/scala/example/Service.scala
+            range:
+              start: { line: 15, character: 6 }
+              end: { line: 15, character: 13 }
+          kind: constructor
+          displayName: Service
+    verification:
+      method: manual_inspection
+      notes: Service is declared in Service.scala and constructed by the companion build method.
+  - id: scala-companion-function-call
+    declaration:
+      location:
+        uri: benchmark://source/src/main/scala/example/Service.scala
+        range:
+          start: { line: 23, character: 6 }
+          end: { line: 23, character: 11 }
+      kind: function
+      displayName: build
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main/scala/example/Consumer.scala
+          range:
+            start: { line: 5, character: 26 }
+            end: { line: 5, character: 31 }
+        kind: function
+        displayName: build
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main/scala/example/Consumer.scala
+            range:
+              start: { line: 5, character: 26 }
+              end: { line: 5, character: 31 }
+          kind: function
+          displayName: build
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/main/scala/example/Service.scala
+            range:
+              start: { line: 23, character: 6 }
+              end: { line: 23, character: 11 }
+          kind: function
+          displayName: build
+    verification:
+      method: manual_inspection
+      notes: Consumer.run calls Service.build.
+  - id: scala-method-call
+    declaration:
+      location:
+        uri: benchmark://source/src/main/scala/example/Service.scala
+        range:
+          start: { line: 16, character: 6 }
+          end: { line: 16, character: 13 }
+      kind: method
+      displayName: execute
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main/scala/example/Consumer.scala
+          range:
+            start: { line: 6, character: 25 }
+            end: { line: 6, character: 32 }
+        kind: method
+        displayName: execute
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main/scala/example/Consumer.scala
+            range:
+              start: { line: 6, character: 25 }
+              end: { line: 6, character: 32 }
+          kind: method
+          displayName: execute
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/main/scala/example/Service.scala
+            range:
+              start: { line: 16, character: 6 }
+              end: { line: 16, character: 13 }
+          kind: method
+          displayName: execute
+    verification:
+      method: manual_inspection
+      notes: Consumer.run calls execute on the Service returned by Service.build.
+  - id: scala-field-and-val-access
+    declaration:
+      location:
+        uri: benchmark://source/src/main/scala/example/Service.scala
+        range:
+          start: { line: 7, character: 6 }
+          end: { line: 7, character: 10 }
+      kind: field
+      displayName: last
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main/scala/example/Service.scala
+          range:
+            start: { line: 10, character: 4 }
+            end: { line: 10, character: 8 }
+        kind: field
+        displayName: last
+      - location:
+          uri: benchmark://source/src/main/scala/example/Service.scala
+          range:
+            start: { line: 11, character: 4 }
+            end: { line: 11, character: 8 }
+        kind: field
+        displayName: last
+      - location:
+          uri: benchmark://source/src/main/scala/example/Consumer.scala
+          range:
+            start: { line: 7, character: 42 }
+            end: { line: 7, character: 46 }
+        kind: field
+        displayName: last
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main/scala/example/Consumer.scala
+            range:
+              start: { line: 7, character: 42 }
+              end: { line: 7, character: 46 }
+          kind: field
+          displayName: last
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/main/scala/example/Service.scala
+            range:
+              start: { line: 7, character: 6 }
+              end: { line: 7, character: 10 }
+          kind: field
+          displayName: last
+    verification:
+      method: manual_inspection
+      notes: last is declared on Repository, assigned/read in save, and read from Consumer.run.
+  - id: scala-object-val-access
+    declaration:
+      location:
+        uri: benchmark://source/src/main/scala/example/Service.scala
+        range:
+          start: { line: 3, character: 6 }
+          end: { line: 3, character: 12 }
+      kind: constant
+      displayName: Prefix
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main/scala/example/Service.scala
+          range:
+            start: { line: 18, character: 17 }
+            end: { line: 18, character: 23 }
+        kind: constant
+        displayName: Prefix
+      - location:
+          uri: benchmark://source/src/main/scala/example/Consumer.scala
+          range:
+            start: { line: 7, character: 13 }
+            end: { line: 7, character: 19 }
+        kind: constant
+        displayName: Prefix
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main/scala/example/Consumer.scala
+            range:
+              start: { line: 7, character: 13 }
+              end: { line: 7, character: 19 }
+          kind: constant
+          displayName: Prefix
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/main/scala/example/Service.scala
+            range:
+              start: { line: 3, character: 6 }
+              end: { line: 3, character: 12 }
+          kind: constant
+          displayName: Prefix
+    verification:
+      method: manual_inspection
+      notes: Prefix is declared in Defaults and read from Service.execute and Consumer.run.

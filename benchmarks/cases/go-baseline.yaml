@@ -1,0 +1,213 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/go/baseline
+language: go
+cases:
+  - id: go-package-function-call
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.go
+        range:
+          start: { line: 23, character: 5 }
+          end: { line: 23, character: 15 }
+      kind: function
+      displayName: NewService
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/example/service_test.go
+          range:
+            start: { line: 4, character: 15 }
+            end: { line: 4, character: 25 }
+        kind: function
+        displayName: NewService
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/example/service_test.go
+            range:
+              start: { line: 4, character: 15 }
+              end: { line: 4, character: 25 }
+          kind: function
+          displayName: NewService
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.go
+            range:
+              start: { line: 23, character: 5 }
+              end: { line: 23, character: 15 }
+          kind: function
+          displayName: NewService
+    verification:
+      method: manual_inspection
+      notes: ExampleService constructs Service through the package-level NewService function.
+  - id: go-value-receiver-method-call
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.go
+        range:
+          start: { line: 27, character: 17 }
+          end: { line: 27, character: 24 }
+      kind: method
+      displayName: Execute
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/example/service_test.go
+          range:
+            start: { line: 5, character: 22 }
+            end: { line: 5, character: 29 }
+        kind: method
+        displayName: Execute
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/example/service_test.go
+            range:
+              start: { line: 5, character: 22 }
+              end: { line: 5, character: 29 }
+          kind: method
+          displayName: Execute
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.go
+            range:
+              start: { line: 27, character: 17 }
+              end: { line: 27, character: 24 }
+          kind: method
+          displayName: Execute
+    verification:
+      method: manual_inspection
+      notes: Execute is declared on the Service value receiver and called from ExampleService.
+  - id: go-pointer-receiver-method-call
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.go
+        range:
+          start: { line: 14, character: 27 }
+          end: { line: 14, character: 31 }
+      kind: method
+      displayName: Save
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/example/service.go
+          range:
+            start: { line: 28, character: 27 }
+            end: { line: 28, character: 31 }
+        kind: method
+        displayName: Save
+      - location:
+          uri: benchmark://source/src/example/service_test.go
+          range:
+            start: { line: 8, character: 15 }
+            end: { line: 8, character: 19 }
+        kind: method
+        displayName: Save
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/example/service_test.go
+            range:
+              start: { line: 8, character: 15 }
+              end: { line: 8, character: 19 }
+          kind: method
+          displayName: Save
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.go
+            range:
+              start: { line: 14, character: 27 }
+              end: { line: 14, character: 31 }
+          kind: method
+          displayName: Save
+    verification:
+      method: manual_inspection
+      notes: Save is implemented on *MemoryRepository and called through both interface-backed and concrete values.
+  - id: go-struct-field-access
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.go
+        range:
+          start: { line: 11, character: 4 }
+          end: { line: 11, character: 8 }
+      kind: field
+      displayName: Last
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/example/service.go
+          range:
+            start: { line: 15, character: 6 }
+            end: { line: 15, character: 10 }
+        kind: field
+        displayName: Last
+      - location:
+          uri: benchmark://source/src/example/service_test.go
+          range:
+            start: { line: 9, character: 19 }
+            end: { line: 9, character: 23 }
+        kind: field
+        displayName: Last
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/example/service_test.go
+            range:
+              start: { line: 9, character: 19 }
+              end: { line: 9, character: 23 }
+          kind: field
+          displayName: Last
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.go
+            range:
+              start: { line: 11, character: 4 }
+              end: { line: 11, character: 8 }
+          kind: field
+          displayName: Last
+    verification:
+      method: manual_inspection
+      notes: Last is assigned inside Save and read from the test fixture.
+  - id: go-package-constant-and-var
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.go
+        range:
+          start: { line: 6, character: 6 }
+          end: { line: 6, character: 19 }
+      kind: constant
+      displayName: DefaultPrefix
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/example/service.go
+          range:
+            start: { line: 29, character: 11 }
+            end: { line: 29, character: 24 }
+        kind: constant
+        displayName: DefaultPrefix
+      - location:
+          uri: benchmark://source/src/example/service_test.go
+          range:
+            start: { line: 7, character: 8 }
+            end: { line: 7, character: 21 }
+        kind: constant
+        displayName: DefaultPrefix
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/example/service_test.go
+            range:
+              start: { line: 7, character: 8 }
+              end: { line: 7, character: 21 }
+          kind: constant
+          displayName: DefaultPrefix
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.go
+            range:
+              start: { line: 6, character: 6 }
+              end: { line: 6, character: 19 }
+          kind: constant
+          displayName: DefaultPrefix
+    verification:
+      method: manual_inspection
+      notes: DefaultPrefix is read once in Execute and once in the test fixture; DefaultRepository is also present for package var coverage.

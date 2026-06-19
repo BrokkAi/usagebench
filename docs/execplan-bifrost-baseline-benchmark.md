@@ -15,18 +15,14 @@ The benchmark must evaluate both lookup directions:
 
 ## Current State
 
-The repository currently contains three language-specific generators:
+The repository now uses a curated, analyzer-neutral fixture corpus as the
+primary benchmark input. Baseline cases live under `benchmarks/cases`, fixture
+sources live under `fixtures`, and the Rust CLI validates the case schema plus
+fixture-backed source locations.
 
-- `javagen`: Java extraction through Eclipse JDT, with output keyed by
-  `fullyQualifiedName`.
-- `gogen`: Go extraction through `go/packages`, with output keyed by
-  `fullyQualifiedName`.
-- `pygen`: Python extraction through Jedi, with output keyed by
-  `fullyQualifiedName`.
-
-The shared output shape is analyzer-derived rather than benchmark-authored:
-generators enumerate definitions and references at scale, then serialize JSON.
-That makes it hard to use the corpus as a stable, analyzer-neutral contract.
+The old broad Java, Go, and Python generator stack has been removed from the
+active benchmark path. Future corpus growth should add reviewed cases rather
+than analyzer-generated expected results.
 
 ## Proposed Direction
 
@@ -97,8 +93,8 @@ repositories. The initial matrix should cover:
 - TypeScript/JavaScript: exported functions/classes, methods, object properties,
   default/named imports, JSX/TSX component references where supported by
   Bifrost.
-- Rust or C# as a follow-up only if Bifrost support is ready enough to avoid
-  spending the first milestone on harness plumbing.
+- Rust, C#, Scala, PHP, and C++ expand the baseline once the fixture-only path is
+  in place, keeping the corpus aligned with Bifrost's supported languages.
 
 Each language should start with a handful of cases from stable repositories or
 small in-repo fixtures. Public repository cases should pin commits.
@@ -113,9 +109,9 @@ small in-repo fixtures. Public repository cases should pin commits.
 
 2. Create the first curated baseline corpus.
 
-   Select a small number of cases across Java, Go, Python, and TypeScript. For
-   each case, verify expected results by LSP and/or manual source inspection.
-   Keep notes about how each baseline was verified.
+   Select a small number of fixture cases across Bifrost-supported languages.
+   For each case, verify expected results by LSP and/or manual source
+   inspection. Keep notes about how each baseline was verified.
 
 3. Build a Bifrost runner.
 
@@ -134,12 +130,11 @@ small in-repo fixtures. Public repository cases should pin commits.
    Add the reverse-direction runner and scorer. The result should answer whether
    a usage site resolves to the expected declaration location.
 
-6. Decide what to do with existing generators.
+6. Remove existing generators from the primary benchmark path.
 
-   Keep `javagen`, `gogen`, and `pygen` as optional corpus-discovery tools,
-   remove them from the primary benchmark path, or archive them under a legacy
-   directory. They can still help find candidate cases, but they should not be
-   the source of truth for expected results.
+   Done for the issue #8 baseline: the legacy Java, Go, and Python generators
+   are no longer part of the active repo surface or CI. The source of truth is
+   the manually reviewed fixture corpus.
 
 ## Validation Strategy
 

@@ -6,6 +6,10 @@ mirrors the Language Server Protocol `Location` shape: each symbol location has
 `location.uri` and `location.range`, where ranges contain zero-based `line` and
 `character` positions and the end position is exclusive.
 
+The baseline corpus is manually curated. Expected locations should be verified
+by reading the checked-in fixture source and recorded with
+`verification.method: manual_inspection`.
+
 ## Source URIs
 
 Use portable corpus URIs instead of checkout-specific file paths:
@@ -26,11 +30,20 @@ The URI path is relative to the pinned source root declared by the document's
 `source` block. Public repositories must use `source.kind: git` with a pinned
 commit. In-repository fixtures use `source.kind: fixture`.
 
+For fixture-backed cases, `source.path` is resolved relative to the repository
+working directory, and validation requires every referenced
+`benchmark://source/...` file to exist under that fixture root.
+
 ## Positions
 
 Positions are LSP-shaped and zero-based. `positionEncoding` defaults to
 `utf-16`, matching LSP's default, and can be set to `utf-8` or `utf-32` when a
 case corpus requires it.
+
+Exact token ranges are preferred. Fixture validation checks that each range is
+within the referenced file's line bounds using UTF-16 character offsets.
+Non-zero fixture ranges must select text equal to the location's `displayName`.
+Keep fixtures ASCII unless a case is specifically intended to exercise encoding.
 
 Line-only authoring is represented as a zero-width range on the intended line:
 
@@ -54,3 +67,6 @@ Each case supports both benchmark directions:
 - `unsupported.reason` keeps useful future cases in the corpus without scoring
   them yet.
 - `verification` records how the expected locations were confirmed.
+
+The current issue #8 corpus stops at validated source-location cases. Bifrost
+execution, result normalization, and scoring are separate milestones.

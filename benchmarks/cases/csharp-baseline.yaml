@@ -1,0 +1,250 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/csharp/baseline
+language: csharp
+cases:
+  - id: csharp-class-reference
+    declaration:
+      location:
+        uri: benchmark://source/src/Service.cs
+        range:
+          start: { line: 18, character: 13 }
+          end: { line: 18, character: 20 }
+      kind: class
+      displayName: Service
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Consumer.cs
+          range:
+            start: { line: 7, character: 8 }
+            end: { line: 7, character: 15 }
+        kind: class
+        displayName: Service
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/Consumer.cs
+            range:
+              start: { line: 7, character: 8 }
+              end: { line: 7, character: 15 }
+          kind: class
+          displayName: Service
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Service.cs
+            range:
+              start: { line: 18, character: 13 }
+              end: { line: 18, character: 20 }
+          kind: class
+          displayName: Service
+    verification:
+      method: manual_inspection
+      notes: Service is declared in Service.cs and used as an explicit local variable type in Consumer.Run.
+  - id: csharp-constructor-call
+    declaration:
+      location:
+        uri: benchmark://source/src/Service.cs
+        range:
+          start: { line: 22, character: 11 }
+          end: { line: 22, character: 18 }
+      kind: constructor
+      displayName: Service
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Consumer.cs
+          range:
+            start: { line: 7, character: 30 }
+            end: { line: 7, character: 37 }
+        kind: constructor
+        displayName: Service
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/Consumer.cs
+            range:
+              start: { line: 7, character: 30 }
+              end: { line: 7, character: 37 }
+          kind: constructor
+          displayName: Service
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Service.cs
+            range:
+              start: { line: 22, character: 11 }
+              end: { line: 22, character: 18 }
+          kind: constructor
+          displayName: Service
+    verification:
+      method: manual_inspection
+      notes: Consumer.Run constructs Service through its explicit constructor.
+  - id: csharp-method-call
+    declaration:
+      location:
+        uri: benchmark://source/src/Service.cs
+        range:
+          start: { line: 27, character: 18 }
+          end: { line: 27, character: 25 }
+      kind: method
+      displayName: Execute
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Consumer.cs
+          range:
+            start: { line: 8, character: 29 }
+            end: { line: 8, character: 36 }
+        kind: method
+        displayName: Execute
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/Consumer.cs
+            range:
+              start: { line: 8, character: 29 }
+              end: { line: 8, character: 36 }
+          kind: method
+          displayName: Execute
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Service.cs
+            range:
+              start: { line: 27, character: 18 }
+              end: { line: 27, character: 25 }
+          kind: method
+          displayName: Execute
+    verification:
+      method: manual_inspection
+      notes: Consumer.Run calls Execute on the constructed Service instance.
+  - id: csharp-repository-method-call
+    declaration:
+      location:
+        uri: benchmark://source/src/Service.cs
+        range:
+          start: { line: 11, character: 18 }
+          end: { line: 11, character: 22 }
+      kind: method
+      displayName: Save
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Service.cs
+          range:
+            start: { line: 29, character: 32 }
+            end: { line: 29, character: 36 }
+        kind: method
+        displayName: Save
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/Service.cs
+            range:
+              start: { line: 29, character: 32 }
+              end: { line: 29, character: 36 }
+          kind: method
+          displayName: Save
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Service.cs
+            range:
+              start: { line: 11, character: 18 }
+              end: { line: 11, character: 22 }
+          kind: method
+          displayName: Save
+    verification:
+      method: manual_inspection
+      notes: Service.Execute calls Repository.Save.
+  - id: csharp-property-access
+    declaration:
+      location:
+        uri: benchmark://source/src/Service.cs
+        range:
+          start: { line: 9, character: 18 }
+          end: { line: 9, character: 22 }
+      kind: property
+      displayName: Last
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Service.cs
+          range:
+            start: { line: 13, character: 8 }
+            end: { line: 13, character: 12 }
+        kind: property
+        displayName: Last
+      - location:
+          uri: benchmark://source/src/Service.cs
+          range:
+            start: { line: 14, character: 15 }
+            end: { line: 14, character: 19 }
+        kind: property
+        displayName: Last
+      - location:
+          uri: benchmark://source/src/Consumer.cs
+          range:
+            start: { line: 9, character: 53 }
+            end: { line: 9, character: 57 }
+        kind: property
+        displayName: Last
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/Consumer.cs
+            range:
+              start: { line: 9, character: 53 }
+              end: { line: 9, character: 57 }
+          kind: property
+          displayName: Last
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Service.cs
+            range:
+              start: { line: 9, character: 18 }
+              end: { line: 9, character: 22 }
+          kind: property
+          displayName: Last
+    verification:
+      method: manual_inspection
+      notes: Last is declared on Repository, assigned/read in Save, and read from Consumer.Run.
+  - id: csharp-constant-access
+    declaration:
+      location:
+        uri: benchmark://source/src/Service.cs
+        range:
+          start: { line: 4, character: 24 }
+          end: { line: 4, character: 30 }
+      kind: constant
+      displayName: Prefix
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Service.cs
+          range:
+            start: { line: 30, character: 27 }
+            end: { line: 30, character: 33 }
+        kind: constant
+        displayName: Prefix
+      - location:
+          uri: benchmark://source/src/Consumer.cs
+          range:
+            start: { line: 9, character: 24 }
+            end: { line: 9, character: 30 }
+        kind: constant
+        displayName: Prefix
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/Consumer.cs
+            range:
+              start: { line: 9, character: 24 }
+              end: { line: 9, character: 30 }
+          kind: constant
+          displayName: Prefix
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Service.cs
+            range:
+              start: { line: 4, character: 24 }
+              end: { line: 4, character: 30 }
+          kind: constant
+          displayName: Prefix
+    verification:
+      method: manual_inspection
+      notes: Prefix is declared on Defaults and read from Service.Execute and Consumer.Run.

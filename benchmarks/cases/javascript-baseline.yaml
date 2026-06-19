@@ -1,0 +1,190 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/javascript/baseline
+language: javascript
+cases:
+  - id: js-named-export-import-function
+    declaration:
+      location:
+        uri: benchmark://source/src/components.js
+        range:
+          start: { line: 12, character: 16 }
+          end: { line: 12, character: 26 }
+      kind: function
+      displayName: formatName
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/components.js
+          range:
+            start: { line: 8, character: 29 }
+            end: { line: 8, character: 39 }
+        kind: function
+        displayName: formatName
+      - location:
+          uri: benchmark://source/src/app.js
+          range:
+            start: { line: 0, character: 48 }
+            end: { line: 0, character: 58 }
+        kind: function
+        displayName: formatName
+      - location:
+          uri: benchmark://source/src/app.js
+          range:
+            start: { line: 6, character: 14 }
+            end: { line: 6, character: 24 }
+        kind: function
+        displayName: formatName
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/app.js
+            range:
+              start: { line: 6, character: 14 }
+              end: { line: 6, character: 24 }
+          kind: function
+          displayName: formatName
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/components.js
+            range:
+              start: { line: 12, character: 16 }
+              end: { line: 12, character: 26 }
+          kind: function
+          displayName: formatName
+    verification:
+      method: manual_inspection
+      notes: formatName is exported from components, imported by app, and called from both files.
+  - id: js-class-construction
+    declaration:
+      location:
+        uri: benchmark://source/src/components.js
+        range:
+          start: { line: 2, character: 13 }
+          end: { line: 2, character: 20 }
+      kind: class
+      displayName: Greeter
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/app.js
+          range:
+            start: { line: 0, character: 24 }
+            end: { line: 0, character: 31 }
+        kind: class
+        displayName: Greeter
+      - location:
+          uri: benchmark://source/src/app.js
+          range:
+            start: { line: 4, character: 19 }
+            end: { line: 4, character: 26 }
+        kind: constructor
+        displayName: Greeter
+      - location:
+          uri: benchmark://source/src/components.js
+          range:
+            start: { line: 17, character: 13 }
+            end: { line: 17, character: 20 }
+        kind: constructor
+        displayName: Greeter
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/app.js
+            range:
+              start: { line: 4, character: 19 }
+              end: { line: 4, character: 26 }
+          kind: constructor
+          displayName: Greeter
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/components.js
+            range:
+              start: { line: 2, character: 13 }
+              end: { line: 2, character: 20 }
+          kind: class
+          displayName: Greeter
+    verification:
+      method: manual_inspection
+      notes: Greeter is imported by app and constructed directly plus through createGreeter.
+  - id: js-method-call
+    declaration:
+      location:
+        uri: benchmark://source/src/components.js
+        range:
+          start: { line: 7, character: 2 }
+          end: { line: 7, character: 7 }
+      kind: method
+      displayName: greet
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/app.js
+          range:
+            start: { line: 5, character: 24 }
+            end: { line: 5, character: 29 }
+        kind: method
+        displayName: greet
+      - location:
+          uri: benchmark://source/src/app.js
+          range:
+            start: { line: 9, character: 16 }
+            end: { line: 9, character: 21 }
+        kind: method
+        displayName: greet
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/app.js
+            range:
+              start: { line: 5, character: 24 }
+              end: { line: 5, character: 29 }
+          kind: method
+          displayName: greet
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/components.js
+            range:
+              start: { line: 7, character: 2 }
+              end: { line: 7, character: 7 }
+          kind: method
+          displayName: greet
+    verification:
+      method: manual_inspection
+      notes: greet is declared on Greeter and called from both top-level app code and runApp.
+  - id: js-class-property-access
+    declaration:
+      location:
+        uri: benchmark://source/src/components.js
+        range:
+          start: { line: 4, character: 9 }
+          end: { line: 4, character: 14 }
+      kind: property
+      displayName: title
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/components.js
+          range:
+            start: { line: 8, character: 19 }
+            end: { line: 8, character: 24 }
+        kind: property
+        displayName: title
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/components.js
+            range:
+              start: { line: 8, character: 19 }
+              end: { line: 8, character: 24 }
+          kind: property
+          displayName: title
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/components.js
+            range:
+              start: { line: 4, character: 9 }
+              end: { line: 4, character: 14 }
+          kind: property
+          displayName: title
+    verification:
+      method: manual_inspection
+      notes: title is initialized as a Greeter instance property in the constructor and read by greet.

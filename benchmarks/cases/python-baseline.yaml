@@ -1,0 +1,275 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/python/baseline
+language: python
+cases:
+  - id: python-module-import
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.py
+        range:
+          start: { line: 0, character: 0 }
+          end: { line: 0, character: 0 }
+      kind: module
+      displayName: example.service
+      disambiguation: first_matching_symbol
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/example/__init__.py
+          range:
+            start: { line: 0, character: 6 }
+            end: { line: 0, character: 13 }
+        kind: module
+        displayName: service
+      - location:
+          uri: benchmark://source/tests/test_service.py
+          range:
+            start: { line: 1, character: 13 }
+            end: { line: 1, character: 20 }
+        kind: module
+        displayName: service
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/tests/test_service.py
+            range:
+              start: { line: 1, character: 13 }
+              end: { line: 1, character: 20 }
+          kind: module
+          displayName: service
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.py
+            range:
+              start: { line: 0, character: 0 }
+              end: { line: 0, character: 0 }
+          kind: module
+          displayName: example.service
+          disambiguation: first_matching_symbol
+    verification:
+      method: manual_inspection
+      notes: service.py is imported from the package initializer and directly from the test fixture.
+  - id: python-function-call-and-reexport
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.py
+        range:
+          start: { line: 18, character: 4 }
+          end: { line: 18, character: 17 }
+      kind: function
+      displayName: build_service
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/example/__init__.py
+          range:
+            start: { line: 0, character: 58 }
+            end: { line: 0, character: 71 }
+        kind: function
+        displayName: build_service
+      - location:
+          uri: benchmark://source/tests/test_service.py
+          range:
+            start: { line: 4, character: 14 }
+            end: { line: 4, character: 27 }
+        kind: function
+        displayName: build_service
+      - location:
+          uri: benchmark://source/tests/test_service.py
+          range:
+            start: { line: 14, character: 14 }
+            end: { line: 14, character: 27 }
+        kind: function
+        displayName: build_service
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/tests/test_service.py
+            range:
+              start: { line: 4, character: 14 }
+              end: { line: 4, character: 27 }
+          kind: function
+          displayName: build_service
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.py
+            range:
+              start: { line: 18, character: 4 }
+              end: { line: 18, character: 17 }
+          kind: function
+          displayName: build_service
+    verification:
+      method: manual_inspection
+      notes: build_service is re-exported from example and called by two test functions.
+  - id: python-class-instantiation
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.py
+        range:
+          start: { line: 10, character: 6 }
+          end: { line: 10, character: 13 }
+      kind: class
+      displayName: Service
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/example/__init__.py
+          range:
+            start: { line: 0, character: 49 }
+            end: { line: 0, character: 56 }
+        kind: class
+        displayName: Service
+      - location:
+          uri: benchmark://source/src/example/service.py
+          range:
+            start: { line: 19, character: 11 }
+            end: { line: 19, character: 18 }
+        kind: class
+        displayName: Service
+      - location:
+          uri: benchmark://source/tests/test_service.py
+          range:
+            start: { line: 0, character: 36 }
+            end: { line: 0, character: 43 }
+        kind: class
+        displayName: Service
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/example/service.py
+            range:
+              start: { line: 19, character: 11 }
+              end: { line: 19, character: 18 }
+          kind: class
+          displayName: Service
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.py
+            range:
+              start: { line: 10, character: 6 }
+              end: { line: 10, character: 13 }
+          kind: class
+          displayName: Service
+    verification:
+      method: manual_inspection
+      notes: Service is re-exported, imported by tests, and instantiated by build_service.
+  - id: python-method-call
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.py
+        range:
+          start: { line: 14, character: 8 }
+          end: { line: 14, character: 15 }
+      kind: method
+      displayName: execute
+    expectedUsages:
+      - location:
+          uri: benchmark://source/tests/test_service.py
+          range:
+            start: { line: 5, character: 21 }
+            end: { line: 5, character: 28 }
+        kind: method
+        displayName: execute
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/tests/test_service.py
+            range:
+              start: { line: 5, character: 21 }
+              end: { line: 5, character: 28 }
+          kind: method
+          displayName: execute
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.py
+            range:
+              start: { line: 14, character: 8 }
+              end: { line: 14, character: 15 }
+          kind: method
+          displayName: execute
+    verification:
+      method: manual_inspection
+      notes: Direct execute call is visible in test_service_execution.
+  - id: python-dynamic-getattr-unsupported
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.py
+        range:
+          start: { line: 14, character: 8 }
+          end: { line: 14, character: 15 }
+      kind: method
+      displayName: execute
+    expectedUsages:
+      - location:
+          uri: benchmark://source/tests/test_service.py
+          range:
+            start: { line: 15, character: 19 }
+            end: { line: 15, character: 26 }
+        kind: method
+        displayName: execute
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/tests/test_service.py
+            range:
+              start: { line: 15, character: 19 }
+              end: { line: 15, character: 26 }
+          kind: method
+          displayName: execute
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.py
+            range:
+              start: { line: 14, character: 8 }
+              end: { line: 14, character: 15 }
+          kind: method
+          displayName: execute
+    unsupported:
+      reason: Dynamic getattr stores the method name as a string, so this is retained but excluded from scoring.
+    verification:
+      method: manual_inspection
+      notes: test_dynamic_lookup calls getattr(service, method_name) after assigning method_name to the string execute.
+  - id: python-attribute-access
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.py
+        range:
+          start: { line: 4, character: 13 }
+          end: { line: 4, character: 17 }
+      kind: property
+      displayName: last
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/example/service.py
+          range:
+            start: { line: 7, character: 13 }
+            end: { line: 7, character: 17 }
+        kind: property
+        displayName: last
+      - location:
+          uri: benchmark://source/tests/test_service.py
+          range:
+            start: { line: 11, character: 22 }
+            end: { line: 11, character: 26 }
+        kind: property
+        displayName: last
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/tests/test_service.py
+            range:
+              start: { line: 11, character: 22 }
+              end: { line: 11, character: 26 }
+          kind: property
+          displayName: last
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.py
+            range:
+              start: { line: 4, character: 13 }
+              end: { line: 4, character: 17 }
+          kind: property
+          displayName: last
+    verification:
+      method: manual_inspection
+      notes: last is initialized and assigned in Repository, then asserted from the test fixture.

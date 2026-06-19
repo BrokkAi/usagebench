@@ -1,0 +1,183 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/rust/baseline
+language: rust
+cases:
+  - id: rust-function-call-and-reexport
+    declaration:
+      location:
+        uri: benchmark://source/src/service.rs
+        range:
+          start: { line: 29, character: 7 }
+          end: { line: 29, character: 20 }
+      kind: function
+      displayName: build_service
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/lib.rs
+          range:
+            start: { line: 2, character: 61 }
+            end: { line: 2, character: 74 }
+        kind: function
+        displayName: build_service
+      - location:
+          uri: benchmark://source/src/lib.rs
+          range:
+            start: { line: 7, character: 18 }
+            end: { line: 7, character: 31 }
+        kind: function
+        displayName: build_service
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 7, character: 18 }
+              end: { line: 7, character: 31 }
+          kind: function
+          displayName: build_service
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 29, character: 7 }
+              end: { line: 29, character: 20 }
+          kind: function
+          displayName: build_service
+    verification:
+      method: manual_inspection
+      notes: build_service is re-exported from lib.rs and called from run_demo.
+  - id: rust-struct-construction
+    declaration:
+      location:
+        uri: benchmark://source/src/service.rs
+        range:
+          start: { line: 14, character: 11 }
+          end: { line: 14, character: 18 }
+      kind: type
+      displayName: Service
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/lib.rs
+          range:
+            start: { line: 2, character: 52 }
+            end: { line: 2, character: 59 }
+        kind: type
+        displayName: Service
+      - location:
+          uri: benchmark://source/src/service.rs
+          range:
+            start: { line: 29, character: 54 }
+            end: { line: 29, character: 61 }
+        kind: type
+        displayName: Service
+      - location:
+          uri: benchmark://source/src/service.rs
+          range:
+            start: { line: 18, character: 5 }
+            end: { line: 18, character: 12 }
+        kind: type
+        displayName: Service
+      - location:
+          uri: benchmark://source/src/service.rs
+          range:
+            start: { line: 30, character: 4 }
+            end: { line: 30, character: 11 }
+        kind: type
+        displayName: Service
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 30, character: 4 }
+              end: { line: 30, character: 11 }
+          kind: type
+          displayName: Service
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 14, character: 11 }
+              end: { line: 14, character: 18 }
+          kind: type
+          displayName: Service
+    verification:
+      method: manual_inspection
+      notes: Service is declared in service.rs, re-exported, returned by build_service, and used to call Service::new.
+  - id: rust-method-call
+    declaration:
+      location:
+          uri: benchmark://source/src/service.rs
+          range:
+            start: { line: 23, character: 11 }
+            end: { line: 23, character: 18 }
+      kind: method
+      displayName: execute
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/lib.rs
+          range:
+            start: { line: 8, character: 12 }
+            end: { line: 8, character: 19 }
+        kind: method
+        displayName: execute
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 8, character: 12 }
+              end: { line: 8, character: 19 }
+          kind: method
+          displayName: execute
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 23, character: 11 }
+              end: { line: 23, character: 18 }
+          kind: method
+          displayName: execute
+    verification:
+      method: manual_inspection
+      notes: run_demo calls execute on the Service returned by build_service.
+  - id: rust-field-access-and-constant
+    declaration:
+      location:
+        uri: benchmark://source/src/service.rs
+        range:
+          start: { line: 4, character: 8 }
+          end: { line: 4, character: 12 }
+      kind: field
+      displayName: last
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/service.rs
+          range:
+            start: { line: 9, character: 13 }
+            end: { line: 9, character: 17 }
+        kind: field
+        displayName: last
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 9, character: 13 }
+              end: { line: 9, character: 17 }
+          kind: field
+          displayName: last
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 4, character: 8 }
+              end: { line: 4, character: 12 }
+          kind: field
+          displayName: last
+    verification:
+      method: manual_inspection
+      notes: last is declared on MemoryRepository and assigned inside save.
