@@ -19,12 +19,11 @@ dataset/**
 
 **/.DS_Store
 
-/gogen/gogen
-
 /target
 
-/pygen/.venv
-/pygen/__pycache__
-/pygen/.pytest_cache
+# Legacy generator trees are no longer part of the active benchmark path.
+/gogen/
+/javagen/
+/pygen/
 
 /.vscode

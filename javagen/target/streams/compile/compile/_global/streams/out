@@ -1,5 +1,0 @@
-[0m[[0m[33mwarn[0m] [0m[0m[33m[33m-- Deprecation Warning: /Users/dave/Workspace/BrokkAi/usagebench/javagen/src/main/scala/ai/brokk/javagen/UsageAnalyzers.scala:19:41 [0m[0m[0m
-[0m[[0m[33mwarn[0m] [0m[0m[33m19 |[0m    [33mval[0m [36mparser[0m = ASTParser.newParser(AST.JLS_Latest)[0m
-[0m[[0m[33mwarn[0m] [0m[0m[33m[33m   |[0m                                     ^^^^^^^^^^^^^^[0m[0m
-[0m[[0m[33mwarn[0m] [0m[0m[33m   |[0m[33mvalue[0m [35mJLS_Latest[0m in [33mobject[0m [35mAST[0m is deprecated: see corresponding Javadoc for more information.[0m
-[0m[[0m[33mwarn[0m] [0m[0mone warning found[0m

@@ -1,1 +1,0 @@
-[[{"${BASE}/src/main/resources/log4j2.xml":["${BASE}/target/scala-3.5.2/classes/log4j2.xml"]},{"${BASE}/target/scala-3.5.2/classes/log4j2.xml":["${BASE}/src/main/resources/log4j2.xml"]}],{"${BASE}/src/main/resources/log4j2.xml":{"file":"file:///Users/dave/Workspace/BrokkAi/usagebench/javagen/src/main/resources/log4j2.xml","lastModified":1769976430331}}]
