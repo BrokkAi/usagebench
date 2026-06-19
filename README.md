@@ -4,8 +4,19 @@ Repository for creating and running benchmarks around the static analysis task o
 
 ## Directory Structure
 
+* `benchmarks`: Authored benchmark case files and schema documentation.
 * `javagen`: A Joern-based Java usage extractor.
 * `gogen`: A Go-based usage extractor.
+* `pygen`: A Python usage extractor.
+
+## Validating Benchmark Cases
+
+Benchmark cases use YAML authored around an LSP-shaped location model. Validate
+them with:
+
+```bash
+cargo run -- validate benchmarks/cases
+```
 
 ## Generating Java Usages
 

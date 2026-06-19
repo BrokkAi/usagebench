@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BrokkAi/usagebench/schema/benchmark-case.schema.json",
+  "title": "Usage Benchmark Case Document",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "source", "language", "cases"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "positionEncoding": {
+      "type": "string",
+      "enum": ["utf-8", "utf-16", "utf-32"],
+      "default": "utf-16"
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/benchmarkCase"
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "repo", "commit"],
+          "properties": {
+            "kind": {
+              "const": "git"
+            },
+            "repo": {
+              "type": "string",
+              "format": "uri"
+            },
+            "commit": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "path"],
+          "properties": {
+            "kind": {
+              "const": "fixture"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "benchmarkCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "declaration", "expectedUsages", "usageLookups"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "declaration": {
+          "$ref": "#/$defs/symbolLocation"
+        },
+        "expectedUsages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/symbolLocation"
+          }
+        },
+        "allowedExtraUsages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/symbolLocation"
+          },
+          "default": []
+        },
+        "usageLookups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/usageLookup"
+          }
+        },
+        "unsupported": {
+          "$ref": "#/$defs/unsupportedReason"
+        },
+        "verification": {
+          "$ref": "#/$defs/verification"
+        }
+      }
+    },
+    "symbolLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["location", "kind", "displayName"],
+      "properties": {
+        "location": {
+          "$ref": "#/$defs/location"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "class",
+            "constructor",
+            "method",
+            "function",
+            "field",
+            "variable",
+            "constant",
+            "module",
+            "package",
+            "interface",
+            "type",
+            "property"
+          ]
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "disambiguation": {
+          "type": "string",
+          "enum": ["first_matching_symbol"]
+        }
+      }
+    },
+    "location": {
+      "description": "LSP Location-compatible object using benchmark://source/... URIs.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uri", "range"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^benchmark://source/.+"
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "range": {
+      "description": "LSP Range: zero-based start/end positions; end is exclusive.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/position"
+        },
+        "end": {
+          "$ref": "#/$defs/position"
+        }
+      }
+    },
+    "position": {
+      "description": "LSP Position: zero-based line and character offsets.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["line", "character"],
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "character": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "usageLookup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["usage", "expectedDeclaration"],
+      "properties": {
+        "usage": {
+          "$ref": "#/$defs/symbolLocation"
+        },
+        "expectedDeclaration": {
+          "$ref": "#/$defs/symbolLocation"
+        }
+      }
+    },
+    "unsupportedReason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason"],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "notes"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["manual_inspection", "lsp", "analyzer_comparison"]
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

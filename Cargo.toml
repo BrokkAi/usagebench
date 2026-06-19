@@ -1,0 +1,17 @@
+[package]
+name = "usagebench"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+jsonschema = "0.18"
+schemars = { version = "0.8", features = ["url"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+url = { version = "2.5", features = ["serde"] }
+
+[dev-dependencies]
+tempfile = "3.10"
