@@ -43,9 +43,12 @@ enum Command {
         /// Run cases marked unsupported instead of reporting them as skipped.
         #[arg(long)]
         include_unsupported: bool,
-        /// Run usage-to-definition probes that require Bifrost get_definition support.
+        /// Deprecated; definition lookups are enabled by default.
         #[arg(long)]
         include_definition_lookups: bool,
+        /// Skip usage-to-definition probes.
+        #[arg(long, conflicts_with = "include_definition_lookups")]
+        skip_definition_lookups: bool,
         /// Keep temporary git source checkouts after the run.
         #[arg(long)]
         keep_worktrees: bool,
@@ -77,6 +80,7 @@ fn main() -> Result<()> {
             output,
             include_unsupported,
             include_definition_lookups,
+            skip_definition_lookups,
             keep_worktrees,
         } => {
             let mut options = RunBifrostOptions::with_defaults(path);
@@ -85,7 +89,8 @@ fn main() -> Result<()> {
             options.work_dir = work_dir;
             options.output = output;
             options.include_unsupported = include_unsupported;
-            options.include_definition_lookups = include_definition_lookups;
+            options.include_definition_lookups =
+                include_definition_lookups || !skip_definition_lookups;
             options.keep_worktrees = keep_worktrees;
             let report = run_bifrost(options)?;
             println!(
