@@ -1,0 +1,219 @@
+name: Benchmark
+
+on:
+  schedule:
+    - cron: '47 9 * * *'
+  workflow_dispatch:
+    inputs:
+      bifrost_ref:
+        description: 'Bifrost ref or commit to benchmark'
+        required: false
+        default: 'master'
+        type: string
+      include_unsupported:
+        description: 'Run cases marked unsupported'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usagebench-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    env:
+      BIFROST_REF: ${{ inputs.bifrost_ref || 'master' }}
+      SLACK_DAILY_USAGEBENCH_WEBHOOK_URL: ${{ secrets.SLACK_DAILY_USAGEBENCH_WEBHOOK_URL }}
+
+    steps:
+      - name: Checkout usagebench
+        uses: actions/checkout@v4
+
+      - name: Checkout Bifrost
+        uses: actions/checkout@v4
+        with:
+          repository: BrokkAi/bifrost
+          path: bifrost
+          ref: ${{ env.BIFROST_REF }}
+          fetch-depth: 0
+          token: ${{ secrets.BIFROST_CHECKOUT_TOKEN || github.token }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo + target
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build usagebench
+        run: cargo build --locked --bin usagebench
+
+      - name: Validate benchmark cases
+        run: ./target/debug/usagebench validate benchmarks/cases
+
+      - name: Run Bifrost usage benchmark
+        id: run_usagebench
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p benchmark-output
+          args=(
+            run-bifrost
+            benchmarks/cases
+            --bifrost-repo bifrost
+            --bifrost-commit "$BIFROST_REF"
+            --work-dir target/usagebench
+            --output "benchmark-output/run-${GITHUB_RUN_ID}.json"
+          )
+          if [ "${{ inputs.include_unsupported || false }}" = "true" ]; then
+            args+=(--include-unsupported)
+          fi
+          ./target/debug/usagebench "${args[@]}"
+
+      - name: Resolve benchmark paths
+        id: paths
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          report_path="benchmark-output/run-${GITHUB_RUN_ID}.json"
+          if [ ! -f "$report_path" ]; then
+            report_path=""
+          fi
+          echo "report_path=${report_path}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: usagebench-${{ github.run_id }}
+          path: benchmark-output
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Publish benchmark summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "# Usage Benchmark"
+            echo
+            echo "- Run step: ${{ steps.run_usagebench.outcome }}"
+            echo "- Bifrost ref: \`${BIFROST_REF}\`"
+            if [ -n "${{ steps.paths.outputs.report_path }}" ]; then
+              echo "- Report: \`${{ steps.paths.outputs.report_path }}\`"
+              echo
+              echo "## Totals"
+              echo
+              jq -r '
+                .totals
+                | "- Documents: \(.documents)\n- Cases: \(.cases)\n- Passed: \(.passed)\n- Failed: \(.failed)\n- Expected failures: \(.expectedFailures)\n- Skipped: \(.skipped)\n- Errors: \(.errors)"
+              ' "${{ steps.paths.outputs.report_path }}"
+            else
+              echo "- Report: none written"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prepare Slack payload
+        id: slack_payload
+        if: always() && env.SLACK_DAILY_USAGEBENCH_WEBHOOK_URL != ''
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          run_outcome="${{ steps.run_usagebench.outcome }}"
+          report_path="${{ steps.paths.outputs.report_path }}"
+          head_sha_short="$(git rev-parse --short "$GITHUB_SHA")"
+
+          bifrost_resolved_commit=""
+          bifrost_sha_short=""
+          cases_count="0"
+          passed_count="0"
+          failed_count="0"
+          expected_failures_count="0"
+          skipped_count="0"
+          errors_count="0"
+          if [ -n "$report_path" ] && [ -f "$report_path" ]; then
+            bifrost_resolved_commit="$(jq -r '.bifrostResolvedCommit // ""' "$report_path")"
+            bifrost_sha_short="$(printf '%s' "$bifrost_resolved_commit" | cut -c1-7)"
+            cases_count="$(jq -r '.totals.cases // 0' "$report_path")"
+            passed_count="$(jq -r '.totals.passed // 0' "$report_path")"
+            failed_count="$(jq -r '.totals.failed // 0' "$report_path")"
+            expected_failures_count="$(jq -r '.totals.expectedFailures // 0' "$report_path")"
+            skipped_count="$(jq -r '.totals.skipped // 0' "$report_path")"
+            errors_count="$(jq -r '.totals.errors // 0' "$report_path")"
+          fi
+
+          ok="true"
+          error_text=""
+          if [ "$run_outcome" != "success" ]; then
+            ok="false"
+            error_text="usage benchmark run failed"
+          elif [ "$failed_count" != "0" ] || [ "$errors_count" != "0" ]; then
+            ok="false"
+            error_text="usage benchmark report recorded failures"
+          fi
+
+          payload="$(
+            jq -nc \
+              --arg error_text "$error_text" \
+              --arg workflow_run_url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              --arg head_sha_short "$head_sha_short" \
+              --arg bifrost_ref "$BIFROST_REF" \
+              --arg bifrost_sha_short "$bifrost_sha_short" \
+              --arg run_outcome "$run_outcome" \
+              --argjson ok "$ok" \
+              --argjson cases_count "$cases_count" \
+              --argjson passed_count "$passed_count" \
+              --argjson failed_count "$failed_count" \
+              --argjson expected_failures_count "$expected_failures_count" \
+              --argjson skipped_count "$skipped_count" \
+              --argjson errors_count "$errors_count" \
+              '{
+                ok: $ok,
+                error_text: $error_text,
+                workflow_run_url: $workflow_run_url,
+                head_sha_short: $head_sha_short,
+                bifrost_ref: $bifrost_ref,
+                bifrost_sha_short: $bifrost_sha_short,
+                run_outcome: $run_outcome,
+                cases_count: $cases_count,
+                passed_count: $passed_count,
+                failed_count: $failed_count,
+                expected_failures_count: $expected_failures_count,
+                skipped_count: $skipped_count,
+                errors_count: $errors_count
+              }'
+          )"
+
+          {
+            echo 'payload<<EOF'
+            echo "$payload"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Send benchmark data to Slack Workflow
+        if: always() && env.SLACK_DAILY_USAGEBENCH_WEBHOOK_URL != '' && steps.slack_payload.outputs.payload != ''
+        continue-on-error: true
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          webhook: ${{ env.SLACK_DAILY_USAGEBENCH_WEBHOOK_URL }}
+          webhook-type: webhook-trigger
+          payload: ${{ steps.slack_payload.outputs.payload }}
+
+      - name: Enforce benchmark outcome
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.run_usagebench.outcome }}" != "success" ]; then
+            echo "usage benchmark run failed" >&2
+            exit 1
+          fi
