@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use usagebench::bifrost_runner::{
     run_bifrost, BifrostRunReport, CaseStatus, NormalizedLocation, RunBifrostOptions,
+    UsageDefinitionReport,
 };
 
 #[derive(Debug, Parser)]
@@ -88,9 +89,10 @@ fn main() -> Result<()> {
             options.keep_worktrees = keep_worktrees;
             let report = run_bifrost(options)?;
             println!(
-                "ran {} case(s): {} passed, {} failed, {} expected failure(s), {} skipped, {} error(s)",
+                "ran {} case(s): {} passed, {} improved, {} failed, {} expected failure(s), {} skipped, {} error(s)",
                 report.totals.cases,
                 report.totals.passed,
+                report.totals.improved,
                 report.totals.failed,
                 report.totals.expected_failures,
                 report.totals.skipped,
@@ -116,7 +118,10 @@ fn print_run_details(report: &BifrostRunReport) {
             let Some(declaration) = &case.declaration_to_usages else {
                 if matches!(
                     case.status,
-                    CaseStatus::Failed | CaseStatus::ExpectedFailure | CaseStatus::Error
+                    CaseStatus::Improved
+                        | CaseStatus::Failed
+                        | CaseStatus::ExpectedFailure
+                        | CaseStatus::Error
                 ) {
                     println!(
                         "{} {}: {}",
@@ -132,7 +137,10 @@ fn print_run_details(report: &BifrostRunReport) {
                 && declaration.unexpected.is_empty()
                 && !matches!(
                     case.status,
-                    CaseStatus::Failed | CaseStatus::ExpectedFailure | CaseStatus::Error
+                    CaseStatus::Improved
+                        | CaseStatus::Failed
+                        | CaseStatus::ExpectedFailure
+                        | CaseStatus::Error
                 )
             {
                 continue;
@@ -148,6 +156,40 @@ fn print_run_details(report: &BifrostRunReport) {
             );
             print_locations("missing", &declaration.missing);
             print_locations("extra", &declaration.unexpected);
+            print_usage_definition_issues(&case.usage_to_declaration);
+        }
+    }
+}
+
+fn print_usage_definition_issues(reports: &[UsageDefinitionReport]) {
+    for report in reports {
+        if matches!(report.status, CaseStatus::Passed | CaseStatus::Skipped) {
+            continue;
+        }
+        let actual = if report.actual_declarations.is_empty() {
+            "none".to_string()
+        } else {
+            report
+                .actual_declarations
+                .iter()
+                .map(format_location)
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        println!(
+            "  usage lookup {}: {} expected {}, got {} ({})",
+            format_location(&report.usage),
+            status_label(report.status),
+            format_location(&report.expected_declaration),
+            actual,
+            safe_display(&report.raw_status)
+        );
+        for diagnostic in &report.diagnostics {
+            println!(
+                "    {}: {}",
+                safe_display(&diagnostic.kind),
+                safe_display(&diagnostic.message)
+            );
         }
     }
 }
@@ -183,6 +225,7 @@ fn safe_display(value: &str) -> String {
 fn status_label(status: CaseStatus) -> &'static str {
     match status {
         CaseStatus::Passed => "PASS",
+        CaseStatus::Improved => "IMPROVED",
         CaseStatus::Failed => "FAIL",
         CaseStatus::ExpectedFailure => "XFAIL",
         CaseStatus::Skipped => "SKIP",

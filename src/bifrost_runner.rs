@@ -71,6 +71,7 @@ pub struct RunTotals {
     pub documents: usize,
     pub cases: usize,
     pub passed: usize,
+    pub improved: usize,
     pub failed: usize,
     pub expected_failures: usize,
     pub skipped: usize,
@@ -90,6 +91,7 @@ pub struct DocumentRunReport {
 #[serde(rename_all = "snake_case")]
 pub enum CaseStatus {
     Passed,
+    Improved,
     Failed,
     ExpectedFailure,
     Skipped,
@@ -1004,7 +1006,7 @@ fn apply_expected_failure(
                 message: "case is marked expectedFailure but passed; update the baseline"
                     .to_string(),
             });
-            CaseStatus::Failed
+            CaseStatus::Improved
         }
         _ => observed_status,
     }
@@ -1019,6 +1021,7 @@ fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
         totals.cases += 1;
         match case.status {
             CaseStatus::Passed => totals.passed += 1,
+            CaseStatus::Improved => totals.improved += 1,
             CaseStatus::Failed => totals.failed += 1,
             CaseStatus::ExpectedFailure => totals.expected_failures += 1,
             CaseStatus::Skipped => totals.skipped += 1,
@@ -1649,6 +1652,7 @@ mod tests {
                 documents: 1,
                 cases: 1,
                 passed: 1,
+                improved: 0,
                 failed: 0,
                 expected_failures: 0,
                 skipped: 0,
@@ -1868,7 +1872,7 @@ mod tests {
     }
 
     #[test]
-    fn expected_failure_that_passes_fails_until_baseline_is_updated() {
+    fn expected_failure_that_passes_is_reported_as_improved() {
         let mut case = benchmark_case();
         case.expected_failure = Some(crate::ExpectedFailure {
             reason: "current Bifrost baseline misses this usage".to_string(),
@@ -1886,8 +1890,16 @@ mod tests {
 
         let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
 
-        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(report.status, CaseStatus::Improved);
         assert_eq!(report.diagnostics[0].kind, "expected_failure_passed");
+        let totals = compute_totals(&[DocumentRunReport {
+            case_file: "benchmarks/cases/rust.yaml".to_string(),
+            language: "rust".to_string(),
+            source_root: "/repo/fixtures/rust".to_string(),
+            cases: vec![report],
+        }]);
+        assert_eq!(totals.failed, 0);
+        assert_eq!(totals.improved, 1);
     }
 
     #[test]
