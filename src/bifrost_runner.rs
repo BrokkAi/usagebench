@@ -20,6 +20,7 @@ use std::{
 use url::{Host, Url};
 
 const DEFAULT_BIFROST_COMMIT: &str = "origin/master";
+const GET_DEFINITION_BY_LOCATION_TOOL: &str = "get_definition_by_location";
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(5 * 60);
 
@@ -44,7 +45,7 @@ impl RunBifrostOptions {
             work_dir: PathBuf::from("target/usagebench"),
             output: None,
             include_unsupported: false,
-            include_definition_lookups: false,
+            include_definition_lookups: true,
             keep_worktrees: false,
         }
     }
@@ -521,20 +522,18 @@ fn run_usage_to_declaration(
     };
 
     let result = match session.call_tool(
-        "get_definition",
-        json!({
-            "references": [query],
-            "include_tests": true,
-        }),
+        GET_DEFINITION_BY_LOCATION_TOOL,
+        json!({ "references": [query] }),
     ) {
         Ok(result) => result,
         Err(error) => {
             let message = format!("{error:#}");
-            let (status, raw_status) = if message.contains("Unknown tool: get_definition") {
-                (CaseStatus::Failed, "unsupported_tool")
-            } else {
-                (CaseStatus::Error, "get_definition_failed")
-            };
+            let (status, raw_status) =
+                if message.contains("Unknown tool: get_definition_by_location") {
+                    (CaseStatus::Failed, "unsupported_tool")
+                } else {
+                    (CaseStatus::Error, "get_definition_by_location_failed")
+                };
             return UsageDefinitionReport {
                 status,
                 usage,
@@ -596,8 +595,7 @@ fn skipped_definition_lookup(lookup: &crate::UsageLookup) -> UsageDefinitionRepo
         raw_status: "definition_lookups_disabled".to_string(),
         diagnostics: vec![RunDiagnostic {
             kind: "definition_lookups_disabled".to_string(),
-            message: "get_definition is not part of the default released runner surface yet"
-                .to_string(),
+            message: "definition lookups were disabled for this run".to_string(),
         }],
     }
 }
@@ -847,7 +845,7 @@ fn parse_get_definition(value: &Value) -> ParsedGetDefinition {
             actual_declarations: Vec::new(),
             diagnostics: vec![RunDiagnostic {
                 kind: "missing_result".to_string(),
-                message: "get_definition returned no result".to_string(),
+                message: "get_definition_by_location returned no result".to_string(),
             }],
         };
     };
@@ -1571,6 +1569,13 @@ mod tests {
     }
 
     #[test]
+    fn bifrost_options_enable_definition_lookups_by_default() {
+        let options = RunBifrostOptions::with_defaults(PathBuf::from("benchmarks/cases"));
+
+        assert!(options.include_definition_lookups);
+    }
+
+    #[test]
     fn converts_zero_based_position_to_one_based_query_position() {
         let location = location("src/lib.rs", 7, 18);
 
@@ -1702,8 +1707,8 @@ mod tests {
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
             tool(
-                "get_definition",
-                get_definition_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITION_BY_LOCATION_TOOL,
+                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -1722,8 +1727,8 @@ mod tests {
             ),
             tool("scan_usages", scan_usages_json(Vec::new(), false)),
             tool(
-                "get_definition",
-                get_definition_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITION_BY_LOCATION_TOOL,
+                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -1754,8 +1759,8 @@ mod tests {
                 scan_usages_json(vec![("src/lib.rs", 8), ("src/extra.rs", 1)], false),
             ),
             tool(
-                "get_definition",
-                get_definition_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITION_BY_LOCATION_TOOL,
+                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -1777,8 +1782,8 @@ mod tests {
                 scan_usages_json(vec![("src/lib.rs", 8), ("src/extra.rs", 1)], false),
             ),
             tool(
-                "get_definition",
-                get_definition_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITION_BY_LOCATION_TOOL,
+                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -1803,8 +1808,8 @@ mod tests {
                 scan_usages_json(vec![("src/extra.rs", 1)], false),
             ),
             tool(
-                "get_definition",
-                get_definition_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITION_BY_LOCATION_TOOL,
+                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -1915,8 +1920,8 @@ mod tests {
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
             tool(
-                "get_definition",
-                get_definition_json("resolved", vec![("src/service.rs", 99)]),
+                GET_DEFINITION_BY_LOCATION_TOOL,
+                get_definition_by_location_json("resolved", vec![("src/service.rs", 99)]),
             ),
         ]);
 
@@ -1927,12 +1932,13 @@ mod tests {
     }
 
     #[test]
-    fn missing_get_definition_tool_is_scored_failure() {
+    fn missing_get_definition_by_location_tool_is_scored_failure() {
         let case = benchmark_case();
         let lookup = &case.usage_lookups[0];
         let mut client = ErrorClient {
-            message: "Bifrost tool `get_definition` failed: Unknown tool: get_definition"
-                .to_string(),
+            message:
+                "Bifrost tool `get_definition_by_location` failed: Unknown tool: get_definition_by_location"
+                    .to_string(),
         };
 
         let report = run_usage_to_declaration(lookup, PositionEncoding::Utf16, &mut client);
@@ -1942,7 +1948,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_lookups_are_skipped_by_default() {
+    fn definition_lookups_are_skipped_when_disabled() {
         let case = benchmark_case();
         let mut client = MockClient::new(vec![
             tool(
@@ -2040,8 +2046,8 @@ mod tests {
                 }),
             ),
             tool(
-                "get_definition",
-                get_definition_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITION_BY_LOCATION_TOOL,
+                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -2299,7 +2305,7 @@ mod tests {
         })
     }
 
-    fn get_definition_json(status: &str, locations: Vec<(&str, usize)>) -> Value {
+    fn get_definition_by_location_json(status: &str, locations: Vec<(&str, usize)>) -> Value {
         json!({
             "results": [{
                 "query": {"path": "src/lib.rs", "line": 8, "column": 19, "symbol": "build_service"},
