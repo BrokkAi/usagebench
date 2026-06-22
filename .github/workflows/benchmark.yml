@@ -3,8 +3,6 @@ name: Benchmark
 on:
   schedule:
     - cron: '47 9 * * *'
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
     inputs:
       bifrost_ref:
