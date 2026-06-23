@@ -115,6 +115,43 @@ jobs:
                 .totals
                 | "- Documents: \(.documents)\n- Cases: \(.cases)\n- Passed: \(.passed)\n- Failed: \(.failed)\n- Expected failures: \(.expectedFailures)\n- Skipped: \(.skipped)\n- Errors: \(.errors)"
               ' "${{ steps.paths.outputs.report_path }}"
+              failing_cases="$(
+                jq -r '
+                  [
+                    .documents[]? as $document
+                    | $document.cases[]?
+                    | select(.status == "failed" or .status == "error")
+                    | "- \(.status): \(.id) (\($document.caseFile))"
+                      + (
+                        if .declarationToUsages then
+                          " missing=\(.declarationToUsages.missing | length), extra=\(.declarationToUsages.unexpected | length)"
+                        else
+                          ""
+                        end
+                      )
+                      + (
+                        ((.usageToDeclaration // []) | map(select(.status == "failed" or .status == "error")) | length) as $usage_issues
+                        | if $usage_issues > 0 then
+                            " usageLookupIssues=\($usage_issues)"
+                          else
+                            ""
+                          end
+                      )
+                  ] as $items
+                  | if ($items | length) > 0 then
+                      ($items[0:10][]),
+                      (if ($items | length) > 10 then "- ... \(($items | length) - 10) more failing case(s)" else empty end)
+                    else
+                      empty
+                    end
+                ' "${{ steps.paths.outputs.report_path }}"
+              )"
+              if [ -n "$failing_cases" ]; then
+                echo
+                echo "## Failing Cases"
+                echo
+                echo "$failing_cases"
+              fi
             else
               echo "- Report: none written"
             fi
@@ -141,6 +178,7 @@ jobs:
           expected_failures_count="0"
           skipped_count="0"
           errors_count="0"
+          failing_cases=""
           if [ -n "$report_path" ] && [ -f "$report_path" ]; then
             bifrost_resolved_commit="$(jq -r '.bifrostResolvedCommit // ""' "$report_path")"
             bifrost_sha_short="$(printf '%s' "$bifrost_resolved_commit" | cut -c1-7)"
@@ -151,16 +189,57 @@ jobs:
             expected_failures_count="$(jq -r '.totals.expectedFailures // 0' "$report_path")"
             skipped_count="$(jq -r '.totals.skipped // 0' "$report_path")"
             errors_count="$(jq -r '.totals.errors // 0' "$report_path")"
+            failing_cases="$(
+              jq -r '
+                [
+                  .documents[]? as $document
+                  | $document.cases[]?
+                  | select(.status == "failed" or .status == "error")
+                  | "- \(.status): \(.id) (\($document.caseFile))"
+                    + (
+                      if .declarationToUsages then
+                        " missing=\(.declarationToUsages.missing | length), extra=\(.declarationToUsages.unexpected | length)"
+                      else
+                        ""
+                      end
+                    )
+                    + (
+                      ((.usageToDeclaration // []) | map(select(.status == "failed" or .status == "error")) | length) as $usage_issues
+                      | if $usage_issues > 0 then
+                          " usageLookupIssues=\($usage_issues)"
+                        else
+                          ""
+                        end
+                    )
+                ] as $items
+                | if ($items | length) > 0 then
+                    ($items[0:10][]),
+                    (if ($items | length) > 10 then "- ... \(($items | length) - 10) more failing case(s)" else empty end)
+                  else
+                    empty
+                  end
+              ' "$report_path"
+            )"
           fi
 
           ok="true"
           error_text=""
           if [ "$run_outcome" != "success" ]; then
             ok="false"
-            error_text="usage benchmark run failed"
+            if [ -n "$failing_cases" ]; then
+              error_text="$(printf 'Usage benchmark run failed:\n%s' "$failing_cases")"
+            elif [ -n "$report_path" ]; then
+              error_text="usage benchmark run failed; report did not list failed cases"
+            else
+              error_text="usage benchmark run failed before writing a report"
+            fi
           elif [ "$failed_count" != "0" ] || [ "$errors_count" != "0" ]; then
             ok="false"
-            error_text="usage benchmark report recorded failures"
+            if [ -n "$failing_cases" ]; then
+              error_text="$(printf 'Usage benchmark report recorded failures:\n%s' "$failing_cases")"
+            else
+              error_text="usage benchmark report recorded failures"
+            fi
           fi
 
           payload="$(
