@@ -6,8 +6,6 @@ source:
 language: rust
 cases:
   - id: rust-function-call-and-reexport
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/service.rs
@@ -17,13 +15,6 @@ cases:
       kind: function
       displayName: build_service
     expectedUsages:
-      - location:
-          uri: benchmark://source/src/lib.rs
-          range:
-            start: { line: 2, character: 61 }
-            end: { line: 2, character: 74 }
-        kind: function
-        displayName: build_service
       - location:
           uri: benchmark://source/src/lib.rs
           range:
@@ -50,7 +41,7 @@ cases:
           displayName: build_service
     verification:
       method: manual_inspection
-      notes: build_service is re-exported from lib.rs and called from run_demo.
+      notes: build_service is called from run_demo; the lib.rs re-export binding is not counted as a usage.
   - id: rust-struct-construction
     expectedFailure:
       reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
@@ -63,13 +54,6 @@ cases:
       kind: type
       displayName: Service
     expectedUsages:
-      - location:
-          uri: benchmark://source/src/lib.rs
-          range:
-            start: { line: 2, character: 52 }
-            end: { line: 2, character: 59 }
-        kind: type
-        displayName: Service
       - location:
           uri: benchmark://source/src/service.rs
           range:
@@ -110,7 +94,7 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is declared in service.rs, re-exported, returned by build_service, and used to call Service::new.
+      notes: Service is declared in service.rs, returned by build_service, and used to call Service::new; the lib.rs re-export binding is not counted as a usage.
   - id: rust-method-call
     expectedFailure:
       reason: Bifrost get_definition_by_location currently returns no definition for this Rust method usage.

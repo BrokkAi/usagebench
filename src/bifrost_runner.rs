@@ -466,7 +466,7 @@ fn run_declaration_to_usages(
         .collect::<Vec<_>>();
     let status = if has_error_status {
         CaseStatus::Error
-    } else if parsed.partial || !missing.is_empty() {
+    } else if parsed.partial || !missing.is_empty() || !unexpected.is_empty() {
         CaseStatus::Failed
     } else {
         CaseStatus::Passed
@@ -1774,7 +1774,7 @@ mod tests {
     }
 
     #[test]
-    fn scorer_reports_unexpected_usage_without_failing_case() {
+    fn scorer_fails_unexpected_usage() {
         let case = benchmark_case();
         let mut client = MockClient::new(vec![
             tool(
@@ -1793,9 +1793,9 @@ mod tests {
 
         let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
 
-        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(report.status, CaseStatus::Failed);
         let declaration = report.declaration_to_usages.unwrap();
-        assert_eq!(declaration.status, CaseStatus::Passed);
+        assert_eq!(declaration.status, CaseStatus::Failed);
         assert_eq!(declaration.unexpected.len(), 1);
     }
 

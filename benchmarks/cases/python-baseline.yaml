@@ -7,7 +7,7 @@ language: python
 cases:
   - id: python-module-import
     expectedFailure:
-      reason: Bifrost get_definition_by_location currently returns no definition for this Python module import.
+      reason: Bifrost currently reports Python import and body references as usage extras for the module declaration.
     declaration:
       location:
         uri: benchmark://source/src/example/service.py
@@ -17,42 +17,11 @@ cases:
       kind: module
       displayName: example.service
       disambiguation: first_matching_symbol
-    expectedUsages:
-      - location:
-          uri: benchmark://source/src/example/__init__.py
-          range:
-            start: { line: 0, character: 6 }
-            end: { line: 0, character: 13 }
-        kind: module
-        displayName: service
-      - location:
-          uri: benchmark://source/tests/test_service.py
-          range:
-            start: { line: 1, character: 13 }
-            end: { line: 1, character: 20 }
-        kind: module
-        displayName: service
-    usageLookups:
-      - usage:
-          location:
-            uri: benchmark://source/tests/test_service.py
-            range:
-              start: { line: 1, character: 13 }
-              end: { line: 1, character: 20 }
-          kind: module
-          displayName: service
-        expectedDeclaration:
-          location:
-            uri: benchmark://source/src/example/service.py
-            range:
-              start: { line: 0, character: 0 }
-              end: { line: 0, character: 0 }
-          kind: module
-          displayName: example.service
-          disambiguation: first_matching_symbol
+    expectedUsages: []
+    usageLookups: []
     verification:
       method: manual_inspection
-      notes: service.py is imported from the package initializer and directly from the test fixture.
+      notes: service.py is imported from the package initializer and directly from the test fixture; import bindings are not counted as usages.
   - id: python-function-call-and-reexport
     expectedFailure:
       reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
@@ -65,13 +34,6 @@ cases:
       kind: function
       displayName: build_service
     expectedUsages:
-      - location:
-          uri: benchmark://source/src/example/__init__.py
-          range:
-            start: { line: 0, character: 58 }
-            end: { line: 0, character: 71 }
-        kind: function
-        displayName: build_service
       - location:
           uri: benchmark://source/tests/test_service.py
           range:
@@ -105,10 +67,8 @@ cases:
           displayName: build_service
     verification:
       method: manual_inspection
-      notes: build_service is re-exported from example and called by two test functions.
+      notes: build_service is called by two test functions; the package re-export binding is not counted as a usage.
   - id: python-class-instantiation
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/example/service.py
@@ -119,24 +79,10 @@ cases:
       displayName: Service
     expectedUsages:
       - location:
-          uri: benchmark://source/src/example/__init__.py
-          range:
-            start: { line: 0, character: 49 }
-            end: { line: 0, character: 56 }
-        kind: class
-        displayName: Service
-      - location:
           uri: benchmark://source/src/example/service.py
           range:
             start: { line: 19, character: 11 }
             end: { line: 19, character: 18 }
-        kind: class
-        displayName: Service
-      - location:
-          uri: benchmark://source/tests/test_service.py
-          range:
-            start: { line: 0, character: 36 }
-            end: { line: 0, character: 43 }
         kind: class
         displayName: Service
     usageLookups:
@@ -158,7 +104,7 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is re-exported, imported by tests, and instantiated by build_service.
+      notes: Service is instantiated by build_service; the package re-export and test import bindings are not counted as usages.
   - id: python-method-call
     expectedFailure:
       reason: Bifrost get_definition_by_location currently returns no definition for this Python method usage.
