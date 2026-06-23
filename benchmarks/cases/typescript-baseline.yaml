@@ -6,8 +6,6 @@ source:
 language: typescript
 cases:
   - id: ts-named-export-import-function
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/components.tsx
@@ -22,13 +20,6 @@ cases:
           range:
             start: { line: 18, character: 29 }
             end: { line: 18, character: 39 }
-        kind: function
-        displayName: formatName
-      - location:
-          uri: benchmark://source/src/app.tsx
-          range:
-            start: { line: 0, character: 46 }
-            end: { line: 0, character: 56 }
         kind: function
         displayName: formatName
       - location:
@@ -57,10 +48,8 @@ cases:
           displayName: formatName
     verification:
       method: manual_inspection
-      notes: formatName is exported from components, imported by app, and called from both fixtures.
+      notes: formatName is exported from components and called from both fixtures; the app import binding is not counted as a usage.
   - id: ts-default-class-import-and-construction
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/components.tsx
@@ -76,13 +65,6 @@ cases:
             start: { line: 23, character: 22 }
             end: { line: 23, character: 29 }
         kind: constructor
-        displayName: Greeter
-      - location:
-          uri: benchmark://source/src/app.tsx
-          range:
-            start: { line: 0, character: 7 }
-            end: { line: 0, character: 14 }
-        kind: class
         displayName: Greeter
       - location:
           uri: benchmark://source/src/app.tsx
@@ -110,7 +92,7 @@ cases:
           displayName: Greeter
     verification:
       method: manual_inspection
-      notes: Greeter is the default export and is constructed in both components and app fixtures.
+      notes: Greeter is the default export and is constructed in both components and app fixtures; the app import binding is not counted as a usage.
   - id: ts-class-method-call
     expectedFailure:
       reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
@@ -204,8 +186,6 @@ cases:
       method: manual_inspection
       notes: User.name is declared in the type literal, initialized in app, and read by formatName.
   - id: ts-tsx-component-reference
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/components.tsx
@@ -215,13 +195,6 @@ cases:
       kind: function
       displayName: WelcomeCard
     expectedUsages:
-      - location:
-          uri: benchmark://source/src/app.tsx
-          range:
-            start: { line: 0, character: 33 }
-            end: { line: 0, character: 44 }
-        kind: function
-        displayName: WelcomeCard
       - location:
           uri: benchmark://source/src/app.tsx
           range:
@@ -248,4 +221,4 @@ cases:
           displayName: WelcomeCard
     verification:
       method: manual_inspection
-      notes: WelcomeCard is a named exported function imported by app and used as a JSX element.
+      notes: WelcomeCard is a named exported function used as a JSX element; the app import binding is not counted as a usage.

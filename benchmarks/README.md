@@ -64,6 +64,11 @@ Each case supports both benchmark directions:
 - `declaration` plus `expectedUsages` tests declaration-to-usage lookup.
 - `usageLookups` tests usage-to-declaration lookup.
 - `allowedExtraUsages` documents acceptable analyzer-specific broader matches.
+- Actual usage locations outside `expectedUsages` and `allowedExtraUsages` are
+  unexpected false positives and fail the case.
+- Import or re-export binding sites are not true-positive usages. Do not include
+  them in `expectedUsages`, `usageLookups`, or `allowedExtraUsages`; analyzers
+  that report them should surface those locations as unexpected extras.
 - `expectedFailure.reason` keeps a known analyzer gap in the baseline while
   still running the case and failing if the case unexpectedly starts passing.
 - `unsupported.reason` keeps useful future cases in the corpus without scoring

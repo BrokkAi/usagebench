@@ -6,8 +6,6 @@ source:
 language: javascript
 cases:
   - id: js-named-export-import-function
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/components.js
@@ -22,13 +20,6 @@ cases:
           range:
             start: { line: 8, character: 29 }
             end: { line: 8, character: 39 }
-        kind: function
-        displayName: formatName
-      - location:
-          uri: benchmark://source/src/app.js
-          range:
-            start: { line: 0, character: 48 }
-            end: { line: 0, character: 58 }
         kind: function
         displayName: formatName
       - location:
@@ -57,10 +48,8 @@ cases:
           displayName: formatName
     verification:
       method: manual_inspection
-      notes: formatName is exported from components, imported by app, and called from both files.
+      notes: formatName is exported from components and called from both files; the app import binding is not counted as a usage.
   - id: js-class-construction
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/components.js
@@ -70,13 +59,6 @@ cases:
       kind: class
       displayName: Greeter
     expectedUsages:
-      - location:
-          uri: benchmark://source/src/app.js
-          range:
-            start: { line: 0, character: 24 }
-            end: { line: 0, character: 31 }
-        kind: class
-        displayName: Greeter
       - location:
           uri: benchmark://source/src/app.js
           range:
@@ -110,7 +92,7 @@ cases:
           displayName: Greeter
     verification:
       method: manual_inspection
-      notes: Greeter is imported by app and constructed directly plus through createGreeter.
+      notes: Greeter is constructed directly in app and through createGreeter; the app import binding is not counted as a usage.
   - id: js-method-call
     expectedFailure:
       reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
