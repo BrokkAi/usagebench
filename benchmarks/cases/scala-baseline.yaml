@@ -6,8 +6,6 @@ source:
 language: scala
 cases:
   - id: scala-class-construction
-    expectedFailure:
-      reason: Bifrost get_definition_by_location currently resolves this constructor usage to the companion build method.
     declaration:
       location:
         uri: benchmark://source/src/main/scala/example/Service.scala

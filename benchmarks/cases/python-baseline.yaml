@@ -6,8 +6,6 @@ source:
 language: python
 cases:
   - id: python-module-import
-    expectedFailure:
-      reason: Bifrost currently reports Python import and body references as usage extras for the module declaration.
     declaration:
       location:
         uri: benchmark://source/src/example/service.py
