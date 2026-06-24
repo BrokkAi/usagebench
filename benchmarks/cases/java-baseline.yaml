@@ -133,8 +133,6 @@ cases:
       method: manual_inspection
       notes: DEFAULT_PREFIX is read once in production code and once through Service.DEFAULT_PREFIX in the test.
   - id: java-nested-class-constructor
-    expectedFailure:
-      reason: Bifrost get_definition_by_location currently returns no definition for this nested-class constructor usage.
     declaration:
       location:
         uri: benchmark://source/src/main/java/example/Service.java

@@ -43,8 +43,6 @@ cases:
       method: manual_inspection
       notes: Service is declared in Service.cs and used as an explicit local variable type in Consumer.Run.
   - id: csharp-constructor-call
-    expectedFailure:
-      reason: Bifrost get_definition_by_location currently resolves this constructor usage to the class declaration line.
     declaration:
       location:
         uri: benchmark://source/src/Service.cs
