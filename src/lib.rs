@@ -20,20 +20,15 @@ pub struct BenchmarkDocument {
     pub cases: Vec<BenchmarkCase>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub enum PositionEncoding {
     #[serde(rename = "utf-8")]
     Utf8,
     #[serde(rename = "utf-16")]
+    #[default]
     Utf16,
     #[serde(rename = "utf-32")]
     Utf32,
-}
-
-impl Default for PositionEncoding {
-    fn default() -> Self {
-        Self::Utf16
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -356,10 +351,10 @@ impl SymbolLocation {
 
         self.location.range.validate()?;
 
-        if self.location.range.is_zero_width() {
-            if self.disambiguation != Some(Disambiguation::FirstMatchingSymbol) {
-                bail!("zero-width line-only ranges require disambiguation: first_matching_symbol");
-            }
+        if self.location.range.is_zero_width()
+            && self.disambiguation != Some(Disambiguation::FirstMatchingSymbol)
+        {
+            bail!("zero-width line-only ranges require disambiguation: first_matching_symbol");
         }
 
         if let Some(fixture_root) = fixture_root {

@@ -29,6 +29,7 @@ pub struct RunBifrostOptions {
     pub case_path: PathBuf,
     pub bifrost_repo: Option<PathBuf>,
     pub bifrost_commit: String,
+    pub bifrost_working_tree: bool,
     pub work_dir: PathBuf,
     pub output: Option<PathBuf>,
     pub include_unsupported: bool,
@@ -42,6 +43,7 @@ impl RunBifrostOptions {
             case_path,
             bifrost_repo: None,
             bifrost_commit: DEFAULT_BIFROST_COMMIT.to_string(),
+            bifrost_working_tree: false,
             work_dir: PathBuf::from("target/usagebench"),
             output: None,
             include_unsupported: false,
@@ -204,8 +206,11 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
 
     let bifrost_source_repo =
         resolve_bifrost_source_repo(&repo_root, options.bifrost_repo.as_ref())?;
-    let bifrost_checkout =
-        prepare_bifrost_checkout(&bifrost_source_repo, &options.bifrost_commit, &work_dir)?;
+    let bifrost_checkout = if options.bifrost_working_tree {
+        bifrost_source_repo.clone()
+    } else {
+        prepare_bifrost_checkout(&bifrost_source_repo, &options.bifrost_commit, &work_dir)?
+    };
     let bifrost_resolved_commit = git_output(&bifrost_checkout, ["rev-parse", "HEAD"])?;
     build_bifrost(&bifrost_checkout)?;
     let bifrost_binary = bifrost_binary_path(&bifrost_checkout);
@@ -984,9 +989,9 @@ fn combine_case_status(
         .map(|report| report.status)
         .chain(usage_to_declaration.iter().map(|report| report.status))
         .collect::<Vec<_>>();
-    if statuses.iter().any(|status| *status == CaseStatus::Error) {
+    if statuses.contains(&CaseStatus::Error) {
         CaseStatus::Error
-    } else if statuses.iter().any(|status| *status == CaseStatus::Failed) {
+    } else if statuses.contains(&CaseStatus::Failed) {
         CaseStatus::Failed
     } else {
         CaseStatus::Passed
@@ -1576,6 +1581,7 @@ mod tests {
         let options = RunBifrostOptions::with_defaults(PathBuf::from("benchmarks/cases"));
 
         assert!(options.include_definition_lookups);
+        assert!(!options.bifrost_working_tree);
     }
 
     #[test]
