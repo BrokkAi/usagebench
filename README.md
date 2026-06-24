@@ -58,6 +58,17 @@ The workflow:
 Scheduled runs use Bifrost `master`. Manual `workflow_dispatch` runs can set a
 specific `bifrost_ref` and can opt into cases marked `unsupported`.
 
+For local Bifrost changes, run the benchmark against the checkout directly:
+
+```bash
+cargo run -- run-bifrost benchmarks/cases \
+  --bifrost-repo /path/to/bifrost \
+  --bifrost-working-tree
+```
+
+Without `--bifrost-working-tree`, `run-bifrost` creates an isolated checkout
+under `target/usagebench` and checks out `--bifrost-commit`.
+
 If the default `GITHUB_TOKEN` cannot read `BrokkAi/bifrost`, configure a
 repository secret named `BIFROST_CHECKOUT_TOKEN` with read access to that repo.
 

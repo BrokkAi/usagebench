@@ -35,6 +35,9 @@ enum Command {
         /// Bifrost commit or ref to test.
         #[arg(long, default_value = "origin/master")]
         bifrost_commit: String,
+        /// Build and run the provided Bifrost checkout directly, including local commits and uncommitted changes.
+        #[arg(long)]
+        bifrost_working_tree: bool,
         /// Directory for temporary checkouts and runner artifacts.
         #[arg(long, default_value = "target/usagebench")]
         work_dir: PathBuf,
@@ -74,6 +77,7 @@ fn main() -> Result<()> {
             path,
             bifrost_repo,
             bifrost_commit,
+            bifrost_working_tree,
             work_dir,
             output,
             include_unsupported,
@@ -83,6 +87,7 @@ fn main() -> Result<()> {
             let mut options = RunBifrostOptions::with_defaults(path);
             options.bifrost_repo = bifrost_repo;
             options.bifrost_commit = bifrost_commit;
+            options.bifrost_working_tree = bifrost_working_tree;
             options.work_dir = work_dir;
             options.output = output;
             options.include_unsupported = include_unsupported;
