@@ -5,6 +5,52 @@ source:
   path: fixtures/javascript/baseline
 language: javascript
 cases:
+  - id: js-commonjs-exported-member-usage
+    expectedFailure:
+      reason: Bifrost baseline resolves the CommonJS export declaration but can miss its usage seed.
+    declaration:
+      location:
+        uri: benchmark://source/src/commonjs-request.js
+        range:
+          start: { line: 0, character: 8 }
+          end: { line: 0, character: 15 }
+      kind: function
+      displayName: accepts
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/commonjs-consumer.js
+          range:
+            start: { line: 2, character: 28 }
+            end: { line: 2, character: 35 }
+        kind: function
+        displayName: accepts
+      - location:
+          uri: benchmark://source/src/commonjs-consumer.js
+          range:
+            start: { line: 5, character: 17 }
+            end: { line: 5, character: 24 }
+        kind: function
+        displayName: accepts
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/commonjs-consumer.js
+            range:
+              start: { line: 2, character: 28 }
+              end: { line: 2, character: 35 }
+          kind: function
+          displayName: accepts
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/commonjs-request.js
+            range:
+              start: { line: 0, character: 8 }
+              end: { line: 0, character: 15 }
+          kind: function
+          displayName: accepts
+    verification:
+      method: manual_inspection
+      notes: commonjs-request assigns accepts to exports; commonjs-consumer requires that module and calls request.accepts twice.
   - id: js-named-export-import-function
     declaration:
       location:
