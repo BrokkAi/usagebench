@@ -1,0 +1,583 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/ruby/baseline
+language: ruby
+cases:
+  - id: ruby-require-relative-class-construction-unsupported
+    unsupported:
+      reason: Ruby support is new in Bifrost; keep require_relative-backed constant and class-method lookup out of scoring until the Ruby graph is implemented.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/invoice.rb
+        range:
+          start: { line: 6, character: 8 }
+          end: { line: 6, character: 15 }
+      kind: class
+      displayName: Invoice
+    expectedUsages:
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 6, character: 25 }
+            end: { line: 6, character: 32 }
+        kind: class
+        displayName: Invoice
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 6, character: 25 }
+              end: { line: 6, character: 32 }
+          kind: class
+          displayName: Invoice
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/invoice.rb
+            range:
+              start: { line: 6, character: 8 }
+              end: { line: 6, character: 15 }
+          kind: class
+          displayName: Invoice
+    verification:
+      method: manual_inspection
+      notes: report.rb requires billing/invoice and calls Billing::Invoice.build; the require_relative binding itself is not a usage.
+  - id: ruby-relative-nested-constant-unsupported
+    unsupported:
+      reason: Ruby lexical constant lookup is not ready for scoring; Money::Currency must resolve relative to Billing inside Invoice.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/money.rb
+        range:
+          start: { line: 2, character: 10 }
+          end: { line: 2, character: 18 }
+      kind: class
+      displayName: Currency
+    expectedUsages:
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 10, character: 30 }
+            end: { line: 10, character: 38 }
+        kind: class
+        displayName: Currency
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/lib/billing/invoice.rb
+            range:
+              start: { line: 10, character: 30 }
+              end: { line: 10, character: 38 }
+          kind: class
+          displayName: Currency
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/money.rb
+            range:
+              start: { line: 2, character: 10 }
+              end: { line: 2, character: 18 }
+          kind: class
+          displayName: Currency
+    verification:
+      method: manual_inspection
+      notes: Invoice is lexically nested in Billing, so Money::Currency refers to Billing::Money::Currency from the required money.rb file.
+  - id: ruby-superclass-reference-unsupported
+    unsupported:
+      reason: Ruby superclass edges need lexical/import-aware constant resolution before this can be scored.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/record.rb
+        range:
+          start: { line: 1, character: 8 }
+          end: { line: 1, character: 14 }
+      kind: class
+      displayName: Record
+    expectedUsages:
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 6, character: 18 }
+            end: { line: 6, character: 24 }
+        kind: class
+        displayName: Record
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/lib/billing/invoice.rb
+            range:
+              start: { line: 6, character: 18 }
+              end: { line: 6, character: 24 }
+          kind: class
+          displayName: Record
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/record.rb
+            range:
+              start: { line: 1, character: 8 }
+              end: { line: 1, character: 14 }
+          kind: class
+          displayName: Record
+    verification:
+      method: manual_inspection
+      notes: Invoice inherits from Record after requiring record.rb; this should be a superclass reference, not a generic text match.
+  - id: ruby-include-instance-mixin-unsupported
+    unsupported:
+      reason: Ruby include semantics must add module instance methods to the receiver class instance lookup chain before usage lookup is scored.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/auditable.rb
+        range:
+          start: { line: 2, character: 8 }
+          end: { line: 2, character: 13 }
+      kind: method
+      displayName: audit
+    expectedUsages:
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 7, character: 14 }
+            end: { line: 7, character: 19 }
+        kind: method
+        displayName: audit
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 7, character: 14 }
+              end: { line: 7, character: 19 }
+          kind: method
+          displayName: audit
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/auditable.rb
+            range:
+              start: { line: 2, character: 8 }
+              end: { line: 2, character: 13 }
+          kind: method
+          displayName: audit
+    verification:
+      method: manual_inspection
+      notes: Invoice includes Auditable, and report.rb calls audit on an Invoice instance constructed through Billing::Invoice.build.
+  - id: ruby-prepend-method-precedence-unsupported
+    unsupported:
+      reason: Ruby prepend needs distinct precedence modeling; Formatting#total_label should win over Invoice#total_label for instance lookup.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/formatting.rb
+        range:
+          start: { line: 2, character: 8 }
+          end: { line: 2, character: 19 }
+      kind: method
+      displayName: total_label
+    expectedUsages:
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 8, character: 14 }
+            end: { line: 8, character: 25 }
+        kind: method
+        displayName: total_label
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 8, character: 14 }
+              end: { line: 8, character: 25 }
+          kind: method
+          displayName: total_label
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/formatting.rb
+            range:
+              start: { line: 2, character: 8 }
+              end: { line: 2, character: 19 }
+          kind: method
+          displayName: total_label
+    verification:
+      method: manual_inspection
+      notes: Invoice prepends Formatting and also defines total_label; Ruby lookup should resolve invoice.total_label to the prepended module method.
+  - id: ruby-extend-and-include-method-lookup-unsupported
+    unsupported:
+      reason: Ruby extend and include expose the same module method through different lookup chains, which Bifrost should model before scoring.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/findable.rb
+        range:
+          start: { line: 2, character: 8 }
+          end: { line: 2, character: 12 }
+      kind: method
+      displayName: find
+    expectedUsages:
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 10, character: 20 }
+            end: { line: 10, character: 24 }
+        kind: method
+        displayName: find
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 11, character: 30 }
+            end: { line: 11, character: 34 }
+        kind: method
+        displayName: find
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 10, character: 20 }
+              end: { line: 10, character: 24 }
+          kind: method
+          displayName: find
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/findable.rb
+            range:
+              start: { line: 2, character: 8 }
+              end: { line: 2, character: 12 }
+          kind: method
+          displayName: find
+      - usage:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 11, character: 30 }
+              end: { line: 11, character: 34 }
+          kind: method
+          displayName: find
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/findable.rb
+            range:
+              start: { line: 2, character: 8 }
+              end: { line: 2, character: 12 }
+          kind: method
+          displayName: find
+    verification:
+      method: manual_inspection
+      notes: User extends Findable, so User.find is a class/singleton method; LegacyUser includes Findable, so LegacyUser.new.find is an instance method.
+  - id: ruby-class-constant-access-unsupported
+    unsupported:
+      reason: Ruby class constants need namespace-aware get-definition and usage lookup before scoring.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/invoice.rb
+        range:
+          start: { line: 10, character: 4 }
+          end: { line: 10, character: 20 }
+      kind: constant
+      displayName: DEFAULT_CURRENCY
+    expectedUsages:
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 9, character: 24 }
+            end: { line: 9, character: 40 }
+        kind: constant
+        displayName: DEFAULT_CURRENCY
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 9, character: 24 }
+              end: { line: 9, character: 40 }
+          kind: constant
+          displayName: DEFAULT_CURRENCY
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/invoice.rb
+            range:
+              start: { line: 10, character: 4 }
+              end: { line: 10, character: 20 }
+          kind: constant
+          displayName: DEFAULT_CURRENCY
+    verification:
+      method: manual_inspection
+      notes: report.rb reads Billing::Invoice::DEFAULT_CURRENCY after requiring billing/invoice.
+  - id: ruby-basic-function-call-unsupported
+    unsupported:
+      reason: Ruby top-level methods become private Object methods, so basic bare-call lookup should remain skipped until Ruby function semantics are explicit.
+    declaration:
+      location:
+        uri: benchmark://source/app/report.rb
+        range:
+          start: { line: 20, character: 4 }
+          end: { line: 20, character: 19 }
+      kind: function
+      displayName: normalize_total
+    expectedUsages:
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 12, character: 6 }
+            end: { line: 12, character: 21 }
+        kind: function
+        displayName: normalize_total
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 12, character: 6 }
+              end: { line: 12, character: 21 }
+          kind: function
+          displayName: normalize_total
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 20, character: 4 }
+              end: { line: 20, character: 19 }
+          kind: function
+          displayName: normalize_total
+    verification:
+      method: manual_inspection
+      notes: render calls normalize_total as a bare function-style Ruby method in the same file.
+  - id: ruby-singleton-method-dispatch-unsupported
+    unsupported:
+      reason: Ruby class-method calls are singleton method dispatches, not static dispatch; keep this skipped until singleton lookup is modeled.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/user.rb
+        range:
+          start: { line: 6, character: 13 }
+          end: { line: 6, character: 18 }
+      kind: method
+      displayName: build
+    expectedUsages:
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 13, character: 20 }
+            end: { line: 13, character: 25 }
+        kind: method
+        displayName: build
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 13, character: 20 }
+              end: { line: 13, character: 25 }
+          kind: method
+          displayName: build
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/user.rb
+            range:
+              start: { line: 6, character: 13 }
+              end: { line: 6, character: 18 }
+          kind: method
+          displayName: build
+    verification:
+      method: manual_inspection
+      notes: Billing::User.build calls the singleton method declared with def self.build on User.
+  - id: ruby-dynamic-public-send-unsupported
+    unsupported:
+      reason: Ruby public_send resolves a method name from a runtime symbol; retain the case as dynamic dispatch coverage but exclude it from scoring.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/auditable.rb
+        range:
+          start: { line: 2, character: 8 }
+          end: { line: 2, character: 13 }
+      kind: method
+      displayName: audit
+    expectedUsages:
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 14, character: 27 }
+            end: { line: 14, character: 32 }
+        kind: method
+        displayName: audit
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 14, character: 27 }
+              end: { line: 14, character: 32 }
+          kind: method
+          displayName: audit
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/auditable.rb
+            range:
+              start: { line: 2, character: 8 }
+              end: { line: 2, character: 13 }
+          kind: method
+          displayName: audit
+    verification:
+      method: manual_inspection
+      notes: invoice.public_send(:audit) names audit through a symbol at the call site, unlike the direct invoice.audit dispatch case.
+  - id: ruby-script-level-constant-access-unsupported
+    unsupported:
+      reason: Ruby script-level constants live on Object and need explicit constant-scope handling before scoring.
+    declaration:
+      location:
+        uri: benchmark://source/app/report.rb
+        range:
+          start: { line: 24, character: 0 }
+          end: { line: 24, character: 12 }
+      kind: constant
+      displayName: SCRIPT_LIMIT
+    expectedUsages:
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 21, character: 16 }
+            end: { line: 21, character: 28 }
+        kind: constant
+        displayName: SCRIPT_LIMIT
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 21, character: 16 }
+              end: { line: 21, character: 28 }
+          kind: constant
+          displayName: SCRIPT_LIMIT
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/app/report.rb
+            range:
+              start: { line: 24, character: 0 }
+              end: { line: 24, character: 12 }
+          kind: constant
+          displayName: SCRIPT_LIMIT
+    verification:
+      method: manual_inspection
+      notes: normalize_total reads the script-level SCRIPT_LIMIT constant declared later in the same file.
+  - id: ruby-instance-field-access-unsupported
+    unsupported:
+      reason: Ruby instance variables are receiver-state fields and need method/receiver-aware lookup before scoring.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/invoice.rb
+        range:
+          start: { line: 15, character: 6 }
+          end: { line: 15, character: 13 }
+      kind: field
+      displayName: "@status"
+    expectedUsages:
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 19, character: 6 }
+            end: { line: 19, character: 13 }
+        kind: field
+        displayName: "@status"
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/lib/billing/invoice.rb
+            range:
+              start: { line: 19, character: 6 }
+              end: { line: 19, character: 13 }
+          kind: field
+          displayName: "@status"
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/invoice.rb
+            range:
+              start: { line: 15, character: 6 }
+              end: { line: 15, character: 13 }
+          kind: field
+          displayName: "@status"
+    verification:
+      method: manual_inspection
+      notes: initialize writes @status and the instance status reader returns the same instance variable.
+  - id: ruby-class-variable-access-unsupported
+    unsupported:
+      reason: Ruby class variables are shared through class hierarchy state and should not be treated as ordinary instance fields.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/invoice.rb
+        range:
+          start: { line: 11, character: 4 }
+          end: { line: 11, character: 14 }
+      kind: field
+      displayName: "@@sequence"
+    expectedUsages:
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 27, character: 6 }
+            end: { line: 27, character: 16 }
+        kind: field
+        displayName: "@@sequence"
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/lib/billing/invoice.rb
+            range:
+              start: { line: 27, character: 6 }
+              end: { line: 27, character: 16 }
+          kind: field
+          displayName: "@@sequence"
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/invoice.rb
+            range:
+              start: { line: 11, character: 4 }
+              end: { line: 11, character: 14 }
+          kind: field
+          displayName: "@@sequence"
+    verification:
+      method: manual_inspection
+      notes: "@@sequence is initialized on Invoice and incremented by the singleton build method."
+  - id: ruby-singleton-field-access-unsupported
+    unsupported:
+      reason: Ruby class-instance variables belong to the class object's singleton state, distinct from instance variables on Invoice instances.
+    declaration:
+      location:
+        uri: benchmark://source/lib/billing/invoice.rb
+        range:
+          start: { line: 12, character: 4 }
+          end: { line: 12, character: 15 }
+      kind: field
+      displayName: "@last_build"
+    expectedUsages:
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 28, character: 6 }
+            end: { line: 28, character: 17 }
+        kind: field
+        displayName: "@last_build"
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 32, character: 6 }
+            end: { line: 32, character: 17 }
+        kind: field
+        displayName: "@last_build"
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/lib/billing/invoice.rb
+            range:
+              start: { line: 32, character: 6 }
+              end: { line: 32, character: 17 }
+          kind: field
+          displayName: "@last_build"
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/billing/invoice.rb
+            range:
+              start: { line: 12, character: 4 }
+              end: { line: 12, character: 15 }
+          kind: field
+          displayName: "@last_build"
+    verification:
+      method: manual_inspection
+      notes: "@last_build is initialized in the Invoice class body, assigned from self.build, and read from self.last_build on the class object's singleton state."
