@@ -68,7 +68,7 @@
     "benchmarkCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "declaration", "expectedUsages", "usageLookups"],
+      "required": ["id"],
       "properties": {
         "id": {
           "type": "string",
@@ -81,7 +81,8 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/symbolLocation"
-          }
+          },
+          "default": []
         },
         "allowedExtraUsages": {
           "type": "array",
@@ -94,7 +95,15 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/usageLookup"
-          }
+          },
+          "default": []
+        },
+        "typeLookups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/typeLookup"
+          },
+          "default": []
         },
         "expectedFailure": {
           "$ref": "#/$defs/expectedFailure"
@@ -197,6 +206,19 @@
           "$ref": "#/$defs/symbolLocation"
         },
         "expectedDeclaration": {
+          "$ref": "#/$defs/symbolLocation"
+        }
+      }
+    },
+    "typeLookup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expression", "expectedType"],
+      "properties": {
+        "expression": {
+          "$ref": "#/$defs/symbolLocation"
+        },
+        "expectedType": {
           "$ref": "#/$defs/symbolLocation"
         }
       }

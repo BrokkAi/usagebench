@@ -94,8 +94,6 @@ cases:
       method: manual_inspection
       notes: Service is declared as a class and used as the build_service return type in the header and implementation.
   - id: cpp-constructor-call
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/include/service.h
@@ -105,13 +103,6 @@ cases:
       kind: constructor
       displayName: Service
     expectedUsages:
-      - location:
-          uri: benchmark://source/src/service.cpp
-          range:
-            start: { line: 9, character: 9 }
-            end: { line: 9, character: 16 }
-        kind: constructor
-        displayName: Service
       - location:
           uri: benchmark://source/src/service.cpp
           range:
@@ -138,7 +129,7 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service has an explicit constructor declared in the header, defined in service.cpp, and invoked by build_service.
+      notes: Service has an explicit constructor declared in the header and invoked by build_service; the out-of-line definition is not counted as a usage.
   - id: cpp-method-call
     declaration:
       location:

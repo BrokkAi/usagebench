@@ -18,8 +18,8 @@ cases:
       - location:
           uri: benchmark://source/src/lib.rs
           range:
-            start: { line: 7, character: 18 }
-            end: { line: 7, character: 31 }
+            start: { line: 10, character: 18 }
+            end: { line: 10, character: 31 }
         kind: function
         displayName: build_service
     usageLookups:
@@ -27,8 +27,8 @@ cases:
           location:
             uri: benchmark://source/src/lib.rs
             range:
-              start: { line: 7, character: 18 }
-              end: { line: 7, character: 31 }
+              start: { line: 10, character: 18 }
+              end: { line: 10, character: 31 }
           kind: function
           displayName: build_service
         expectedDeclaration:
@@ -110,8 +110,8 @@ cases:
       - location:
           uri: benchmark://source/src/lib.rs
           range:
-            start: { line: 8, character: 12 }
-            end: { line: 8, character: 19 }
+            start: { line: 18, character: 34 }
+            end: { line: 18, character: 41 }
         kind: method
         displayName: execute
     usageLookups:
@@ -119,8 +119,8 @@ cases:
           location:
             uri: benchmark://source/src/lib.rs
             range:
-              start: { line: 8, character: 12 }
-              end: { line: 8, character: 19 }
+              start: { line: 18, character: 34 }
+              end: { line: 18, character: 41 }
           kind: method
           displayName: execute
         expectedDeclaration:
@@ -171,3 +171,79 @@ cases:
     verification:
       method: manual_inspection
       notes: last is declared on MemoryRepository and assigned inside save.
+  - id: rust-explicit-local-and-parameter-type-lookup
+    usageLookups: []
+    typeLookups:
+      - expression:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 52, character: 21 }
+              end: { line: 52, character: 32 }
+          kind: variable
+          displayName: local_label
+        expectedType:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 36, character: 11 }
+              end: { line: 36, character: 21 }
+          kind: type
+          displayName: AuditLabel
+      - expression:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 51, character: 34 }
+              end: { line: 51, character: 39 }
+          kind: variable
+          displayName: event
+        expectedType:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 40, character: 11 }
+              end: { line: 40, character: 21 }
+          kind: type
+          displayName: AuditEvent
+    verification:
+      method: manual_inspection
+      notes: format_audit_event carries explicit parameter and local type annotations used by get_type_by_location.
+  - id: rust-imported-type-and-member-type-lookup
+    usageLookups: []
+    typeLookups:
+      - expression:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 17, character: 42 }
+              end: { line: 17, character: 51 }
+          kind: variable
+          displayName: formatter
+        expectedType:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 34, character: 11 }
+              end: { line: 34, character: 25 }
+          kind: type
+          displayName: AuditFormatter
+      - expression:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 51, character: 40 }
+              end: { line: 51, character: 45 }
+          kind: field
+          displayName: label
+        expectedType:
+          location:
+            uri: benchmark://source/src/service.rs
+            range:
+              start: { line: 36, character: 11 }
+              end: { line: 36, character: 21 }
+          kind: type
+          displayName: AuditLabel
+    verification:
+      method: manual_inspection
+      notes: run_demo imports AuditFormatter through the fixture re-export, and event.label resolves through the known AuditEvent receiver type.

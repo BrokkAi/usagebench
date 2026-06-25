@@ -30,3 +30,25 @@ impl Service {
 pub fn build_service(repository: MemoryRepository) -> Service {
     Service::new(repository)
 }
+
+#[derive(Default)]
+pub struct AuditFormatter;
+
+pub struct AuditLabel {
+    pub text: String,
+}
+
+pub struct AuditEvent {
+    pub label: AuditLabel,
+}
+
+impl AuditFormatter {
+    pub fn render(&self, label: AuditLabel) -> String {
+        label.text
+    }
+}
+
+pub fn format_audit_event(event: AuditEvent, formatter: AuditFormatter) -> String {
+    let local_label: AuditLabel = event.label;
+    formatter.render(local_label)
+}

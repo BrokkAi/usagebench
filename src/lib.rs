@@ -44,13 +44,16 @@ pub enum Source {
 #[serde(rename_all = "camelCase")]
 pub struct BenchmarkCase {
     pub id: String,
-    pub declaration: SymbolLocation,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub declaration: Option<SymbolLocation>,
     #[serde(default)]
     pub expected_usages: Vec<SymbolLocation>,
     #[serde(default)]
     pub allowed_extra_usages: Vec<SymbolLocation>,
     #[serde(default)]
     pub usage_lookups: Vec<UsageLookup>,
+    #[serde(default)]
+    pub type_lookups: Vec<TypeLookup>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expected_failure: Option<ExpectedFailure>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -116,6 +119,13 @@ pub enum Disambiguation {
 pub struct UsageLookup {
     pub usage: SymbolLocation,
     pub expected_declaration: SymbolLocation,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct TypeLookup {
+    pub expression: SymbolLocation,
+    pub expected_type: SymbolLocation,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -307,9 +317,11 @@ impl BenchmarkDocument {
 
 impl BenchmarkCase {
     fn validate(&self, fixture_root: Option<&Path>, encoding: PositionEncoding) -> Result<()> {
-        self.declaration
-            .validate(fixture_root, encoding)
-            .with_context(|| format!("case {} declaration", self.id))?;
+        if let Some(declaration) = &self.declaration {
+            declaration
+                .validate(fixture_root, encoding)
+                .with_context(|| format!("case {} declaration", self.id))?;
+        }
 
         for usage in &self.expected_usages {
             usage
@@ -332,6 +344,17 @@ impl BenchmarkCase {
                 .expected_declaration
                 .validate(fixture_root, encoding)
                 .with_context(|| format!("case {} usageLookups expectedDeclaration", self.id))?;
+        }
+
+        for lookup in &self.type_lookups {
+            lookup
+                .expression
+                .validate(fixture_root, encoding)
+                .with_context(|| format!("case {} typeLookups expression", self.id))?;
+            lookup
+                .expected_type
+                .validate(fixture_root, encoding)
+                .with_context(|| format!("case {} typeLookups expectedType", self.id))?;
         }
 
         Ok(())
