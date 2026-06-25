@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use usagebench::bifrost_runner::{
     run_bifrost, BifrostRunReport, CaseStatus, NormalizedLocation, RunBifrostOptions,
-    UsageDefinitionReport,
+    TypeLookupReport, UsageDefinitionReport,
 };
 
 #[derive(Debug, Parser)]
@@ -134,6 +134,8 @@ fn print_run_details(report: &BifrostRunReport) {
                         safe_display(&case.id),
                         safe_display(&document.case_file)
                     );
+                    print_usage_definition_issues(&case.usage_to_declaration);
+                    print_type_lookup_issues(&case.type_lookups);
                 }
                 continue;
             };
@@ -162,6 +164,7 @@ fn print_run_details(report: &BifrostRunReport) {
             print_locations("missing", &declaration.missing);
             print_locations("extra", &declaration.unexpected);
             print_usage_definition_issues(&case.usage_to_declaration);
+            print_type_lookup_issues(&case.type_lookups);
         }
     }
 }
@@ -186,6 +189,39 @@ fn print_usage_definition_issues(reports: &[UsageDefinitionReport]) {
             format_location(&report.usage),
             status_label(report.status),
             format_location(&report.expected_declaration),
+            actual,
+            safe_display(&report.raw_status)
+        );
+        for diagnostic in &report.diagnostics {
+            println!(
+                "    {}: {}",
+                safe_display(&diagnostic.kind),
+                safe_display(&diagnostic.message)
+            );
+        }
+    }
+}
+
+fn print_type_lookup_issues(reports: &[TypeLookupReport]) {
+    for report in reports {
+        if matches!(report.status, CaseStatus::Passed | CaseStatus::Skipped) {
+            continue;
+        }
+        let actual = if report.actual_types.is_empty() {
+            "none".to_string()
+        } else {
+            report
+                .actual_types
+                .iter()
+                .map(format_location)
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        println!(
+            "  type lookup {}: {} expected {}, got {} ({})",
+            format_location(&report.expression),
+            status_label(report.status),
+            format_location(&report.expected_type),
             actual,
             safe_display(&report.raw_status)
         );

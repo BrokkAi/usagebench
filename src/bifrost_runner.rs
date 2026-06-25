@@ -21,6 +21,7 @@ use url::{Host, Url};
 
 const DEFAULT_BIFROST_COMMIT: &str = "origin/master";
 const GET_DEFINITION_BY_LOCATION_TOOL: &str = "get_definition_by_location";
+const GET_TYPE_BY_LOCATION_TOOL: &str = "get_type_by_location";
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(5 * 60);
 
@@ -114,6 +115,8 @@ pub struct CaseRunReport {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub usage_to_declaration: Vec<UsageDefinitionReport>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub type_lookups: Vec<TypeLookupReport>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub diagnostics: Vec<RunDiagnostic>,
 }
 
@@ -139,6 +142,18 @@ pub struct UsageDefinitionReport {
     pub usage: NormalizedLocation,
     pub expected_declaration: NormalizedLocation,
     pub actual_declarations: Vec<NormalizedLocation>,
+    pub raw_status: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub diagnostics: Vec<RunDiagnostic>,
+}
+
+#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct TypeLookupReport {
+    pub status: CaseStatus,
+    pub expression: NormalizedLocation,
+    pub expected_type: NormalizedLocation,
+    pub actual_types: Vec<NormalizedLocation>,
     pub raw_status: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub diagnostics: Vec<RunDiagnostic>,
@@ -310,13 +325,17 @@ fn run_case(
                 unsupported_reason: Some(unsupported.reason.clone()),
                 declaration_to_usages: None,
                 usage_to_declaration: Vec::new(),
+                type_lookups: Vec::new(),
                 diagnostics: Vec::new(),
             };
         }
     }
 
     let mut diagnostics = Vec::new();
-    let declaration_to_usages = Some(run_declaration_to_usages(case, session, &mut diagnostics));
+    let declaration_to_usages = case
+        .declaration
+        .as_ref()
+        .map(|declaration| run_declaration_to_usages(case, declaration, session, &mut diagnostics));
     let usage_to_declaration = if include_definition_lookups {
         case.usage_lookups
             .iter()
@@ -328,10 +347,22 @@ fn run_case(
             .map(skipped_definition_lookup)
             .collect::<Vec<_>>()
     };
+    let type_lookups = if include_definition_lookups {
+        case.type_lookups
+            .iter()
+            .map(|lookup| run_type_lookup(lookup, encoding, session))
+            .collect::<Vec<_>>()
+    } else {
+        case.type_lookups
+            .iter()
+            .map(skipped_type_lookup)
+            .collect::<Vec<_>>()
+    };
 
     let observed_status = combine_case_status(
         declaration_to_usages.as_ref(),
         &usage_to_declaration,
+        &type_lookups,
         &diagnostics,
     );
     let expected_failure_reason = case
@@ -353,12 +384,14 @@ fn run_case(
             .map(|unsupported| unsupported.reason.clone()),
         declaration_to_usages,
         usage_to_declaration,
+        type_lookups,
         diagnostics,
     }
 }
 
 fn run_declaration_to_usages(
     case: &BenchmarkCase,
+    declaration: &SymbolLocation,
     session: &mut impl SearchToolsClient,
     diagnostics: &mut Vec<RunDiagnostic>,
 ) -> DeclarationUsageReport {
@@ -393,7 +426,7 @@ fn run_declaration_to_usages(
         }
     };
 
-    let selector = match resolve_declaration_selector(session, &case.declaration) {
+    let selector = match resolve_declaration_selector(session, declaration) {
         Ok(selector) => selector,
         Err(error) => {
             diagnostics.push(RunDiagnostic {
@@ -578,6 +611,96 @@ fn run_usage_to_declaration(
     }
 }
 
+fn run_type_lookup(
+    lookup: &crate::TypeLookup,
+    encoding: PositionEncoding,
+    session: &mut impl SearchToolsClient,
+) -> TypeLookupReport {
+    let expression =
+        normalize_symbol_location(&lookup.expression).unwrap_or_else(|_| NormalizedLocation {
+            path: "<invalid>".to_string(),
+            line: 0,
+            column: None,
+            display_name: Some(lookup.expression.display_name.clone()),
+            kind: Some(symbol_kind_name(&lookup.expression.kind).to_string()),
+        });
+    let expected_type =
+        normalize_symbol_location(&lookup.expected_type).unwrap_or_else(|_| NormalizedLocation {
+            path: "<invalid>".to_string(),
+            line: 0,
+            column: None,
+            display_name: Some(lookup.expected_type.display_name.clone()),
+            kind: Some(symbol_kind_name(&lookup.expected_type.kind).to_string()),
+        });
+    let query = match reference_query(
+        &lookup.expression.location,
+        &lookup.expression.display_name,
+        encoding,
+    ) {
+        Ok(query) => query,
+        Err(error) => {
+            return TypeLookupReport {
+                status: CaseStatus::Error,
+                expression,
+                expected_type,
+                actual_types: Vec::new(),
+                raw_status: "invalid_reference_location".to_string(),
+                diagnostics: vec![RunDiagnostic {
+                    kind: "invalid_reference_location".to_string(),
+                    message: format!("{error:#}"),
+                }],
+            };
+        }
+    };
+
+    let result = match session
+        .call_tool(GET_TYPE_BY_LOCATION_TOOL, json!({ "references": [query] }))
+    {
+        Ok(result) => result,
+        Err(error) => {
+            let message = format!("{error:#}");
+            let (status, raw_status) = if message.contains("Unknown tool: get_type_by_location") {
+                (CaseStatus::Failed, "unsupported_tool")
+            } else {
+                (CaseStatus::Error, "get_type_by_location_failed")
+            };
+            return TypeLookupReport {
+                status,
+                expression,
+                expected_type,
+                actual_types: Vec::new(),
+                raw_status: raw_status.to_string(),
+                diagnostics: vec![RunDiagnostic {
+                    kind: raw_status.to_string(),
+                    message,
+                }],
+            };
+        }
+    };
+
+    let parsed = parse_get_type(&result);
+    let status = if parsed.raw_status != "resolved" {
+        CaseStatus::Failed
+    } else if parsed
+        .actual_types
+        .iter()
+        .any(|actual| same_type_location(actual, &expected_type))
+    {
+        CaseStatus::Passed
+    } else {
+        CaseStatus::Failed
+    };
+
+    TypeLookupReport {
+        status,
+        expression,
+        expected_type,
+        actual_types: parsed.actual_types,
+        raw_status: parsed.raw_status,
+        diagnostics: parsed.diagnostics,
+    }
+}
+
 fn skipped_definition_lookup(lookup: &crate::UsageLookup) -> UsageDefinitionReport {
     let usage = normalize_symbol_location(&lookup.usage).unwrap_or_else(|_| NormalizedLocation {
         path: "<invalid>".to_string(),
@@ -599,6 +722,36 @@ fn skipped_definition_lookup(lookup: &crate::UsageLookup) -> UsageDefinitionRepo
         usage,
         expected_declaration,
         actual_declarations: Vec::new(),
+        raw_status: "definition_lookups_disabled".to_string(),
+        diagnostics: vec![RunDiagnostic {
+            kind: "definition_lookups_disabled".to_string(),
+            message: "definition lookups were disabled for this run".to_string(),
+        }],
+    }
+}
+
+fn skipped_type_lookup(lookup: &crate::TypeLookup) -> TypeLookupReport {
+    let expression =
+        normalize_symbol_location(&lookup.expression).unwrap_or_else(|_| NormalizedLocation {
+            path: "<invalid>".to_string(),
+            line: 0,
+            column: None,
+            display_name: Some(lookup.expression.display_name.clone()),
+            kind: Some(symbol_kind_name(&lookup.expression.kind).to_string()),
+        });
+    let expected_type =
+        normalize_symbol_location(&lookup.expected_type).unwrap_or_else(|_| NormalizedLocation {
+            path: "<invalid>".to_string(),
+            line: 0,
+            column: None,
+            display_name: Some(lookup.expected_type.display_name.clone()),
+            kind: Some(symbol_kind_name(&lookup.expected_type.kind).to_string()),
+        });
+    TypeLookupReport {
+        status: CaseStatus::Skipped,
+        expression,
+        expected_type,
+        actual_types: Vec::new(),
         raw_status: "definition_lookups_disabled".to_string(),
         diagnostics: vec![RunDiagnostic {
             kind: "definition_lookups_disabled".to_string(),
@@ -841,6 +994,13 @@ struct ParsedGetDefinition {
     diagnostics: Vec<RunDiagnostic>,
 }
 
+#[derive(Debug)]
+struct ParsedGetType {
+    raw_status: String,
+    actual_types: Vec<NormalizedLocation>,
+    diagnostics: Vec<RunDiagnostic>,
+}
+
 fn parse_get_definition(value: &Value) -> ParsedGetDefinition {
     let Some(result) = value
         .get("results")
@@ -910,6 +1070,82 @@ fn parse_get_definition(value: &Value) -> ParsedGetDefinition {
     }
 }
 
+fn parse_get_type(value: &Value) -> ParsedGetType {
+    let Some(result) = value
+        .get("results")
+        .and_then(Value::as_array)
+        .and_then(|results| results.first())
+    else {
+        return ParsedGetType {
+            raw_status: "missing_result".to_string(),
+            actual_types: Vec::new(),
+            diagnostics: vec![RunDiagnostic {
+                kind: "missing_result".to_string(),
+                message: "get_type_by_location returned no result".to_string(),
+            }],
+        };
+    };
+    let raw_status = result
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("missing_status")
+        .to_string();
+    let actual_types = result
+        .get("types")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .flat_map(|lookup_type| {
+            lookup_type
+                .get("definitions")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(|definition| {
+                    let path = definition.get("path").and_then(Value::as_str)?;
+                    let line = definition.get("start_line").and_then(Value::as_u64)?;
+                    Some(NormalizedLocation {
+                        path: path.to_string(),
+                        line: line as u32,
+                        column: None,
+                        display_name: definition
+                            .get("fqn")
+                            .and_then(Value::as_str)
+                            .map(str::to_string),
+                        kind: definition
+                            .get("kind")
+                            .and_then(Value::as_str)
+                            .map(str::to_string),
+                    })
+                })
+        })
+        .collect();
+    let diagnostics = result
+        .get("diagnostics")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .map(|diagnostic| RunDiagnostic {
+            kind: diagnostic
+                .get("kind")
+                .and_then(Value::as_str)
+                .unwrap_or("diagnostic")
+                .to_string(),
+            message: diagnostic
+                .get("message")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_string(),
+        })
+        .collect();
+
+    ParsedGetType {
+        raw_status,
+        actual_types,
+        diagnostics,
+    }
+}
+
 fn normalize_symbol_location(symbol: &SymbolLocation) -> Result<NormalizedLocation> {
     let path = benchmark_source_path(&symbol.location.uri)?;
     Ok(NormalizedLocation {
@@ -955,6 +1191,17 @@ fn same_path_line(left: &NormalizedLocation, right: &NormalizedLocation) -> bool
     left.path == right.path && left.line == right.line
 }
 
+fn same_type_location(actual: &NormalizedLocation, expected: &NormalizedLocation) -> bool {
+    same_path_line(actual, expected)
+        && actual
+            .display_name
+            .as_deref()
+            .zip(expected.display_name.as_deref())
+            .is_some_and(|(actual_name, expected_name)| {
+                symbol_name_matches(actual_name, expected_name)
+            })
+}
+
 fn symbol_name_matches(symbol: &str, display_name: &str) -> bool {
     symbol == display_name
         || symbol.ends_with(&format!(".{display_name}"))
@@ -982,12 +1229,14 @@ fn symbol_kind_name(kind: &SymbolKind) -> &'static str {
 fn combine_case_status(
     declaration_to_usages: Option<&DeclarationUsageReport>,
     usage_to_declaration: &[UsageDefinitionReport],
+    type_lookup: &[TypeLookupReport],
     _diagnostics: &[RunDiagnostic],
 ) -> CaseStatus {
     let statuses = declaration_to_usages
         .into_iter()
         .map(|report| report.status)
         .chain(usage_to_declaration.iter().map(|report| report.status))
+        .chain(type_lookup.iter().map(|report| report.status))
         .collect::<Vec<_>>();
     if statuses.contains(&CaseStatus::Error) {
         CaseStatus::Error
@@ -1562,7 +1811,7 @@ impl Drop for McpSession {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Location, Position, Range, UsageLookup};
+    use crate::{Location, Position, Range, TypeLookup, UsageLookup};
     use std::collections::VecDeque;
 
     #[test]
@@ -1688,6 +1937,7 @@ mod tests {
                         raw_statuses: vec!["ok".to_string()],
                     }),
                     usage_to_declaration: Vec::new(),
+                    type_lookups: Vec::new(),
                     diagnostics: Vec::new(),
                 }],
             }],
@@ -1725,6 +1975,95 @@ mod tests {
         let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
 
         assert_eq!(report.status, CaseStatus::Passed);
+    }
+
+    #[test]
+    fn scorer_passes_exact_type_lookup_result() {
+        let mut case = benchmark_case();
+        case.type_lookups.push(TypeLookup {
+            expression: symbol_location("src/lib.rs", 7, 12, "service", SymbolKind::Variable),
+            expected_type: symbol_location("src/service.rs", 14, 11, "Service", SymbolKind::Type),
+        });
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+            tool(
+                GET_DEFINITION_BY_LOCATION_TOOL,
+                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
+            ),
+            tool(
+                GET_TYPE_BY_LOCATION_TOOL,
+                get_type_by_location_json("resolved", vec![("src/service.rs", 15)]),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(report.type_lookups[0].status, CaseStatus::Passed);
+    }
+
+    #[test]
+    fn type_lookup_fails_same_line_wrong_type() {
+        let mut case = benchmark_case();
+        case.type_lookups.push(TypeLookup {
+            expression: symbol_location("src/lib.rs", 7, 12, "service", SymbolKind::Variable),
+            expected_type: symbol_location("src/service.rs", 14, 11, "Service", SymbolKind::Type),
+        });
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+            tool(
+                GET_DEFINITION_BY_LOCATION_TOOL,
+                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
+            ),
+            tool(
+                GET_TYPE_BY_LOCATION_TOOL,
+                get_type_by_location_json_with_fqns(
+                    "resolved",
+                    vec![("src/service.rs", 15, "example.Other")],
+                ),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(report.type_lookups[0].status, CaseStatus::Failed);
+    }
+
+    #[test]
+    fn scorer_reports_type_lookup_without_declaration_scan() {
+        let mut case = benchmark_case();
+        case.declaration = None;
+        case.expected_usages.clear();
+        case.usage_lookups.clear();
+        case.type_lookups.push(TypeLookup {
+            expression: symbol_location("src/lib.rs", 7, 12, "service", SymbolKind::Variable),
+            expected_type: symbol_location("src/service.rs", 14, 11, "Service", SymbolKind::Type),
+        });
+        let mut client = MockClient::new(vec![tool(
+            GET_TYPE_BY_LOCATION_TOOL,
+            get_type_by_location_json("resolved", vec![("src/service.rs", 15)]),
+        )]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert!(report.declaration_to_usages.is_none());
+        assert_eq!(report.type_lookups[0].status, CaseStatus::Passed);
     }
 
     #[test]
@@ -2014,8 +2353,13 @@ mod tests {
     #[test]
     fn constructor_declarations_resolve_from_functions_bucket() {
         let mut case = benchmark_case();
-        case.declaration =
-            symbol_location("src/service.rs", 29, 7, "Service", SymbolKind::Constructor);
+        case.declaration = Some(symbol_location(
+            "src/service.rs",
+            29,
+            7,
+            "Service",
+            SymbolKind::Constructor,
+        ));
         let mut client = MockClient::new(vec![
             tool(
                 "search_symbols",
@@ -2078,7 +2422,8 @@ mod tests {
     #[test]
     fn first_matching_symbol_disambiguation_selects_first_candidate() {
         let mut case = benchmark_case();
-        case.declaration.disambiguation = Some(crate::Disambiguation::FirstMatchingSymbol);
+        case.declaration.as_mut().unwrap().disambiguation =
+            Some(crate::Disambiguation::FirstMatchingSymbol);
         let mut client = MockClient::new(vec![
             tool(
                 "search_symbols",
@@ -2225,13 +2570,13 @@ mod tests {
     fn benchmark_case() -> BenchmarkCase {
         BenchmarkCase {
             id: "rust-function".to_string(),
-            declaration: symbol_location(
+            declaration: Some(symbol_location(
                 "src/service.rs",
                 29,
                 7,
                 "build_service",
                 SymbolKind::Function,
-            ),
+            )),
             expected_usages: vec![symbol_location(
                 "src/lib.rs",
                 7,
@@ -2250,6 +2595,7 @@ mod tests {
                     SymbolKind::Function,
                 ),
             }],
+            type_lookups: Vec::new(),
             expected_failure: None,
             unsupported: None,
             verification: None,
@@ -2319,6 +2665,42 @@ mod tests {
                         "hits": [{"line": line, "enclosing": "run_demo"}]
                     })
                 }).collect::<Vec<_>>()
+            }]
+        })
+    }
+
+    fn get_type_by_location_json(status: &str, locations: Vec<(&str, usize)>) -> Value {
+        get_type_by_location_json_with_fqns(
+            status,
+            locations
+                .into_iter()
+                .map(|(path, line)| (path, line, "example.Service"))
+                .collect(),
+        )
+    }
+
+    fn get_type_by_location_json_with_fqns(
+        status: &str,
+        locations: Vec<(&str, usize, &str)>,
+    ) -> Value {
+        json!({
+            "results": [{
+                "query": {"path": "src/lib.rs", "line": 8, "column": 19, "symbol": "build_service"},
+                "status": status,
+                "types": [{
+                    "fqn": "example.Service",
+                    "definitions": locations.into_iter().map(|(path, line, fqn)| {
+                        json!({
+                            "fqn": fqn,
+                            "path": path,
+                            "start_line": line,
+                            "end_line": line,
+                            "kind": "class",
+                            "language": "rust"
+                        })
+                    }).collect::<Vec<_>>()
+                }],
+                "diagnostics": []
             }]
         })
     }
