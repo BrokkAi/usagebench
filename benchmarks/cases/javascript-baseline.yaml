@@ -6,8 +6,6 @@ source:
 language: javascript
 cases:
   - id: js-commonjs-exported-member-usage
-    expectedFailure:
-      reason: Bifrost baseline resolves the CommonJS export declaration but can miss its usage seed.
     declaration:
       location:
         uri: benchmark://source/src/commonjs-request.js

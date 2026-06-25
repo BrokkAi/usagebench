@@ -21,8 +21,6 @@ cases:
       method: manual_inspection
       notes: service.py is imported from the package initializer and directly from the test fixture; import bindings are not counted as usages.
   - id: python-function-call-and-reexport
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/example/service.py
