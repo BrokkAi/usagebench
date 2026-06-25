@@ -223,8 +223,6 @@ cases:
       method: manual_inspection
       notes: WelcomeCard is a named exported function used as a JSX element; the app import binding is not counted as a usage.
   - id: ts-ky-style-implementation-static-create
-    expectedFailure:
-      reason: Bifrost baseline misses Ky-style static create usages through the TypeScript graph.
     declaration:
       location:
         uri: benchmark://source/src/http.ts
