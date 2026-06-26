@@ -80,8 +80,6 @@ cases:
       method: manual_inspection
       notes: Execute is declared on the Service value receiver and called from ExampleService.
   - id: go-pointer-receiver-method-call
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/example/service.go

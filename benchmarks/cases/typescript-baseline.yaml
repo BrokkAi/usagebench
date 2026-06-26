@@ -94,8 +94,6 @@ cases:
       method: manual_inspection
       notes: Greeter is the default export and is constructed in both components and app fixtures; the app import binding is not counted as a usage.
   - id: ts-class-method-call
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/components.tsx
