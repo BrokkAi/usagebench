@@ -5,9 +5,9 @@ source:
   path: fixtures/ruby/baseline
 language: ruby
 cases:
-  - id: ruby-require-relative-class-construction-unsupported
-    unsupported:
-      reason: Ruby support is new in Bifrost; keep require_relative-backed constant and class-method lookup out of scoring until the Ruby graph is implemented.
+  - id: ruby-require-relative-class-construction
+    expectedFailure:
+      reason: Bifrost get_definition_by_location resolves this require_relative-backed class construction, but scan_usages does not yet find the usage from the class declaration.
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb
@@ -44,9 +44,9 @@ cases:
     verification:
       method: manual_inspection
       notes: report.rb requires billing/invoice and calls Billing::Invoice.build; the require_relative binding itself is not a usage.
-  - id: ruby-relative-nested-constant-unsupported
-    unsupported:
-      reason: Ruby lexical constant lookup is not ready for scoring; Money::Currency must resolve relative to Billing inside Invoice.
+  - id: ruby-relative-nested-constant
+    expectedFailure:
+      reason: Bifrost get_definition_by_location resolves this lexical nested constant reference, but scan_usages does not yet find the usage from the nested class declaration.
     declaration:
       location:
         uri: benchmark://source/lib/billing/money.rb
@@ -83,9 +83,9 @@ cases:
     verification:
       method: manual_inspection
       notes: Invoice is lexically nested in Billing, so Money::Currency refers to Billing::Money::Currency from the required money.rb file.
-  - id: ruby-superclass-reference-unsupported
-    unsupported:
-      reason: Ruby superclass edges need lexical/import-aware constant resolution before this can be scored.
+  - id: ruby-superclass-reference
+    expectedFailure:
+      reason: Bifrost get_definition_by_location resolves this superclass reference, but scan_usages does not yet find the inheritance usage from the superclass declaration.
     declaration:
       location:
         uri: benchmark://source/lib/billing/record.rb
@@ -122,9 +122,9 @@ cases:
     verification:
       method: manual_inspection
       notes: Invoice inherits from Record after requiring record.rb; this should be a superclass reference, not a generic text match.
-  - id: ruby-include-instance-mixin-unsupported
-    unsupported:
-      reason: Ruby include semantics must add module instance methods to the receiver class instance lookup chain before usage lookup is scored.
+  - id: ruby-include-instance-mixin
+    expectedFailure:
+      reason: Bifrost does not yet resolve Ruby include semantics for instance method dispatch through the receiver lookup chain.
     declaration:
       location:
         uri: benchmark://source/lib/billing/auditable.rb
@@ -161,9 +161,9 @@ cases:
     verification:
       method: manual_inspection
       notes: Invoice includes Auditable, and report.rb calls audit on an Invoice instance constructed through Billing::Invoice.build.
-  - id: ruby-prepend-method-precedence-unsupported
-    unsupported:
-      reason: Ruby prepend needs distinct precedence modeling; Formatting#total_label should win over Invoice#total_label for instance lookup.
+  - id: ruby-prepend-method-precedence
+    expectedFailure:
+      reason: Bifrost does not yet model Ruby prepend precedence for receiver method lookup.
     declaration:
       location:
         uri: benchmark://source/lib/billing/formatting.rb
@@ -200,9 +200,7 @@ cases:
     verification:
       method: manual_inspection
       notes: Invoice prepends Formatting and also defines total_label; Ruby lookup should resolve invoice.total_label to the prepended module method.
-  - id: ruby-extend-and-include-method-lookup-unsupported
-    unsupported:
-      reason: Ruby extend and include expose the same module method through different lookup chains, which Bifrost should model before scoring.
+  - id: ruby-extend-and-include-method-lookup
     declaration:
       location:
         uri: benchmark://source/lib/billing/findable.rb
@@ -262,9 +260,9 @@ cases:
     verification:
       method: manual_inspection
       notes: User extends Findable, so User.find is a class/singleton method; LegacyUser includes Findable, so LegacyUser.new.find is an instance method.
-  - id: ruby-class-constant-access-unsupported
-    unsupported:
-      reason: Ruby class constants need namespace-aware get-definition and usage lookup before scoring.
+  - id: ruby-class-constant-access
+    expectedFailure:
+      reason: Bifrost does not yet resolve namespaced Ruby class constants for usage lookup.
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb
@@ -301,9 +299,9 @@ cases:
     verification:
       method: manual_inspection
       notes: report.rb reads Billing::Invoice::DEFAULT_CURRENCY after requiring billing/invoice.
-  - id: ruby-basic-function-call-unsupported
-    unsupported:
-      reason: Ruby top-level methods become private Object methods, so basic bare-call lookup should remain skipped until Ruby function semantics are explicit.
+  - id: ruby-basic-function-call
+    expectedFailure:
+      reason: Bifrost does not yet resolve bare calls to Ruby top-level methods.
     declaration:
       location:
         uri: benchmark://source/app/report.rb
@@ -340,9 +338,7 @@ cases:
     verification:
       method: manual_inspection
       notes: render calls normalize_total as a bare function-style Ruby method in the same file.
-  - id: ruby-singleton-method-dispatch-unsupported
-    unsupported:
-      reason: Ruby class-method calls are singleton method dispatches, not static dispatch; keep this skipped until singleton lookup is modeled.
+  - id: ruby-singleton-method-dispatch
     declaration:
       location:
         uri: benchmark://source/lib/billing/user.rb
@@ -379,9 +375,9 @@ cases:
     verification:
       method: manual_inspection
       notes: Billing::User.build calls the singleton method declared with def self.build on User.
-  - id: ruby-dynamic-public-send-unsupported
-    unsupported:
-      reason: Ruby public_send resolves a method name from a runtime symbol; retain the case as dynamic dispatch coverage but exclude it from scoring.
+  - id: ruby-dynamic-public-send
+    expectedFailure:
+      reason: Bifrost does not yet resolve Ruby public_send symbol arguments as dynamic method usages.
     declaration:
       location:
         uri: benchmark://source/lib/billing/auditable.rb
@@ -418,9 +414,7 @@ cases:
     verification:
       method: manual_inspection
       notes: invoice.public_send(:audit) names audit through a symbol at the call site, unlike the direct invoice.audit dispatch case.
-  - id: ruby-script-level-constant-access-unsupported
-    unsupported:
-      reason: Ruby script-level constants live on Object and need explicit constant-scope handling before scoring.
+  - id: ruby-script-level-constant-access
     declaration:
       location:
         uri: benchmark://source/app/report.rb
@@ -457,9 +451,9 @@ cases:
     verification:
       method: manual_inspection
       notes: normalize_total reads the script-level SCRIPT_LIMIT constant declared later in the same file.
-  - id: ruby-instance-field-access-unsupported
-    unsupported:
-      reason: Ruby instance variables are receiver-state fields and need method/receiver-aware lookup before scoring.
+  - id: ruby-instance-field-access
+    expectedFailure:
+      reason: Bifrost does not yet index Ruby instance variable declarations and references for usage lookup.
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb
@@ -496,9 +490,9 @@ cases:
     verification:
       method: manual_inspection
       notes: initialize writes @status and the instance status reader returns the same instance variable.
-  - id: ruby-class-variable-access-unsupported
-    unsupported:
-      reason: Ruby class variables are shared through class hierarchy state and should not be treated as ordinary instance fields.
+  - id: ruby-class-variable-access
+    expectedFailure:
+      reason: Bifrost does not yet index Ruby class variable declarations and references for usage lookup.
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb
@@ -535,9 +529,9 @@ cases:
     verification:
       method: manual_inspection
       notes: "@@sequence is initialized on Invoice and incremented by the singleton build method."
-  - id: ruby-singleton-field-access-unsupported
-    unsupported:
-      reason: Ruby class-instance variables belong to the class object's singleton state, distinct from instance variables on Invoice instances.
+  - id: ruby-singleton-field-access
+    expectedFailure:
+      reason: Bifrost does not yet index Ruby class-instance variable declarations and references for singleton-state usage lookup.
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb

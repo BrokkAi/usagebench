@@ -475,7 +475,7 @@ fn run_declaration_to_usages(
     };
 
     let parsed = parse_scan_usages(&result);
-    let has_error_status = parsed.has_error_status();
+    let has_failure_status = parsed.has_failure_status();
     let actual = parsed.locations;
     let expected_keys = expected
         .iter()
@@ -502,13 +502,12 @@ fn run_declaration_to_usages(
         })
         .cloned()
         .collect::<Vec<_>>();
-    let status = if has_error_status {
-        CaseStatus::Error
-    } else if parsed.partial || !missing.is_empty() || !unexpected.is_empty() {
-        CaseStatus::Failed
-    } else {
-        CaseStatus::Passed
-    };
+    let status =
+        if has_failure_status || parsed.partial || !missing.is_empty() || !unexpected.is_empty() {
+            CaseStatus::Failed
+        } else {
+            CaseStatus::Passed
+        };
 
     DeclarationUsageReport {
         status,
@@ -903,7 +902,7 @@ struct ParsedScanUsages {
 }
 
 impl ParsedScanUsages {
-    fn has_error_status(&self) -> bool {
+    fn has_failure_status(&self) -> bool {
         self.raw_statuses.iter().any(|status| {
             matches!(
                 status.as_str(),
@@ -2200,6 +2199,41 @@ mod tests {
         }]);
         assert_eq!(totals.failed, 0);
         assert_eq!(totals.expected_failures, 1);
+    }
+
+    #[test]
+    fn expected_failure_marks_scan_usages_failure_without_counting_as_error() {
+        let mut case = benchmark_case();
+        case.expected_failure = Some(crate::ExpectedFailure {
+            reason: "current Bifrost baseline cannot scan this declaration".to_string(),
+        });
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages",
+                json!({
+                    "summary": {
+                        "requested_symbols": 1,
+                        "resolved_symbols": 0,
+                        "total_hits": 0,
+                        "partial": false
+                    },
+                    "usages": [],
+                    "failures": [{"symbol": "example.build_service"}]
+                }),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+
+        assert_eq!(report.status, CaseStatus::ExpectedFailure);
+        assert_eq!(
+            report.declaration_to_usages.as_ref().unwrap().status,
+            CaseStatus::Failed
+        );
     }
 
     #[test]
