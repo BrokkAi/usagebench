@@ -1,0 +1,28 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/rust/sibling-associated-type
+language: rust
+cases:
+  - id: rust-sibling-module-associated-type-segment-definition
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main.rs
+            range:
+              start: { line: 5, character: 12 }
+              end: { line: 5, character: 20 }
+          kind: type
+          displayName: AppState
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/state.rs
+            range:
+              start: { line: 0, character: 11 }
+              end: { line: 0, character: 19 }
+          kind: type
+          displayName: AppState
+    verification:
+      method: manual_inspection
+      notes: AppState is imported from the sibling state module and used as the type segment of AppState::with_environment; the lookup should resolve to the struct declaration, not the impl block.
