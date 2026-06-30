@@ -1205,6 +1205,7 @@ fn symbol_name_matches(symbol: &str, display_name: &str) -> bool {
     symbol == display_name
         || symbol.ends_with(&format!(".{display_name}"))
         || symbol.ends_with(&format!("::{display_name}"))
+        || symbol.ends_with(&format!("${display_name}"))
         || symbol.ends_with(&format!("#{display_name}"))
 }
 
@@ -2418,6 +2419,46 @@ mod tests {
         let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
 
         assert_eq!(report.status, CaseStatus::Passed);
+    }
+
+    #[test]
+    fn declaration_resolution_accepts_dollar_namespace_separator() {
+        let mut case = benchmark_case();
+        case.declaration = Some(symbol_location(
+            "lib/billing/invoice.rb",
+            6,
+            6,
+            "Invoice",
+            SymbolKind::Class,
+        ));
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                json!({
+                    "files": [{
+                        "path": "lib/billing/invoice.rb",
+                        "loc": 10,
+                        "classes": [{"symbol": "Billing$Invoice", "signature": "", "line": 7}],
+                        "functions": [],
+                        "fields": [],
+                        "modules": [],
+                        "macros": []
+                    }]
+                }),
+            ),
+            tool(
+                "scan_usages",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(
+            report.declaration_to_usages.unwrap().selector.as_deref(),
+            Some("Billing$Invoice")
+        );
     }
 
     #[test]
