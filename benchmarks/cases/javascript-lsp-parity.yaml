@@ -1,0 +1,133 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/javascript/lsp-parity
+language: javascript
+cases:
+  - id: js-parity-commonjs-destructured-function-call
+    declaration:
+      location:
+        uri: benchmark://source/src/library.js
+        range:
+          start: { line: 0, character: 9 }
+          end: { line: 0, character: 18 }
+      kind: function
+      displayName: buildTask
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/consumer.js
+          range:
+            start: { line: 2, character: 19 }
+            end: { line: 2, character: 28 }
+        kind: function
+        displayName: buildTask
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/consumer.js
+            range:
+              start: { line: 2, character: 19 }
+              end: { line: 2, character: 28 }
+          kind: function
+          displayName: buildTask
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/library.js
+            range:
+              start: { line: 0, character: 9 }
+              end: { line: 0, character: 18 }
+          kind: function
+          displayName: buildTask
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
+        Upstream reference: TypeScript Server fourslash CommonJS/navigation scenarios such as autoImportNoPackageJson_commonjs.ts.
+        Adapted fixture: fixtures/javascript/lsp-parity/.
+        Maturity: destructured CommonJS require bindings should resolve calls back to the exported function; the destructuring binding itself is not counted as a usage.
+  - id: js-parity-object-literal-method-call
+    expectedFailure:
+      reason: Bifrost baseline may not resolve JavaScript object-literal method calls to their method declaration; tracked in bifrost#406.
+    declaration:
+      location:
+        uri: benchmark://source/src/library.js
+        range:
+          start: { line: 15, character: 2 }
+          end: { line: 15, character: 12 }
+      kind: method
+      displayName: formatTask
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/library.js
+          range:
+            start: { line: 10, character: 19 }
+            end: { line: 10, character: 29 }
+        kind: method
+        displayName: formatTask
+      - location:
+          uri: benchmark://source/src/consumer.js
+          range:
+            start: { line: 4, character: 8 }
+            end: { line: 4, character: 18 }
+        kind: method
+        displayName: formatTask
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/consumer.js
+            range:
+              start: { line: 4, character: 8 }
+              end: { line: 4, character: 18 }
+          kind: method
+          displayName: formatTask
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/library.js
+            range:
+              start: { line: 15, character: 2 }
+              end: { line: 15, character: 12 }
+          kind: method
+          displayName: formatTask
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
+        Upstream reference: TypeScript Server fourslash object-literal reference and best-common-type object-literal scenarios.
+        Adapted fixture: fixtures/javascript/lsp-parity/.
+        Maturity: helpers.formatTask should resolve to the object-literal method declaration and count both internal and imported member calls.
+  - id: js-parity-computed-method-name-unsupported
+    unsupported:
+      reason: Computed JavaScript method calls are retained for parity tracking but are not scored until string-driven member dispatch has a deliberate model.
+    declaration:
+      location:
+        uri: benchmark://source/src/library.js
+        range:
+          start: { line: 9, character: 2 }
+          end: { line: 9, character: 8 }
+      kind: method
+      displayName: finish
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/consumer.js
+            range:
+              start: { line: 7, character: 20 }
+              end: { line: 7, character: 26 }
+          kind: method
+          displayName: finish
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/library.js
+            range:
+              start: { line: 9, character: 2 }
+              end: { line: 9, character: 8 }
+          kind: method
+          displayName: finish
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
+        Upstream reference: TypeScript Server navigation behavior for string-literal and computed property access.
+        Adapted fixture: fixtures/javascript/lsp-parity/.
+        Maturity: constructed[methodName]() is intentionally unscored; the string literal is kept as the visible future target.

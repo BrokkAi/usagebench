@@ -1,0 +1,217 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/scala/lsp-parity
+language: scala
+cases:
+  - id: scala-parity-trait-method-implementation
+    expectedFailure:
+      reason: Bifrost baseline does not index Scala trait methods well enough to connect overrides and receiver calls; tracked in bifrost#419.
+    declaration:
+      location:
+        uri: benchmark://source/src/main/scala/example/Workflow.scala
+        range:
+          start: { line: 3, character: 6 }
+          end: { line: 3, character: 12 }
+      kind: method
+      displayName: render
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main/scala/example/Workflow.scala
+          range:
+            start: { line: 6, character: 15 }
+            end: { line: 6, character: 21 }
+        kind: method
+        displayName: render
+      - location:
+          uri: benchmark://source/src/main/scala/example/Workflow.scala
+          range:
+            start: { line: 15, character: 13 }
+            end: { line: 15, character: 19 }
+        kind: method
+        displayName: render
+      - location:
+          uri: benchmark://source/src/main/scala/example/Workflow.scala
+          range:
+            start: { line: 28, character: 24 }
+            end: { line: 28, character: 30 }
+        kind: method
+        displayName: render
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main/scala/example/Workflow.scala
+            range:
+              start: { line: 15, character: 13 }
+              end: { line: 15, character: 19 }
+          kind: method
+          displayName: render
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/main/scala/example/Workflow.scala
+            range:
+              start: { line: 3, character: 6 }
+              end: { line: 3, character: 12 }
+          kind: method
+          displayName: render
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: scalameta/metals@0e01c3f6e56736e88f6bb276156b8049cbf3ca9d.
+        Upstream reference: Metals definition/reference and implementation suites for trait methods and overrides.
+        Adapted fixture: fixtures/scala/lsp-parity/.
+        Maturity: trait method references should connect the abstract method, overriding method, interface-typed call, and concrete receiver call.
+  - id: scala-parity-import-alias-companion-method
+    expectedFailure:
+      reason: Bifrost baseline does not resolve Scala renamed-import usage sites to the imported companion method; tracked in bifrost#420.
+    declaration:
+      location:
+        uri: benchmark://source/src/main/scala/example/Workflow.scala
+        range:
+          start: { line: 10, character: 6 }
+          end: { line: 10, character: 13 }
+      kind: method
+      displayName: default
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main/scala/example/Workflow.scala
+          range:
+            start: { line: 26, character: 30 }
+            end: { line: 26, character: 38 }
+        kind: method
+        displayName: renderer
+      - location:
+          uri: benchmark://source/src/main/scala/example/Workflow.scala
+          range:
+            start: { line: 28, character: 15 }
+            end: { line: 28, character: 23 }
+        kind: method
+        displayName: renderer
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main/scala/example/Workflow.scala
+            range:
+              start: { line: 26, character: 30 }
+              end: { line: 26, character: 38 }
+          kind: method
+          displayName: renderer
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/main/scala/example/Workflow.scala
+            range:
+              start: { line: 10, character: 6 }
+              end: { line: 10, character: 13 }
+          kind: method
+          displayName: default
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: scalameta/metals@0e01c3f6e56736e88f6bb276156b8049cbf3ca9d.
+        Upstream reference: Metals definition suites for imports, renamed imports, and companion members.
+        Adapted fixture: fixtures/scala/lsp-parity/.
+        Maturity: renamed import usage sites should resolve back to the companion method declaration; the import binding itself is not counted as a usage.
+  - id: scala-parity-extension-method-call
+    expectedFailure:
+      reason: Bifrost baseline does not resolve Scala 3 extension method calls to extension method declarations; tracked in bifrost#421.
+    declaration:
+      location:
+        uri: benchmark://source/src/main/scala/example/Workflow.scala
+        range:
+          start: { line: 19, character: 8 }
+          end: { line: 19, character: 12 }
+      kind: method
+      displayName: slug
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main/scala/example/Workflow.scala
+          range:
+            start: { line: 29, character: 30 }
+            end: { line: 29, character: 34 }
+        kind: method
+        displayName: slug
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main/scala/example/Workflow.scala
+            range:
+              start: { line: 29, character: 30 }
+              end: { line: 29, character: 34 }
+          kind: method
+          displayName: slug
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/main/scala/example/Workflow.scala
+            range:
+              start: { line: 19, character: 8 }
+              end: { line: 19, character: 12 }
+          kind: method
+          displayName: slug
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: scalameta/metals@0e01c3f6e56736e88f6bb276156b8049cbf3ca9d.
+        Upstream reference: Metals Scala 3 definition/reference tests for extension methods.
+        Adapted fixture: fixtures/scala/lsp-parity/.
+        Maturity: imported Scala 3 extension methods should resolve from extension-call syntax back to the extension method declaration.
+  - id: scala-parity-workflow-method-call
+    declaration:
+      location:
+        uri: benchmark://source/src/main/scala/example/Workflow.scala
+        range:
+          start: { line: 14, character: 6 }
+          end: { line: 14, character: 9 }
+      kind: method
+      displayName: run
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main/scala/example/Workflow.scala
+          range:
+            start: { line: 27, character: 24 }
+            end: { line: 27, character: 27 }
+        kind: method
+        displayName: run
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main/scala/example/Workflow.scala
+            range:
+              start: { line: 27, character: 24 }
+              end: { line: 27, character: 27 }
+          kind: method
+          displayName: run
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/main/scala/example/Workflow.scala
+            range:
+              start: { line: 14, character: 6 }
+              end: { line: 14, character: 9 }
+          kind: method
+          displayName: run
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: scalameta/metals@0e01c3f6e56736e88f6bb276156b8049cbf3ca9d.
+        Upstream reference: Metals basic definition/reference tests for local vals and methods.
+        Adapted fixture: fixtures/scala/lsp-parity/.
+        Maturity: a method call through a local val initialized with a constructor should resolve to the class method declaration.
+  - id: scala-parity-generated-synthetic-unsupported
+    unsupported:
+      reason: Scala generated/synthetic surfaces such as case-class copy/apply and compiler-generated accessors are retained for parity tracking but not scored until the runner has a deliberate model.
+    declaration:
+      location:
+        uri: benchmark://source/src/main/scala/example/Workflow.scala
+        range:
+          start: { line: 5, character: 6 }
+          end: { line: 5, character: 21 }
+      kind: class
+      displayName: ConsoleRenderer
+    usageLookups: []
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: scalameta/metals@0e01c3f6e56736e88f6bb276156b8049cbf3ca9d.
+        Upstream reference: Metals semanticdb-backed tests involving generated and synthetic symbols.
+        Adapted fixture: fixtures/scala/lsp-parity/.
+        Maturity: generated/synthetic Scala surfaces are intentionally unscored in the first Scala parity fixture.

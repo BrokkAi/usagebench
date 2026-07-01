@@ -1,0 +1,259 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/ruby/lsp-parity
+language: ruby
+cases:
+  - id: ruby-parity-autoload-constant-definition
+    expectedFailure:
+      reason: Bifrost baseline does not resolve Ruby autoload symbols or later constant paths to the indexed class declaration; tracked in bifrost#409.
+    declaration:
+      location:
+        uri: benchmark://source/lib/shop/discount.rb
+        range:
+          start: { line: 1, character: 8 }
+          end: { line: 1, character: 16 }
+      kind: class
+      displayName: Discount
+    expectedUsages:
+      - location:
+          uri: benchmark://source/lib/shop/product.rb
+          range:
+            start: { line: 27, character: 12 }
+            end: { line: 27, character: 20 }
+        kind: class
+        displayName: Discount
+      - location:
+          uri: benchmark://source/app/catalog.rb
+          range:
+            start: { line: 11, character: 6 }
+            end: { line: 11, character: 14 }
+        kind: class
+        displayName: Discount
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/lib/shop/product.rb
+            range:
+              start: { line: 27, character: 12 }
+              end: { line: 27, character: 20 }
+          kind: class
+          displayName: Discount
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/shop/discount.rb
+            range:
+              start: { line: 1, character: 8 }
+              end: { line: 1, character: 16 }
+          kind: class
+          displayName: Discount
+      - usage:
+          location:
+            uri: benchmark://source/app/catalog.rb
+            range:
+              start: { line: 11, character: 6 }
+              end: { line: 11, character: 14 }
+          kind: class
+          displayName: Discount
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/shop/discount.rb
+            range:
+              start: { line: 1, character: 8 }
+              end: { line: 1, character: 16 }
+          kind: class
+          displayName: Discount
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: Shopify/ruby-lsp@3f3121bb908a847d712aba2a7ebc333eca186469.
+        Upstream reference: test/requests/definition_expectations_test.rb::test_jumping_to_autoload_definition_when_declaration_exists.
+        Adapted fixture: fixtures/ruby/lsp-parity/.
+        Maturity: autoload's symbol argument and a later constant path should both resolve to the concrete Discount class when the declaration exists.
+  - id: ruby-parity-attr-reader-method-call
+    expectedFailure:
+      reason: Bifrost baseline does not resolve Ruby generated reader methods through inferred receiver calls; tracked in bifrost#410.
+    declaration:
+      location:
+        uri: benchmark://source/lib/shop/product.rb
+        range:
+          start: { line: 4, character: 17 }
+          end: { line: 4, character: 21 }
+      kind: method
+      displayName: name
+    expectedUsages:
+      - location:
+          uri: benchmark://source/lib/shop/product.rb
+          range:
+            start: { line: 10, character: 26 }
+            end: { line: 10, character: 30 }
+        kind: method
+        displayName: name
+      - location:
+          uri: benchmark://source/app/catalog.rb
+          range:
+            start: { line: 6, character: 8 }
+            end: { line: 6, character: 12 }
+        kind: method
+        displayName: name
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/catalog.rb
+            range:
+              start: { line: 6, character: 8 }
+              end: { line: 6, character: 12 }
+          kind: method
+          displayName: name
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/shop/product.rb
+            range:
+              start: { line: 4, character: 17 }
+              end: { line: 4, character: 21 }
+          kind: method
+          displayName: name
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: Shopify/ruby-lsp@3f3121bb908a847d712aba2a7ebc333eca186469.
+        Upstream reference: lib/ruby_indexer/test/method_test.rb::test_keeps_track_of_attributes.
+        Adapted fixture: fixtures/ruby/lsp-parity/.
+        Maturity: attr_reader :name generates a readable method, and alias_method's target symbol is a reference to that generated method.
+  - id: ruby-parity-singleton-class-method-definition
+    expectedFailure:
+      reason: Bifrost baseline omits class << self method calls from declaration-to-usage scans; tracked in bifrost#411.
+    declaration:
+      location:
+        uri: benchmark://source/lib/shop/product.rb
+        range:
+          start: { line: 21, character: 10 }
+          end: { line: 21, character: 18 }
+      kind: method
+      displayName: from_sku
+    expectedUsages:
+      - location:
+          uri: benchmark://source/app/catalog.rb
+          range:
+            start: { line: 4, character: 28 }
+            end: { line: 4, character: 36 }
+        kind: method
+        displayName: from_sku
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/catalog.rb
+            range:
+              start: { line: 4, character: 28 }
+              end: { line: 4, character: 36 }
+          kind: method
+          displayName: from_sku
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/shop/product.rb
+            range:
+              start: { line: 21, character: 10 }
+              end: { line: 21, character: 18 }
+          kind: method
+          displayName: from_sku
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: Shopify/ruby-lsp@3f3121bb908a847d712aba2a7ebc333eca186469.
+        Upstream reference: test/requests/definition_expectations_test.rb::test_definition_for_singleton_methods.
+        Adapted fixture: fixtures/ruby/lsp-parity/.
+        Maturity: methods declared inside class << self should resolve from constant receiver calls.
+  - id: ruby-parity-alias-method-call
+    expectedFailure:
+      reason: Bifrost baseline does not resolve Ruby alias_method declarations through inferred receiver calls; tracked in bifrost#410.
+    declaration:
+      location:
+        uri: benchmark://source/lib/shop/product.rb
+        range:
+          start: { line: 10, character: 18 }
+          end: { line: 10, character: 23 }
+      kind: method
+      displayName: label
+    expectedUsages:
+      - location:
+          uri: benchmark://source/lib/shop/product.rb
+          range:
+            start: { line: 13, character: 6 }
+            end: { line: 13, character: 11 }
+        kind: method
+        displayName: label
+      - location:
+          uri: benchmark://source/app/catalog.rb
+          range:
+            start: { line: 7, character: 8 }
+            end: { line: 7, character: 13 }
+        kind: method
+        displayName: label
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/catalog.rb
+            range:
+              start: { line: 7, character: 8 }
+              end: { line: 7, character: 13 }
+          kind: method
+          displayName: label
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/shop/product.rb
+            range:
+              start: { line: 10, character: 18 }
+              end: { line: 10, character: 23 }
+          kind: method
+          displayName: label
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: Shopify/ruby-lsp@3f3121bb908a847d712aba2a7ebc333eca186469.
+        Upstream reference: lib/ruby_indexer/test/index_test.rb::test_resolving_method_aliases.
+        Adapted fixture: fixtures/ruby/lsp-parity/.
+        Maturity: alias_method :label, :name creates an alias declaration that direct and receiver method calls should resolve through.
+  - id: ruby-parity-module-function-call
+    expectedFailure:
+      reason: Bifrost baseline does not model Ruby module_function methods as singleton methods on the module; tracked in bifrost#411.
+    declaration:
+      location:
+        uri: benchmark://source/lib/shop/pricing.rb
+        range:
+          start: { line: 4, character: 8 }
+          end: { line: 4, character: 16 }
+      kind: method
+      displayName: tax_rate
+    expectedUsages:
+      - location:
+          uri: benchmark://source/app/catalog.rb
+          range:
+            start: { line: 10, character: 14 }
+            end: { line: 10, character: 22 }
+        kind: method
+        displayName: tax_rate
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/app/catalog.rb
+            range:
+              start: { line: 10, character: 14 }
+              end: { line: 10, character: 22 }
+          kind: method
+          displayName: tax_rate
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/lib/shop/pricing.rb
+            range:
+              start: { line: 4, character: 8 }
+              end: { line: 4, character: 16 }
+          kind: method
+          displayName: tax_rate
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: Shopify/ruby-lsp@3f3121bb908a847d712aba2a7ebc333eca186469.
+        Upstream reference: lib/ruby_indexer/test/method_test.rb::test_module_function_with_no_arguments.
+        Adapted fixture: fixtures/ruby/lsp-parity/.
+        Maturity: module_function should expose following instance methods as callable singleton methods on the module.

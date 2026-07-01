@@ -1,0 +1,174 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/go/lsp-parity
+language: go
+cases:
+  - id: go-parity-cross-package-import-alias-function-call
+    declaration:
+      location:
+        uri: benchmark://source/pkg/service/service.go
+        range:
+          start: { line: 15, character: 5 }
+          end: { line: 15, character: 14 }
+      kind: function
+      displayName: NewWorker
+    expectedUsages:
+      - location:
+          uri: benchmark://source/cmd/app/main.go
+          range:
+            start: { line: 5, character: 15 }
+            end: { line: 5, character: 24 }
+        kind: function
+        displayName: NewWorker
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/cmd/app/main.go
+            range:
+              start: { line: 5, character: 15 }
+              end: { line: 5, character: 24 }
+          kind: function
+          displayName: NewWorker
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/pkg/service/service.go
+            range:
+              start: { line: 15, character: 5 }
+              end: { line: 15, character: 14 }
+          kind: function
+          displayName: NewWorker
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: golang/tools@ce1ac030f27092a75b323f20611767330fee68f3.
+        Upstream reference: gopls/internal/test/marker/testdata/definition and references scenarios for imported package selectors.
+        Adapted fixture: fixtures/go/lsp-parity/.
+        Maturity: svc.NewWorker should resolve through the package import alias to the package function declaration.
+  - id: go-parity-embedded-promoted-method-call
+    expectedFailure:
+      reason: Bifrost baseline does not resolve Go promoted methods through embedded structs; tracked in bifrost#418.
+    declaration:
+      location:
+        uri: benchmark://source/pkg/service/service.go
+        range:
+          start: { line: 6, character: 19 }
+          end: { line: 6, character: 25 }
+      kind: method
+      displayName: Record
+    expectedUsages:
+      - location:
+          uri: benchmark://source/pkg/service/service.go
+          range:
+            start: { line: 24, character: 10 }
+            end: { line: 24, character: 16 }
+        kind: method
+        displayName: Record
+      - location:
+          uri: benchmark://source/cmd/app/main.go
+          range:
+            start: { line: 6, character: 8 }
+            end: { line: 6, character: 14 }
+        kind: method
+        displayName: Record
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/cmd/app/main.go
+            range:
+              start: { line: 6, character: 8 }
+              end: { line: 6, character: 14 }
+          kind: method
+          displayName: Record
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/pkg/service/service.go
+            range:
+              start: { line: 6, character: 19 }
+              end: { line: 6, character: 25 }
+          kind: method
+          displayName: Record
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: golang/tools@ce1ac030f27092a75b323f20611767330fee68f3.
+        Upstream reference: gopls/internal/test/marker/testdata/references and implementation scenarios for embedded fields and promoted methods.
+        Adapted fixture: fixtures/go/lsp-parity/.
+        Maturity: Worker embeds *AuditLog, so worker.Record should resolve to the promoted AuditLog.Record method.
+  - id: go-parity-embedded-promoted-field-access
+    expectedFailure:
+      reason: Bifrost baseline does not resolve Go promoted fields through embedded structs; tracked in bifrost#418.
+    declaration:
+      location:
+        uri: benchmark://source/pkg/service/service.go
+        range:
+          start: { line: 3, character: 1 }
+          end: { line: 3, character: 5 }
+      kind: field
+      displayName: Last
+    expectedUsages:
+      - location:
+          uri: benchmark://source/pkg/service/service.go
+          range:
+            start: { line: 7, character: 3 }
+            end: { line: 7, character: 7 }
+        kind: field
+        displayName: Last
+      - location:
+          uri: benchmark://source/pkg/service/service.go
+          range:
+            start: { line: 8, character: 10 }
+            end: { line: 8, character: 14 }
+        kind: field
+        displayName: Last
+      - location:
+          uri: benchmark://source/cmd/app/main.go
+          range:
+            start: { line: 7, character: 12 }
+            end: { line: 7, character: 16 }
+        kind: field
+        displayName: Last
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/cmd/app/main.go
+            range:
+              start: { line: 7, character: 12 }
+              end: { line: 7, character: 16 }
+          kind: field
+          displayName: Last
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/pkg/service/service.go
+            range:
+              start: { line: 3, character: 1 }
+              end: { line: 3, character: 5 }
+          kind: field
+          displayName: Last
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: golang/tools@ce1ac030f27092a75b323f20611767330fee68f3.
+        Upstream reference: gopls/internal/test/marker/testdata/references scenarios for embedded fields and promoted selectors.
+        Adapted fixture: fixtures/go/lsp-parity/.
+        Maturity: Worker embeds *AuditLog, so worker.Last should resolve to the promoted AuditLog.Last field.
+  - id: go-parity-build-tag-unsupported
+    unsupported:
+      reason: Go build-tag-sensitive files are retained for parity tracking but are not scored until the runner exposes deliberate build constraints.
+    declaration:
+      location:
+        uri: benchmark://source/pkg/service/integration.go
+        range:
+          start: { line: 4, character: 5 }
+          end: { line: 4, character: 20 }
+      kind: function
+      displayName: IntegrationOnly
+    usageLookups: []
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: golang/tools@ce1ac030f27092a75b323f20611767330fee68f3.
+        Upstream reference: gopls marker tests for build tags and workspace/build configuration.
+        Adapted fixture: fixtures/go/lsp-parity/.
+        Maturity: build-tag-sensitive files are intentionally unscored in the first Go parity fixture.

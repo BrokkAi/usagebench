@@ -148,6 +148,13 @@ cases:
             end: { line: 7, character: 19 }
         kind: method
         displayName: audit
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 14, character: 27 }
+            end: { line: 14, character: 32 }
+        kind: method
+        displayName: audit
     usageLookups:
       - usage:
           location:
@@ -167,7 +174,7 @@ cases:
           displayName: audit
     verification:
       method: manual_inspection
-      notes: Invoice includes Auditable, and report.rb calls audit on an Invoice instance constructed through Billing::Invoice.build.
+      notes: Invoice includes Auditable, and report.rb calls audit directly and through public_send on an Invoice instance constructed through Billing::Invoice.build.
   - id: ruby-prepend-method-precedence
     declaration:
       location:
@@ -391,6 +398,13 @@ cases:
       - location:
           uri: benchmark://source/app/report.rb
           range:
+            start: { line: 7, character: 14 }
+            end: { line: 7, character: 19 }
+        kind: method
+        displayName: audit
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
             start: { line: 14, character: 27 }
             end: { line: 14, character: 32 }
         kind: method
@@ -414,7 +428,7 @@ cases:
           displayName: audit
     verification:
       method: manual_inspection
-      notes: invoice.public_send(:audit) names audit through a symbol at the call site, unlike the direct invoice.audit dispatch case.
+      notes: invoice.public_send(:audit) names audit through a symbol at the call site; declaration scans should still include the direct invoice.audit usage for the same method.
   - id: ruby-script-level-constant-access
     declaration:
       location:

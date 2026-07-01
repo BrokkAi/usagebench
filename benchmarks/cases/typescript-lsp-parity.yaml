@@ -1,0 +1,180 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/typescript/lsp-parity
+language: typescript
+cases:
+  - id: ts-parity-default-function-import-call
+    declaration:
+      location:
+        uri: benchmark://source/src/api.ts
+        range:
+          start: { line: 21, character: 24 }
+          end: { line: 21, character: 36 }
+      kind: function
+      displayName: createClient
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/app.ts
+          range:
+            start: { line: 2, character: 15 }
+            end: { line: 2, character: 27 }
+        kind: function
+        displayName: createClient
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/app.ts
+            range:
+              start: { line: 2, character: 15 }
+              end: { line: 2, character: 27 }
+          kind: function
+          displayName: createClient
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/api.ts
+            range:
+              start: { line: 21, character: 24 }
+              end: { line: 21, character: 36 }
+          kind: function
+          displayName: createClient
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
+        Upstream reference: TypeScript Server fourslash go-to-definition scenarios for default exports and imported call sites.
+        Adapted fixture: fixtures/typescript/lsp-parity/.
+        Maturity: a default function import call should resolve back to the exported function declaration; the import binding itself is not counted as a usage.
+  - id: ts-parity-static-method-call
+    expectedFailure:
+      reason: Bifrost baseline cannot resolve TypeScript static method calls to the indexed method declaration; tracked in bifrost#407.
+    declaration:
+      location:
+        uri: benchmark://source/src/api.ts
+        range:
+          start: { line: 6, character: 9 }
+          end: { line: 6, character: 15 }
+      kind: method
+      displayName: create
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/api.ts
+          range:
+            start: { line: 22, character: 19 }
+            end: { line: 22, character: 25 }
+        kind: method
+        displayName: create
+      - location:
+          uri: benchmark://source/src/app.ts
+          range:
+            start: { line: 3, character: 25 }
+            end: { line: 3, character: 31 }
+        kind: method
+        displayName: create
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/app.ts
+            range:
+              start: { line: 3, character: 25 }
+              end: { line: 3, character: 31 }
+          kind: method
+          displayName: create
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/api.ts
+            range:
+              start: { line: 6, character: 9 }
+              end: { line: 6, character: 15 }
+          kind: method
+          displayName: create
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
+        Upstream reference: TypeScript Server fourslash references for static class members and imported class call sites.
+        Adapted fixture: fixtures/typescript/lsp-parity/.
+        Maturity: ApiClient.create calls from the defining module and imported module should resolve to the static method declaration.
+  - id: ts-parity-type-only-interface-import
+    typeLookups:
+      - expression:
+          location:
+            uri: benchmark://source/src/app.ts
+            range:
+              start: { line: 4, character: 6 }
+              end: { line: 4, character: 10 }
+          kind: variable
+          displayName: user
+        expectedType:
+          location:
+            uri: benchmark://source/src/api.ts
+            range:
+              start: { line: 0, character: 17 }
+              end: { line: 0, character: 21 }
+          kind: interface
+          displayName: User
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
+        Upstream reference: TypeScript Server fourslash type-only import scenarios such as autoImportTypeOnlyPreferred*.ts and codeFixConvertToTypeOnlyImport*.ts.
+        Adapted fixture: fixtures/typescript/lsp-parity/.
+        Maturity: the local user variable is annotated through a type-only import and should recover the User interface type.
+  - id: ts-parity-interface-property-access
+    expectedFailure:
+      reason: Bifrost baseline cannot resolve TypeScript interface property declarations before scanning usages; tracked in bifrost#408.
+    declaration:
+      location:
+        uri: benchmark://source/src/api.ts
+        range:
+          start: { line: 2, character: 2 }
+          end: { line: 2, character: 6 }
+      kind: property
+      displayName: name
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/api.ts
+          range:
+            start: { line: 13, character: 17 }
+            end: { line: 13, character: 21 }
+        kind: property
+        displayName: name
+      - location:
+          uri: benchmark://source/src/api.ts
+          range:
+            start: { line: 18, character: 14 }
+            end: { line: 18, character: 18 }
+        kind: property
+        displayName: name
+      - location:
+          uri: benchmark://source/src/app.ts
+          range:
+            start: { line: 6, character: 18 }
+            end: { line: 6, character: 22 }
+        kind: property
+        displayName: name
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/app.ts
+            range:
+              start: { line: 6, character: 18 }
+              end: { line: 6, character: 22 }
+          kind: property
+          displayName: name
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/api.ts
+            range:
+              start: { line: 2, character: 2 }
+              end: { line: 2, character: 6 }
+          kind: property
+          displayName: name
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
+        Upstream reference: TypeScript Server fourslash find-all-references and object/type literal property scenarios.
+        Adapted fixture: fixtures/typescript/lsp-parity/.
+        Maturity: User.name should connect object-literal initialization and property reads back to the interface property declaration.
