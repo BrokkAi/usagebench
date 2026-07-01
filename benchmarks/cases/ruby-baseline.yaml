@@ -6,8 +6,6 @@ source:
 language: ruby
 cases:
   - id: ruby-require-relative-class-construction
-    expectedFailure:
-      reason: Bifrost get_definition_by_location resolves this require_relative-backed class construction, but scan_usages does not yet find the usage from the class declaration.
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb
@@ -60,8 +58,6 @@ cases:
       method: manual_inspection
       notes: report.rb requires billing/invoice and calls Billing::Invoice.build; the require_relative binding itself is not a usage.
   - id: ruby-relative-nested-constant
-    expectedFailure:
-      reason: Bifrost get_definition_by_location resolves this lexical nested constant reference, but scan_usages does not yet find the usage from the nested class declaration.
     declaration:
       location:
         uri: benchmark://source/lib/billing/money.rb
@@ -99,8 +95,6 @@ cases:
       method: manual_inspection
       notes: Invoice is lexically nested in Billing, so Money::Currency refers to Billing::Money::Currency from the required money.rb file.
   - id: ruby-superclass-reference
-    expectedFailure:
-      reason: Bifrost get_definition_by_location resolves this superclass reference, but scan_usages does not yet find the inheritance usage from the superclass declaration.
     declaration:
       location:
         uri: benchmark://source/lib/billing/record.rb
@@ -138,8 +132,6 @@ cases:
       method: manual_inspection
       notes: Invoice inherits from Record after requiring record.rb; this should be a superclass reference, not a generic text match.
   - id: ruby-include-instance-mixin
-    expectedFailure:
-      reason: Bifrost does not yet resolve Ruby include semantics for instance method dispatch through the receiver lookup chain.
     declaration:
       location:
         uri: benchmark://source/lib/billing/auditable.rb
@@ -177,8 +169,6 @@ cases:
       method: manual_inspection
       notes: Invoice includes Auditable, and report.rb calls audit on an Invoice instance constructed through Billing::Invoice.build.
   - id: ruby-prepend-method-precedence
-    expectedFailure:
-      reason: Bifrost does not yet model Ruby prepend precedence for receiver method lookup.
     declaration:
       location:
         uri: benchmark://source/lib/billing/formatting.rb
@@ -276,8 +266,6 @@ cases:
       method: manual_inspection
       notes: User extends Findable, so User.find is a class/singleton method; LegacyUser includes Findable, so LegacyUser.new.find is an instance method.
   - id: ruby-class-constant-access
-    expectedFailure:
-      reason: Bifrost does not yet resolve namespaced Ruby class constants for usage lookup.
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb
@@ -315,8 +303,6 @@ cases:
       method: manual_inspection
       notes: report.rb reads Billing::Invoice::DEFAULT_CURRENCY after requiring billing/invoice.
   - id: ruby-basic-function-call
-    expectedFailure:
-      reason: Bifrost does not yet resolve bare calls to Ruby top-level methods.
     declaration:
       location:
         uri: benchmark://source/app/report.rb
@@ -467,8 +453,6 @@ cases:
       method: manual_inspection
       notes: normalize_total reads the script-level SCRIPT_LIMIT constant declared later in the same file.
   - id: ruby-instance-field-access
-    expectedFailure:
-      reason: Bifrost does not yet index Ruby instance variable declarations and references for usage lookup.
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb
@@ -506,8 +490,6 @@ cases:
       method: manual_inspection
       notes: initialize writes @status and the instance status reader returns the same instance variable.
   - id: ruby-class-variable-access
-    expectedFailure:
-      reason: Bifrost does not yet index Ruby class variable declarations and references for usage lookup.
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb
@@ -545,8 +527,6 @@ cases:
       method: manual_inspection
       notes: "@@sequence is initialized on Invoice and incremented by the singleton build method."
   - id: ruby-singleton-field-access
-    expectedFailure:
-      reason: Bifrost does not yet index Ruby class-instance variable declarations and references for singleton-state usage lookup.
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb
