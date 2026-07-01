@@ -1,0 +1,131 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/rust/lsp-parity
+language: rust
+cases:
+  - id: rust-parity-module-declaration-definition
+    expectedFailure:
+      reason: Bifrost baseline may not resolve Rust module path references to the module declaration.
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 2, character: 4 }
+              end: { line: 2, character: 12 }
+          kind: module
+          displayName: workflow
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 0, character: 8 }
+              end: { line: 0, character: 16 }
+          kind: module
+          displayName: workflow
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: rust-lang/rust-analyzer@cc5f0f8dadfc3297aebe4026d99b6d8f85fb1eb8.
+        Upstream test: crates/ide/src/goto_definition.rs::goto_def_for_module_declaration.
+        Adapted fixture: fixtures/rust/lsp-parity/.
+        Maturity: adapted to the concrete source-location contract by resolving the workflow use path back to the mod workflow declaration token.
+  - id: rust-parity-ufcs-trait-method-definition
+    expectedFailure:
+      reason: Bifrost baseline Rust method lookup does not yet reliably resolve trait-provided associated function calls.
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 19, character: 17 }
+              end: { line: 19, character: 20 }
+          kind: method
+          displayName: run
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 7, character: 7 }
+              end: { line: 7, character: 10 }
+          kind: method
+          displayName: run
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: rust-lang/rust-analyzer@cc5f0f8dadfc3297aebe4026d99b6d8f85fb1eb8.
+        Upstream test: crates/ide/src/goto_definition.rs::goto_def_for_ufcs_trait_methods_through_self.
+        Adapted fixture: fixtures/rust/lsp-parity/.
+        Maturity: LocalRunner::run is provided by the Runner trait default method, so definition lookup should reach Runner::run.
+  - id: rust-parity-associated-type-impl-definition
+    expectedFailure:
+      reason: Bifrost baseline does not yet model Rust impl associated type declarations as references to the trait associated type.
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 15, character: 9 }
+              end: { line: 15, character: 15 }
+          kind: type
+          displayName: Output
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 5, character: 9 }
+              end: { line: 5, character: 15 }
+          kind: type
+          displayName: Output
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: rust-lang/rust-analyzer@cc5f0f8dadfc3297aebe4026d99b6d8f85fb1eb8.
+        Upstream test: crates/ide/src/goto_definition.rs::goto_def_of_trait_impl_type_alias.
+        Adapted fixture: fixtures/rust/lsp-parity/.
+        Maturity: Output in the impl should resolve to the associated type declared by the Runner trait.
+  - id: rust-parity-macro-generated-function-reference
+    unsupported:
+      reason: Macro-generated Rust declarations are retained for parity tracking but are not scored until the runner has a fair macro expansion model.
+    declaration:
+      location:
+        uri: benchmark://source/src/lib.rs
+        range:
+          start: { line: 34, character: 18 }
+          end: { line: 34, character: 31 }
+      kind: function
+      displayName: generated_job
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/lib.rs
+          range:
+            start: { line: 37, character: 4 }
+            end: { line: 37, character: 17 }
+        kind: function
+        displayName: generated_job
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 37, character: 4 }
+              end: { line: 37, character: 17 }
+          kind: function
+          displayName: generated_job
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 34, character: 18 }
+              end: { line: 34, character: 31 }
+          kind: function
+          displayName: generated_job
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: rust-lang/rust-analyzer@cc5f0f8dadfc3297aebe4026d99b6d8f85fb1eb8.
+        Upstream reference: crates/ide/src/goto_definition.rs macro-definition tests and crates/ide/src/references.rs::test_find_all_refs_macro_def.
+        Adapted fixture: fixtures/rust/lsp-parity/.
+        Maturity: generated_job is declared through define_job_maker! and called from source; this should remain visible but unscored until macro expansion parity is intentional.

@@ -1,0 +1,269 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/csharp/lsp-parity
+language: csharp
+cases:
+  - id: csharp-parity-namespace-alias-constructor
+    expectedFailure:
+      reason: Bifrost baseline does not resolve C# namespace aliases to aliased class declarations; tracked in bifrost#422.
+    declaration:
+      location:
+        uri: benchmark://source/src/Handlers.cs
+        range:
+          start: { line: 29, character: 20 }
+          end: { line: 29, character: 34 }
+      kind: class
+      displayName: ConsoleHandler
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Handlers.cs
+          range:
+            start: { line: 57, character: 19 }
+            end: { line: 57, character: 30 }
+        kind: class
+        displayName: WorkerAlias
+      - location:
+          uri: benchmark://source/src/Consumers.cs
+          range:
+            start: { line: 16, character: 27 }
+            end: { line: 16, character: 41 }
+        kind: class
+        displayName: ConsoleHandler
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 57, character: 19 }
+              end: { line: 57, character: 30 }
+          kind: class
+          displayName: WorkerAlias
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 29, character: 20 }
+              end: { line: 29, character: 34 }
+          kind: class
+          displayName: ConsoleHandler
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
+        Upstream reference: Roslyn LanguageServerProtocol definition and references tests for aliases and constructor/class navigation.
+        Adapted fixture: fixtures/csharp/lsp-parity/.
+        Maturity: a namespace alias used as a constructor/class reference should resolve to the aliased class declaration.
+  - id: csharp-parity-interface-receiver-method-call
+    expectedFailure:
+      reason: Bifrost baseline usage lookup resolves this C# receiver method call, but declaration-to-usage misses the call site; tracked in bifrost#423.
+    declaration:
+      location:
+        uri: benchmark://source/src/Handlers.cs
+        range:
+          start: { line: 6, character: 11 }
+          end: { line: 6, character: 17 }
+      kind: method
+      displayName: Handle
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Consumers.cs
+          range:
+            start: { line: 15, character: 28 }
+            end: { line: 15, character: 34 }
+        kind: method
+        displayName: Handle
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/Consumers.cs
+            range:
+              start: { line: 15, character: 28 }
+              end: { line: 15, character: 34 }
+          kind: method
+          displayName: Handle
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 6, character: 11 }
+              end: { line: 6, character: 17 }
+          kind: method
+          displayName: Handle
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
+        Upstream reference: Roslyn LanguageServerProtocol definition, references, and implementation tests for interface methods.
+        Adapted fixture: fixtures/csharp/lsp-parity/.
+        Maturity: handler.Handle is called through an IHandler-typed local and should resolve to the interface method declaration.
+  - id: csharp-parity-concrete-implementation-method-call
+    expectedFailure:
+      reason: Bifrost baseline usage lookup resolves this C# concrete receiver method call, but declaration-to-usage misses the call site; tracked in bifrost#423.
+    declaration:
+      location:
+        uri: benchmark://source/src/Handlers.cs
+        range:
+          start: { line: 38, character: 18 }
+          end: { line: 38, character: 24 }
+      kind: method
+      displayName: Handle
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Consumers.cs
+          range:
+            start: { line: 17, character: 30 }
+            end: { line: 17, character: 36 }
+        kind: method
+        displayName: Handle
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/Consumers.cs
+            range:
+              start: { line: 17, character: 30 }
+              end: { line: 17, character: 36 }
+          kind: method
+          displayName: Handle
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 38, character: 18 }
+              end: { line: 38, character: 24 }
+          kind: method
+          displayName: Handle
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
+        Upstream reference: Roslyn LanguageServerProtocol implementation and references tests for override/interface implementations.
+        Adapted fixture: fixtures/csharp/lsp-parity/.
+        Maturity: concrete.Handle is called through a ConsoleHandler local and should resolve to ConsoleHandler.Handle.
+  - id: csharp-parity-extension-method-call
+    expectedFailure:
+      reason: Bifrost baseline resolves C# extension-method usage lookup, but declaration-to-usage misses extension-call syntax; tracked in bifrost#425.
+    declaration:
+      location:
+        uri: benchmark://source/src/Handlers.cs
+        range:
+          start: { line: 47, character: 25 }
+          end: { line: 47, character: 28 }
+      kind: method
+      displayName: Tag
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Consumers.cs
+          range:
+            start: { line: 6, character: 20 }
+            end: { line: 6, character: 23 }
+        kind: method
+        displayName: Tag
+      - location:
+          uri: benchmark://source/src/Consumers.cs
+          range:
+            start: { line: 15, character: 42 }
+            end: { line: 15, character: 45 }
+        kind: method
+        displayName: Tag
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/Consumers.cs
+            range:
+              start: { line: 15, character: 42 }
+              end: { line: 15, character: 45 }
+          kind: method
+          displayName: Tag
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 47, character: 25 }
+              end: { line: 47, character: 28 }
+          kind: method
+          displayName: Tag
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
+        Upstream reference: Roslyn LanguageServerProtocol definition and references tests for extension methods.
+        Adapted fixture: fixtures/csharp/lsp-parity/.
+        Maturity: extension-call syntax should resolve back to the static extension method declaration.
+  - id: csharp-parity-partial-property-access
+    expectedFailure:
+      reason: Bifrost baseline does not resolve C# partial property receiver usages across partial class files; tracked in bifrost#424.
+    declaration:
+      location:
+        uri: benchmark://source/src/Handlers.cs
+        range:
+          start: { line: 21, character: 18 }
+          end: { line: 21, character: 22 }
+      kind: property
+      displayName: Name
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Handlers.cs
+          range:
+            start: { line: 25, character: 8 }
+            end: { line: 25, character: 12 }
+        kind: property
+        displayName: Name
+      - location:
+          uri: benchmark://source/src/Consumers.cs
+          range:
+            start: { line: 6, character: 15 }
+            end: { line: 6, character: 19 }
+        kind: property
+        displayName: Name
+      - location:
+          uri: benchmark://source/src/Consumers.cs
+          range:
+            start: { line: 19, character: 30 }
+            end: { line: 19, character: 34 }
+        kind: property
+        displayName: Name
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/Consumers.cs
+            range:
+              start: { line: 19, character: 30 }
+              end: { line: 19, character: 34 }
+          kind: property
+          displayName: Name
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 21, character: 18 }
+              end: { line: 21, character: 22 }
+          kind: property
+          displayName: Name
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
+        Upstream reference: Roslyn LanguageServerProtocol references tests for properties and partial-class declarations.
+        Adapted fixture: fixtures/csharp/lsp-parity/.
+        Maturity: partial EventRecord members should share one type surface, and Name accesses in the other partial file should resolve to the property declaration.
+  - id: csharp-parity-source-generator-unsupported
+    unsupported:
+      reason: C# source-generator-produced members are retained for parity tracking but are not scored until the runner has a deliberate generated-source model.
+    declaration:
+      location:
+        uri: benchmark://source/src/Consumers.cs
+        range:
+          start: { line: 25, character: 26 }
+          end: { line: 25, character: 39 }
+      kind: method
+      displayName: GeneratedName
+    usageLookups: []
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
+        Upstream reference: Roslyn LanguageServerProtocol tests for generated files and source-generated members.
+        Adapted fixture: fixtures/csharp/lsp-parity/.
+        Maturity: source-generator-produced members are intentionally unscored in the first C# parity fixture.

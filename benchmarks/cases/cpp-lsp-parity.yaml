@@ -1,0 +1,274 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/cpp/lsp-parity
+language: cpp
+cases:
+  - id: cpp-parity-using-alias-constructor
+    expectedFailure:
+      reason: Bifrost baseline resolves the C++ using alias itself instead of the aliased class declaration and misses out-of-line class qualifier usages; tracked in bifrost#426.
+    declaration:
+      location:
+        uri: benchmark://source/include/parity.h
+        range:
+          start: { line: 17, character: 6 }
+          end: { line: 17, character: 20 }
+      kind: class
+      displayName: ConsoleHandler
+    expectedUsages:
+      - location:
+          uri: benchmark://source/include/parity.h
+          range:
+            start: { line: 26, character: 21 }
+            end: { line: 26, character: 35 }
+        kind: class
+        displayName: ConsoleHandler
+      - location:
+          uri: benchmark://source/src/parity.cpp
+          range:
+            start: { line: 8, character: 0 }
+            end: { line: 8, character: 14 }
+        kind: class
+        displayName: ConsoleHandler
+      - location:
+          uri: benchmark://source/src/parity.cpp
+          range:
+            start: { line: 10, character: 12 }
+            end: { line: 10, character: 26 }
+        kind: class
+        displayName: ConsoleHandler
+      - location:
+          uri: benchmark://source/src/main.cpp
+          range:
+            start: { line: 6, character: 12 }
+            end: { line: 6, character: 24 }
+        kind: class
+        displayName: HandlerAlias
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main.cpp
+            range:
+              start: { line: 6, character: 12 }
+              end: { line: 6, character: 24 }
+          kind: class
+          displayName: HandlerAlias
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/include/parity.h
+            range:
+              start: { line: 17, character: 6 }
+              end: { line: 17, character: 20 }
+          kind: class
+          displayName: ConsoleHandler
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
+        Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp scenarios for aliases, declarations, and definitions.
+        Adapted fixture: fixtures/cpp/lsp-parity/.
+        Maturity: HandlerAlias should resolve through the using alias to the ConsoleHandler class declaration.
+  - id: cpp-parity-virtual-base-method-call
+    declaration:
+      location:
+        uri: benchmark://source/include/parity.h
+        range:
+          start: { line: 14, character: 24 }
+          end: { line: 14, character: 30 }
+      kind: method
+      displayName: handle
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main.cpp
+          range:
+            start: { line: 8, character: 22 }
+            end: { line: 8, character: 28 }
+        kind: method
+        displayName: handle
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main.cpp
+            range:
+              start: { line: 8, character: 22 }
+              end: { line: 8, character: 28 }
+          kind: method
+          displayName: handle
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/include/parity.h
+            range:
+              start: { line: 14, character: 24 }
+              end: { line: 14, character: 30 }
+          kind: method
+          displayName: handle
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
+        Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp and FindTargetTests.cpp scenarios for virtual methods and overridden members.
+        Adapted fixture: fixtures/cpp/lsp-parity/.
+        Maturity: base.handle is called through a BaseHandler reference and should resolve to the virtual base method declaration.
+  - id: cpp-parity-concrete-override-method-call
+    expectedFailure:
+      reason: Bifrost baseline usage lookup resolves this C++ concrete member call, but declaration-to-usage misses the call site; tracked in bifrost#428.
+    declaration:
+      location:
+        uri: benchmark://source/include/parity.h
+        range:
+          start: { line: 20, character: 16 }
+          end: { line: 20, character: 22 }
+      kind: method
+      displayName: handle
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/parity.cpp
+          range:
+            start: { line: 10, character: 28 }
+            end: { line: 10, character: 34 }
+        kind: method
+        displayName: handle
+      - location:
+          uri: benchmark://source/src/main.cpp
+          range:
+            start: { line: 9, character: 26 }
+            end: { line: 9, character: 32 }
+        kind: method
+        displayName: handle
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main.cpp
+            range:
+              start: { line: 9, character: 26 }
+              end: { line: 9, character: 32 }
+          kind: method
+          displayName: handle
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/include/parity.h
+            range:
+              start: { line: 20, character: 16 }
+              end: { line: 20, character: 22 }
+          kind: method
+          displayName: handle
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
+        Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp scenarios for member definitions and member-call references.
+        Adapted fixture: fixtures/cpp/lsp-parity/.
+        Maturity: handler.handle is called through a concrete ConsoleHandler value and should resolve to ConsoleHandler::handle.
+  - id: cpp-parity-overload-string-function-call
+    expectedFailure:
+      reason: Bifrost baseline conflates C++ overloads for declaration-to-usage and usage-to-declaration; tracked in bifrost#427.
+    declaration:
+      location:
+        uri: benchmark://source/include/parity.h
+        range:
+          start: { line: 28, character: 12 }
+          end: { line: 28, character: 18 }
+      kind: function
+      displayName: format
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/parity.cpp
+          range:
+            start: { line: 15, character: 12 }
+            end: { line: 15, character: 18 }
+        kind: function
+        displayName: format
+      - location:
+          uri: benchmark://source/src/main.cpp
+          range:
+            start: { line: 10, character: 29 }
+            end: { line: 10, character: 35 }
+        kind: function
+        displayName: format
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main.cpp
+            range:
+              start: { line: 10, character: 29 }
+              end: { line: 10, character: 35 }
+          kind: function
+          displayName: format
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/include/parity.h
+            range:
+              start: { line: 28, character: 12 }
+              end: { line: 28, character: 18 }
+          kind: function
+          displayName: format
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
+        Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp scenarios for overloaded functions and call-target precision.
+        Adapted fixture: fixtures/cpp/lsp-parity/.
+        Maturity: the string overload of format should collect only the std::string definition and call, not the int overload or int call.
+  - id: cpp-parity-template-function-call
+    expectedFailure:
+      reason: Bifrost baseline classifies this explicit C++ template function call as a declaration/import site instead of a reference site; tracked in bifrost#429.
+    declaration:
+      location:
+        uri: benchmark://source/include/parity.h
+        range:
+          start: { line: 32, character: 2 }
+          end: { line: 32, character: 8 }
+      kind: function
+      displayName: choose
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main.cpp
+          range:
+            start: { line: 12, character: 26 }
+            end: { line: 12, character: 32 }
+        kind: function
+        displayName: choose
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/main.cpp
+            range:
+              start: { line: 12, character: 26 }
+              end: { line: 12, character: 32 }
+          kind: function
+          displayName: choose
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/include/parity.h
+            range:
+              start: { line: 32, character: 2 }
+              end: { line: 32, character: 8 }
+          kind: function
+          displayName: choose
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
+        Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp and FindTargetTests.cpp scenarios for template definitions and specialization calls.
+        Adapted fixture: fixtures/cpp/lsp-parity/.
+        Maturity: an explicit template function call should resolve to the template declaration.
+  - id: cpp-parity-compile-commands-unsupported
+    unsupported:
+      reason: C++ compile-command-sensitive inactive code is retained for parity tracking but is not scored until the runner exposes deliberate compile command and preprocessor configuration.
+    declaration:
+      location:
+        uri: benchmark://source/include/parity.h
+        range:
+          start: { line: 37, character: 12 }
+          end: { line: 37, character: 27 }
+      kind: function
+      displayName: configured_only
+    usageLookups: []
+    verification:
+      method: analyzer_comparison
+      notes: >
+        Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
+        Upstream reference: clang-tools-extra/clangd tests for compile commands, preprocessor configuration, and inactive-code navigation.
+        Adapted fixture: fixtures/cpp/lsp-parity/.
+        Maturity: preprocessor/compile-command-sensitive behavior is intentionally unscored in the first C++ parity fixture.
