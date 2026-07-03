@@ -6,8 +6,6 @@ source:
 language: cpp
 cases:
   - id: cpp-parity-using-alias-constructor
-    expectedFailure:
-      reason: Bifrost baseline resolves the C++ using alias itself instead of the aliased class declaration and misses out-of-line class qualifier usages; tracked in bifrost#426.
     declaration:
       location:
         uri: benchmark://source/include/parity.h
@@ -211,8 +209,6 @@ cases:
         Adapted fixture: fixtures/cpp/lsp-parity/.
         Maturity: the string overload of format should collect only the std::string definition and call, not the int overload or int call.
   - id: cpp-parity-template-function-call
-    expectedFailure:
-      reason: Bifrost baseline classifies this explicit C++ template function call as a declaration/import site instead of a reference site; tracked in bifrost#429.
     declaration:
       location:
         uri: benchmark://source/include/parity.h

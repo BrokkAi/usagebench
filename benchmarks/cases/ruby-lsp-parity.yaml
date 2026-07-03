@@ -6,8 +6,6 @@ source:
 language: ruby
 cases:
   - id: ruby-parity-autoload-constant-definition
-    expectedFailure:
-      reason: Bifrost baseline does not resolve Ruby autoload symbols or later constant paths to the indexed class declaration; tracked in bifrost#409.
     declaration:
       location:
         uri: benchmark://source/lib/shop/discount.rb
@@ -122,8 +120,6 @@ cases:
         Adapted fixture: fixtures/ruby/lsp-parity/.
         Maturity: attr_reader :name generates a readable method, and alias_method's target symbol is a reference to that generated method.
   - id: ruby-parity-singleton-class-method-definition
-    expectedFailure:
-      reason: Bifrost baseline omits class << self method calls from declaration-to-usage scans; tracked in bifrost#411.
     declaration:
       location:
         uri: benchmark://source/lib/shop/product.rb
@@ -215,8 +211,6 @@ cases:
         Adapted fixture: fixtures/ruby/lsp-parity/.
         Maturity: alias_method :label, :name creates an alias declaration that direct and receiver method calls should resolve through.
   - id: ruby-parity-module-function-call
-    expectedFailure:
-      reason: Bifrost baseline does not model Ruby module_function methods as singleton methods on the module; tracked in bifrost#411.
     declaration:
       location:
         uri: benchmark://source/lib/shop/pricing.rb
