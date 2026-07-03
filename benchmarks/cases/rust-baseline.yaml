@@ -43,8 +43,6 @@ cases:
       method: manual_inspection
       notes: build_service is called from run_demo; the lib.rs re-export binding is not counted as a usage.
   - id: rust-struct-construction
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/service.rs

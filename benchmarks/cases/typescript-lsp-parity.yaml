@@ -122,8 +122,6 @@ cases:
         Adapted fixture: fixtures/typescript/lsp-parity/.
         Maturity: the local user variable is annotated through a type-only import and should recover the User interface type.
   - id: ts-parity-interface-property-access
-    expectedFailure:
-      reason: Bifrost baseline cannot resolve TypeScript interface property declarations before scanning usages; tracked in bifrost#408.
     declaration:
       location:
         uri: benchmark://source/src/api.ts

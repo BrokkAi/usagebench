@@ -6,8 +6,6 @@ source:
 language: csharp
 cases:
   - id: csharp-parity-namespace-alias-constructor
-    expectedFailure:
-      reason: Bifrost baseline does not resolve C# namespace aliases to aliased class declarations; tracked in bifrost#422.
     declaration:
       location:
         uri: benchmark://source/src/Handlers.cs
@@ -56,8 +54,6 @@ cases:
         Adapted fixture: fixtures/csharp/lsp-parity/.
         Maturity: a namespace alias used as a constructor/class reference should resolve to the aliased class declaration.
   - id: csharp-parity-interface-receiver-method-call
-    expectedFailure:
-      reason: Bifrost baseline usage lookup resolves this C# receiver method call, but declaration-to-usage misses the call site; tracked in bifrost#423.
     declaration:
       location:
         uri: benchmark://source/src/Handlers.cs
@@ -99,8 +95,6 @@ cases:
         Adapted fixture: fixtures/csharp/lsp-parity/.
         Maturity: handler.Handle is called through an IHandler-typed local and should resolve to the interface method declaration.
   - id: csharp-parity-concrete-implementation-method-call
-    expectedFailure:
-      reason: Bifrost baseline usage lookup resolves this C# concrete receiver method call, but declaration-to-usage misses the call site; tracked in bifrost#423.
     declaration:
       location:
         uri: benchmark://source/src/Handlers.cs
@@ -142,8 +136,6 @@ cases:
         Adapted fixture: fixtures/csharp/lsp-parity/.
         Maturity: concrete.Handle is called through a ConsoleHandler local and should resolve to ConsoleHandler.Handle.
   - id: csharp-parity-extension-method-call
-    expectedFailure:
-      reason: Bifrost baseline resolves C# extension-method usage lookup, but declaration-to-usage misses extension-call syntax; tracked in bifrost#425.
     declaration:
       location:
         uri: benchmark://source/src/Handlers.cs
