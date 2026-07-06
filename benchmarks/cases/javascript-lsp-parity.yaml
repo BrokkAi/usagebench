@@ -96,8 +96,8 @@ cases:
         Upstream reference: TypeScript Server fourslash object-literal reference and best-common-type object-literal scenarios.
         Adapted fixture: fixtures/javascript/lsp-parity/.
         Maturity: helpers.formatTask should resolve to the object-literal method declaration and count both internal and imported member calls.
-  - id: js-parity-computed-method-name-unsupported
-    unsupported:
+  - id: js-parity-computed-method-name-not-planned
+    notPlanned:
       reason: Computed JavaScript method calls are retained for parity tracking but are not scored until string-driven member dispatch has a deliberate model.
     declaration:
       location:

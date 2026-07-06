@@ -177,8 +177,8 @@ cases:
         Upstream reference: packages/pyright-internal/src/tests/samples/property1.py and property evaluator scenarios.
         Adapted fixture: fixtures/python/lsp-parity/.
         Maturity: @property getter access through an inferred instance should resolve to the property method declaration.
-  - id: python-parity-dunder-getattr-unsupported
-    unsupported:
+  - id: python-parity-dunder-getattr-not-planned
+    notPlanned:
       reason: Python __getattr__ dynamic attribute fallback is retained for parity tracking but is not scored until dynamic member lookup has a deliberate model.
     declaration:
       location:

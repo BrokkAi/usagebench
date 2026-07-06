@@ -60,8 +60,9 @@ scoring behavior. It may fetch, build, or create temporary worktrees under
   recorded with `verification.method: manual_inspection`.
 * Non-zero fixture ranges should select text equal to the location's
   `displayName`.
-* Use `allowedExtraUsages`, `expectedFailure`, and `unsupported` to document
-  known analyzer behavior without weakening the source-location contract.
+* Use `allowedExtraUsages`, `expectedFailure`, `notPlanned`, and `unsupported`
+  to document known analyzer behavior without weakening the source-location
+  contract.
 
 Keep benchmark cases small and reviewed. Prefer adding focused fixture source
 over reviving generator-heavy corpora.
@@ -77,4 +78,3 @@ Follow the existing Rust style in `src/`:
   ad hoc YAML handling.
 * Keep CLI output stable enough for CI and automation consumers.
 * Avoid broad refactors when adjusting benchmark data or runner behavior.
-

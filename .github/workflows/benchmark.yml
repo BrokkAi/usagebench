@@ -1,6 +1,11 @@
 name: Benchmark
 
 on:
+  # TEMP: run this PR branch once so the Slack payload can be observed.
+  # Remove before merging.
+  push:
+    branches:
+      - dave/usagebench-report-buckets
   schedule:
     - cron: '47 9 * * *'
   workflow_dispatch:
@@ -113,7 +118,7 @@ jobs:
               echo
               jq -r '
                 .totals
-                | "- Documents: \(.documents)\n- Cases: \(.cases)\n- Passed: \(.passed)\n- Failed: \(.failed)\n- Expected failures: \(.expectedFailures)\n- Skipped: \(.skipped)\n- Errors: \(.errors)"
+                | "- Documents: \(.documents)\n- Planned cases: \(.cases)\n- Passed: \(.passed)\n- Failed: \(.failed)\n- Expected failures: \(.expectedFailures)\n- Not planned: \(.notPlanned // 0)\n- Unsupported: \(.unsupported // 0)\n- Skipped: \(.skipped)\n- Errors: \(.errors)"
               ' "${{ steps.paths.outputs.report_path }}"
               failing_cases="$(
                 jq -r '
@@ -176,6 +181,8 @@ jobs:
           improved_count="0"
           failed_count="0"
           expected_failures_count="0"
+          not_planned_count="0"
+          unsupported_count="0"
           skipped_count="0"
           errors_count="0"
           failing_cases=""
@@ -187,6 +194,8 @@ jobs:
             improved_count="$(jq -r '.totals.improved // 0' "$report_path")"
             failed_count="$(jq -r '.totals.failed // 0' "$report_path")"
             expected_failures_count="$(jq -r '.totals.expectedFailures // 0' "$report_path")"
+            not_planned_count="$(jq -r '.totals.notPlanned // 0' "$report_path")"
+            unsupported_count="$(jq -r '.totals.unsupported // 0' "$report_path")"
             skipped_count="$(jq -r '.totals.skipped // 0' "$report_path")"
             errors_count="$(jq -r '.totals.errors // 0' "$report_path")"
             failing_cases="$(
@@ -256,6 +265,8 @@ jobs:
               --argjson improved_count "$improved_count" \
               --argjson failed_count "$failed_count" \
               --argjson expected_failures_count "$expected_failures_count" \
+              --argjson not_planned_count "$not_planned_count" \
+              --argjson unsupported_count "$unsupported_count" \
               --argjson skipped_count "$skipped_count" \
               --argjson errors_count "$errors_count" \
               '{
@@ -271,6 +282,8 @@ jobs:
                 improved_count: $improved_count,
                 failed_count: $failed_count,
                 expected_failures_count: $expected_failures_count,
+                not_planned_count: $not_planned_count,
+                unsupported_count: $unsupported_count,
                 skipped_count: $skipped_count,
                 errors_count: $errors_count
               }'

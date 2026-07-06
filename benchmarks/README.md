@@ -71,8 +71,10 @@ Each case supports both benchmark directions:
   that report them should surface those locations as unexpected extras.
 - `expectedFailure.reason` keeps a known analyzer gap in the baseline while
   still running the case and failing if the case unexpectedly starts passing.
-- `unsupported.reason` keeps useful future cases in the corpus without scoring
-  them yet.
+- `notPlanned.reason` keeps runtime-dynamic or generated-code expectations in
+  the corpus and runs them without including them in the planned-case total.
+- `unsupported.reason` documents out-of-boundary cases and reports them as
+  unsupported by default; `--include-unsupported` opts into running them.
 - `verification` records how the expected locations were confirmed.
 
 The current issue #8 corpus stops at validated source-location cases. Bifrost

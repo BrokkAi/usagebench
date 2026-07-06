@@ -57,6 +57,8 @@ pub struct BenchmarkCase {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expected_failure: Option<ExpectedFailure>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub not_planned: Option<NotPlannedReason>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unsupported: Option<UnsupportedReason>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub verification: Option<Verification>,
@@ -131,6 +133,12 @@ pub struct TypeLookup {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ExpectedFailure {
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct NotPlannedReason {
     pub reason: String,
 }
 
@@ -317,6 +325,21 @@ impl BenchmarkDocument {
 
 impl BenchmarkCase {
     fn validate(&self, fixture_root: Option<&Path>, encoding: PositionEncoding) -> Result<()> {
+        let scoring_markers = [
+            self.expected_failure.is_some(),
+            self.not_planned.is_some(),
+            self.unsupported.is_some(),
+        ]
+        .into_iter()
+        .filter(|present| *present)
+        .count();
+        if scoring_markers > 1 {
+            bail!(
+                "case {} must use at most one of expectedFailure, notPlanned, or unsupported",
+                self.id
+            );
+        }
+
         if let Some(declaration) = &self.declaration {
             declaration
                 .validate(fixture_root, encoding)
@@ -638,6 +661,32 @@ cases: []
         let files = validate_path("benchmarks/cases").unwrap();
 
         assert!(!files.is_empty());
+    }
+
+    #[test]
+    fn validation_rejects_multiple_scoring_markers() {
+        let tempdir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(tempdir.path().join("fixtures/fixture")).unwrap();
+        let document = serde_yaml::from_str::<BenchmarkDocument>(
+            r#"
+schemaVersion: 1
+source:
+  kind: fixture
+  path: fixtures/fixture
+language: text
+cases:
+  - id: ambiguous-marker
+    expectedFailure:
+      reason: planned gap
+    notPlanned:
+      reason: out of scope
+"#,
+        )
+        .unwrap();
+
+        let error = document.validate_with_base(tempdir.path()).unwrap_err();
+
+        assert!(format!("{error:#}").contains("must use at most one"));
     }
 
     #[test]

@@ -44,7 +44,7 @@ enum Command {
         /// Write the machine-readable report JSON to this path.
         #[arg(long)]
         output: Option<PathBuf>,
-        /// Run cases marked unsupported instead of reporting them as skipped.
+        /// Run cases marked unsupported instead of reporting only the unsupported boundary.
         #[arg(long)]
         include_unsupported: bool,
         /// Deprecated; definition lookups are enabled by default.
@@ -94,12 +94,14 @@ fn main() -> Result<()> {
             options.keep_worktrees = keep_worktrees;
             let report = run_bifrost(options)?;
             println!(
-                "ran {} case(s): {} passed, {} improved, {} failed, {} expected failure(s), {} skipped, {} error(s)",
+                "ran {} planned case(s): {} passed, {} improved, {} failed, {} expected failure(s), {} not planned, {} unsupported, {} skipped, {} error(s)",
                 report.totals.cases,
                 report.totals.passed,
                 report.totals.improved,
                 report.totals.failed,
                 report.totals.expected_failures,
+                report.totals.not_planned,
+                report.totals.unsupported,
                 report.totals.skipped,
                 report.totals.errors
             );
@@ -126,6 +128,8 @@ fn print_run_details(report: &BifrostRunReport) {
                     CaseStatus::Improved
                         | CaseStatus::Failed
                         | CaseStatus::ExpectedFailure
+                        | CaseStatus::NotPlanned
+                        | CaseStatus::Unsupported
                         | CaseStatus::Error
                 ) {
                     println!(
@@ -147,6 +151,8 @@ fn print_run_details(report: &BifrostRunReport) {
                     CaseStatus::Improved
                         | CaseStatus::Failed
                         | CaseStatus::ExpectedFailure
+                        | CaseStatus::NotPlanned
+                        | CaseStatus::Unsupported
                         | CaseStatus::Error
                 )
             {
@@ -269,6 +275,8 @@ fn status_label(status: CaseStatus) -> &'static str {
         CaseStatus::Improved => "IMPROVED",
         CaseStatus::Failed => "FAIL",
         CaseStatus::ExpectedFailure => "XFAIL",
+        CaseStatus::NotPlanned => "NOTPLANNED",
+        CaseStatus::Unsupported => "UNSUPPORTED",
         CaseStatus::Skipped => "SKIP",
         CaseStatus::Error => "ERROR",
     }

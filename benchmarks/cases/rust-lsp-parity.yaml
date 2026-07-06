@@ -86,8 +86,8 @@ cases:
         Upstream test: crates/ide/src/goto_definition.rs::goto_def_of_trait_impl_type_alias.
         Adapted fixture: fixtures/rust/lsp-parity/.
         Maturity: Output in the impl should resolve to the associated type declared by the Runner trait.
-  - id: rust-parity-macro-generated-function-reference
-    unsupported:
+  - id: rust-parity-macro-generated-function-reference-not-planned
+    notPlanned:
       reason: Macro-generated Rust declarations are retained for parity tracking but are not scored until the runner has a fair macro expansion model.
     declaration:
       location:

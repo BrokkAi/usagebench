@@ -198,8 +198,8 @@ cases:
         Upstream reference: lib/Indexer/Tests/Adapter/ReferenceFinder/IndexedReferenceFinderTest.php::provideMembers static properties.
         Adapted fixture: fixtures/php/lsp-parity/.
         Maturity: static property writes and reads should resolve back to the declared property.
-  - id: php-parity-magic-get-unsupported
-    unsupported:
+  - id: php-parity-magic-get-not-planned
+    notPlanned:
       reason: PHP magic __get property fallback is retained for parity tracking but is not scored until dynamic member lookup has a deliberate model.
     declaration:
       location:

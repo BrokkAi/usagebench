@@ -21,8 +21,8 @@ locations, not upstream-internal symbol IDs or Bifrost fully-qualified names.
 - source locations use `benchmark://source/...` URIs and LSP-style ranges;
 - `usageLookups` covers usage-to-declaration behavior;
 - `declaration` plus `expectedUsages` covers declaration-to-usage behavior;
-- `typeLookups`, `expectedFailure`, and `unsupported` keep future maturity gaps
-  visible without weakening the source-location contract.
+- `typeLookups`, `expectedFailure`, `notPlanned`, and `unsupported` keep future
+  maturity gaps visible without weakening the source-location contract.
 
 The active corpus is the reviewed fixture corpus under `benchmarks/cases` and
 `fixtures`. This plan should extend that path, not revive generator-heavy
@@ -35,8 +35,10 @@ corpora or analyzer-specific expected output.
 - Mine upstream scenarios, not upstream harnesses. The adapted case should be
   readable and reviewable in `usagebench`.
 - Keep import, re-export, generated-code, macro, and dynamic-language cases
-  explicit. Use `expectedFailure` or `unsupported` when the behavior is useful
-  but not yet a fair scored Bifrost requirement.
+  explicit. Use `expectedFailure` for planned analyzer gaps, `notPlanned` for
+  runnable but intentionally unscored dynamic/generated behavior, and
+  `unsupported` for cases that need runner or project-shape support before they
+  should run by default.
 - Treat false positives as first-class precision failures. A mature analyzer
   parity case should say what should not count as a usage when that distinction
   matters.
@@ -56,8 +58,8 @@ Use this taxonomy when mining upstream tests and naming future cases.
 | Implementation | `usageLookups` or future implementation-specific cases | trait/interface method implementation, superclass method override, abstract method implementation |
 | Imports and re-exports | `usageLookups`, `expectedUsages`, `allowedExtraUsages` | module exports, package aliases, wildcard imports, static imports, re-exported functions/classes |
 | Inheritance and overrides | `usageLookups`, `expectedUsages`, `typeLookups` | virtual dispatch, overridden methods, anonymous classes, embedded/anonymous fields |
-| Generated or expanded code | `expectedFailure` or `unsupported` initially | Rust macros/proc macros, Java annotation processors, Lombok-style methods |
-| Dynamic behavior | `unsupported` initially | Python `__getattr__`, Ruby dynamic dispatch, JavaScript computed properties |
+| Generated or expanded code | `notPlanned` initially | Rust macros/proc macros, Java annotation processors, Lombok-style methods |
+| Dynamic behavior | `notPlanned` initially | Python `__getattr__`, Ruby dynamic dispatch, JavaScript computed properties |
 | Precision negatives | strict extras handling | import bindings that are not usages, unrelated same-name symbols, ambiguous wildcard imports |
 
 ## Provenance Contract
@@ -120,10 +122,10 @@ Initial scenario set:
 - type aliases and generic type parameters;
 - operator and indexing calls where a trait implementation is the meaningful
   target;
-- declarative macro-generated references, marked conservatively when expansion
-  support is incomplete;
-- proc-macro cases marked `unsupported` until the runner has a fair execution
-  model.
+- declarative macro-generated references, marked `notPlanned` when expansion
+  support is outside the planned scoring surface;
+- proc-macro cases marked `notPlanned` until macro expansion parity becomes an
+  intentional target.
 
 Implementation notes:
 
@@ -141,7 +143,7 @@ Current progress:
 - Verified the first Bifrost run against
   `origin/master` resolved to `6e0b54063ec3cf43c13cd489051cce35c34e22dc`:
   three cases are expected failures and the macro-generated function case is
-  skipped as unsupported.
+  marked not planned.
 
 Exit criteria:
 
@@ -175,8 +177,8 @@ Initial scenario set:
 - test-to-production references;
 - JAR/classfile-adjacent source navigation, marked `unsupported` unless the
   case can be represented as a small fixture;
-- annotation-processor or Lombok-like generated members, marked `unsupported`
-  until there is a fair fixture and runner model.
+- annotation-processor or Lombok-like generated members, marked `notPlanned`
+  until generated-member parity becomes an intentional target.
 
 Implementation notes:
 
@@ -220,14 +222,14 @@ and file standalone product issues for meaningful misses.
 
 | Language | Current baseline handles | Parity mining process |
 | --- | --- | --- |
-| JavaScript | CommonJS exported members, named export/import functions, class construction, `js-method-call` expected failure, `js-class-property-access` expected failure | Mine TypeScript Server JavaScript tests and VS Code JS language-feature behavior for CommonJS aliases, default/named imports, prototype/class methods, instance properties, object-literal members, and computed-property unsupported cases. Keep import bindings out of expected usages unless documented as `allowedExtraUsages`. |
+| JavaScript | CommonJS exported members, named export/import functions, class construction, `js-method-call` expected failure, `js-class-property-access` expected failure | Mine TypeScript Server JavaScript tests and VS Code JS language-feature behavior for CommonJS aliases, default/named imports, prototype/class methods, instance properties, object-literal members, and computed-property not-planned cases. Keep import bindings out of expected usages unless documented as `allowedExtraUsages`. |
 | TypeScript | named exports, default class import/construction, class method calls, `ts-object-property-access` expected failure, TSX component references, Ky-style static factory calls | Mine TypeScript Server tests for TS/TSX references, JSX component definitions, type-only imports, static methods, object/type-literal properties, interface members, generic aliases, and default export wrappers. Separate syntax-only TSX fixtures from project-shape cases that need `tsconfig.json`. |
-| Ruby | `require_relative`, nested constants, superclass references, include/prepend/extend lookup, class constants, bare method calls, singleton methods, `ruby-dynamic-public-send` expected failure, script constants, instance/class/singleton fields | Mine Ruby LSP and Solargraph-style scenarios for constant lookup, mixins, singleton/class methods, `require`/`autoload`, field readers/writers, and receiver-aware dynamic dispatch. Keep `send`, `__send__`, and `public_send` cases scored only when the receiver and first symbol/string argument make the target provable; otherwise mark them `expectedFailure` or `unsupported`. |
+| Ruby | `require_relative`, nested constants, superclass references, include/prepend/extend lookup, class constants, bare method calls, singleton methods, `ruby-dynamic-public-send` not planned, script constants, instance/class/singleton fields | Mine Ruby LSP and Solargraph-style scenarios for constant lookup, mixins, singleton/class methods, `require`/`autoload`, field readers/writers, and receiver-aware dynamic dispatch. Mark runtime-dispatch cases such as `send`, `__send__`, and `public_send` as `notPlanned` unless they are deliberately promoted into the scored surface. |
 | Scala | class construction, companion object calls, `scala-method-call` expected failure, `scala-field-and-val-access` expected failure, object val access | Mine Metals scenarios for companions, imports, inheritance, traits, extension methods, symbolic operators, infix/postfix calls, givens/using clauses, and generated-synthetic surfaces. Keep sbt/build-shape cases separate from single-fixture source cases. |
-| PHP | class construction, direct method calls, `php-repository-method-call` expected failure, property access, class constants | Mine Intelephense or PHP language server scenarios for namespaces, imports, traits, static calls, instance properties, class constants, Composer autoload roots, fluent receiver chains, and magic method/property unsupported cases. Split Composer/autoload cases from simple source-only fixtures. |
-| Python | module imports, function re-export calls, class instantiation, `python-method-call` expected failure, dynamic `getattr` unsupported, `python-attribute-access` expected failure | Mine Pyright and pylsp scenarios for imports/re-exports, class methods, attributes, protocol-like methods, package `__init__` exports, decorators, and dynamic lookup. Keep `__getattr__`, monkey-patching, dynamic imports, and string-based `getattr` unsupported unless the target is statically provable. |
+| PHP | class construction, direct method calls, `php-repository-method-call` expected failure, property access, class constants | Mine Intelephense or PHP language server scenarios for namespaces, imports, traits, static calls, instance properties, class constants, Composer autoload roots, fluent receiver chains, and magic method/property not-planned cases. Split Composer/autoload cases from simple source-only fixtures. |
+| Python | module imports, function re-export calls, class instantiation, `python-method-call` expected failure, dynamic `getattr` not planned, `python-attribute-access` expected failure | Mine Pyright and pylsp scenarios for imports/re-exports, class methods, attributes, protocol-like methods, package `__init__` exports, decorators, and dynamic lookup. Keep `__getattr__`, monkey-patching, dynamic imports, and string-based `getattr` not planned unless the target is deliberately promoted into the scored surface. |
 | Go | package functions, value receiver methods, pointer receiver methods, struct fields, package constants/vars | Mine gopls scenarios for pointer/value receiver equivalence, interfaces, embedding, promoted fields/methods, package aliases, cross-package references, constants/vars, and build-tag unsupported cases. Preserve package-level fixture shape with minimal `go.mod` where needed. |
-| C# | class references, constructors, methods, repository methods, properties, constants | Mine Roslyn LSP or OmniSharp scenarios for properties, fields, constructors, partial classes, interfaces, inheritance, extension methods, namespace aliases, and generated/source-generator unsupported cases. Keep source-generator cases unscored until a fair runner model exists. |
+| C# | class references, constructors, methods, repository methods, properties, constants | Mine Roslyn LSP or OmniSharp scenarios for properties, fields, constructors, partial classes, interfaces, inheritance, extension methods, namespace aliases, and generated/source-generator not-planned cases. Keep source-generator cases unscored until generated-source parity becomes an intentional target. |
 | C++ | functions, class references, constructors, methods, `cpp-field-access` expected failure, constants | Mine clangd scenarios for declarations versus definitions, headers and implementations, overloads, namespaces, constructors, fields, constants, templates, using aliases, and include-boundary precision. Mark template-heavy or compile-command-sensitive cases conservatively until fixtures include enough project shape. |
 
 Each language milestone should add a small reviewed scenario set before
@@ -258,7 +260,7 @@ Current Ruby progress:
 - Tightened `benchmarks/cases/ruby-baseline.yaml` so declaration scans for
   `Billing::Auditable.audit` treat both `invoice.audit` and
   `invoice.public_send(:audit)` as true usages of the same method; the dynamic
-  `public_send` usage-to-definition gap remains an expected failure.
+  `public_send` usage-to-definition gap is now marked not planned.
 - Verified focused Bifrost runs against `origin/master` resolved to
   `6e0b54063ec3cf43c13cd489051cce35c34e22dc`.
 - Filed Ruby autoload/constant-path misses as `bifrost#409`, generated reader
@@ -268,13 +270,13 @@ Current Ruby progress:
 Current Python/PHP progress:
 
 - Added `benchmarks/cases/python-lsp-parity.yaml` with re-exported class alias,
-  classmethod, staticmethod, property getter, and unsupported `__getattr__`
+  classmethod, staticmethod, property getter, and not-planned `__getattr__`
   scenarios.
 - Added `fixtures/python/lsp-parity/` as the first minimal Python parity
   fixture.
 - Added `benchmarks/cases/php-lsp-parity.yaml` with namespace alias static
   method, trait method, interface method implementation, static property, and
-  unsupported magic `__get` scenarios.
+  not-planned magic `__get` scenarios.
 - Added `fixtures/php/lsp-parity/` as the first minimal PHP parity fixture.
 - Verified focused Bifrost runs against `origin/master` resolved to
   `96f5f3a9b099cfe72e83994dbc99dcad3db6b516`.
@@ -291,7 +293,7 @@ Current Scala/Go progress:
 - Added `fixtures/go/lsp-parity/` as the first minimal Go parity fixture.
 - Added `benchmarks/cases/scala-lsp-parity.yaml` with trait method
   implementation, renamed import, extension method, local method call, and
-  unsupported generated/synthetic scenarios.
+  not-planned generated/synthetic scenarios.
 - Added `fixtures/scala/lsp-parity/` as the first minimal Scala parity fixture.
 - Verified focused Bifrost runs against `origin/master` resolved to
   `96f5f3a9b099cfe72e83994dbc99dcad3db6b516`.
@@ -303,7 +305,7 @@ Current C#/C++ progress:
 
 - Added `benchmarks/cases/csharp-lsp-parity.yaml` with namespace alias,
   interface receiver method, concrete implementation method, extension method,
-  partial property, and unsupported source-generator scenarios.
+  partial property, and not-planned source-generator scenarios.
 - Added `fixtures/csharp/lsp-parity/` as the first minimal C# parity fixture.
 - Added `benchmarks/cases/cpp-lsp-parity.yaml` with using alias, virtual base
   method, concrete override method, overload precision, template call, and
@@ -311,9 +313,8 @@ Current C#/C++ progress:
 - Added `fixtures/cpp/lsp-parity/` as the first minimal C++ parity fixture.
 - Verified focused Bifrost runs against `origin/master` resolved to
   `96f5f3a9b099cfe72e83994dbc99dcad3db6b516`.
-- The focused C# run reports five expected failures and one skipped unsupported
-  case; the focused C++ run reports one pass, four expected failures, and one
-  skipped unsupported case.
+- The focused C# corpus includes a not-planned source-generator case; the
+  focused C++ corpus still includes an unsupported compile-command case.
 - Filed C# alias misses as `bifrost#422`, receiver method reference-scan misses
   as `bifrost#423`, partial property receiver misses as `bifrost#424`, and
   extension method reference misses as `bifrost#425`.

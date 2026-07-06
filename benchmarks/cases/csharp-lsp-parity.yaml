@@ -240,8 +240,8 @@ cases:
         Upstream reference: Roslyn LanguageServerProtocol references tests for properties and partial-class declarations.
         Adapted fixture: fixtures/csharp/lsp-parity/.
         Maturity: partial EventRecord members should share one type surface, and Name accesses in the other partial file should resolve to the property declaration.
-  - id: csharp-parity-source-generator-unsupported
-    unsupported:
+  - id: csharp-parity-source-generator-not-planned
+    notPlanned:
       reason: C# source-generator-produced members are retained for parity tracking but are not scored until the runner has a deliberate generated-source model.
     declaration:
       location:
