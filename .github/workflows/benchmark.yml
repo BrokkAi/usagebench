@@ -1,11 +1,6 @@
 name: Benchmark
 
 on:
-  # TEMP: run this PR branch once so the Slack payload can be observed.
-  # Remove before merging.
-  push:
-    branches:
-      - dave/usagebench-report-buckets
   schedule:
     - cron: '47 9 * * *'
   workflow_dispatch:
