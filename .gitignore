@@ -16,6 +16,7 @@ dataset/**
 !AGENTS.md
 !.brokk/style.md
 !.brokk/project.properties
+**/.bifrost
 
 **/.DS_Store
 
