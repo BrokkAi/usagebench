@@ -73,6 +73,20 @@ cases:
             end: { line: 16, character: 7 }
         kind: class
         displayName: Service
+      - location:
+          uri: benchmark://source/src/service.cpp
+          range:
+            start: { line: 9, character: 0 }
+            end: { line: 9, character: 7 }
+        kind: class
+        displayName: Service
+      - location:
+          uri: benchmark://source/src/service.cpp
+          range:
+            start: { line: 11, character: 12 }
+            end: { line: 11, character: 19 }
+        kind: class
+        displayName: Service
     usageLookups:
       - usage:
           location:
@@ -92,7 +106,7 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is declared as a class and used as the build_service return type in the header and implementation.
+      notes: Service is declared as a class, used as the build_service return type in the header and implementation, and used as the explicit qualifier in out-of-line member definitions.
   - id: cpp-constructor-call
     declaration:
       location:
