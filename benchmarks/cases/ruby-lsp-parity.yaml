@@ -70,8 +70,6 @@ cases:
         Adapted fixture: fixtures/ruby/lsp-parity/.
         Maturity: autoload's symbol argument and a later constant path should both resolve to the concrete Discount class when the declaration exists.
   - id: ruby-parity-attr-reader-method-call
-    expectedFailure:
-      reason: Bifrost baseline does not resolve Ruby generated reader methods through inferred receiver calls; tracked in bifrost#410.
     declaration:
       location:
         uri: benchmark://source/lib/shop/product.rb
@@ -161,8 +159,6 @@ cases:
         Adapted fixture: fixtures/ruby/lsp-parity/.
         Maturity: methods declared inside class << self should resolve from constant receiver calls.
   - id: ruby-parity-alias-method-call
-    expectedFailure:
-      reason: Bifrost baseline does not resolve Ruby alias_method declarations through inferred receiver calls; tracked in bifrost#410.
     declaration:
       location:
         uri: benchmark://source/lib/shop/product.rb

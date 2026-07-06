@@ -6,8 +6,6 @@ source:
 language: scala
 cases:
   - id: scala-parity-trait-method-implementation
-    expectedFailure:
-      reason: Bifrost baseline does not index Scala trait methods well enough to connect overrides and receiver calls; tracked in bifrost#419.
     declaration:
       location:
         uri: benchmark://source/src/main/scala/example/Workflow.scala

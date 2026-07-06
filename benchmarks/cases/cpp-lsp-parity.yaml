@@ -159,8 +159,6 @@ cases:
         Adapted fixture: fixtures/cpp/lsp-parity/.
         Maturity: handler.handle is called through a concrete ConsoleHandler value and should resolve to ConsoleHandler::handle.
   - id: cpp-parity-overload-string-function-call
-    expectedFailure:
-      reason: Bifrost baseline conflates C++ overloads for declaration-to-usage and usage-to-declaration; tracked in bifrost#427.
     declaration:
       location:
         uri: benchmark://source/include/parity.h
