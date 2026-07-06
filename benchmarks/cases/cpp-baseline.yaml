@@ -50,8 +50,6 @@ cases:
       method: manual_inspection
       notes: build_service is declared in the header, defined in service.cpp, and called by run_demo.
   - id: cpp-class-reference
-    expectedFailure:
-      reason: Bifrost master reports out-of-line member-definition qualifiers as extra class-reference usages; tracked in bifrost#453.
     declaration:
       location:
         uri: benchmark://source/include/service.h
