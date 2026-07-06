@@ -140,7 +140,7 @@ cases:
     verification:
       method: manual_inspection
       notes: Direct execute call is visible in test_service_execution.
-  - id: python-dynamic-getattr-unsupported
+  - id: python-dynamic-getattr-not-planned
     declaration:
       location:
         uri: benchmark://source/src/example/service.py
@@ -174,7 +174,7 @@ cases:
               end: { line: 14, character: 15 }
           kind: method
           displayName: execute
-    unsupported:
+    notPlanned:
       reason: Dynamic getattr stores the method name as a string, so this is retained but excluded from scoring.
     verification:
       method: manual_inspection

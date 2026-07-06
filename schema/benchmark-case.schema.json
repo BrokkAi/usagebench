@@ -108,6 +108,9 @@
         "expectedFailure": {
           "$ref": "#/$defs/expectedFailure"
         },
+        "notPlanned": {
+          "$ref": "#/$defs/notPlannedReason"
+        },
         "unsupported": {
           "$ref": "#/$defs/unsupportedReason"
         },
@@ -224,6 +227,17 @@
       }
     },
     "expectedFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason"],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "notPlannedReason": {
       "type": "object",
       "additionalProperties": false,
       "required": ["reason"],

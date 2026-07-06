@@ -88,5 +88,7 @@ payload with:
 * `passed_count`
 * `failed_count`
 * `expected_failures_count`
+* `not_planned_count`
+* `unsupported_count`
 * `skipped_count`
 * `errors_count`

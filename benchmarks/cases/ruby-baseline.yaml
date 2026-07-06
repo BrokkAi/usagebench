@@ -384,7 +384,7 @@ cases:
       method: manual_inspection
       notes: Billing::User.build calls the singleton method declared with def self.build on User.
   - id: ruby-dynamic-public-send
-    expectedFailure:
+    notPlanned:
       reason: Bifrost does not yet resolve Ruby public_send symbol arguments as dynamic method usages.
     declaration:
       location:

@@ -77,6 +77,8 @@ pub struct RunTotals {
     pub improved: usize,
     pub failed: usize,
     pub expected_failures: usize,
+    pub not_planned: usize,
+    pub unsupported: usize,
     pub skipped: usize,
     pub errors: usize,
 }
@@ -97,6 +99,8 @@ pub enum CaseStatus {
     Improved,
     Failed,
     ExpectedFailure,
+    NotPlanned,
+    Unsupported,
     Skipped,
     Error,
 }
@@ -108,6 +112,8 @@ pub struct CaseRunReport {
     pub status: CaseStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expected_failure_reason: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub not_planned_reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unsupported_reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -317,11 +323,15 @@ fn run_case(
         if !include_unsupported {
             return CaseRunReport {
                 id: case.id.clone(),
-                status: CaseStatus::Skipped,
+                status: CaseStatus::Unsupported,
                 expected_failure_reason: case
                     .expected_failure
                     .as_ref()
                     .map(|expected_failure| expected_failure.reason.clone()),
+                not_planned_reason: case
+                    .not_planned
+                    .as_ref()
+                    .map(|not_planned| not_planned.reason.clone()),
                 unsupported_reason: Some(unsupported.reason.clone()),
                 declaration_to_usages: None,
                 usage_to_declaration: Vec::new(),
@@ -369,15 +379,21 @@ fn run_case(
         .expected_failure
         .as_ref()
         .map(|expected_failure| expected_failure.reason.clone());
-    let status = apply_expected_failure(
+    let not_planned_reason = case
+        .not_planned
+        .as_ref()
+        .map(|not_planned| not_planned.reason.clone());
+    let status = apply_case_expectation(
         observed_status,
         expected_failure_reason.as_deref(),
+        not_planned_reason.as_deref(),
         &mut diagnostics,
     );
     CaseRunReport {
         id: case.id.clone(),
         status,
         expected_failure_reason,
+        not_planned_reason,
         unsupported_reason: case
             .unsupported
             .as_ref()
@@ -1247,11 +1263,20 @@ fn combine_case_status(
     }
 }
 
-fn apply_expected_failure(
+fn apply_case_expectation(
     observed_status: CaseStatus,
     expected_failure_reason: Option<&str>,
+    not_planned_reason: Option<&str>,
     diagnostics: &mut Vec<RunDiagnostic>,
 ) -> CaseStatus {
+    if observed_status == CaseStatus::Error {
+        return CaseStatus::Error;
+    }
+
+    if not_planned_reason.is_some() {
+        return CaseStatus::NotPlanned;
+    }
+
     match (expected_failure_reason, observed_status) {
         (Some(_), CaseStatus::Failed) => CaseStatus::ExpectedFailure,
         (Some(_), CaseStatus::Passed) => {
@@ -1272,17 +1297,28 @@ fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
         ..RunTotals::default()
     };
     for case in documents.iter().flat_map(|document| &document.cases) {
-        totals.cases += 1;
+        if is_planned_case_status(case.status) {
+            totals.cases += 1;
+        }
         match case.status {
             CaseStatus::Passed => totals.passed += 1,
             CaseStatus::Improved => totals.improved += 1,
             CaseStatus::Failed => totals.failed += 1,
             CaseStatus::ExpectedFailure => totals.expected_failures += 1,
+            CaseStatus::NotPlanned => totals.not_planned += 1,
+            CaseStatus::Unsupported => totals.unsupported += 1,
             CaseStatus::Skipped => totals.skipped += 1,
             CaseStatus::Error => totals.errors += 1,
         }
     }
     totals
+}
+
+fn is_planned_case_status(status: CaseStatus) -> bool {
+    !matches!(
+        status,
+        CaseStatus::NotPlanned | CaseStatus::Unsupported | CaseStatus::Skipped
+    )
 }
 
 fn resolve_bifrost_source_repo(repo_root: &Path, explicit: Option<&PathBuf>) -> Result<PathBuf> {
@@ -1910,6 +1946,8 @@ mod tests {
                 improved: 0,
                 failed: 0,
                 expected_failures: 0,
+                not_planned: 0,
+                unsupported: 0,
                 skipped: 0,
                 errors: 0,
             },
@@ -1921,6 +1959,7 @@ mod tests {
                     id: "rust-function".to_string(),
                     status: CaseStatus::Passed,
                     expected_failure_reason: None,
+                    not_planned_reason: None,
                     unsupported_reason: None,
                     declaration_to_usages: Some(DeclarationUsageReport {
                         status: CaseStatus::Passed,
@@ -2238,12 +2277,64 @@ mod tests {
     }
 
     #[test]
+    fn not_planned_case_runs_but_is_excluded_from_planned_totals() {
+        let mut case = benchmark_case();
+        case.not_planned = Some(crate::NotPlannedReason {
+            reason: "runtime reflection is retained for parity tracking".to_string(),
+        });
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool("scan_usages", scan_usages_json(Vec::new(), false)),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+
+        assert_eq!(report.status, CaseStatus::NotPlanned);
+        assert_eq!(
+            report.not_planned_reason.as_deref(),
+            Some("runtime reflection is retained for parity tracking")
+        );
+        assert_eq!(
+            report.declaration_to_usages.as_ref().unwrap().status,
+            CaseStatus::Failed
+        );
+        let totals = compute_totals(&[DocumentRunReport {
+            case_file: "benchmarks/cases/rust.yaml".to_string(),
+            language: "rust".to_string(),
+            source_root: "/repo/fixtures/rust".to_string(),
+            cases: vec![report],
+        }]);
+        assert_eq!(totals.cases, 0);
+        assert_eq!(totals.failed, 0);
+        assert_eq!(totals.not_planned, 1);
+    }
+
+    #[test]
     fn expected_failure_does_not_mask_runner_errors() {
         let mut diagnostics = Vec::new();
 
-        let status = apply_expected_failure(
+        let status = apply_case_expectation(
             CaseStatus::Error,
             Some("current Bifrost baseline misses this usage"),
+            None,
+            &mut diagnostics,
+        );
+
+        assert_eq!(status, CaseStatus::Error);
+        assert!(diagnostics.is_empty());
+    }
+
+    #[test]
+    fn not_planned_does_not_mask_runner_errors() {
+        let mut diagnostics = Vec::new();
+
+        let status = apply_case_expectation(
+            CaseStatus::Error,
+            None,
+            Some("runtime reflection is out of scope"),
             &mut diagnostics,
         );
 
@@ -2283,7 +2374,7 @@ mod tests {
     }
 
     #[test]
-    fn unsupported_case_is_skipped_by_default() {
+    fn unsupported_case_reports_boundary_status_by_default() {
         let mut case = benchmark_case();
         case.unsupported = Some(crate::UnsupportedReason {
             reason: "not implemented".to_string(),
@@ -2292,11 +2383,20 @@ mod tests {
 
         let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
 
-        assert_eq!(report.status, CaseStatus::Skipped);
+        assert_eq!(report.status, CaseStatus::Unsupported);
         assert_eq!(
             report.unsupported_reason.as_deref(),
             Some("not implemented")
         );
+        let totals = compute_totals(&[DocumentRunReport {
+            case_file: "benchmarks/cases/rust.yaml".to_string(),
+            language: "rust".to_string(),
+            source_root: "/repo/fixtures/rust".to_string(),
+            cases: vec![report],
+        }]);
+        assert_eq!(totals.cases, 0);
+        assert_eq!(totals.unsupported, 1);
+        assert_eq!(totals.skipped, 0);
     }
 
     #[test]
@@ -2672,6 +2772,7 @@ mod tests {
             }],
             type_lookups: Vec::new(),
             expected_failure: None,
+            not_planned: None,
             unsupported: None,
             verification: None,
         }

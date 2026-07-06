@@ -194,8 +194,8 @@ cases:
         Upstream reference: Metals basic definition/reference tests for local vals and methods.
         Adapted fixture: fixtures/scala/lsp-parity/.
         Maturity: a method call through a local val initialized with a constructor should resolve to the class method declaration.
-  - id: scala-parity-generated-synthetic-unsupported
-    unsupported:
+  - id: scala-parity-generated-synthetic-not-planned
+    notPlanned:
       reason: Scala generated/synthetic surfaces such as case-class copy/apply and compiler-generated accessors are retained for parity tracking but not scored until the runner has a deliberate model.
     declaration:
       location:
