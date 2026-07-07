@@ -94,8 +94,6 @@ cases:
       method: manual_inspection
       notes: Service is declared in service.rs, returned by build_service, and used to call Service::new; the lib.rs re-export binding is not counted as a usage.
   - id: rust-method-call
-    expectedFailure:
-      reason: Bifrost get_definition_by_location currently returns no definition for this Rust method usage.
     declaration:
       location:
           uri: benchmark://source/src/service.rs

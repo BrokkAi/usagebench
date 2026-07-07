@@ -95,8 +95,6 @@ cases:
         Adapted fixture: fixtures/java/lsp-parity/.
         Maturity: handler.handle is called through an interface-typed local, so definition lookup should reach Handler.handle without treating the implementation override as the declaration.
   - id: java-parity-concrete-implementation-method-call
-    expectedFailure:
-      reason: Bifrost baseline resolves this Java override method call to the annotation line instead of the method declaration token; tracked in bifrost#404.
     declaration:
       location:
         uri: benchmark://source/src/main/java/example/parity/ConsoleHandler.java

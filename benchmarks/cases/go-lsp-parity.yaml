@@ -47,8 +47,6 @@ cases:
         Adapted fixture: fixtures/go/lsp-parity/.
         Maturity: svc.NewWorker should resolve through the package import alias to the package function declaration.
   - id: go-parity-embedded-promoted-method-call
-    expectedFailure:
-      reason: Bifrost baseline does not resolve Go promoted methods through embedded structs; tracked in bifrost#418.
     declaration:
       location:
         uri: benchmark://source/pkg/service/service.go
@@ -97,8 +95,6 @@ cases:
         Adapted fixture: fixtures/go/lsp-parity/.
         Maturity: Worker embeds *AuditLog, so worker.Record should resolve to the promoted AuditLog.Record method.
   - id: go-parity-embedded-promoted-field-access
-    expectedFailure:
-      reason: Bifrost baseline does not resolve Go promoted fields through embedded structs; tracked in bifrost#418.
     declaration:
       location:
         uri: benchmark://source/pkg/service/service.go

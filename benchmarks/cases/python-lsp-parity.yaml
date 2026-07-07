@@ -6,8 +6,6 @@ source:
 language: python
 cases:
   - id: python-parity-reexported-class-alias-classmethod
-    expectedFailure:
-      reason: Bifrost baseline resolves this decorated re-exported class alias to the decorator line instead of the class token; tracked in bifrost#413.
     declaration:
       location:
         uri: benchmark://source/src/shop/models.py
@@ -49,8 +47,6 @@ cases:
         Adapted fixture: fixtures/python/lsp-parity/.
         Maturity: from .models import User as Account re-exports the class, and Account.guest should keep the class alias tied back to User.
   - id: python-parity-classmethod-call
-    expectedFailure:
-      reason: Bifrost baseline cannot resolve classmethod calls across this Python package import alias boundary; tracked in bifrost#413.
     declaration:
       location:
         uri: benchmark://source/src/shop/models.py
@@ -92,8 +88,6 @@ cases:
         Adapted fixture: fixtures/python/lsp-parity/.
         Maturity: @classmethod calls through an imported class alias should resolve to the decorated method declaration.
   - id: python-parity-staticmethod-call
-    expectedFailure:
-      reason: Bifrost baseline cannot resolve staticmethod calls across this Python package import alias boundary; tracked in bifrost#413.
     declaration:
       location:
         uri: benchmark://source/src/shop/models.py
@@ -135,8 +129,6 @@ cases:
         Adapted fixture: fixtures/python/lsp-parity/.
         Maturity: @staticmethod calls through an imported class alias should resolve to the decorated method declaration.
   - id: python-parity-property-getter-access
-    expectedFailure:
-      reason: Bifrost baseline cannot resolve Python property getter reads through the inferred instance; tracked in bifrost#414.
     declaration:
       location:
         uri: benchmark://source/src/shop/models.py

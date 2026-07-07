@@ -6,8 +6,6 @@ source:
 language: rust
 cases:
   - id: rust-parity-module-declaration-definition
-    expectedFailure:
-      reason: Bifrost baseline may not resolve Rust module path references to the module declaration.
     usageLookups:
       - usage:
           location:
@@ -33,8 +31,6 @@ cases:
         Adapted fixture: fixtures/rust/lsp-parity/.
         Maturity: adapted to the concrete source-location contract by resolving the workflow use path back to the mod workflow declaration token.
   - id: rust-parity-ufcs-trait-method-definition
-    expectedFailure:
-      reason: Bifrost baseline Rust method lookup does not yet reliably resolve trait-provided associated function calls.
     usageLookups:
       - usage:
           location:
@@ -60,8 +56,6 @@ cases:
         Adapted fixture: fixtures/rust/lsp-parity/.
         Maturity: LocalRunner::run is provided by the Runner trait default method, so definition lookup should reach Runner::run.
   - id: rust-parity-associated-type-impl-definition
-    expectedFailure:
-      reason: Bifrost baseline does not yet model Rust impl associated type declarations as references to the trait associated type.
     usageLookups:
       - usage:
           location:

@@ -47,8 +47,6 @@ cases:
         Adapted fixture: fixtures/typescript/lsp-parity/.
         Maturity: a default function import call should resolve back to the exported function declaration; the import binding itself is not counted as a usage.
   - id: ts-parity-static-method-call
-    expectedFailure:
-      reason: Bifrost baseline cannot resolve TypeScript static method calls to the indexed method declaration; tracked in bifrost#407.
     declaration:
       location:
         uri: benchmark://source/src/api.ts
