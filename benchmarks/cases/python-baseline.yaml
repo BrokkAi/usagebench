@@ -102,8 +102,6 @@ cases:
       method: manual_inspection
       notes: Service is instantiated by build_service; the package re-export and test import bindings are not counted as usages.
   - id: python-method-call
-    expectedFailure:
-      reason: Bifrost get_definition_by_location currently returns no definition for this Python method usage.
     declaration:
       location:
         uri: benchmark://source/src/example/service.py

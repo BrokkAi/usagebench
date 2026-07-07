@@ -138,8 +138,6 @@ cases:
       method: manual_inspection
       notes: greet is declared on Greeter and called from both the TSX component and app fixture.
   - id: ts-object-property-access
-    expectedFailure:
-      reason: Bifrost baseline cannot resolve this property declaration before scanning usages.
     declaration:
       location:
         uri: benchmark://source/src/components.tsx

@@ -189,8 +189,6 @@ cases:
       method: manual_inspection
       notes: execute is declared in the header, defined in service.cpp, and called on service in run_demo.
   - id: cpp-field-access
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/include/service.h

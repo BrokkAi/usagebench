@@ -184,8 +184,6 @@ cases:
         Adapted fixture: fixtures/csharp/lsp-parity/.
         Maturity: extension-call syntax should resolve back to the static extension method declaration.
   - id: csharp-parity-partial-property-access
-    expectedFailure:
-      reason: Bifrost baseline does not resolve C# partial property receiver usages across partial class files; tracked in bifrost#424.
     declaration:
       location:
         uri: benchmark://source/src/Handlers.cs

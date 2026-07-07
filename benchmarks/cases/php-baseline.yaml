@@ -80,8 +80,6 @@ cases:
       method: manual_inspection
       notes: Consumer::run calls execute on the constructed Service instance.
   - id: php-repository-method-call
-    expectedFailure:
-      reason: Bifrost get_definition_by_location currently returns no definition for this PHP method usage.
     declaration:
       location:
         uri: benchmark://source/src/Service.php

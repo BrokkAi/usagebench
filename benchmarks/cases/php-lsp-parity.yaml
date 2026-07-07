@@ -6,8 +6,6 @@ source:
 language: php
 cases:
   - id: php-parity-use-alias-static-method-call
-    expectedFailure:
-      reason: Bifrost baseline omits PHP static method calls through namespace import aliases from declaration-to-usage scans; tracked in bifrost#415.
     declaration:
       location:
         uri: benchmark://source/src/Service/EmailNotifier.php
@@ -49,8 +47,6 @@ cases:
         Adapted fixture: fixtures/php/lsp-parity/.
         Maturity: a static method call through a namespace import alias should resolve to the method declaration.
   - id: php-parity-trait-method-call
-    expectedFailure:
-      reason: Bifrost baseline does not resolve PHP trait methods through classes using the trait; tracked in bifrost#416.
     declaration:
       location:
         uri: benchmark://source/src/Support/LogsEvents.php
@@ -99,8 +95,6 @@ cases:
         Adapted fixture: fixtures/php/lsp-parity/.
         Maturity: trait methods should be found through both internal $this calls and external calls on a class using the trait.
   - id: php-parity-interface-method-implementation
-    expectedFailure:
-      reason: Bifrost baseline does not connect PHP interface methods to implementing methods and calls; tracked in bifrost#417.
     declaration:
       location:
         uri: benchmark://source/src/Contracts/Notifier.php
@@ -149,8 +143,6 @@ cases:
         Adapted fixture: fixtures/php/lsp-parity/.
         Maturity: an interface method should connect to its implementing method and calls on the implementation.
   - id: php-parity-static-property-access
-    expectedFailure:
-      reason: Bifrost baseline treats PHP static property reads as variable references instead of resolving to the declared static property; tracked in bifrost#415.
     declaration:
       location:
         uri: benchmark://source/src/Service/EmailNotifier.php

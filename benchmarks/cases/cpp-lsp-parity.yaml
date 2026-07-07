@@ -109,8 +109,6 @@ cases:
         Adapted fixture: fixtures/cpp/lsp-parity/.
         Maturity: base.handle is called through a BaseHandler reference and should resolve to the virtual base method declaration.
   - id: cpp-parity-concrete-override-method-call
-    expectedFailure:
-      reason: Bifrost baseline usage lookup resolves this C++ concrete member call, but declaration-to-usage misses the call site; tracked in bifrost#428.
     declaration:
       location:
         uri: benchmark://source/include/parity.h

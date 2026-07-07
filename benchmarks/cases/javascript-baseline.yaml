@@ -138,8 +138,6 @@ cases:
       method: manual_inspection
       notes: Greeter is constructed directly in app and through createGreeter; the app import binding is not counted as a usage.
   - id: js-method-call
-    expectedFailure:
-      reason: Bifrost baseline misses one or more expected declaration-to-usage sites.
     declaration:
       location:
         uri: benchmark://source/src/components.js
@@ -184,8 +182,6 @@ cases:
       method: manual_inspection
       notes: greet is declared on Greeter and called from both top-level app code and runApp.
   - id: js-class-property-access
-    expectedFailure:
-      reason: Bifrost baseline cannot resolve this property declaration before scanning usages.
     declaration:
       location:
         uri: benchmark://source/src/components.js

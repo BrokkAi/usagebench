@@ -61,8 +61,6 @@ cases:
         Adapted fixture: fixtures/scala/lsp-parity/.
         Maturity: trait method references should connect the abstract method, overriding method, interface-typed call, and concrete receiver call.
   - id: scala-parity-import-alias-companion-method
-    expectedFailure:
-      reason: Bifrost baseline does not resolve Scala renamed-import usage sites to the imported companion method; tracked in bifrost#420.
     declaration:
       location:
         uri: benchmark://source/src/main/scala/example/Workflow.scala
@@ -111,8 +109,6 @@ cases:
         Adapted fixture: fixtures/scala/lsp-parity/.
         Maturity: renamed import usage sites should resolve back to the companion method declaration; the import binding itself is not counted as a usage.
   - id: scala-parity-extension-method-call
-    expectedFailure:
-      reason: Bifrost baseline does not resolve Scala 3 extension method calls to extension method declarations; tracked in bifrost#421.
     declaration:
       location:
         uri: benchmark://source/src/main/scala/example/Workflow.scala
