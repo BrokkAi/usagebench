@@ -174,6 +174,7 @@ jobs:
           cases_count="0"
           passed_count="0"
           improved_count="0"
+          total_passed_count="0"
           failed_count="0"
           expected_failures_count="0"
           not_planned_count="0"
@@ -187,6 +188,7 @@ jobs:
             cases_count="$(jq -r '.totals.cases // 0' "$report_path")"
             passed_count="$(jq -r '.totals.passed // 0' "$report_path")"
             improved_count="$(jq -r '.totals.improved // 0' "$report_path")"
+            total_passed_count="$((passed_count + improved_count))"
             failed_count="$(jq -r '.totals.failed // 0' "$report_path")"
             expected_failures_count="$(jq -r '.totals.expectedFailures // 0' "$report_path")"
             not_planned_count="$(jq -r '.totals.notPlanned // 0' "$report_path")"
@@ -258,6 +260,7 @@ jobs:
               --argjson cases_count "$cases_count" \
               --argjson passed_count "$passed_count" \
               --argjson improved_count "$improved_count" \
+              --argjson total_passed_count "$total_passed_count" \
               --argjson failed_count "$failed_count" \
               --argjson expected_failures_count "$expected_failures_count" \
               --argjson not_planned_count "$not_planned_count" \
@@ -275,6 +278,7 @@ jobs:
                 cases_count: $cases_count,
                 passed_count: $passed_count,
                 improved_count: $improved_count,
+                total_passed_count: $total_passed_count,
                 failed_count: $failed_count,
                 expected_failures_count: $expected_failures_count,
                 not_planned_count: $not_planned_count,
