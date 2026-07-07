@@ -47,8 +47,6 @@ cases:
         Adapted fixture: fixtures/javascript/lsp-parity/.
         Maturity: destructured CommonJS require bindings should resolve calls back to the exported function; the destructuring binding itself is not counted as a usage.
   - id: js-parity-object-literal-method-call
-    expectedFailure:
-      reason: Bifrost baseline may not resolve JavaScript object-literal method calls to their method declaration; tracked in bifrost#406.
     declaration:
       location:
         uri: benchmark://source/src/library.js
