@@ -86,6 +86,8 @@ payload with:
 * `run_outcome`
 * `cases_count`
 * `passed_count`
+* `improved_count`
+* `total_passed_count`
 * `failed_count`
 * `expected_failures_count`
 * `not_planned_count`
