@@ -29,6 +29,13 @@ cases:
             end: { line: 5, character: 37 }
         kind: constructor
         displayName: Service
+      - location:
+          uri: benchmark://source/src/test/java/example/ServiceTest.java
+          range:
+            start: { line: 7, character: 27 }
+            end: { line: 7, character: 34 }
+        kind: class
+        displayName: Service
     usageLookups:
       - usage:
           location:
@@ -48,7 +55,7 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is declared in the fixture production source and constructed in the test fixture.
+      notes: Service is declared in the fixture production source, constructed in the test fixture, and referenced as a static field qualifier.
   - id: java-service-method-call
     declaration:
       location:

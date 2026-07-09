@@ -22,6 +22,13 @@ cases:
             end: { line: 3, character: 14 }
         kind: class
         displayName: Account
+      - location:
+          uri: benchmark://source/tests/test_models.py
+          range:
+            start: { line: 4, character: 0 }
+            end: { line: 4, character: 7 }
+        kind: class
+        displayName: Account
     usageLookups:
       - usage:
           location:
@@ -45,7 +52,7 @@ cases:
         Parity source: microsoft/pyright@433e84d82d7944d129dbc239499d13eaae5f81ac.
         Upstream reference: packages/pyright-internal/src/tests/importResolver.test.ts import alias and private import usage scenarios.
         Adapted fixture: fixtures/python/lsp-parity/.
-        Maturity: from .models import User as Account re-exports the class, and Account.guest should keep the class alias tied back to User.
+        Maturity: from .models import User as Account re-exports the class, and classmethod/staticmethod calls through Account should keep the class alias tied back to User.
   - id: python-parity-classmethod-call
     declaration:
       location:
