@@ -930,67 +930,61 @@ impl ParsedScanUsages {
 
 fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
     let mut locations = BTreeSet::new();
-    for usage in value
-        .get("usages")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-    {
-        for file in usage
-            .get("files")
-            .and_then(Value::as_array)
-            .into_iter()
-            .flatten()
-        {
-            let Some(path) = file.get("path").and_then(Value::as_str) else {
-                continue;
-            };
-            for hit in file
-                .get("hits")
-                .and_then(Value::as_array)
-                .into_iter()
-                .flatten()
-            {
-                let Some(line) = hit.get("line").and_then(Value::as_u64) else {
-                    continue;
-                };
-                locations.insert(NormalizedLocation {
-                    path: path.to_string(),
-                    line: line as u32,
-                    column: None,
-                    display_name: None,
-                    kind: None,
-                });
-            }
-        }
-    }
 
     let mut raw_statuses = Vec::new();
-    for key in ["not_found", "ambiguous", "failures", "too_many_callsites"] {
-        if value
-            .get(key)
-            .and_then(Value::as_array)
-            .map(|items| !items.is_empty())
-            .unwrap_or(false)
-        {
-            raw_statuses.push(
-                match key {
-                    "failures" => "failure",
-                    other => other,
-                }
-                .to_string(),
-            );
-        }
-    }
-    if raw_statuses.is_empty() {
-        raw_statuses.push("ok".to_string());
-    }
-
-    let partial = value
+    let mut partial = value
         .get("summary")
         .and_then(|summary| summary.get("partial"))
         .and_then(Value::as_bool)
         .unwrap_or(false);
+
+    if let Some(results) = value.get("results").and_then(Value::as_array) {
+        for result in results {
+            collect_scan_usage_locations(result, &mut locations);
+            if let Some(status) = result.get("status").and_then(Value::as_str) {
+                raw_statuses.push(status.to_string());
+            }
+            if result
+                .get("complete")
+                .and_then(Value::as_bool)
+                .map(|complete| !complete)
+                .unwrap_or(false)
+            {
+                partial = true;
+            }
+        }
+    } else {
+        for usage in value
+            .get("usages")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
+            collect_scan_usage_locations(usage, &mut locations);
+        }
+
+        for key in ["not_found", "ambiguous", "failures", "too_many_callsites"] {
+            if value
+                .get(key)
+                .and_then(Value::as_array)
+                .map(|items| !items.is_empty())
+                .unwrap_or(false)
+            {
+                raw_statuses.push(
+                    match key {
+                        "failures" => "failure",
+                        other => other,
+                    }
+                    .to_string(),
+                );
+            }
+        }
+    }
+
+    if raw_statuses.is_empty() {
+        raw_statuses.push("ok".to_string());
+    }
+
     if partial && !raw_statuses.iter().any(|status| status == "partial") {
         raw_statuses.push("partial".to_string());
     }
@@ -999,6 +993,36 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
         locations: locations.into_iter().collect(),
         partial,
         raw_statuses,
+    }
+}
+
+fn collect_scan_usage_locations(value: &Value, locations: &mut BTreeSet<NormalizedLocation>) {
+    for file in value
+        .get("files")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let Some(path) = file.get("path").and_then(Value::as_str) else {
+            continue;
+        };
+        for hit in file
+            .get("hits")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
+            let Some(line) = hit.get("line").and_then(Value::as_u64) else {
+                continue;
+            };
+            locations.insert(NormalizedLocation {
+                path: path.to_string(),
+                line: line as u32,
+                column: None,
+                display_name: None,
+                kind: None,
+            });
+        }
     }
 }
 
@@ -2486,6 +2510,82 @@ mod tests {
     }
 
     #[test]
+    fn parse_scan_usages_reads_results_shape_with_hits() {
+        let parsed = parse_scan_usages(&scan_usages_results_json(
+            "found",
+            vec![("src/service.cpp", 17), ("src/main.cpp", 7)],
+            true,
+            false,
+        ));
+
+        assert_eq!(
+            parsed.locations,
+            vec![
+                NormalizedLocation {
+                    path: "src/main.cpp".to_string(),
+                    line: 7,
+                    column: None,
+                    display_name: None,
+                    kind: None,
+                },
+                NormalizedLocation {
+                    path: "src/service.cpp".to_string(),
+                    line: 17,
+                    column: None,
+                    display_name: None,
+                    kind: None,
+                }
+            ]
+        );
+        assert_eq!(parsed.raw_statuses, vec!["found".to_string()]);
+        assert!(!parsed.partial);
+        assert!(!parsed.has_failure_status());
+    }
+
+    #[test]
+    fn parse_scan_usages_treats_failure_status_as_failure() {
+        let parsed = parse_scan_usages(&scan_usages_results_json(
+            "failure",
+            Vec::new(),
+            true,
+            false,
+        ));
+
+        assert_eq!(parsed.raw_statuses, vec!["failure".to_string()]);
+        assert!(parsed.has_failure_status());
+    }
+
+    #[test]
+    fn parse_scan_usages_marks_incomplete_results_partial() {
+        let parsed =
+            parse_scan_usages(&scan_usages_results_json("found", Vec::new(), false, false));
+
+        assert!(parsed.partial);
+        assert_eq!(
+            parsed.raw_statuses,
+            vec!["found".to_string(), "partial".to_string()]
+        );
+    }
+
+    #[test]
+    fn parse_scan_usages_keeps_legacy_usages_shape() {
+        let parsed = parse_scan_usages(&scan_usages_json(vec![("src/lib.rs", 8)], false));
+
+        assert_eq!(
+            parsed.locations,
+            vec![NormalizedLocation {
+                path: "src/lib.rs".to_string(),
+                line: 8,
+                column: None,
+                display_name: None,
+                kind: None,
+            }]
+        );
+        assert_eq!(parsed.raw_statuses, vec!["ok".to_string()]);
+        assert!(!parsed.partial);
+    }
+
+    #[test]
     fn constructor_declarations_resolve_from_functions_bucket() {
         let mut case = benchmark_case();
         case.declaration = Some(symbol_location(
@@ -2835,6 +2935,33 @@ mod tests {
                 "symbol": "example.build_service",
                 "total_hits": locations.len(),
                 "rendering": "full",
+                "files": locations.into_iter().map(|(path, line)| {
+                    json!({
+                        "path": path,
+                        "hits": [{"line": line, "enclosing": "run_demo"}]
+                    })
+                }).collect::<Vec<_>>()
+            }]
+        })
+    }
+
+    fn scan_usages_results_json(
+        status: &str,
+        locations: Vec<(&str, usize)>,
+        complete: bool,
+        summary_partial: bool,
+    ) -> Value {
+        json!({
+            "summary": {
+                "requested_symbols": 1,
+                "resolved_symbols": 1,
+                "total_hits": locations.len(),
+                "partial": summary_partial
+            },
+            "results": [{
+                "symbol": "example.build_service",
+                "status": status,
+                "complete": complete,
                 "files": locations.into_iter().map(|(path, line)| {
                     json!({
                         "path": path,
