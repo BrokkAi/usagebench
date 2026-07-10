@@ -342,10 +342,9 @@ fn run_case(
     }
 
     let mut diagnostics = Vec::new();
-    let declaration_to_usages = case
-        .declaration
-        .as_ref()
-        .map(|declaration| run_declaration_to_usages(case, declaration, session, &mut diagnostics));
+    let declaration_to_usages = case.declaration.as_ref().map(|declaration| {
+        run_declaration_to_usages(case, declaration, encoding, session, &mut diagnostics)
+    });
     let usage_to_declaration = if include_definition_lookups {
         case.usage_lookups
             .iter()
@@ -408,6 +407,7 @@ fn run_case(
 fn run_declaration_to_usages(
     case: &BenchmarkCase,
     declaration: &SymbolLocation,
+    encoding: PositionEncoding,
     session: &mut impl SearchToolsClient,
     diagnostics: &mut Vec<RunDiagnostic>,
 ) -> DeclarationUsageReport {
@@ -463,10 +463,37 @@ fn run_declaration_to_usages(
         }
     };
 
+    let target = match reference_query(&declaration.location, &declaration.display_name, encoding) {
+        Ok(mut target) => {
+            target
+                .as_object_mut()
+                .expect("reference query object")
+                .remove("symbol");
+            target
+        }
+        Err(error) => {
+            diagnostics.push(RunDiagnostic {
+                kind: "invalid_declaration_location".to_string(),
+                message: format!("{error:#}"),
+            });
+            return DeclarationUsageReport {
+                status: CaseStatus::Error,
+                selector: Some(selector.selector),
+                expected: expected.clone(),
+                allowed_extra,
+                actual: Vec::new(),
+                missing: expected,
+                unexpected: Vec::new(),
+                partial: false,
+                raw_statuses: vec!["invalid_declaration_location".to_string()],
+            };
+        }
+    };
+
     let result = match session.call_tool(
-        "scan_usages",
+        "scan_usages_by_location",
         json!({
-            "symbols": [selector.selector.clone()],
+            "targets": [target],
             "include_tests": true,
         }),
     ) {
@@ -2026,7 +2053,7 @@ mod tests {
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
             tool(
@@ -2053,7 +2080,7 @@ mod tests {
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
             tool(
@@ -2085,7 +2112,7 @@ mod tests {
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
             tool(
@@ -2137,7 +2164,10 @@ mod tests {
                 "search_symbols",
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
-            tool("scan_usages", scan_usages_json(Vec::new(), false)),
+            tool(
+                "scan_usages_by_location",
+                scan_usages_json(Vec::new(), false),
+            ),
             tool(
                 GET_DEFINITIONS_BY_LOCATION_TOOL,
                 get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
@@ -2167,7 +2197,7 @@ mod tests {
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8), ("src/extra.rs", 1)], false),
             ),
             tool(
@@ -2190,7 +2220,7 @@ mod tests {
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8), ("src/extra.rs", 1)], false),
             ),
             tool(
@@ -2216,7 +2246,7 @@ mod tests {
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/extra.rs", 1)], false),
             ),
             tool(
@@ -2245,7 +2275,10 @@ mod tests {
                 "search_symbols",
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
-            tool("scan_usages", scan_usages_json(Vec::new(), false)),
+            tool(
+                "scan_usages_by_location",
+                scan_usages_json(Vec::new(), false),
+            ),
         ]);
 
         let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
@@ -2277,7 +2310,7 @@ mod tests {
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 json!({
                     "summary": {
                         "requested_symbols": 1,
@@ -2311,7 +2344,10 @@ mod tests {
                 "search_symbols",
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
-            tool("scan_usages", scan_usages_json(Vec::new(), false)),
+            tool(
+                "scan_usages_by_location",
+                scan_usages_json(Vec::new(), false),
+            ),
         ]);
 
         let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
@@ -2378,7 +2414,7 @@ mod tests {
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
         ]);
@@ -2432,7 +2468,7 @@ mod tests {
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
             tool(
@@ -2472,7 +2508,7 @@ mod tests {
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
         ]);
@@ -2496,7 +2532,7 @@ mod tests {
                 search_symbols_json("src/service.rs", "example.build_service", 30),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8)], true),
             ),
         ]);
@@ -2611,7 +2647,7 @@ mod tests {
                 }),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
         ]);
@@ -2647,7 +2683,7 @@ mod tests {
                 }),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
         ]);
@@ -2718,7 +2754,7 @@ mod tests {
                 }),
             ),
             tool(
-                "scan_usages",
+                "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
         ]);
