@@ -70,6 +70,13 @@ cases:
             end: { line: 6, character: 29 }
         kind: method
         displayName: handle
+      - location:
+          uri: benchmark://source/src/main/java/example/parity/Runner.java
+          range:
+            start: { line: 19, character: 31 }
+            end: { line: 19, character: 37 }
+        kind: method
+        displayName: handle
     allowedExtraUsages:
       - location:
           uri: benchmark://source/src/main/java/example/parity/ConsoleHandler.java
@@ -101,7 +108,7 @@ cases:
         Parity source: eclipse-jdtls/eclipse.jdt.ls@4c4f2230f81bf8371661de77bca0c3375f5ce399.
         Upstream test: org.eclipse.jdt.ls.tests/.../ImplementationsHandlerTest.java::testMethodInvocationImplementation.
         Adapted fixture: fixtures/java/lsp-parity/.
-        Maturity: handler.handle is called through an interface-typed local, so definition lookup should reach Handler.handle without treating the implementation override as the declaration.
+        Maturity: handler.handle is called through an interface-typed local, while makeAnonymous().handle is called through a method returning Handler; both should resolve to Handler.handle without treating the implementation override as the declaration.
   - id: java-parity-concrete-implementation-method-call
     declaration:
       location:

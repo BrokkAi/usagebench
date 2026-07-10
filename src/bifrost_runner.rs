@@ -20,7 +20,7 @@ use std::{
 use url::{Host, Url};
 
 const DEFAULT_BIFROST_COMMIT: &str = "origin/master";
-const GET_DEFINITION_BY_LOCATION_TOOL: &str = "get_definition_by_location";
+const GET_DEFINITIONS_BY_LOCATION_TOOL: &str = "get_definitions_by_location";
 const GET_TYPE_BY_LOCATION_TOOL: &str = "get_type_by_location";
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(5 * 60);
@@ -577,17 +577,17 @@ fn run_usage_to_declaration(
     };
 
     let result = match session.call_tool(
-        GET_DEFINITION_BY_LOCATION_TOOL,
+        GET_DEFINITIONS_BY_LOCATION_TOOL,
         json!({ "references": [query] }),
     ) {
         Ok(result) => result,
         Err(error) => {
             let message = format!("{error:#}");
             let (status, raw_status) =
-                if message.contains("Unknown tool: get_definition_by_location") {
+                if message.contains("Unknown tool: get_definitions_by_location") {
                     (CaseStatus::Failed, "unsupported_tool")
                 } else {
-                    (CaseStatus::Error, "get_definition_by_location_failed")
+                    (CaseStatus::Error, "get_definitions_by_location_failed")
                 };
             return UsageDefinitionReport {
                 status,
@@ -1051,7 +1051,7 @@ fn parse_get_definition(value: &Value) -> ParsedGetDefinition {
             actual_declarations: Vec::new(),
             diagnostics: vec![RunDiagnostic {
                 kind: "missing_result".to_string(),
-                message: "get_definition_by_location returned no result".to_string(),
+                message: "get_definitions_by_location returned no result".to_string(),
             }],
         };
     };
@@ -2030,8 +2030,8 @@ mod tests {
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
             tool(
-                GET_DEFINITION_BY_LOCATION_TOOL,
-                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -2057,8 +2057,8 @@ mod tests {
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
             tool(
-                GET_DEFINITION_BY_LOCATION_TOOL,
-                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
             tool(
                 GET_TYPE_BY_LOCATION_TOOL,
@@ -2089,8 +2089,8 @@ mod tests {
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
             tool(
-                GET_DEFINITION_BY_LOCATION_TOOL,
-                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
             tool(
                 GET_TYPE_BY_LOCATION_TOOL,
@@ -2139,8 +2139,8 @@ mod tests {
             ),
             tool("scan_usages", scan_usages_json(Vec::new(), false)),
             tool(
-                GET_DEFINITION_BY_LOCATION_TOOL,
-                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -2171,8 +2171,8 @@ mod tests {
                 scan_usages_json(vec![("src/lib.rs", 8), ("src/extra.rs", 1)], false),
             ),
             tool(
-                GET_DEFINITION_BY_LOCATION_TOOL,
-                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -2194,8 +2194,8 @@ mod tests {
                 scan_usages_json(vec![("src/lib.rs", 8), ("src/extra.rs", 1)], false),
             ),
             tool(
-                GET_DEFINITION_BY_LOCATION_TOOL,
-                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -2220,8 +2220,8 @@ mod tests {
                 scan_usages_json(vec![("src/extra.rs", 1)], false),
             ),
             tool(
-                GET_DEFINITION_BY_LOCATION_TOOL,
-                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -2436,8 +2436,8 @@ mod tests {
                 scan_usages_json(vec![("src/lib.rs", 8)], false),
             ),
             tool(
-                GET_DEFINITION_BY_LOCATION_TOOL,
-                get_definition_by_location_json("resolved", vec![("src/service.rs", 99)]),
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 99)]),
             ),
         ]);
 
@@ -2448,12 +2448,12 @@ mod tests {
     }
 
     #[test]
-    fn missing_get_definition_by_location_tool_is_scored_failure() {
+    fn missing_get_definitions_by_location_tool_is_scored_failure() {
         let case = benchmark_case();
         let lookup = &case.usage_lookups[0];
         let mut client = ErrorClient {
             message:
-                "Bifrost tool `get_definition_by_location` failed: Unknown tool: get_definition_by_location"
+                "Bifrost tool `get_definitions_by_location` failed: Unknown tool: get_definitions_by_location"
                     .to_string(),
         };
 
@@ -2683,8 +2683,8 @@ mod tests {
                 }),
             ),
             tool(
-                GET_DEFINITION_BY_LOCATION_TOOL,
-                get_definition_by_location_json("resolved", vec![("src/service.rs", 30)]),
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
             ),
         ]);
 
@@ -3008,7 +3008,7 @@ mod tests {
         })
     }
 
-    fn get_definition_by_location_json(status: &str, locations: Vec<(&str, usize)>) -> Value {
+    fn get_definitions_by_location_json(status: &str, locations: Vec<(&str, usize)>) -> Value {
         json!({
             "results": [{
                 "query": {"path": "src/lib.rs", "line": 8, "column": 19, "symbol": "build_service"},
