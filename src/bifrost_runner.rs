@@ -135,6 +135,8 @@ pub struct DeclarationUsageReport {
     pub expected: Vec<NormalizedLocation>,
     pub allowed_extra: Vec<NormalizedLocation>,
     pub actual: Vec<NormalizedLocation>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub unproven: Vec<NormalizedLocation>,
     pub missing: Vec<NormalizedLocation>,
     pub unexpected: Vec<NormalizedLocation>,
     pub partial: bool,
@@ -434,6 +436,7 @@ fn run_declaration_to_usages(
                 expected: Vec::new(),
                 allowed_extra: Vec::new(),
                 actual: Vec::new(),
+                unproven: Vec::new(),
                 missing: Vec::new(),
                 unexpected: Vec::new(),
                 partial: false,
@@ -455,6 +458,7 @@ fn run_declaration_to_usages(
                 expected: expected.clone(),
                 allowed_extra,
                 actual: Vec::new(),
+                unproven: Vec::new(),
                 missing: expected,
                 unexpected: Vec::new(),
                 partial: false,
@@ -485,6 +489,7 @@ fn run_declaration_to_usages(
                 expected: expected.clone(),
                 allowed_extra,
                 actual: Vec::new(),
+                unproven: Vec::new(),
                 missing: expected,
                 unexpected: Vec::new(),
                 partial: false,
@@ -512,6 +517,7 @@ fn run_declaration_to_usages(
                 expected: expected.clone(),
                 allowed_extra,
                 actual: Vec::new(),
+                unproven: Vec::new(),
                 missing: expected,
                 unexpected: Vec::new(),
                 partial: false,
@@ -523,6 +529,7 @@ fn run_declaration_to_usages(
     let parsed = parse_scan_usages(&result);
     let has_failure_status = parsed.has_failure_status();
     let actual = parsed.locations;
+    let unproven = parsed.unproven_locations;
     let expected_keys = expected
         .iter()
         .map(LocationLine::from)
@@ -533,6 +540,7 @@ fn run_declaration_to_usages(
         .collect::<BTreeSet<_>>();
     let actual_keys = actual
         .iter()
+        .chain(&unproven)
         .map(LocationLine::from)
         .collect::<BTreeSet<_>>();
     let missing = expected
@@ -561,6 +569,7 @@ fn run_declaration_to_usages(
         expected,
         allowed_extra,
         actual,
+        unproven,
         missing,
         unexpected,
         partial: parsed.partial,
@@ -943,6 +952,7 @@ fn count_symbol_occurrences(value: &Value, symbol: &str) -> usize {
 #[derive(Debug)]
 struct ParsedScanUsages {
     locations: Vec<NormalizedLocation>,
+    unproven_locations: Vec<NormalizedLocation>,
     partial: bool,
     raw_statuses: Vec<String>,
 }
@@ -960,6 +970,7 @@ impl ParsedScanUsages {
 
 fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
     let mut locations = BTreeSet::new();
+    let mut unproven_locations = BTreeSet::new();
 
     let mut raw_statuses = Vec::new();
     let mut partial = value
@@ -970,7 +981,8 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
 
     if let Some(results) = value.get("results").and_then(Value::as_array) {
         for result in results {
-            collect_scan_usage_locations(result, &mut locations);
+            collect_scan_usage_locations(result, "files", &mut locations);
+            collect_scan_usage_locations(result, "unproven_files", &mut unproven_locations);
             if let Some(status) = result.get("status").and_then(Value::as_str) {
                 raw_statuses.push(status.to_string());
             }
@@ -990,7 +1002,7 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
             .into_iter()
             .flatten()
         {
-            collect_scan_usage_locations(usage, &mut locations);
+            collect_scan_usage_locations(usage, "files", &mut locations);
         }
 
         for key in ["not_found", "ambiguous", "failures", "too_many_callsites"] {
@@ -1021,39 +1033,42 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
 
     ParsedScanUsages {
         locations: locations.into_iter().collect(),
+        unproven_locations: unproven_locations.into_iter().collect(),
         partial,
         raw_statuses,
     }
 }
 
-fn collect_scan_usage_locations(value: &Value, locations: &mut BTreeSet<NormalizedLocation>) {
-    for group in ["files", "unproven_files"] {
-        for file in value
-            .get(group)
+fn collect_scan_usage_locations(
+    value: &Value,
+    group: &str,
+    locations: &mut BTreeSet<NormalizedLocation>,
+) {
+    for file in value
+        .get(group)
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let Some(path) = file.get("path").and_then(Value::as_str) else {
+            continue;
+        };
+        for hit in file
+            .get("hits")
             .and_then(Value::as_array)
             .into_iter()
             .flatten()
         {
-            let Some(path) = file.get("path").and_then(Value::as_str) else {
+            let Some(line) = hit.get("line").and_then(Value::as_u64) else {
                 continue;
             };
-            for hit in file
-                .get("hits")
-                .and_then(Value::as_array)
-                .into_iter()
-                .flatten()
-            {
-                let Some(line) = hit.get("line").and_then(Value::as_u64) else {
-                    continue;
-                };
-                locations.insert(NormalizedLocation {
-                    path: path.to_string(),
-                    line: line as u32,
-                    column: None,
-                    display_name: None,
-                    kind: None,
-                });
-            }
+            locations.insert(NormalizedLocation {
+                path: path.to_string(),
+                line: line as u32,
+                column: None,
+                display_name: None,
+                kind: None,
+            });
         }
     }
 }
@@ -2026,6 +2041,7 @@ mod tests {
                             normalized_location("src/lib.rs", 8),
                             normalized_location("src/extra.rs", 1),
                         ],
+                        unproven: Vec::new(),
                         missing: Vec::new(),
                         unexpected: vec![normalized_location("src/extra.rs", 1)],
                         partial: false,
@@ -2218,6 +2234,47 @@ mod tests {
         let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
 
         assert_eq!(report.status, CaseStatus::Passed);
+    }
+
+    #[test]
+    fn scorer_uses_unproven_locations_for_recall_without_treating_them_as_false_positives() {
+        let case = benchmark_case();
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages_by_location",
+                json!({
+                    "summary": {"partial": false},
+                    "results": [{
+                        "status": "found",
+                        "files": [],
+                        "unproven_files": [{
+                            "path": "src/lib.rs",
+                            "hits": [{"line": 8}]
+                        }, {
+                            "path": "src/conservative_candidate.rs",
+                            "hits": [{"line": 4}]
+                        }]
+                    }]
+                }),
+            ),
+            tool(
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        let declaration = report.declaration_to_usages.unwrap();
+        assert!(declaration.actual.is_empty());
+        assert_eq!(declaration.unproven.len(), 2);
+        assert!(declaration.missing.is_empty());
+        assert!(declaration.unexpected.is_empty());
     }
 
     #[test]
@@ -2588,7 +2645,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_scan_usages_includes_unproven_result_locations() {
+    fn parse_scan_usages_preserves_unproven_result_locations_separately() {
         let parsed = parse_scan_usages(&json!({
             "summary": {"partial": false},
             "results": [{
@@ -2606,22 +2663,23 @@ mod tests {
 
         assert_eq!(
             parsed.locations,
-            vec![
-                NormalizedLocation {
-                    path: "src/service.go".to_string(),
-                    line: 29,
-                    column: None,
-                    display_name: None,
-                    kind: None,
-                },
-                NormalizedLocation {
-                    path: "src/service_test.go".to_string(),
-                    line: 9,
-                    column: None,
-                    display_name: None,
-                    kind: None,
-                },
-            ]
+            vec![NormalizedLocation {
+                path: "src/service_test.go".to_string(),
+                line: 9,
+                column: None,
+                display_name: None,
+                kind: None,
+            }]
+        );
+        assert_eq!(
+            parsed.unproven_locations,
+            vec![NormalizedLocation {
+                path: "src/service.go".to_string(),
+                line: 29,
+                column: None,
+                display_name: None,
+                kind: None,
+            }]
         );
         assert_eq!(parsed.raw_statuses, vec!["found".to_string()]);
         assert!(!parsed.partial);
