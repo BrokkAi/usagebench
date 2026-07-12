@@ -468,7 +468,10 @@ fn run_declaration_to_usages(
             target
                 .as_object_mut()
                 .expect("reference query object")
-                .remove("symbol");
+                .insert(
+                    "symbol".to_string(),
+                    Value::String(selector.selector.clone()),
+                );
             target
         }
         Err(error) => {
@@ -2065,6 +2068,10 @@ mod tests {
         let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
 
         assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(
+            client.calls[1].1["targets"][0]["symbol"],
+            "example.build_service"
+        );
     }
 
     #[test]
@@ -2836,20 +2843,23 @@ mod tests {
 
     struct MockClient {
         responses: VecDeque<(String, Value)>,
+        calls: Vec<(String, Value)>,
     }
 
     impl MockClient {
         fn new(responses: Vec<(String, Value)>) -> Self {
             Self {
                 responses: VecDeque::from(responses),
+                calls: Vec::new(),
             }
         }
     }
 
     impl SearchToolsClient for MockClient {
-        fn call_tool(&mut self, name: &str, _arguments: Value) -> Result<Value> {
+        fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value> {
             let (expected_name, value) = self.responses.pop_front().unwrap();
             assert_eq!(expected_name, name);
+            self.calls.push((name.to_string(), arguments));
             Ok(value)
         }
     }
