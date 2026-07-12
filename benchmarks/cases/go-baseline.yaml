@@ -88,7 +88,7 @@ cases:
           end: { line: 14, character: 31 }
       kind: method
       displayName: Save
-    expectedUsages:
+    expectedUnprovenUsages:
       - location:
           uri: benchmark://source/src/example/service.go
           range:
@@ -96,6 +96,7 @@ cases:
             end: { line: 28, character: 31 }
         kind: method
         displayName: Save
+    expectedUsages:
       - location:
           uri: benchmark://source/src/example/service_test.go
           range:

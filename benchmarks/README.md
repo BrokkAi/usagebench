@@ -62,12 +62,18 @@ line matching the location's `kind` and `displayName`.
 Each case supports both benchmark directions:
 
 - `declaration` plus `expectedUsages` tests declaration-to-usage lookup.
+- `expectedUnprovenUsages` lists required conservative candidates. Each may be
+  returned as either proven or unproven, so increasing analyzer confidence does
+  not break the case.
 - `usageLookups` tests usage-to-declaration lookup.
 - `allowedExtraUsages` documents acceptable analyzer-specific broader matches.
-- Actual usage locations outside `expectedUsages` and `allowedExtraUsages` are
-  unexpected false positives and fail the case.
+- `allowedUnprovenUsages` documents optional conservative candidates that are
+  acceptable only while they remain unproven.
+- Proven locations outside `expectedUsages`, `expectedUnprovenUsages`, and
+  `allowedExtraUsages`, and unproven locations outside
+  `expectedUnprovenUsages` and `allowedUnprovenUsages`, fail the case.
 - Import or re-export binding sites are not true-positive usages. Do not include
-  them in `expectedUsages`, `usageLookups`, or `allowedExtraUsages`; analyzers
+  them in any usage expectation or allowance; analyzers
   that report them should surface those locations as unexpected extras.
 - `expectedFailure.reason` keeps a known analyzer gap in the baseline while
   still running the case and failing if the case unexpectedly starts passing.

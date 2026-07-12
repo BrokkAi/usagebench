@@ -133,12 +133,18 @@ pub struct DeclarationUsageReport {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selector: Option<String>,
     pub expected: Vec<NormalizedLocation>,
+    pub expected_unproven: Vec<NormalizedLocation>,
     pub allowed_extra: Vec<NormalizedLocation>,
+    pub allowed_unproven: Vec<NormalizedLocation>,
     pub actual: Vec<NormalizedLocation>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub unproven: Vec<NormalizedLocation>,
     pub missing: Vec<NormalizedLocation>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub missing_unproven: Vec<NormalizedLocation>,
     pub unexpected: Vec<NormalizedLocation>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub unexpected_unproven: Vec<NormalizedLocation>,
     pub partial: bool,
     pub raw_statuses: Vec<String>,
 }
@@ -418,32 +424,52 @@ fn run_declaration_to_usages(
         .iter()
         .map(normalize_symbol_location)
         .collect::<Result<Vec<_>>>();
+    let expected_unproven = case
+        .expected_unproven_usages
+        .iter()
+        .map(normalize_symbol_location)
+        .collect::<Result<Vec<_>>>();
     let allowed_extra = case
         .allowed_extra_usages
         .iter()
         .map(normalize_symbol_location)
         .collect::<Result<Vec<_>>>();
-    let (expected, allowed_extra) = match (expected, allowed_extra) {
-        (Ok(expected), Ok(allowed_extra)) => (expected, allowed_extra),
-        (Err(error), _) | (_, Err(error)) => {
-            diagnostics.push(RunDiagnostic {
-                kind: "invalid_expected_location".to_string(),
-                message: format!("{error:#}"),
-            });
-            return DeclarationUsageReport {
-                status: CaseStatus::Error,
-                selector: None,
-                expected: Vec::new(),
-                allowed_extra: Vec::new(),
-                actual: Vec::new(),
-                unproven: Vec::new(),
-                missing: Vec::new(),
-                unexpected: Vec::new(),
-                partial: false,
-                raw_statuses: vec!["invalid_expected_location".to_string()],
-            };
-        }
-    };
+    let allowed_unproven = case
+        .allowed_unproven_usages
+        .iter()
+        .map(normalize_symbol_location)
+        .collect::<Result<Vec<_>>>();
+    let (expected, expected_unproven, allowed_extra, allowed_unproven) =
+        match (expected, expected_unproven, allowed_extra, allowed_unproven) {
+            (Ok(expected), Ok(expected_unproven), Ok(allowed_extra), Ok(allowed_unproven)) => {
+                (expected, expected_unproven, allowed_extra, allowed_unproven)
+            }
+            (Err(error), _, _, _)
+            | (_, Err(error), _, _)
+            | (_, _, Err(error), _)
+            | (_, _, _, Err(error)) => {
+                diagnostics.push(RunDiagnostic {
+                    kind: "invalid_expected_location".to_string(),
+                    message: format!("{error:#}"),
+                });
+                return DeclarationUsageReport {
+                    status: CaseStatus::Error,
+                    selector: None,
+                    expected: Vec::new(),
+                    expected_unproven: Vec::new(),
+                    allowed_extra: Vec::new(),
+                    allowed_unproven: Vec::new(),
+                    actual: Vec::new(),
+                    unproven: Vec::new(),
+                    missing: Vec::new(),
+                    missing_unproven: Vec::new(),
+                    unexpected: Vec::new(),
+                    unexpected_unproven: Vec::new(),
+                    partial: false,
+                    raw_statuses: vec!["invalid_expected_location".to_string()],
+                };
+            }
+        };
 
     let selector = match resolve_declaration_selector(session, declaration) {
         Ok(selector) => selector,
@@ -456,11 +482,15 @@ fn run_declaration_to_usages(
                 status: CaseStatus::Failed,
                 selector: None,
                 expected: expected.clone(),
+                expected_unproven: expected_unproven.clone(),
                 allowed_extra,
+                allowed_unproven,
                 actual: Vec::new(),
                 unproven: Vec::new(),
                 missing: expected,
+                missing_unproven: expected_unproven,
                 unexpected: Vec::new(),
+                unexpected_unproven: Vec::new(),
                 partial: false,
                 raw_statuses: vec!["symbol_resolution_failed".to_string()],
             };
@@ -487,11 +517,15 @@ fn run_declaration_to_usages(
                 status: CaseStatus::Error,
                 selector: Some(selector.selector),
                 expected: expected.clone(),
+                expected_unproven: expected_unproven.clone(),
                 allowed_extra,
+                allowed_unproven,
                 actual: Vec::new(),
                 unproven: Vec::new(),
                 missing: expected,
+                missing_unproven: expected_unproven,
                 unexpected: Vec::new(),
+                unexpected_unproven: Vec::new(),
                 partial: false,
                 raw_statuses: vec!["invalid_declaration_location".to_string()],
             };
@@ -515,11 +549,15 @@ fn run_declaration_to_usages(
                 status: CaseStatus::Error,
                 selector: Some(selector.selector),
                 expected: expected.clone(),
+                expected_unproven: expected_unproven.clone(),
                 allowed_extra,
+                allowed_unproven,
                 actual: Vec::new(),
                 unproven: Vec::new(),
                 missing: expected,
+                missing_unproven: expected_unproven,
                 unexpected: Vec::new(),
+                unexpected_unproven: Vec::new(),
                 partial: false,
                 raw_statuses: vec!["scan_usages_failed".to_string()],
             };
@@ -534,11 +572,23 @@ fn run_declaration_to_usages(
         .iter()
         .map(LocationLine::from)
         .collect::<BTreeSet<_>>();
+    let expected_unproven_keys = expected_unproven
+        .iter()
+        .map(LocationLine::from)
+        .collect::<BTreeSet<_>>();
     let allowed_keys = allowed_extra
         .iter()
         .map(LocationLine::from)
         .collect::<BTreeSet<_>>();
+    let allowed_unproven_keys = allowed_unproven
+        .iter()
+        .map(LocationLine::from)
+        .collect::<BTreeSet<_>>();
     let actual_keys = actual
+        .iter()
+        .map(LocationLine::from)
+        .collect::<BTreeSet<_>>();
+    let all_actual_keys = actual
         .iter()
         .chain(&unproven)
         .map(LocationLine::from)
@@ -548,30 +598,54 @@ fn run_declaration_to_usages(
         .filter(|location| !actual_keys.contains(&LocationLine::from(*location)))
         .cloned()
         .collect::<Vec<_>>();
+    let missing_unproven = expected_unproven
+        .iter()
+        .filter(|location| !all_actual_keys.contains(&LocationLine::from(*location)))
+        .cloned()
+        .collect::<Vec<_>>();
     let unexpected = actual
         .iter()
         .filter(|location| {
             let key = LocationLine::from(*location);
-            !expected_keys.contains(&key) && !allowed_keys.contains(&key)
+            !expected_keys.contains(&key)
+                && !expected_unproven_keys.contains(&key)
+                && !allowed_keys.contains(&key)
         })
         .cloned()
         .collect::<Vec<_>>();
-    let status =
-        if has_failure_status || parsed.partial || !missing.is_empty() || !unexpected.is_empty() {
-            CaseStatus::Failed
-        } else {
-            CaseStatus::Passed
-        };
+    let unexpected_unproven = unproven
+        .iter()
+        .filter(|location| {
+            let key = LocationLine::from(*location);
+            !expected_unproven_keys.contains(&key) && !allowed_unproven_keys.contains(&key)
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    let status = if has_failure_status
+        || parsed.partial
+        || !missing.is_empty()
+        || !missing_unproven.is_empty()
+        || !unexpected.is_empty()
+        || !unexpected_unproven.is_empty()
+    {
+        CaseStatus::Failed
+    } else {
+        CaseStatus::Passed
+    };
 
     DeclarationUsageReport {
         status,
         selector: Some(selector.selector),
         expected,
+        expected_unproven,
         allowed_extra,
+        allowed_unproven,
         actual,
         unproven,
         missing,
+        missing_unproven,
         unexpected,
+        unexpected_unproven,
         partial: parsed.partial,
         raw_statuses: parsed.raw_statuses,
     }
@@ -1003,6 +1077,7 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
             .flatten()
         {
             collect_scan_usage_locations(usage, "files", &mut locations);
+            collect_scan_usage_locations(usage, "unproven_files", &mut unproven_locations);
         }
 
         for key in ["not_found", "ambiguous", "failures", "too_many_callsites"] {
@@ -1030,6 +1105,11 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
     if partial && !raw_statuses.iter().any(|status| status == "partial") {
         raw_statuses.push("partial".to_string());
     }
+
+    // A location reported in both tiers has proven evidence. Keep the stronger
+    // classification so downstream scoring does not treat it as an unproven
+    // extra as well.
+    unproven_locations.retain(|location| !locations.contains(location));
 
     ParsedScanUsages {
         locations: locations.into_iter().collect(),
@@ -2036,14 +2116,18 @@ mod tests {
                         status: CaseStatus::Passed,
                         selector: Some("example.build_service".to_string()),
                         expected: vec![normalized_location("src/lib.rs", 8)],
+                        expected_unproven: Vec::new(),
                         allowed_extra: Vec::new(),
+                        allowed_unproven: Vec::new(),
                         actual: vec![
                             normalized_location("src/lib.rs", 8),
                             normalized_location("src/extra.rs", 1),
                         ],
                         unproven: Vec::new(),
                         missing: Vec::new(),
+                        missing_unproven: Vec::new(),
                         unexpected: vec![normalized_location("src/extra.rs", 1)],
+                        unexpected_unproven: Vec::new(),
                         partial: false,
                         raw_statuses: vec!["ok".to_string()],
                     }),
@@ -2237,8 +2321,16 @@ mod tests {
     }
 
     #[test]
-    fn scorer_uses_unproven_locations_for_recall_without_treating_them_as_false_positives() {
-        let case = benchmark_case();
+    fn scorer_accepts_only_explicitly_expected_or_allowed_unproven_locations() {
+        let mut case = benchmark_case();
+        case.expected_unproven_usages = std::mem::take(&mut case.expected_usages);
+        case.allowed_unproven_usages.push(symbol_location(
+            "src/conservative_candidate.rs",
+            3,
+            0,
+            "build_service",
+            SymbolKind::Function,
+        ));
         let mut client = MockClient::new(vec![
             tool(
                 "search_symbols",
@@ -2274,7 +2366,45 @@ mod tests {
         assert!(declaration.actual.is_empty());
         assert_eq!(declaration.unproven.len(), 2);
         assert!(declaration.missing.is_empty());
+        assert!(declaration.missing_unproven.is_empty());
         assert!(declaration.unexpected.is_empty());
+        assert!(declaration.unexpected_unproven.is_empty());
+    }
+
+    #[test]
+    fn scorer_fails_when_a_proven_expectation_degrades_to_unproven() {
+        let case = benchmark_case();
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages_by_location",
+                json!({
+                    "summary": {"partial": false},
+                    "results": [{
+                        "status": "found",
+                        "files": [],
+                        "unproven_files": [{
+                            "path": "src/lib.rs",
+                            "hits": [{"line": 8}]
+                        }]
+                    }]
+                }),
+            ),
+            tool(
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
+            ),
+        ]);
+
+        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        let declaration = report.declaration_to_usages.unwrap();
+        assert_eq!(declaration.missing.len(), 1);
+        assert_eq!(declaration.unexpected_unproven.len(), 1);
     }
 
     #[test]
@@ -2657,6 +2787,9 @@ mod tests {
                 "unproven_files": [{
                     "path": "src/service.go",
                     "hits": [{"line": 29}]
+                }, {
+                    "path": "src/service_test.go",
+                    "hits": [{"line": 9}]
                 }]
             }]
         }));
@@ -2712,13 +2845,35 @@ mod tests {
 
     #[test]
     fn parse_scan_usages_keeps_legacy_usages_shape() {
-        let parsed = parse_scan_usages(&scan_usages_json(vec![("src/lib.rs", 8)], false));
+        let parsed = parse_scan_usages(&json!({
+            "summary": {"partial": false},
+            "usages": [{
+                "files": [{
+                    "path": "src/lib.rs",
+                    "hits": [{"line": 8}]
+                }],
+                "unproven_files": [{
+                    "path": "src/conservative.rs",
+                    "hits": [{"line": 12}]
+                }]
+            }]
+        }));
 
         assert_eq!(
             parsed.locations,
             vec![NormalizedLocation {
                 path: "src/lib.rs".to_string(),
                 line: 8,
+                column: None,
+                display_name: None,
+                kind: None,
+            }]
+        );
+        assert_eq!(
+            parsed.unproven_locations,
+            vec![NormalizedLocation {
+                path: "src/conservative.rs".to_string(),
+                line: 12,
                 column: None,
                 display_name: None,
                 kind: None,
@@ -3005,7 +3160,9 @@ mod tests {
                 "build_service",
                 SymbolKind::Function,
             )],
+            expected_unproven_usages: Vec::new(),
             allowed_extra_usages: Vec::new(),
+            allowed_unproven_usages: Vec::new(),
             usage_lookups: vec![UsageLookup {
                 usage: symbol_location("src/lib.rs", 7, 18, "build_service", SymbolKind::Function),
                 expected_declaration: symbol_location(

@@ -49,7 +49,11 @@ pub struct BenchmarkCase {
     #[serde(default)]
     pub expected_usages: Vec<SymbolLocation>,
     #[serde(default)]
+    pub expected_unproven_usages: Vec<SymbolLocation>,
+    #[serde(default)]
     pub allowed_extra_usages: Vec<SymbolLocation>,
+    #[serde(default)]
+    pub allowed_unproven_usages: Vec<SymbolLocation>,
     #[serde(default)]
     pub usage_lookups: Vec<UsageLookup>,
     #[serde(default)]
@@ -352,10 +356,22 @@ impl BenchmarkCase {
                 .with_context(|| format!("case {} expectedUsages", self.id))?;
         }
 
+        for usage in &self.expected_unproven_usages {
+            usage
+                .validate(fixture_root, encoding)
+                .with_context(|| format!("case {} expectedUnprovenUsages", self.id))?;
+        }
+
         for usage in &self.allowed_extra_usages {
             usage
                 .validate(fixture_root, encoding)
                 .with_context(|| format!("case {} allowedExtraUsages", self.id))?;
+        }
+
+        for usage in &self.allowed_unproven_usages {
+            usage
+                .validate(fixture_root, encoding)
+                .with_context(|| format!("case {} allowedUnprovenUsages", self.id))?;
         }
 
         for lookup in &self.usage_lookups {
