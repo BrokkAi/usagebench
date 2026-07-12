@@ -1027,31 +1027,33 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
 }
 
 fn collect_scan_usage_locations(value: &Value, locations: &mut BTreeSet<NormalizedLocation>) {
-    for file in value
-        .get("files")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-    {
-        let Some(path) = file.get("path").and_then(Value::as_str) else {
-            continue;
-        };
-        for hit in file
-            .get("hits")
+    for group in ["files", "unproven_files"] {
+        for file in value
+            .get(group)
             .and_then(Value::as_array)
             .into_iter()
             .flatten()
         {
-            let Some(line) = hit.get("line").and_then(Value::as_u64) else {
+            let Some(path) = file.get("path").and_then(Value::as_str) else {
                 continue;
             };
-            locations.insert(NormalizedLocation {
-                path: path.to_string(),
-                line: line as u32,
-                column: None,
-                display_name: None,
-                kind: None,
-            });
+            for hit in file
+                .get("hits")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                let Some(line) = hit.get("line").and_then(Value::as_u64) else {
+                    continue;
+                };
+                locations.insert(NormalizedLocation {
+                    path: path.to_string(),
+                    line: line as u32,
+                    column: None,
+                    display_name: None,
+                    kind: None,
+                });
+            }
         }
     }
 }
@@ -2583,6 +2585,46 @@ mod tests {
         assert_eq!(parsed.raw_statuses, vec!["found".to_string()]);
         assert!(!parsed.partial);
         assert!(!parsed.has_failure_status());
+    }
+
+    #[test]
+    fn parse_scan_usages_includes_unproven_result_locations() {
+        let parsed = parse_scan_usages(&json!({
+            "summary": {"partial": false},
+            "results": [{
+                "status": "found",
+                "files": [{
+                    "path": "src/service_test.go",
+                    "hits": [{"line": 9}]
+                }],
+                "unproven_files": [{
+                    "path": "src/service.go",
+                    "hits": [{"line": 29}]
+                }]
+            }]
+        }));
+
+        assert_eq!(
+            parsed.locations,
+            vec![
+                NormalizedLocation {
+                    path: "src/service.go".to_string(),
+                    line: 29,
+                    column: None,
+                    display_name: None,
+                    kind: None,
+                },
+                NormalizedLocation {
+                    path: "src/service_test.go".to_string(),
+                    line: 9,
+                    column: None,
+                    display_name: None,
+                    kind: None,
+                },
+            ]
+        );
+        assert_eq!(parsed.raw_statuses, vec!["found".to_string()]);
+        assert!(!parsed.partial);
     }
 
     #[test]
