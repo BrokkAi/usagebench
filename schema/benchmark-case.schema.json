@@ -84,7 +84,21 @@
           },
           "default": []
         },
+        "expectedUnprovenUsages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/symbolLocation"
+          },
+          "default": []
+        },
         "allowedExtraUsages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/symbolLocation"
+          },
+          "default": []
+        },
+        "allowedUnprovenUsages": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/symbolLocation"

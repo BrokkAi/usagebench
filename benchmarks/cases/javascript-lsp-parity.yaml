@@ -22,6 +22,13 @@ cases:
             end: { line: 2, character: 28 }
         kind: function
         displayName: buildTask
+      - location:
+          uri: benchmark://source/src/library.js
+          range:
+            start: { line: 20, character: 20 }
+            end: { line: 20, character: 29 }
+        kind: function
+        displayName: buildTask
     usageLookups:
       - usage:
           location:
@@ -45,7 +52,7 @@ cases:
         Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
         Upstream reference: TypeScript Server fourslash CommonJS/navigation scenarios such as autoImportNoPackageJson_commonjs.ts.
         Adapted fixture: fixtures/javascript/lsp-parity/.
-        Maturity: destructured CommonJS require bindings should resolve calls back to the exported function; the destructuring binding itself is not counted as a usage.
+        Maturity: destructured CommonJS require bindings should resolve calls back to the exported function; the export value and call are usages, while the destructuring binding itself is not.
   - id: js-parity-object-literal-method-call
     declaration:
       location:

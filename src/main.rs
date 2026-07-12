@@ -145,7 +145,9 @@ fn print_run_details(report: &BifrostRunReport) {
             };
 
             if declaration.missing.is_empty()
+                && declaration.missing_unproven.is_empty()
                 && declaration.unexpected.is_empty()
+                && declaration.unexpected_unproven.is_empty()
                 && !matches!(
                     case.status,
                     CaseStatus::Improved
@@ -160,15 +162,19 @@ fn print_run_details(report: &BifrostRunReport) {
             }
 
             println!(
-                "{} {}: {} missing, {} extra ({})",
+                "{} {}: {} proven missing, {} conservative missing, {} proven extra, {} unproven extra ({})",
                 status_label(case.status),
                 safe_display(&case.id),
                 declaration.missing.len(),
+                declaration.missing_unproven.len(),
                 declaration.unexpected.len(),
+                declaration.unexpected_unproven.len(),
                 safe_display(&document.case_file)
             );
             print_locations("missing", &declaration.missing);
+            print_locations("missing conservative", &declaration.missing_unproven);
             print_locations("extra", &declaration.unexpected);
+            print_locations("extra unproven", &declaration.unexpected_unproven);
             print_usage_definition_issues(&case.usage_to_declaration);
             print_type_lookup_issues(&case.type_lookups);
         }
