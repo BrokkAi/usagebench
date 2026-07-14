@@ -1,0 +1,25 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source: { kind: fixture, path: fixtures/cpp/precision }
+language: cpp
+cases:
+  - id: cpp-out-of-line-member-call
+    declaration:
+      location: { uri: benchmark://source/include/worker.h, range: { start: { line: 5, character: 7 }, end: { line: 5, character: 14 } } }
+      kind: method
+      displayName: execute
+    expectedUsages:
+      - location: { uri: benchmark://source/src/consumer.cpp, range: { start: { line: 4, character: 9 }, end: { line: 4, character: 16 } } }
+        kind: method
+        displayName: execute
+    verification: { method: manual_inspection, notes: "Worker::execute is declared in a header, defined out of line, and called through a typed receiver; a comment and string mention are deliberately excluded." }
+  - id: cpp-overload-string-call-is-narrow
+    declaration:
+      location: { uri: benchmark://source/include/worker.h, range: { start: { line: 9, character: 4 }, end: { line: 9, character: 10 } } }
+      kind: function
+      displayName: select
+    expectedUsages:
+      - location: { uri: benchmark://source/src/consumer.cpp, range: { start: { line: 5, character: 25 }, end: { line: 5, character: 31 } } }
+        kind: function
+        displayName: select
+    verification: { method: manual_inspection, notes: "The const char* overload must not merge with the int overload." }

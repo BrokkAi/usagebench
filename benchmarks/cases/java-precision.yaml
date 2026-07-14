@@ -1,0 +1,38 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source: { kind: fixture, path: fixtures/java/precision }
+language: java
+cases:
+  - id: java-lambda-body-member-call
+    declaration:
+      location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 3, character: 9 }, end: { line: 3, character: 16 } } }
+      kind: method
+      displayName: execute
+    expectedUsages:
+      - location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 12, character: 43 }, end: { line: 12, character: 50 } } }
+        kind: method
+        displayName: execute
+    verification: { method: manual_inspection, notes: "The lambda body invokes Worker.execute on an inline constructed receiver." }
+  - id: java-record-type-reference
+    declaration:
+      location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 6, character: 7 }, end: { line: 6, character: 12 } } }
+      kind: class
+      displayName: Entry
+    expectedUsages:
+      - location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 14, character: 8 }, end: { line: 14, character: 13 } } }
+        kind: class
+        displayName: Entry
+      - location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 14, character: 26 }, end: { line: 14, character: 31 } } }
+        kind: class
+        displayName: Entry
+    verification: { method: manual_inspection, notes: "A record type is used both as a local type annotation and constructor owner." }
+  - id: java-static-qualified-method-call
+    declaration:
+      location: { uri: benchmark://source/src/main/java/precision/Helpers.java, range: { start: { line: 3, character: 16 }, end: { line: 3, character: 19 } } }
+      kind: method
+      displayName: log
+    expectedUsages:
+      - location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 16, character: 16 }, end: { line: 16, character: 19 } } }
+        kind: method
+        displayName: log
+    verification: { method: manual_inspection, notes: "A static method call through its owner type is a method usage, not a type-only reference." }
