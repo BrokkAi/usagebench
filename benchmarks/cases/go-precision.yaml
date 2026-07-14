@@ -1,0 +1,28 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source: { kind: fixture, path: fixtures/go/precision }
+language: go
+cases:
+  - id: go-dot-import-concrete-receiver-call
+    declaration:
+      location: { uri: benchmark://source/worker/worker.go, range: { start: { line: 4, character: 14 }, end: { line: 4, character: 20 } } }
+      kind: method
+      displayName: Record
+    expectedUsages:
+      - location: { uri: benchmark://source/cmd/app/main.go, range: { start: { line: 6, character: 8 }, end: { line: 6, character: 14 } } }
+        kind: method
+        displayName: Record
+      - location: { uri: benchmark://source/cmd/app/main.go, range: { start: { line: 8, character: 8 }, end: { line: 8, character: 14 } } }
+        kind: method
+        displayName: Record
+    verification: { method: manual_inspection, notes: "A dot-imported constructor seeds concrete receivers, including the second binding of a tuple assignment, without confusing the interface call." }
+  - id: go-interface-receiver-method-call
+    declaration:
+      location: { uri: benchmark://source/worker/worker.go, range: { start: { line: 7, character: 1 }, end: { line: 7, character: 7 } } }
+      kind: method
+      displayName: Record
+    expectedUsages:
+      - location: { uri: benchmark://source/cmd/app/main.go, range: { start: { line: 10, character: 10 }, end: { line: 10, character: 16 } } }
+        kind: method
+        displayName: Record
+    verification: { method: manual_inspection, notes: "A call through an interface-typed local belongs to the interface method, not the concrete method." }

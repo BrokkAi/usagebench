@@ -1,0 +1,35 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source: { kind: fixture, path: fixtures/csharp/precision }
+language: csharp
+cases:
+  - id: csharp-attribute-shorthand-reference
+    declaration:
+      location: { uri: benchmark://source/Precision.cs, range: { start: { line: 7, character: 20 }, end: { line: 7, character: 36 } } }
+      kind: class
+      displayName: TrackedAttribute
+    expectedUsages:
+      - location: { uri: benchmark://source/Precision.cs, range: { start: { line: 4, character: 1 }, end: { line: 4, character: 8 } } }
+        kind: class
+        displayName: Tracked
+    verification: { method: manual_inspection, notes: "C# attribute suffix elision must resolve [Tracked] to TrackedAttribute." }
+  - id: csharp-generic-extension-call
+    declaration:
+      location: { uri: benchmark://source/Precision.cs, range: { start: { line: 10, character: 20 }, end: { line: 10, character: 24 } } }
+      kind: method
+      displayName: Echo
+    expectedUsages:
+      - location: { uri: benchmark://source/Precision.cs, range: { start: { line: 18, character: 55 }, end: { line: 18, character: 59 } } }
+        kind: method
+        displayName: Echo
+    verification: { method: manual_inspection, notes: "A generic extension called on a constructed receiver is a precise member usage." }
+  - id: csharp-static-qualified-method-call
+    declaration:
+      location: { uri: benchmark://source/Precision.cs, range: { start: { line: 14, character: 25 }, end: { line: 14, character: 31 } } }
+      kind: method
+      displayName: Create
+    expectedUsages:
+      - location: { uri: benchmark://source/Precision.cs, range: { start: { line: 19, character: 43 }, end: { line: 19, character: 49 } } }
+        kind: method
+        displayName: Create
+    verification: { method: manual_inspection, notes: "A class-qualified static call must resolve to Labels.Create without confusing the consumer method." }

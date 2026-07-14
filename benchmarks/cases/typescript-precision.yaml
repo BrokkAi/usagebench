@@ -1,0 +1,25 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source: { kind: fixture, path: fixtures/typescript/precision }
+language: typescript
+cases:
+  - id: ts-chained-barrel-function-call
+    declaration:
+      location: { uri: benchmark://source/src/api.ts, range: { start: { line: 4, character: 16 }, end: { line: 4, character: 28 } } }
+      kind: function
+      displayName: createWidget
+    expectedUsages:
+      - location: { uri: benchmark://source/src/app.ts, range: { start: { line: 2, character: 23 }, end: { line: 2, character: 35 } } }
+        kind: function
+        displayName: createWidget
+    verification: { method: manual_inspection, notes: "A function imported through a local barrel must preserve its declaration identity." }
+  - id: ts-type-annotation-through-barrel
+    declaration:
+      location: { uri: benchmark://source/src/api.ts, range: { start: { line: 0, character: 17 }, end: { line: 0, character: 23 } } }
+      kind: interface
+      displayName: Widget
+    expectedUsages:
+      - location: { uri: benchmark://source/src/app.ts, range: { start: { line: 2, character: 14 }, end: { line: 2, character: 20 } } }
+        kind: interface
+        displayName: Widget
+    verification: { method: manual_inspection, notes: "A type-only annotation reached through a barrel is a true type usage; import bindings are not." }

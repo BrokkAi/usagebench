@@ -1,0 +1,35 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source: { kind: fixture, path: fixtures/php/precision }
+language: php
+cases:
+  - id: php-interface-typed-receiver-call
+    declaration:
+      location: { uri: benchmark://source/src/Contracts.php, range: { start: { line: 5, character: 20 }, end: { line: 5, character: 24 } } }
+      kind: method
+      displayName: send
+    expectedUsages:
+      - location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 11, character: 15 }, end: { line: 11, character: 19 } } }
+        kind: method
+        displayName: send
+    verification: { method: manual_inspection, notes: "The receiver has the Notifier interface type, so the call belongs to Notifier::send." }
+  - id: php-function-import-call
+    declaration:
+      location: { uri: benchmark://source/src/Support.php, range: { start: { line: 4, character: 9 }, end: { line: 4, character: 15 } } }
+      kind: function
+      displayName: format
+    expectedUsages:
+      - location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 11, character: 20 }, end: { line: 11, character: 26 } } }
+        kind: function
+        displayName: format
+    verification: { method: manual_inspection, notes: "A use-function import enables the bare call without making the import binding a usage." }
+  - id: php-static-qualified-method-call
+    declaration:
+      location: { uri: benchmark://source/src/Labels.php, range: { start: { line: 5, character: 27 }, end: { line: 5, character: 33 } } }
+      kind: method
+      displayName: create
+    expectedUsages:
+      - location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 12, character: 12 }, end: { line: 12, character: 18 } } }
+        kind: method
+        displayName: create
+    verification: { method: manual_inspection, notes: "A static PHP call through a class qualifier must resolve to Labels::create." }

@@ -1,0 +1,28 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source: { kind: fixture, path: fixtures/javascript/precision }
+language: javascript
+cases:
+  - id: js-commonjs-barrel-class-construction
+    declaration:
+      location: { uri: benchmark://source/src/lib.js, range: { start: { line: 0, character: 6 }, end: { line: 0, character: 12 } } }
+      kind: class
+      displayName: Client
+    expectedUsages:
+      - location: { uri: benchmark://source/src/app.js, range: { start: { line: 2, character: 4 }, end: { line: 2, character: 10 } } }
+        kind: class
+        displayName: Client
+    verification: { method: manual_inspection, notes: "A CommonJS barrel re-export preserves the class identity at construction." }
+  - id: js-commonjs-barrel-member-call
+    declaration:
+      location: { uri: benchmark://source/src/lib.js, range: { start: { line: 1, character: 2 }, end: { line: 1, character: 9 } } }
+      kind: method
+      displayName: request
+    expectedUsages:
+      - location: { uri: benchmark://source/src/app.js, range: { start: { line: 2, character: 13 }, end: { line: 2, character: 20 } } }
+        kind: method
+        displayName: request
+      - location: { uri: benchmark://source/src/app.js, range: { start: { line: 3, character: 29 }, end: { line: 3, character: 36 } } }
+        kind: method
+        displayName: request
+    verification: { method: manual_inspection, notes: "The member call remains attached to Client.request through the CommonJS barrel, including a factory-returned receiver." }

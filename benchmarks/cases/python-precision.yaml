@@ -1,0 +1,38 @@
+schemaVersion: 1
+positionEncoding: utf-16
+source: { kind: fixture, path: fixtures/python/precision }
+language: python
+cases:
+  - id: python-barrel-inherited-member-call
+    declaration:
+      location: { uri: benchmark://source/precision/services.py, range: { start: { line: 1, character: 8 }, end: { line: 1, character: 12 } } }
+      kind: method
+      displayName: save
+    expectedUsages:
+      - location: { uri: benchmark://source/consumer.py, range: { start: { line: 6, character: 11 }, end: { line: 6, character: 15 } } }
+        kind: method
+        displayName: save
+      - location: { uri: benchmark://source/consumer.py, range: { start: { line: 8, character: 15 }, end: { line: 8, character: 19 } } }
+        kind: method
+        displayName: save
+    verification: { method: manual_inspection, notes: "Child and Grandchild are re-exported from the package barrel and inherit Base.save across files." }
+  - id: python-barrel-class-construction
+    declaration:
+      location: { uri: benchmark://source/precision/services.py, range: { start: { line: 5, character: 6 }, end: { line: 5, character: 11 } } }
+      kind: class
+      displayName: Child
+    expectedUsages:
+      - location: { uri: benchmark://source/consumer.py, range: { start: { line: 5, character: 20 }, end: { line: 5, character: 25 } } }
+        kind: class
+        displayName: Child
+    verification: { method: manual_inspection, notes: "Construction through a package-barrel import resolves to the concrete class declaration." }
+  - id: python-multilevel-barrel-class-construction
+    declaration:
+      location: { uri: benchmark://source/precision/services.py, range: { start: { line: 9, character: 6 }, end: { line: 9, character: 16 } } }
+      kind: class
+      displayName: Grandchild
+    expectedUsages:
+      - location: { uri: benchmark://source/consumer.py, range: { start: { line: 7, character: 29 }, end: { line: 7, character: 39 } } }
+        kind: class
+        displayName: Grandchild
+    verification: { method: manual_inspection, notes: "A multilevel subclass re-exported by the package barrel resolves at construction." }
