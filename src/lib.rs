@@ -7,7 +7,10 @@ use std::{
 };
 use url::Url;
 
-pub mod bifrost_runner;
+pub mod runners;
+
+/// Compatibility re-export for integrations that imported the original module.
+pub use runners::bifrost as bifrost_runner;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]

@@ -1,19 +1,27 @@
+use super::mcp::{McpSession, ToolClient as SearchToolsClient};
+use super::{
+    compute_totals, normalize_symbol_location, path_to_slash, score_declaration_locations,
+    symbol_kind_name, CapabilitySupport, RunReport, RunnerCapability, RunnerMetadata,
+    RunnerOperation,
+};
+pub use super::{
+    CaseRunReport, CaseStatus, DeclarationUsageReport, DocumentRunReport, NormalizedLocation,
+    RunDiagnostic, RunTotals, TypeLookupReport, UsageDefinitionReport,
+};
 use crate::{
     benchmark_source_path, find_repo_root_for_path, BenchmarkCase, BenchmarkDocument, Location,
     PositionEncoding, Source, SymbolKind, SymbolLocation,
 };
 use anyhow::{anyhow, bail, Context, Result};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Value};
 use std::{
     collections::{hash_map::DefaultHasher, BTreeSet},
     fs,
     hash::{Hash, Hasher},
-    io::{BufRead, BufReader, Read, Write},
+    io::Read,
     path::{Path, PathBuf},
-    process::{Child, ChildStdin, Command, Stdio},
-    sync::mpsc::{self, Receiver},
+    process::{Command, Stdio},
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
@@ -23,7 +31,6 @@ const DEFAULT_BIFROST_COMMIT: &str = "origin/master";
 const GET_DEFINITIONS_BY_LOCATION_TOOL: &str = "get_definitions_by_location";
 const GET_TYPE_BY_LOCATION_TOOL: &str = "get_type_by_location";
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(10 * 60);
-const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(5 * 60);
 
 #[derive(Debug, Clone)]
 pub struct RunBifrostOptions {
@@ -54,163 +61,10 @@ impl RunBifrostOptions {
     }
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct BifrostRunReport {
-    pub usagebench_version: String,
-    pub bifrost_repo: String,
-    pub bifrost_commit: String,
-    pub bifrost_resolved_commit: String,
-    pub started_at_unix_seconds: u64,
-    pub finished_at_unix_seconds: u64,
-    pub case_files: Vec<String>,
-    pub totals: RunTotals,
-    pub documents: Vec<DocumentRunReport>,
-}
-
-#[derive(Debug, Clone, Default, Serialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct RunTotals {
-    pub documents: usize,
-    pub cases: usize,
-    pub passed: usize,
-    pub improved: usize,
-    pub failed: usize,
-    pub expected_failures: usize,
-    pub not_planned: usize,
-    pub unsupported: usize,
-    pub skipped: usize,
-    pub errors: usize,
-}
-
-#[derive(Debug, Clone, Serialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct DocumentRunReport {
-    pub case_file: String,
-    pub language: String,
-    pub source_root: String,
-    pub cases: Vec<CaseRunReport>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum CaseStatus {
-    Passed,
-    Improved,
-    Failed,
-    ExpectedFailure,
-    NotPlanned,
-    Unsupported,
-    Skipped,
-    Error,
-}
-
-#[derive(Debug, Clone, Serialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct CaseRunReport {
-    pub id: String,
-    pub status: CaseStatus,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub expected_failure_reason: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub not_planned_reason: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub unsupported_reason: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub declaration_to_usages: Option<DeclarationUsageReport>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub usage_to_declaration: Vec<UsageDefinitionReport>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub type_lookups: Vec<TypeLookupReport>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub diagnostics: Vec<RunDiagnostic>,
-}
-
-#[derive(Debug, Clone, Serialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct DeclarationUsageReport {
-    pub status: CaseStatus,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub selector: Option<String>,
-    pub expected: Vec<NormalizedLocation>,
-    pub expected_unproven: Vec<NormalizedLocation>,
-    pub allowed_extra: Vec<NormalizedLocation>,
-    pub allowed_unproven: Vec<NormalizedLocation>,
-    pub actual: Vec<NormalizedLocation>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub unproven: Vec<NormalizedLocation>,
-    pub missing: Vec<NormalizedLocation>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub missing_unproven: Vec<NormalizedLocation>,
-    pub unexpected: Vec<NormalizedLocation>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub unexpected_unproven: Vec<NormalizedLocation>,
-    pub partial: bool,
-    pub raw_statuses: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct UsageDefinitionReport {
-    pub status: CaseStatus,
-    pub usage: NormalizedLocation,
-    pub expected_declaration: NormalizedLocation,
-    pub actual_declarations: Vec<NormalizedLocation>,
-    pub raw_status: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub diagnostics: Vec<RunDiagnostic>,
-}
-
-#[derive(Debug, Clone, Serialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct TypeLookupReport {
-    pub status: CaseStatus,
-    pub expression: NormalizedLocation,
-    pub expected_type: NormalizedLocation,
-    pub actual_types: Vec<NormalizedLocation>,
-    pub raw_status: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub diagnostics: Vec<RunDiagnostic>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct NormalizedLocation {
-    pub path: String,
-    pub line: u32,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub column: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub display_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub kind: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-struct LocationLine {
-    path: String,
-    line: u32,
-}
-
-impl From<&NormalizedLocation> for LocationLine {
-    fn from(location: &NormalizedLocation) -> Self {
-        Self {
-            path: location.path.clone(),
-            line: location.line,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct RunDiagnostic {
-    pub kind: String,
-    pub message: String,
-}
+pub type BifrostRunReport = RunReport;
 
 pub fn generated_bifrost_report_schema_json() -> Result<String> {
-    let schema = schemars::schema_for!(BifrostRunReport);
-    serde_json::to_string_pretty(&schema).context("serialize generated Bifrost report schema")
+    super::generated_report_schema_json()
 }
 
 pub fn default_bifrost_repo(repo_root: &Path) -> Option<PathBuf> {
@@ -268,11 +122,37 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     }
 
     let finished_at = unix_seconds_now()?;
+    let requested_version = options.bifrost_commit.clone();
+    let runner = RunnerMetadata {
+        name: "bifrost".to_string(),
+        requested_version: requested_version.clone(),
+        resolved_version: bifrost_resolved_commit.clone(),
+        source: display_path(&bifrost_source_repo),
+        adapter_version: env!("CARGO_PKG_VERSION").to_string(),
+        capabilities: vec![
+            RunnerCapability {
+                operation: RunnerOperation::DeclarationToUsages,
+                support: CapabilitySupport::Native,
+                notes: "Bifrost scan_usages_by_location MCP output".to_string(),
+            },
+            RunnerCapability {
+                operation: RunnerOperation::UsageToDeclaration,
+                support: CapabilitySupport::Native,
+                notes: "Bifrost get_definitions_by_location MCP output".to_string(),
+            },
+            RunnerCapability {
+                operation: RunnerOperation::TypeLookup,
+                support: CapabilitySupport::Native,
+                notes: "Bifrost get_type_by_location MCP output".to_string(),
+            },
+        ],
+    };
     let mut report = BifrostRunReport {
         usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
-        bifrost_repo: display_path(&bifrost_source_repo),
-        bifrost_commit: options.bifrost_commit,
-        bifrost_resolved_commit,
+        runner,
+        bifrost_repo: Some(display_path(&bifrost_source_repo)),
+        bifrost_commit: Some(requested_version),
+        bifrost_resolved_commit: Some(bifrost_resolved_commit),
         started_at_unix_seconds: started_at,
         finished_at_unix_seconds: finished_at,
         case_files: case_files.iter().map(|path| display_path(path)).collect(),
@@ -304,7 +184,13 @@ fn run_document_cases(
     include_unsupported: bool,
     include_definition_lookups: bool,
 ) -> Result<Vec<CaseRunReport>> {
-    let mut session = McpSession::start(bifrost_binary, source_root)?;
+    let mut command = Command::new(bifrost_binary);
+    command
+        .arg("--root")
+        .arg(source_root)
+        .arg("--server")
+        .arg("searchtools");
+    let mut session = McpSession::start(&mut command, "Bifrost")?;
     session.initialize()?;
 
     let mut reports = Vec::new();
@@ -568,87 +454,16 @@ fn run_declaration_to_usages(
     let has_failure_status = parsed.has_failure_status();
     let actual = parsed.locations;
     let unproven = parsed.unproven_locations;
-    let expected_keys = expected
-        .iter()
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
-    let expected_unproven_keys = expected_unproven
-        .iter()
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
-    let allowed_keys = allowed_extra
-        .iter()
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
-    let allowed_unproven_keys = allowed_unproven
-        .iter()
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
-    let actual_keys = actual
-        .iter()
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
-    let all_actual_keys = actual
-        .iter()
-        .chain(&unproven)
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
-    let missing = expected
-        .iter()
-        .filter(|location| !actual_keys.contains(&LocationLine::from(*location)))
-        .cloned()
-        .collect::<Vec<_>>();
-    let missing_unproven = expected_unproven
-        .iter()
-        .filter(|location| !all_actual_keys.contains(&LocationLine::from(*location)))
-        .cloned()
-        .collect::<Vec<_>>();
-    let unexpected = actual
-        .iter()
-        .filter(|location| {
-            let key = LocationLine::from(*location);
-            !expected_keys.contains(&key)
-                && !expected_unproven_keys.contains(&key)
-                && !allowed_keys.contains(&key)
-        })
-        .cloned()
-        .collect::<Vec<_>>();
-    let unexpected_unproven = unproven
-        .iter()
-        .filter(|location| {
-            let key = LocationLine::from(*location);
-            !expected_unproven_keys.contains(&key) && !allowed_unproven_keys.contains(&key)
-        })
-        .cloned()
-        .collect::<Vec<_>>();
-    let status = if has_failure_status
-        || parsed.partial
-        || !missing.is_empty()
-        || !missing_unproven.is_empty()
-        || !unexpected.is_empty()
-        || !unexpected_unproven.is_empty()
-    {
-        CaseStatus::Failed
-    } else {
-        CaseStatus::Passed
-    };
-
-    DeclarationUsageReport {
-        status,
-        selector: Some(selector.selector),
-        expected,
-        expected_unproven,
-        allowed_extra,
-        allowed_unproven,
+    score_declaration_locations(
+        case,
+        Some(selector.selector),
         actual,
         unproven,
-        missing,
-        missing_unproven,
-        unexpected,
-        unexpected_unproven,
-        partial: parsed.partial,
-        raw_statuses: parsed.raw_statuses,
-    }
+        parsed.partial,
+        parsed.raw_statuses,
+        has_failure_status,
+    )
+    .expect("expected locations were normalized before scoring")
 }
 
 fn run_usage_to_declaration(
@@ -1312,17 +1127,6 @@ fn parse_get_type(value: &Value) -> ParsedGetType {
     }
 }
 
-fn normalize_symbol_location(symbol: &SymbolLocation) -> Result<NormalizedLocation> {
-    let path = benchmark_source_path(&symbol.location.uri)?;
-    Ok(NormalizedLocation {
-        path: path_to_slash(&path),
-        line: symbol.location.range.start.line + 1,
-        column: Some(symbol.location.range.start.character + 1),
-        display_name: Some(symbol.display_name.clone()),
-        kind: Some(symbol_kind_name(&symbol.kind).to_string()),
-    })
-}
-
 fn reference_query(location: &Location, symbol: &str, encoding: PositionEncoding) -> Result<Value> {
     let path = benchmark_source_path(&location.uri)?;
     let position = one_based_position(location, encoding)?;
@@ -1376,23 +1180,6 @@ fn symbol_name_matches(symbol: &str, display_name: &str) -> bool {
         || symbol.ends_with(&format!("#{display_name}"))
 }
 
-fn symbol_kind_name(kind: &SymbolKind) -> &'static str {
-    match kind {
-        SymbolKind::Class => "class",
-        SymbolKind::Constructor => "constructor",
-        SymbolKind::Method => "method",
-        SymbolKind::Function => "function",
-        SymbolKind::Field => "field",
-        SymbolKind::Variable => "variable",
-        SymbolKind::Constant => "constant",
-        SymbolKind::Module => "module",
-        SymbolKind::Package => "package",
-        SymbolKind::Interface => "interface",
-        SymbolKind::Type => "type",
-        SymbolKind::Property => "property",
-    }
-}
-
 fn combine_case_status(
     declaration_to_usages: Option<&DeclarationUsageReport>,
     usage_to_declaration: &[UsageDefinitionReport],
@@ -1440,36 +1227,6 @@ fn apply_case_expectation(
         }
         _ => observed_status,
     }
-}
-
-fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
-    let mut totals = RunTotals {
-        documents: documents.len(),
-        ..RunTotals::default()
-    };
-    for case in documents.iter().flat_map(|document| &document.cases) {
-        if is_planned_case_status(case.status) {
-            totals.cases += 1;
-        }
-        match case.status {
-            CaseStatus::Passed => totals.passed += 1,
-            CaseStatus::Improved => totals.improved += 1,
-            CaseStatus::Failed => totals.failed += 1,
-            CaseStatus::ExpectedFailure => totals.expected_failures += 1,
-            CaseStatus::NotPlanned => totals.not_planned += 1,
-            CaseStatus::Unsupported => totals.unsupported += 1,
-            CaseStatus::Skipped => totals.skipped += 1,
-            CaseStatus::Error => totals.errors += 1,
-        }
-    }
-    totals
-}
-
-fn is_planned_case_status(status: CaseStatus) -> bool {
-    !matches!(
-        status,
-        CaseStatus::NotPlanned | CaseStatus::Unsupported | CaseStatus::Skipped
-    )
 }
 
 fn resolve_bifrost_source_repo(repo_root: &Path, explicit: Option<&PathBuf>) -> Result<PathBuf> {
@@ -1572,7 +1329,11 @@ fn bifrost_binary_path(repo: &Path) -> PathBuf {
     })
 }
 
-fn prepare_source_root(source: &Source, repo_root: &Path, work_dir: &Path) -> Result<PathBuf> {
+pub(crate) fn prepare_source_root(
+    source: &Source,
+    repo_root: &Path,
+    work_dir: &Path,
+) -> Result<PathBuf> {
     match source {
         Source::Fixture { path } => {
             let source_root = repo_root.join(path);
@@ -1714,7 +1475,7 @@ fn run_command(command: &mut Command) -> Result<()> {
     Ok(())
 }
 
-fn command_output_with_timeout(
+pub(crate) fn command_output_with_timeout(
     command: &mut Command,
     timeout: Duration,
 ) -> Result<std::process::Output> {
@@ -1811,190 +1572,6 @@ fn display_path(path: &Path) -> String {
     path.display().to_string()
 }
 
-fn path_to_slash(path: &Path) -> String {
-    path.components()
-        .map(|component| component.as_os_str().to_string_lossy())
-        .collect::<Vec<_>>()
-        .join("/")
-}
-
-trait SearchToolsClient {
-    fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value>;
-}
-
-struct McpSession {
-    child: Child,
-    stdin: ChildStdin,
-    stdout_lines: Receiver<Result<String, String>>,
-    next_id: u64,
-}
-
-impl McpSession {
-    fn start(bifrost_binary: &Path, root: &Path) -> Result<Self> {
-        let mut child = Command::new(bifrost_binary)
-            .arg("--root")
-            .arg(root)
-            .arg("--server")
-            .arg("searchtools")
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::null())
-            .spawn()
-            .with_context(|| format!("spawn Bifrost MCP server {}", bifrost_binary.display()))?;
-        let stdin = child.stdin.take().context("missing Bifrost stdin")?;
-        let stdout = child.stdout.take().context("missing Bifrost stdout")?;
-        let (sender, stdout_lines) = mpsc::channel();
-        thread::spawn(move || {
-            let mut reader = BufReader::new(stdout);
-            loop {
-                let mut line = String::new();
-                match reader.read_line(&mut line) {
-                    Ok(0) => {
-                        let _ = sender.send(Err("Bifrost MCP server closed stdout".to_string()));
-                        break;
-                    }
-                    Ok(_) => {
-                        if sender.send(Ok(line)).is_err() {
-                            break;
-                        }
-                    }
-                    Err(error) => {
-                        let _ = sender.send(Err(format!("read MCP response: {error}")));
-                        break;
-                    }
-                }
-            }
-        });
-        Ok(Self {
-            child,
-            stdin,
-            stdout_lines,
-            next_id: 1,
-        })
-    }
-
-    fn initialize(&mut self) -> Result<()> {
-        let response = self.request(json!({
-            "jsonrpc": "2.0",
-            "id": 0,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2025-11-25",
-                "capabilities": {},
-                "clientInfo": {
-                    "name": "usagebench",
-                    "version": env!("CARGO_PKG_VERSION")
-                }
-            }
-        }))?;
-        if let Some(error) = response.get("error") {
-            bail!("Bifrost initialize failed: {error}");
-        }
-        self.notify(json!({
-            "jsonrpc": "2.0",
-            "method": "notifications/initialized"
-        }))
-    }
-
-    fn request(&mut self, payload: Value) -> Result<Value> {
-        let expected_id = payload
-            .get("id")
-            .cloned()
-            .context("JSON-RPC request missing id")?;
-        self.write_line(&payload)?;
-        self.read_response(expected_id)
-    }
-
-    fn notify(&mut self, payload: Value) -> Result<()> {
-        self.write_line(&payload)
-    }
-
-    fn write_line(&mut self, payload: &Value) -> Result<()> {
-        writeln!(self.stdin, "{payload}")
-            .and_then(|_| self.stdin.flush())
-            .context("write MCP request")
-    }
-
-    fn read_response(&mut self, expected_id: Value) -> Result<Value> {
-        read_json_rpc_response(&self.stdout_lines, expected_id)
-    }
-
-    fn take_id(&mut self) -> u64 {
-        let next = self.next_id;
-        self.next_id += 1;
-        next
-    }
-}
-
-fn read_json_rpc_response(
-    stdout_lines: &Receiver<Result<String, String>>,
-    expected_id: Value,
-) -> Result<Value> {
-    loop {
-        let line = stdout_lines
-            .recv_timeout(MCP_REQUEST_TIMEOUT)
-            .with_context(|| {
-                format!(
-                    "timed out after {} seconds waiting for Bifrost MCP response",
-                    MCP_REQUEST_TIMEOUT.as_secs()
-                )
-            })?
-            .map_err(|message| anyhow!(message))?;
-        let response: Value = serde_json::from_str(&line)
-            .with_context(|| format!("parse MCP JSON response: {line}"))?;
-        if response.get("id") == Some(&expected_id) {
-            return Ok(response);
-        }
-    }
-}
-
-impl SearchToolsClient for McpSession {
-    fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value> {
-        let id = self.take_id();
-        let response = self.request(json!({
-            "jsonrpc": "2.0",
-            "id": id,
-            "method": "tools/call",
-            "params": {
-                "name": name,
-                "arguments": arguments,
-            }
-        }))?;
-        if let Some(error) = response.get("error") {
-            bail!("Bifrost MCP request failed for `{name}`: {error}");
-        }
-        let result = response
-            .get("result")
-            .context("Bifrost MCP response missing result")?;
-        if result
-            .get("isError")
-            .and_then(Value::as_bool)
-            .unwrap_or(false)
-        {
-            let message = result
-                .get("content")
-                .and_then(Value::as_array)
-                .and_then(|items| items.first())
-                .and_then(|item| item.get("text"))
-                .and_then(Value::as_str)
-                .unwrap_or("tool returned isError without text");
-            bail!("Bifrost tool `{name}` failed: {message}");
-        }
-        result
-            .get("structuredContent")
-            .cloned()
-            .ok_or_else(|| anyhow!("Bifrost tool `{name}` response missing structuredContent"))
-    }
-}
-
-impl Drop for McpSession {
-    fn drop(&mut self) {
-        let _ = self.stdin.flush();
-        let _ = self.child.kill();
-        let _ = self.child.wait();
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2084,9 +1661,17 @@ mod tests {
     fn serializes_report_with_stable_camel_case_fields() {
         let report = BifrostRunReport {
             usagebench_version: "0.1.0".to_string(),
-            bifrost_repo: "/repo/bifrost".to_string(),
-            bifrost_commit: "origin/master".to_string(),
-            bifrost_resolved_commit: "abc123".to_string(),
+            runner: RunnerMetadata {
+                name: "bifrost".to_string(),
+                requested_version: "origin/master".to_string(),
+                resolved_version: "abc123".to_string(),
+                source: "/repo/bifrost".to_string(),
+                adapter_version: "0.1.0".to_string(),
+                capabilities: Vec::new(),
+            },
+            bifrost_repo: Some("/repo/bifrost".to_string()),
+            bifrost_commit: Some("origin/master".to_string()),
+            bifrost_resolved_commit: Some("abc123".to_string()),
             started_at_unix_seconds: 1,
             finished_at_unix_seconds: 2,
             case_files: vec!["benchmarks/cases/rust.yaml".to_string()],
@@ -3070,30 +2655,6 @@ mod tests {
 
         assert!(output.status.success());
         assert!(output.stdout.len() > 500_000);
-    }
-
-    #[test]
-    fn json_rpc_response_reader_skips_notifications_and_other_ids() {
-        let (sender, receiver) = mpsc::channel();
-        sender
-            .send(Ok(
-                json!({"jsonrpc": "2.0", "method": "progress"}).to_string()
-            ))
-            .unwrap();
-        sender
-            .send(Ok(
-                json!({"jsonrpc": "2.0", "id": 1, "result": "wrong"}).to_string()
-            ))
-            .unwrap();
-        sender
-            .send(Ok(
-                json!({"jsonrpc": "2.0", "id": 2, "result": "right"}).to_string()
-            ))
-            .unwrap();
-
-        let response = read_json_rpc_response(&receiver, json!(2)).unwrap();
-
-        assert_eq!(response["result"], "right");
     }
 
     struct MockClient {

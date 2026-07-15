@@ -12,7 +12,9 @@ sites, and reverse usage-to-declaration probes using LSP-shaped ranges.
 * `benchmarks`: Authored benchmark case files and corpus documentation.
 * `fixtures`: Small in-repository source corpora used by the baseline cases.
 * `schema`: JSON Schema for benchmark case documents.
-* `src`: Rust validation CLI and schema model.
+* `src`: Rust validation CLI, schema model, and analyzer runner adapters.
+* `docs/runner-adapters.md`: Adapter contract, version policy, and peer-tool
+  feasibility notes.
 
 ## Validating Benchmark Cases
 
@@ -40,6 +42,43 @@ Java/Go/Python generator stack has been removed from the active benchmark path.
 Each fixture case records `verification.method: manual_inspection` with a short
 note explaining how the expected declaration and usage locations were checked.
 
+## Analyzer Runners
+
+Runner adapters under `src/runners` translate tool-specific output into one
+analyzer-neutral report shape. Every report records the requested and resolved
+tool version plus per-operation capability levels (`native`, `recovered`, or
+`unsupported`). Print its JSON Schema with:
+
+```bash
+cargo run -- report-schema
+```
+
+The existing Bifrost command remains stable:
+
+```bash
+cargo run -- run-bifrost benchmarks/cases \
+  --bifrost-repo /path/to/bifrost \
+  --bifrost-working-tree
+```
+
+The Repowise adapter is intentionally pinned to the one verified response
+contract, v0.31.0. By default it uses `uvx` to install/cache and run that exact
+release, creates isolated source copies, disables telemetry and global editor
+registration, and removes its index copies after the run:
+
+```bash
+cargo run -- run-repowise benchmarks/cases/rust-baseline.yaml \
+  --repowise-version 0.31.0 \
+  --output benchmark-output/repowise-rust.json
+```
+
+Use `--repowise-command /path/to/repowise` for an existing executable; its
+reported version must still match. Repowise v0.31.0 exposes call/heritage graph
+edges but not exact call-site locations, so the adapter recovers exact tokens
+inside graph-confirmed caller bodies. Non-call references and type lookups are
+reported as unsupported. See [runner adapter details](docs/runner-adapters.md)
+for the evidence and boundary.
+
 ## Daily Bifrost Benchmark
 
 The daily GitHub Actions workflow in `.github/workflows/benchmark.yml` runs the
@@ -57,14 +96,6 @@ The workflow:
 
 Scheduled runs use Bifrost `master`. Manual `workflow_dispatch` runs can set a
 specific `bifrost_ref` and can opt into cases marked `unsupported`.
-
-For local Bifrost changes, run the benchmark against the checkout directly:
-
-```bash
-cargo run -- run-bifrost benchmarks/cases \
-  --bifrost-repo /path/to/bifrost \
-  --bifrost-working-tree
-```
 
 Without `--bifrost-working-tree`, `run-bifrost` creates an isolated checkout
 under `target/usagebench` and checks out `--bifrost-commit`.
