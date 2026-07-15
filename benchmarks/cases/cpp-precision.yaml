@@ -9,6 +9,9 @@ cases:
       kind: method
       displayName: execute
     expectedUsages:
+      - location: { uri: benchmark://source/src/worker.cpp, range: { start: { line: 4, character: 13 }, end: { line: 4, character: 20 } } }
+        kind: method
+        displayName: execute
       - location: { uri: benchmark://source/src/consumer.cpp, range: { start: { line: 4, character: 9 }, end: { line: 4, character: 16 } } }
         kind: method
         displayName: execute
@@ -19,6 +22,9 @@ cases:
       kind: function
       displayName: select
     expectedUsages:
+      - location: { uri: benchmark://source/src/worker.cpp, range: { start: { line: 7, character: 4 }, end: { line: 7, character: 10 } } }
+        kind: function
+        displayName: select
       - location: { uri: benchmark://source/src/consumer.cpp, range: { start: { line: 5, character: 25 }, end: { line: 5, character: 31 } } }
         kind: function
         displayName: select

@@ -9,11 +9,19 @@ cases:
       kind: class
       displayName: Client
     expectedUsages:
+      - location: { uri: benchmark://source/src/lib.js, range: { start: { line: 5, character: 13 }, end: { line: 5, character: 19 } } }
+        kind: class
+        displayName: Client
+      - location: { uri: benchmark://source/src/lib.js, range: { start: { line: 8, character: 19 }, end: { line: 8, character: 25 } } }
+        kind: class
+        displayName: Client
       - location: { uri: benchmark://source/src/app.js, range: { start: { line: 2, character: 4 }, end: { line: 2, character: 10 } } }
         kind: class
         displayName: Client
-    verification: { method: manual_inspection, notes: "A CommonJS barrel re-export preserves the class identity at construction." }
+    verification: { method: manual_inspection, notes: "The factory construction and runtime CommonJS export both read Client; the downstream construction preserves its identity." }
   - id: js-commonjs-barrel-member-call
+    expectedFailure:
+      reason: "Bifrost returns the call on a CommonJS factory result only as an unproven usage."
     declaration:
       location: { uri: benchmark://source/src/lib.js, range: { start: { line: 1, character: 2 }, end: { line: 1, character: 9 } } }
       kind: method

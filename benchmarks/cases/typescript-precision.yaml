@@ -19,6 +19,9 @@ cases:
       kind: interface
       displayName: Widget
     expectedUsages:
+      - location: { uri: benchmark://source/src/api.ts, range: { start: { line: 4, character: 32 }, end: { line: 4, character: 38 } } }
+        kind: interface
+        displayName: Widget
       - location: { uri: benchmark://source/src/app.ts, range: { start: { line: 2, character: 14 }, end: { line: 2, character: 20 } } }
         kind: interface
         displayName: Widget

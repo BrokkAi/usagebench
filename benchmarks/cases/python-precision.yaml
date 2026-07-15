@@ -22,6 +22,9 @@ cases:
       kind: class
       displayName: Child
     expectedUsages:
+      - location: { uri: benchmark://source/precision/services.py, range: { start: { line: 9, character: 17 }, end: { line: 9, character: 22 } } }
+        kind: class
+        displayName: Child
       - location: { uri: benchmark://source/consumer.py, range: { start: { line: 5, character: 20 }, end: { line: 5, character: 25 } } }
         kind: class
         displayName: Child

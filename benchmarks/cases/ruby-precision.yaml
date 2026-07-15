@@ -4,6 +4,8 @@ source: { kind: fixture, path: fixtures/ruby/precision }
 language: ruby
 cases:
   - id: ruby-factory-return-member-call
+    expectedFailure:
+      reason: "Bifrost returns the call through a factory using bare new only as an unproven usage."
     declaration:
       location: { uri: benchmark://source/lib/precision/base.rb, range: { start: { line: 2, character: 8 }, end: { line: 2, character: 15 } } }
       kind: method

@@ -75,8 +75,12 @@ Each case supports both benchmark directions:
 - Import or re-export binding sites are not true-positive usages. Do not include
   them in any usage expectation or allowance; analyzers
   that report them should surface those locations as unexpected extras.
+- Runtime export expressions that read a local value are usages. For example,
+  the `Client` on the right-hand side of `module.exports = { Client }` or
+  `exports.Client = Client` belongs in `expectedUsages`.
 - `expectedFailure.reason` keeps a known analyzer gap in the baseline while
-  still running the case and failing if the case unexpectedly starts passing.
+  still running the case and reporting it as improved if it unexpectedly starts
+  passing.
 - `notPlanned.reason` keeps runtime-dynamic or generated-code expectations in
   the corpus and runs them without including them in the planned-case total.
 - `unsupported.reason` documents out-of-boundary cases and reports them as

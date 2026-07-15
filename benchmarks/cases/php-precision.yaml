@@ -9,6 +9,9 @@ cases:
       kind: method
       displayName: send
     expectedUsages:
+      - location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 7, character: 20 }, end: { line: 7, character: 24 } } }
+        kind: method
+        displayName: send
       - location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 11, character: 15 }, end: { line: 11, character: 19 } } }
         kind: method
         displayName: send
