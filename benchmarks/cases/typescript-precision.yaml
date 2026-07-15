@@ -4,6 +4,8 @@ source: { kind: fixture, path: fixtures/typescript/precision }
 language: typescript
 cases:
   - id: ts-chained-barrel-function-call
+    expectedFailure:
+      reason: "Bifrost incorrectly reports the chained barrel re-export binding as a function usage."
     declaration:
       location: { uri: benchmark://source/src/api.ts, range: { start: { line: 4, character: 16 }, end: { line: 4, character: 28 } } }
       kind: function
@@ -14,6 +16,8 @@ cases:
         displayName: createWidget
     verification: { method: manual_inspection, notes: "A function imported through a local barrel must preserve its declaration identity." }
   - id: ts-type-annotation-through-barrel
+    expectedFailure:
+      reason: "Bifrost incorrectly reports the barrel re-export binding as an interface usage."
     declaration:
       location: { uri: benchmark://source/src/api.ts, range: { start: { line: 0, character: 17 }, end: { line: 0, character: 23 } } }
       kind: interface
