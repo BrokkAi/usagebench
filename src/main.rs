@@ -5,6 +5,7 @@ use usagebench::bifrost_runner::{
     run_bifrost, BifrostRunReport, CaseStatus, NormalizedLocation, RunBifrostOptions,
     TypeLookupReport, UsageDefinitionReport,
 };
+use usagebench::runners::lsp::{run_lsp, RunLspOptions};
 use usagebench::runners::repowise::{run_repowise, RunRepowiseOptions};
 
 #[derive(Debug, Parser)]
@@ -81,6 +82,32 @@ enum Command {
         #[arg(long)]
         keep_worktrees: bool,
     },
+    /// Run benchmark cases against a versioned language-server profile.
+    RunLsp {
+        /// Case file or directory to run.
+        path: PathBuf,
+        /// JSON profile describing the language server and requested release.
+        #[arg(long)]
+        profile: PathBuf,
+        /// Override the profile's executable while retaining its arguments.
+        #[arg(long)]
+        server_command: Option<PathBuf>,
+        /// Directory for isolated source copies and runner artifacts.
+        #[arg(long, default_value = "target/usagebench")]
+        work_dir: PathBuf,
+        /// Write the machine-readable report JSON to this path.
+        #[arg(long)]
+        output: Option<PathBuf>,
+        /// Run cases marked unsupported instead of reporting only the unsupported boundary.
+        #[arg(long)]
+        include_unsupported: bool,
+        /// Keep isolated source copies after the run.
+        #[arg(long)]
+        keep_worktrees: bool,
+        /// Run only the matching case ID after language filtering.
+        #[arg(long)]
+        case_id: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -118,9 +145,10 @@ fn main() -> Result<()> {
             options.keep_worktrees = keep_worktrees;
             let report = run_bifrost(options)?;
             println!(
-                "ran {} planned case(s): {} passed, {} improved, {} failed, {} expected failure(s), {} not planned, {} unsupported, {} skipped, {} error(s)",
+                "ran {} planned case(s): {} passed, {} near miss(es), {} improved, {} failed, {} expected failure(s), {} not planned, {} unsupported, {} skipped, {} error(s)",
                 report.totals.cases,
                 report.totals.passed,
+                report.totals.near_misses,
                 report.totals.improved,
                 report.totals.failed,
                 report.totals.expected_failures,
@@ -156,9 +184,10 @@ fn main() -> Result<()> {
             options.keep_worktrees = keep_worktrees;
             let report = run_repowise(options)?;
             println!(
-                "ran {} planned case(s) with Repowise: {} passed, {} failed, {} not planned, {} unsupported, {} skipped, {} error(s)",
+                "ran {} planned case(s) with Repowise: {} passed, {} near miss(es), {} failed, {} not planned, {} unsupported, {} skipped, {} error(s)",
                 report.totals.cases,
                 report.totals.passed,
+                report.totals.near_misses,
                 report.totals.failed,
                 report.totals.not_planned,
                 report.totals.unsupported,
@@ -169,6 +198,46 @@ fn main() -> Result<()> {
             if report.totals.failed > 0 || report.totals.errors > 0 {
                 bail!(
                     "Repowise benchmark run failed: {} failed, {} error(s)",
+                    report.totals.failed,
+                    report.totals.errors
+                );
+            }
+        }
+        Command::RunLsp {
+            path,
+            profile,
+            server_command,
+            work_dir,
+            output,
+            include_unsupported,
+            keep_worktrees,
+            case_id,
+        } => {
+            let mut options = RunLspOptions::with_defaults(path, profile);
+            options.server_command = server_command;
+            options.work_dir = work_dir;
+            options.output = output;
+            options.include_unsupported = include_unsupported;
+            options.keep_worktrees = keep_worktrees;
+            options.case_id = case_id;
+            let report = run_lsp(options)?;
+            println!(
+                "ran {} planned case(s) with {} {}: {} passed, {} near miss(es), {} failed, {} not planned, {} unsupported, {} skipped, {} error(s)",
+                report.totals.cases,
+                report.runner.name,
+                report.runner.resolved_version,
+                report.totals.passed,
+                report.totals.near_misses,
+                report.totals.failed,
+                report.totals.not_planned,
+                report.totals.unsupported,
+                report.totals.skipped,
+                report.totals.errors
+            );
+            print_run_details(&report);
+            if report.totals.failed > 0 || report.totals.errors > 0 {
+                bail!(
+                    "LSP benchmark run failed: {} failed, {} error(s)",
                     report.totals.failed,
                     report.totals.errors
                 );
@@ -185,7 +254,8 @@ fn print_run_details(report: &BifrostRunReport) {
             let Some(declaration) = &case.declaration_to_usages else {
                 if matches!(
                     case.status,
-                    CaseStatus::Improved
+                    CaseStatus::NearMiss
+                        | CaseStatus::Improved
                         | CaseStatus::Failed
                         | CaseStatus::ExpectedFailure
                         | CaseStatus::NotPlanned
@@ -210,7 +280,8 @@ fn print_run_details(report: &BifrostRunReport) {
                 && declaration.unexpected_unproven.is_empty()
                 && !matches!(
                     case.status,
-                    CaseStatus::Improved
+                    CaseStatus::NearMiss
+                        | CaseStatus::Improved
                         | CaseStatus::Failed
                         | CaseStatus::ExpectedFailure
                         | CaseStatus::NotPlanned
@@ -338,6 +409,7 @@ fn safe_display(value: &str) -> String {
 fn status_label(status: CaseStatus) -> &'static str {
     match status {
         CaseStatus::Passed => "PASS",
+        CaseStatus::NearMiss => "NEAR-MISS",
         CaseStatus::Improved => "IMPROVED",
         CaseStatus::Failed => "FAIL",
         CaseStatus::ExpectedFailure => "XFAIL",

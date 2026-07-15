@@ -1,0 +1,39 @@
+{
+  "id": "metals",
+  "name": "Metals",
+  "languages": ["scala"],
+  "requestedVersion": "1.6.7",
+  "source": "https://github.com/scalameta/metals/releases/tag/v1.6.7",
+  "command": [
+    "cs",
+    "launch",
+    "org.scalameta:metals_2.13:1.6.7",
+    "-M",
+    "scala.meta.metals.Main"
+  ],
+  "fileExtensions": [".scala", ".sc"],
+  "languageIds": {".scala": "scala", ".sc": "scala"},
+  "initializationOptions": {
+    "statusBarProvider": "off",
+    "metals": {
+      "autoImportBuilds": "all",
+      "targetBuildTool": "sbt",
+      "defaultBspToBuildTool": true
+    }
+  },
+  "configuration": {
+    "metals": {
+      "autoImportBuilds": "all",
+      "targetBuildTool": "sbt",
+      "defaultBspToBuildTool": true
+    }
+  },
+  "acceptFirstActionRequests": true,
+  "workspaceFiles": {
+    "build.sbt": "scalaVersion := \"3.7.3\"\n",
+    "project/build.properties": "sbt.version=1.11.7\n"
+  },
+  "prepareCommand": ["cs", "launch", "sbt:1.11.7", "--", "compile"],
+  "prepareTimeoutMilliseconds": 300000,
+  "settleMilliseconds": 60000
+}

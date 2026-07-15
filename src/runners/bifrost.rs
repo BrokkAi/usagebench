@@ -1679,6 +1679,7 @@ mod tests {
                 documents: 1,
                 cases: 1,
                 passed: 1,
+                near_misses: 0,
                 improved: 0,
                 failed: 0,
                 expected_failures: 0,

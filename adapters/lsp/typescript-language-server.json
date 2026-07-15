@@ -1,0 +1,30 @@
+{
+  "id": "typescript-language-server",
+  "name": "typescript-language-server",
+  "languages": ["javascript", "typescript"],
+  "requestedVersion": "5.3.0 (TypeScript 5.9.3)",
+  "source": "https://github.com/typescript-language-server/typescript-language-server",
+  "command": [
+    "npx",
+    "--yes",
+    "--package=typescript-language-server@5.3.0",
+    "--package=typescript@5.9.3",
+    "typescript-language-server",
+    "--stdio"
+  ],
+  "fileExtensions": [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts"],
+  "languageIds": {
+    ".js": "javascript",
+    ".jsx": "javascriptreact",
+    ".mjs": "javascript",
+    ".cjs": "javascript",
+    ".ts": "typescript",
+    ".tsx": "typescriptreact",
+    ".mts": "typescript",
+    ".cts": "typescript"
+  },
+  "workspaceFiles": {
+    "tsconfig.json": "{\"compilerOptions\":{\"allowJs\":true,\"checkJs\":true,\"moduleResolution\":\"bundler\",\"jsx\":\"preserve\",\"target\":\"ES2022\",\"module\":\"ESNext\"},\"include\":[\"**/*\"]}"
+  },
+  "settleMilliseconds": 500
+}

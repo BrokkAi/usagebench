@@ -1,0 +1,12 @@
+{
+  "id": "intelephense",
+  "name": "Intelephense",
+  "languages": ["php"],
+  "requestedVersion": "1.18.5",
+  "source": "https://www.npmjs.com/package/intelephense/v/1.18.5",
+  "command": ["npx", "--yes", "--package=intelephense@1.18.5", "intelephense", "--stdio"],
+  "fileExtensions": [".php"],
+  "languageIds": {".php": "php"},
+  "configuration": {"intelephense": {"files": {"maxSize": 1000000}}},
+  "settleMilliseconds": 750
+}

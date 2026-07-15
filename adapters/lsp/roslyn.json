@@ -1,0 +1,35 @@
+{
+  "id": "roslyn",
+  "name": "Microsoft.CodeAnalysis.LanguageServer",
+  "languages": ["csharp"],
+  "requestedVersion": "vscode-csharp 2.140.9",
+  "source": "https://github.com/dotnet/vscode-csharp/releases/tag/v2.140.9",
+  "command": [
+    "Microsoft.CodeAnalysis.LanguageServer",
+    "--stdio",
+    "--logLevel",
+    "Error",
+    "--telemetryLevel",
+    "off"
+  ],
+  "fileExtensions": [".cs"],
+  "languageIds": {".cs": "csharp"},
+  "clientCapabilities": {
+    "workspace": {"_vs_projectContext": {"refreshSupport": true}}
+  },
+  "workspaceFiles": {
+    "usagebench.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net8.0</TargetFramework><LangVersion>latest</LangVersion><Nullable>enable</Nullable></PropertyGroup></Project>"
+  },
+  "postInitializeNotifications": [
+    {
+      "method": "project/open",
+      "params": {"projects": ["{workspaceUri}/usagebench.csproj"]}
+    }
+  ],
+  "readinessNotification": "workspace/projectInitializationComplete",
+  "readinessTimeoutMilliseconds": 120000,
+  "projectContextRequest": "textDocument/_vs_getProjectContexts",
+  "prepareCommand": ["dotnet", "restore", "--nologo", "--verbosity", "quiet"],
+  "prepareTimeoutMilliseconds": 180000,
+  "settleMilliseconds": 1000
+}

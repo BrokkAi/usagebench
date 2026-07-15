@@ -1,0 +1,18 @@
+{
+  "id": "gopls",
+  "name": "gopls",
+  "languages": ["go"],
+  "requestedVersion": "0.23.0",
+  "source": "https://github.com/golang/tools/releases/tag/gopls/v0.23.0",
+  "command": ["gopls"],
+  "fileExtensions": [".go"],
+  "languageIds": {".go": "go"},
+  "environment": {
+    "GOCACHE": "{runDir}/go-build-cache",
+    "GOPLSCACHE": "{runDir}/gopls-cache",
+    "GOTELEMETRY": "off"
+  },
+  "workspaceFiles": {"go.mod": "module usagebench.fixture\n\ngo 1.23\n"},
+  "settleMilliseconds": 5000,
+  "requestTimeoutMilliseconds": 30000
+}

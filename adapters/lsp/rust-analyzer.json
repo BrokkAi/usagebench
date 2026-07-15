@@ -1,0 +1,16 @@
+{
+  "id": "rust-analyzer",
+  "name": "rust-analyzer",
+  "languages": ["rust"],
+  "requestedVersion": "2026-07-13",
+  "source": "https://github.com/rust-lang/rust-analyzer/releases/tag/2026-07-13",
+  "command": ["rust-analyzer"],
+  "fileExtensions": [".rs"],
+  "languageIds": {".rs": "rust"},
+  "initializationOptions": {"checkOnSave": false},
+  "configuration": {"rust-analyzer": {"checkOnSave": false}},
+  "workspaceFiles": {
+    "Cargo.toml": "[package]\nname = \"usagebench_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n"
+  },
+  "settleMilliseconds": 3000
+}

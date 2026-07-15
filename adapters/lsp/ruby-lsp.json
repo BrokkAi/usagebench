@@ -1,0 +1,20 @@
+{
+  "id": "ruby-lsp",
+  "name": "Ruby LSP",
+  "languages": ["ruby"],
+  "requestedVersion": "0.26.10",
+  "source": "https://github.com/Shopify/ruby-lsp/releases/tag/v0.26.10",
+  "command": ["ruby-lsp", "--use-launcher"],
+  "fileExtensions": [".rb", ".rake"],
+  "languageIds": {".rb": "ruby", ".rake": "ruby"},
+  "initializationOptions": {"enabledFeatures": {"diagnostics": false}},
+  "environment": {
+    "BUNDLE_USER_HOME": "{workspace}/.bundle",
+    "HOME": "{workspace}"
+  },
+  "workspaceFiles": {
+    "Gemfile": "source \"https://rubygems.org\"\n\ngem \"ruby-lsp\", \"0.26.10\"\ngem \"debug\", \"1.11.1\"\n",
+    "Gemfile.lock": "GEM\n  remote: https://rubygems.org/\n  specs:\n    debug (1.11.1)\n      irb (~> 1.10)\n      reline (>= 0.3.8)\n    erb (6.0.4)\n    io-console (0.8.2)\n    irb (1.18.0)\n      pp (>= 0.6.0)\n      prism (>= 1.3.0)\n      rdoc (>= 4.0.0)\n      reline (>= 0.4.2)\n    language_server-protocol (3.17.0.6)\n    logger (1.7.0)\n    pp (0.6.4)\n      prettyprint\n    prettyprint (0.2.0)\n    prism (1.9.0)\n    rbs (4.0.3)\n      logger\n      prism (>= 1.6.0)\n      tsort\n    rdoc (8.0.0)\n      erb\n      prism (>= 1.6.0)\n      rbs (>= 4.0.0)\n      tsort\n    reline (0.6.3)\n      io-console (~> 0.5)\n    ruby-lsp (0.26.10)\n      language_server-protocol (~> 3.17.0)\n      prism (>= 1.2, < 2.0)\n      rbs (>= 3, < 5)\n    tsort (0.2.0)\n\nPLATFORMS\n  arm64-darwin-25\n  ruby\n\nDEPENDENCIES\n  debug (= 1.11.1)\n  ruby-lsp (= 0.26.10)\n\nCHECKSUMS\n  debug (1.11.1)\n  erb (6.0.4)\n  io-console (0.8.2)\n  irb (1.18.0)\n  language_server-protocol (3.17.0.6)\n  logger (1.7.0)\n  pp (0.6.4)\n  prettyprint (0.2.0)\n  prism (1.9.0)\n  rbs (4.0.3)\n  rdoc (8.0.0)\n  reline (0.6.3)\n  ruby-lsp (0.26.10)\n  tsort (0.2.0)\n\nBUNDLED WITH\n  4.0.11\n"
+  },
+  "settleMilliseconds": 750
+}

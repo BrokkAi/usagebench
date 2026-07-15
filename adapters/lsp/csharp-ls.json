@@ -1,0 +1,14 @@
+{
+  "id": "csharp-ls",
+  "name": "csharp-ls",
+  "languages": ["csharp"],
+  "requestedVersion": "0.26.0",
+  "source": "https://github.com/razzmatazz/csharp-language-server/releases/tag/0.26.0",
+  "command": ["csharp-ls"],
+  "fileExtensions": [".cs"],
+  "languageIds": {".cs": "csharp"},
+  "workspaceFiles": {
+    "usagebench.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net8.0</TargetFramework><LangVersion>latest</LangVersion><Nullable>enable</Nullable></PropertyGroup></Project>"
+  },
+  "settleMilliseconds": 1000
+}

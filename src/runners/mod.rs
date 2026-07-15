@@ -10,6 +10,8 @@ use serde::Serialize;
 use std::{collections::BTreeSet, path::Path};
 
 pub mod bifrost;
+pub mod lsp;
+mod lsp_protocol;
 mod mcp;
 pub mod repowise;
 
@@ -73,6 +75,7 @@ pub struct RunTotals {
     pub documents: usize,
     pub cases: usize,
     pub passed: usize,
+    pub near_misses: usize,
     pub improved: usize,
     pub failed: usize,
     pub expected_failures: usize,
@@ -95,6 +98,7 @@ pub struct DocumentRunReport {
 #[serde(rename_all = "snake_case")]
 pub enum CaseStatus {
     Passed,
+    NearMiss,
     Improved,
     Failed,
     ExpectedFailure,
@@ -373,6 +377,7 @@ pub(crate) fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
         }
         match case.status {
             CaseStatus::Passed => totals.passed += 1,
+            CaseStatus::NearMiss => totals.near_misses += 1,
             CaseStatus::Improved => totals.improved += 1,
             CaseStatus::Failed => totals.failed += 1,
             CaseStatus::ExpectedFailure => totals.expected_failures += 1,

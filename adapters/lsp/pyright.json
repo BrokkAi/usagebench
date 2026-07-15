@@ -1,0 +1,14 @@
+{
+  "id": "pyright",
+  "name": "Pyright",
+  "languages": ["python"],
+  "requestedVersion": "1.1.411",
+  "source": "https://github.com/microsoft/pyright/releases/tag/1.1.411",
+  "command": ["npx", "--yes", "--package=pyright@1.1.411", "pyright-langserver", "--stdio"],
+  "fileExtensions": [".py", ".pyi"],
+  "languageIds": {".py": "python", ".pyi": "python"},
+  "workspaceFiles": {
+    "pyrightconfig.json": "{\"include\":[\".\"],\"typeCheckingMode\":\"basic\"}"
+  },
+  "settleMilliseconds": 500
+}

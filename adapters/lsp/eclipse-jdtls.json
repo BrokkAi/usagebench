@@ -1,0 +1,15 @@
+{
+  "id": "eclipse-jdtls",
+  "name": "Eclipse JDT LS",
+  "languages": ["java"],
+  "requestedVersion": "1.61.0-202607142124",
+  "source": "https://download.eclipse.org/jdtls/snapshots/",
+  "command": ["jdtls", "-data", "{workspace}/.usagebench-jdtls-data"],
+  "fileExtensions": [".java"],
+  "languageIds": {".java": "java"},
+  "configuration": {"java": {"configuration": {"updateBuildConfiguration": "automatic"}}},
+  "workspaceFiles": {
+    "pom.xml": "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"><modelVersion>4.0.0</modelVersion><groupId>usagebench</groupId><artifactId>fixture</artifactId><version>0.0.0</version><properties><maven.compiler.release>21</maven.compiler.release></properties></project>"
+  },
+  "settleMilliseconds": 2000
+}
