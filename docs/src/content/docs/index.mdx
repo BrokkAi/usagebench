@@ -1,0 +1,38 @@
+---
+title: UsageBench
+description: Analyzer-neutral evidence for source usage and navigation behavior.
+template: splash
+hero:
+  title: UsageBench
+  tagline: Compare what code-navigation analyzers return, why they differ, and how strong the evidence is.
+  actions:
+    - text: Read the results
+      link: results/
+      icon: right-arrow
+      variant: primary
+    - text: Understand the method
+      link: methodology/
+      variant: secondary
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid>
+  <Card title="Source-grounded cases" icon="document">
+    Every expected declaration and usage is a reviewed source location in a small checked-in fixture.
+  </Card>
+  <Card title="Analyzer-neutral reports" icon="seti:json">
+    Bifrost and language servers are normalized into the same reference and navigation result model.
+  </Card>
+  <Card title="Differences, not verdicts" icon="approve-check-circle">
+    Results separate policy choices, precision differences, missing edges, unsupported shapes, and harness failures.
+  </Card>
+  <Card title="Reproducible versions" icon="history">
+    Reports retain the requested and resolved analyzer versions instead of silently substituting another release.
+  </Card>
+</CardGrid>
+
+UsageBench currently focuses on a task that maps naturally to LSP operations:
+declaration-to-reference lookup, reference-to-declaration navigation, and type
+navigation. Call graphs, taint, and other analyses should use focused sibling
+benchmarks rather than stretching “usage” into an analyzer-specific umbrella.

@@ -1,0 +1,62 @@
+name: Docs
+
+# Publishing stays manual until benchmark results have a versioned release model.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usagebench-docs-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install docs dependencies
+        run: npm ci
+        working-directory: docs
+
+      - name: Check docs
+        run: npm run check
+        working-directory: docs
+
+      - name: Build docs
+        run: npm run build
+        working-directory: docs
+        env:
+          PUBLIC_DOCS_SITE: https://brokkai.github.io
+          PUBLIC_DOCS_BASE: /usagebench
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs/dist
+
+  deploy:
+    name: deploy docs
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy docs
+        id: deployment
+        uses: actions/deploy-pages@v4

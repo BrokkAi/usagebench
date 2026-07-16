@@ -3,6 +3,10 @@
 Repository for curated benchmarks around the static analysis task of
 discovering usages of source symbols.
 
+The Starlight site under [`docs/`](docs/README.md) explains the comparison
+methodology, current Bifrost-versus-LSP results, and case-level language
+differences.
+
 The benchmark corpus is authored by source location instead of by an
 analyzer-specific symbol ID. Each case points at a declaration, expected usage
 sites, and reverse usage-to-declaration probes using LSP-shaped ranges.
@@ -14,8 +18,7 @@ sites, and reverse usage-to-declaration probes using LSP-shaped ranges.
 * `schema`: JSON Schema for benchmark case documents.
 * `src`: Rust validation CLI, schema model, and analyzer runner adapters.
 * `adapters/lsp`: Versioned language-server profiles and reproduction notes.
-* `docs/runner-adapters.md`: Adapter contract, version policy, and measured LSP
-  comparison.
+* `docs`: Public Starlight content plus adapter design notes and execution plans.
 
 ## Validating Benchmark Cases
 

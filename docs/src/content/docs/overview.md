@@ -1,0 +1,36 @@
+---
+title: Overview
+description: What UsageBench measures and why the comparison is deliberately cautious.
+---
+
+UsageBench evaluates source usage and navigation behavior on small, reviewed
+fixtures. A case starts from a declaration location, lists expected usage
+locations, and may probe whether those usages navigate back to the intended
+declaration or type.
+
+The benchmark is analyzer-neutral. Cases do not contain Bifrost symbol IDs or
+LSP-specific response shapes. Runners translate each tool's public interface
+into a shared report containing exact locations, missing locations, unexpected
+locations, navigation targets, capability levels, and diagnostics.
+
+## What the benchmark can establish
+
+- A runner returned or omitted a specific reviewed source location.
+- A navigation request reached or missed a specific declaration or type.
+- A difference was reproducible for a named analyzer release and fixture.
+- An extra location is an import/re-export policy difference or remains an
+  unexplained precision difference.
+
+## What it cannot establish by itself
+
+- That a language server is generally “wrong.” Its editor contract may group
+  declarations, constructors, implementations, or aliases differently.
+- That a miss was caused by flow insensitivity, object insensitivity, or another
+  particular approximation. That requires an isolating minimal pair.
+- That one architecture is faster or more scalable. Correctness fixtures do not
+  measure indexing time, warm-query latency, or peak memory.
+- That every real-world program construct is represented by the current corpus.
+
+The [comparison methodology](../methodology/) defines the evidence threshold for
+stronger claims. The [result snapshot](../results/) summarizes the current
+Bifrost-versus-LSP runs, and each language page explains the observed deltas.

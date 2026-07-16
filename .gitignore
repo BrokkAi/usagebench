@@ -22,6 +22,10 @@ dataset/**
 
 /target
 
+/docs/node_modules/
+/docs/dist/
+/docs/.astro/
+
 # Legacy generator trees are no longer part of the active benchmark path.
 /gogen/
 /javagen/
