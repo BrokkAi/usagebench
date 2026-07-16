@@ -26,18 +26,18 @@ export default defineConfig({
       ],
       sidebar: [
         {
-          label: 'Start',
+          label: 'About the benchmark',
           items: [
             { label: 'Overview', slug: 'overview' },
+            { label: 'Comparison methodology', slug: 'methodology' },
             { label: 'Reproduce the comparison', slug: 'reproduce' },
           ],
         },
         {
-          label: 'Interpret results',
+          label: 'Results and findings',
           items: [
-            { label: 'Comparison methodology', slug: 'methodology' },
-            { label: 'Result snapshot', slug: 'results' },
-            { label: 'Case comparison', slug: 'results/case-comparison' },
+            { label: 'Full result snapshot', slug: 'results' },
+            { label: 'Case-by-case comparison', slug: 'results/case-comparison' },
           ],
         },
         {

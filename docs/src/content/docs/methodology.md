@@ -67,6 +67,26 @@ Use that wording only when all of the following hold:
 
 Until then, report a benchmark disagreement and its evidence.
 
+## Execution and workspace policy
+
+Bifrost is evaluated as a fully static analyzer. It reads and indexes the
+checked-in source, but it does not execute fixture code or invoke the fixture's
+project build.
+
+Language servers receive a different, deliberately favorable setup. Their
+profiles may add minimal project files, configure toolchains, restore
+dependencies, generate compilation metadata, accept build-import prompts, and
+wait for a real project-loaded signal. A server may build or compile the fixture
+when that is part of its supported semantic-workspace flow.
+
+This asymmetry is intentional. Preventing a compiler-backed language server from
+hydrating its normal workspace would turn missing results into a harness
+configuration test. UsageBench compares each analyzer's returned locations
+after its intended environment is ready, while preserving Bifrost's notable
+property that its analysis does not depend on running or building the target
+project. The current snapshot does not compare the time, resource, dependency,
+or security costs of those execution models.
+
 ## Explaining a Bifrost advantage
 
 When Bifrost returns an expected edge that an LSP omits, the page names the

@@ -1,38 +1,93 @@
 ---
-title: UsageBench
-description: Analyzer-neutral evidence for source usage and navigation behavior.
-template: splash
-hero:
-  title: UsageBench
-  tagline: Compare what code-navigation analyzers return, why they differ, and how strong the evidence is.
-  actions:
-    - text: Read the results
-      link: results/
-      icon: right-arrow
-      variant: primary
-    - text: Understand the method
-      link: methodology/
-      variant: secondary
+title: UsageBench results
+description: Current cross-analyzer results for source usage and navigation behavior.
+tableOfContents: false
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+<p class="snapshot-kicker">RESULT SNAPSHOT · 16 JULY 2026</p>
 
-<CardGrid>
-  <Card title="Source-grounded cases" icon="document">
-    Every expected declaration and usage is a reviewed source location in a small checked-in fixture.
-  </Card>
-  <Card title="Analyzer-neutral reports" icon="seti:json">
-    Bifrost and language servers are normalized into the same reference and navigation result model.
-  </Card>
-  <Card title="Differences, not verdicts" icon="approve-check-circle">
-    Results separate policy choices, precision differences, missing edges, unsupported shapes, and harness failures.
-  </Card>
-  <Card title="Reproducible versions" icon="clock">
-    Reports retain the requested and resolved analyzer versions instead of silently substituting another release.
-  </Card>
-</CardGrid>
+<h2 class="landing-headline">Usage lookup, compared at the source-location level</h2>
 
-UsageBench currently focuses on a task that maps naturally to LSP operations:
-declaration-to-reference lookup, reference-to-declaration navigation, and type
-navigation. Call graphs, taint, and other analyses should use focused sibling
-benchmarks rather than stretching “usage” into an analyzer-specific umbrella.
+UsageBench measures whether code-navigation analyzers return the same reviewed
+declarations, usages, and navigation targets. The current snapshot compares
+Bifrost with ten language servers across small, checked-in fixtures.
+
+<div class="result-summary" aria-label="Current result summary">
+  <div class="result-metric">
+    <span>Bifrost exact</span>
+    <strong>128 <small>/ 137</small></strong>
+    <p>planned cases</p>
+  </div>
+  <div class="result-metric">
+    <span>Language-server exact</span>
+    <strong>74 <small>/ 136</small></strong>
+    <p>planned, expressible cases</p>
+  </div>
+  <div class="result-metric">
+    <span>Policy-only near misses</span>
+    <strong>19</strong>
+    <p>required results plus bindings</p>
+  </div>
+  <div class="result-metric">
+    <span>Runner errors</span>
+    <strong>0</strong>
+    <p>across measured servers</p>
+  </div>
+</div>
+
+These are contract results, not a general analyzer leaderboard. A policy-only
+near miss contains every required location but also includes an import,
+re-export, or export-metadata location that UsageBench excludes. A hard
+disagreement can combine missing usages, broader symbol families, or a different
+navigation target.
+
+<div class="execution-contrast">
+  <span>EXECUTION MODEL</span>
+  <strong>Static on one side; full build context on the other.</strong>
+  <p>
+    Bifrost never executes the code under analysis or invokes its project build.
+    Language servers may receive configured toolchains, restore dependencies,
+    import projects, and build fixtures when their normal semantic model requires
+    it. The comparison gives each analyzer the environment it needs; Bifrost's
+    results remain build-independent.
+  </p>
+</div>
+
+## Results by language
+
+| Language | Bifrost exact | Bifrost expected gap | Language server | Exact | Policy-only | Hard disagreement |
+|---|---:|---:|---|---:|---:|---:|
+| [C++](languages/cpp/) | 13 | 0 | clangd | 4 | 0 | 9 |
+| [C#](languages/csharp/) | 13 | 1 | Roslyn | 11 | 0 | 3 |
+| [Go](languages/go/) | 9 | 1 | gopls | 9 | 0 | 1 |
+| [Java](languages/java/) | 9 | 2 | Eclipse JDT LS | 9 | 1 | 1 |
+| [JavaScript, TypeScript](languages/javascript-typescript/) | 20 | 1 | TypeScript LS | 10 | 9 | 2 |
+| [PHP](languages/php/) | 12 | 0 | Intelephense | 9 | 1 | 2 |
+| [Python](languages/python/) | 12 | 0 | Pyright | 6 | 4 | 1 |
+| [Ruby](languages/ruby/) | 18 | 2 | Ruby LSP | 1 | 0 | 19 |
+| [Rust](languages/rust/) | 10 | 2 | rust-analyzer | 7 | 2 | 3 |
+| [Scala](languages/scala/) | 12 | 0 | Metals | 8 | 2 | 2 |
+| **Total** | **128** | **9** | **10 servers** | **74** | **19** | **43** |
+
+The denominators differ because Bifrost can address one zero-width Python module
+selector that the generic LSP runner cannot express as a cursor request. Eight
+not-planned cases are outside both denominators; three LSP-unsupported cases and
+two Bifrost-unsupported cases are also outside them.
+
+<div class="evidence-note">
+  The strongest pattern is not one score: import and re-export policy explains
+  19 near misses, while the hard results split across identity, recall,
+  implementation-family grouping, dynamic-language coverage, and navigation
+  semantics.
+</div>
+
+## Read beyond the aggregate
+
+The [full result snapshot](results/) records the version envelope and
+cross-analyzer patterns. The [case comparison](results/case-comparison/) lists
+every non-exact case and the observed distinction. Language pages discuss the
+evidence and fairness gaps without turning contract differences into unsupported
+defect claims.
+
+For how cases are scored, see the [comparison methodology](methodology/). To run
+the same corpus, use the [reproduction guide](reproduce/).

@@ -5,7 +5,7 @@ description: Compare imports, barrels, aliases, class methods, properties, and c
 
 | Runner | Exact | Policy near | Hard | Unsupported | Not planned |
 |---|---:|---:|---:|---:|---:|
-| Bifrost | 11 | 0 | 0 unexpected | 0 | 2 |
+| Bifrost | 12 | 0 | 0 unexpected | 0 | 2 |
 | Pyright | 6 | 4 | 1 | 1 | 2 |
 
 ## Agreement behind import policy
