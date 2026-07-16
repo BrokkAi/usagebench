@@ -14,8 +14,8 @@ sites, and reverse usage-to-declaration probes using LSP-shaped ranges.
 * `schema`: JSON Schema for benchmark case documents.
 * `src`: Rust validation CLI, schema model, and analyzer runner adapters.
 * `adapters/lsp`: Versioned language-server profiles and reproduction notes.
-* `docs/runner-adapters.md`: Adapter contract, version policy, and peer-tool
-  feasibility notes.
+* `docs/runner-adapters.md`: Adapter contract, version policy, and measured LSP
+  comparison.
 
 ## Validating Benchmark Cases
 
@@ -63,28 +63,6 @@ cargo run -- run-bifrost benchmarks/cases \
   --bifrost-working-tree
 ```
 
-The Repowise adapter is intentionally pinned to the one verified response
-contract, v0.31.0. By default it uses `uvx` to install/cache and run that exact
-release, creates isolated source copies, disables telemetry and global editor
-registration, and removes its index copies after the run. A version-specific
-Python hook observes Repowise's `CallResolver` output before individual calls
-are collapsed into graph edges:
-
-```bash
-cargo run -- run-repowise benchmarks/cases \
-  --repowise-version 0.31.0 \
-  --include-unsupported \
-  --output benchmark-output/repowise-v0.31.0.json
-```
-
-Use `--repowise-command /path/to/repowise` for an existing executable; its
-reported version must still match and the command must honor Python's
-`sitecustomize` hook. Resolved call sites at Repowise's public confidence floor
-are scored normally; lower-confidence calls remain unproven. Mixed or non-call
-references and type lookups are reported as unsupported. See
-[runner adapter details](docs/runner-adapters.md) for the evidence, full
-language probe, and capability boundary.
-
 The generic LSP adapter starts a versioned stdio language server, opens an
 isolated fixture workspace, and translates the protocol's native references,
 definition, and type-definition responses into the same report:
@@ -102,6 +80,13 @@ profile must be installed or available through the profile's package launcher;
 `--server-command` can override only the executable while preserving its
 arguments. See [the LSP profile guide](adapters/lsp/README.md) for setup and
 the measured comparison.
+
+UsageBench deliberately stays focused on the LSP-shaped task of finding symbol
+references and navigating those references back to declarations and types.
+Broader analysis contracts should use sibling suites—for example, a future
+`callbench` for call-graph resolution and `taintbench` for taint-flow analysis—
+so each benchmark can model its own ground truth without tool-specific private
+hooks or weakened semantics.
 
 ## Daily Bifrost Benchmark
 

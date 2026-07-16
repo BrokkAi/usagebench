@@ -13,7 +13,6 @@ pub mod bifrost;
 pub mod lsp;
 mod lsp_protocol;
 mod mcp;
-pub mod repowise;
 
 #[derive(Debug, Clone, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]

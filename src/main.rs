@@ -6,7 +6,6 @@ use usagebench::bifrost_runner::{
     TypeLookupReport, UsageDefinitionReport,
 };
 use usagebench::runners::lsp::{run_lsp, RunLspOptions};
-use usagebench::runners::repowise::{run_repowise, RunRepowiseOptions};
 
 #[derive(Debug, Parser)]
 #[command(name = "usagebench")]
@@ -56,29 +55,6 @@ enum Command {
         #[arg(long)]
         include_definition_lookups: bool,
         /// Keep temporary git source checkouts after the run.
-        #[arg(long)]
-        keep_worktrees: bool,
-    },
-    /// Run benchmark case YAML files against a pinned Repowise release.
-    RunRepowise {
-        /// Case file or directory to run.
-        path: PathBuf,
-        /// Exact supported Repowise release to run.
-        #[arg(long, default_value = "0.31.0")]
-        repowise_version: String,
-        /// Existing Repowise executable; defaults to `uvx --from repowise==VERSION repowise`.
-        #[arg(long)]
-        repowise_command: Option<PathBuf>,
-        /// Directory for isolated source copies and runner artifacts.
-        #[arg(long, default_value = "target/usagebench")]
-        work_dir: PathBuf,
-        /// Write the machine-readable report JSON to this path.
-        #[arg(long)]
-        output: Option<PathBuf>,
-        /// Run cases marked unsupported instead of reporting only the unsupported boundary.
-        #[arg(long)]
-        include_unsupported: bool,
-        /// Keep isolated indexed source copies after the run.
         #[arg(long)]
         keep_worktrees: bool,
     },
@@ -161,43 +137,6 @@ fn main() -> Result<()> {
             if report.totals.failed > 0 || report.totals.errors > 0 {
                 bail!(
                     "Bifrost benchmark run failed: {} failed, {} error(s)",
-                    report.totals.failed,
-                    report.totals.errors
-                );
-            }
-        }
-        Command::RunRepowise {
-            path,
-            repowise_version,
-            repowise_command,
-            work_dir,
-            output,
-            include_unsupported,
-            keep_worktrees,
-        } => {
-            let mut options = RunRepowiseOptions::with_defaults(path);
-            options.repowise_version = repowise_version;
-            options.repowise_command = repowise_command;
-            options.work_dir = work_dir;
-            options.output = output;
-            options.include_unsupported = include_unsupported;
-            options.keep_worktrees = keep_worktrees;
-            let report = run_repowise(options)?;
-            println!(
-                "ran {} planned case(s) with Repowise: {} passed, {} near miss(es), {} failed, {} not planned, {} unsupported, {} skipped, {} error(s)",
-                report.totals.cases,
-                report.totals.passed,
-                report.totals.near_misses,
-                report.totals.failed,
-                report.totals.not_planned,
-                report.totals.unsupported,
-                report.totals.skipped,
-                report.totals.errors
-            );
-            print_run_details(&report);
-            if report.totals.failed > 0 || report.totals.errors > 0 {
-                bail!(
-                    "Repowise benchmark run failed: {} failed, {} error(s)",
                     report.totals.failed,
                     report.totals.errors
                 );
