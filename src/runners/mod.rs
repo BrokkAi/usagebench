@@ -4,10 +4,10 @@
 //! translating that tool's public query surface into UsageBench locations.
 
 use crate::{benchmark_source_path, BenchmarkCase, SymbolKind, SymbolLocation};
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use schemars::JsonSchema;
-use serde::Serialize;
-use std::{collections::BTreeSet, path::Path};
+use serde::{Deserialize, Serialize};
+use std::{collections::BTreeSet, fs, path::Path, process::Command};
 
 pub mod bifrost;
 pub mod lsp;
@@ -52,7 +52,13 @@ pub enum CapabilitySupport {
 #[derive(Debug, Clone, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RunReport {
+    /// Version of the Rust CLI and runner adapters.
     pub usagebench_version: String,
+    /// Exact UsageBench source commit, with `-dirty` when local changes exist.
+    pub usagebench_revision: String,
+    /// Benchmark release tag for a clean tagged checkout or release bundle.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub usagebench_release: Option<String>,
     pub runner: RunnerMetadata,
     /// Compatibility fields retained for existing Bifrost report consumers.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -66,6 +72,105 @@ pub struct RunReport {
     pub case_files: Vec<String>,
     pub totals: RunTotals,
     pub documents: Vec<DocumentRunReport>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct UsagebenchProvenance {
+    pub revision: String,
+    pub release: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ReleaseMetadata {
+    revision: String,
+    release_tag: String,
+}
+
+pub(crate) fn resolve_usagebench_provenance(repo_root: &Path) -> Result<UsagebenchProvenance> {
+    let canonical_repo_root = fs::canonicalize(repo_root)
+        .with_context(|| format!("canonicalize UsageBench root {}", repo_root.display()))?;
+    let owns_git_worktree = git_stdout(repo_root, &["rev-parse", "--show-toplevel"])
+        .and_then(|path| fs::canonicalize(path).ok())
+        .is_some_and(|git_root| git_root == canonical_repo_root);
+    if owns_git_worktree {
+        let commit = git_stdout(repo_root, &["rev-parse", "HEAD"])
+            .context("resolve UsageBench Git revision")?;
+        let status = git_stdout(
+            repo_root,
+            &["status", "--porcelain", "--untracked-files=normal"],
+        )
+        .context("inspect UsageBench working tree for provenance")?;
+        let dirty = !status.is_empty();
+        let revision = if dirty {
+            format!("{commit}-dirty")
+        } else {
+            commit
+        };
+        let release = if dirty {
+            None
+        } else {
+            git_stdout(
+                repo_root,
+                &["tag", "--points-at", "HEAD", "--list", "v[0-9]*"],
+            )
+            .and_then(|tags| {
+                tags.lines()
+                    .map(str::trim)
+                    .find(|tag| is_release_tag(tag))
+                    .map(str::to_string)
+            })
+        };
+        return Ok(UsagebenchProvenance { revision, release });
+    }
+
+    let metadata_path = repo_root.join(".usagebench-release.json");
+    if metadata_path.is_file() {
+        let metadata: ReleaseMetadata = serde_json::from_slice(
+            &fs::read(&metadata_path)
+                .with_context(|| format!("read {}", metadata_path.display()))?,
+        )
+        .with_context(|| format!("parse {}", metadata_path.display()))?;
+        if metadata.revision.is_empty() || !is_release_tag(&metadata.release_tag) {
+            bail!(
+                "invalid UsageBench release provenance in {}",
+                metadata_path.display()
+            );
+        }
+        return Ok(UsagebenchProvenance {
+            revision: metadata.revision,
+            release: Some(metadata.release_tag),
+        });
+    }
+
+    bail!(
+        "could not resolve UsageBench source revision from Git or {}",
+        metadata_path.display()
+    )
+}
+
+fn git_stdout(repo_root: &Path, args: &[&str]) -> Option<String> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo_root)
+        .args(args)
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    Some(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
+fn is_release_tag(tag: &str) -> bool {
+    let Some(version) = tag.strip_prefix('v') else {
+        return false;
+    };
+    let parts = version.split('.').collect::<Vec<_>>();
+    parts.len() == 3
+        && parts
+            .iter()
+            .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
 }
 
 #[derive(Debug, Clone, Default, Serialize, JsonSchema)]
@@ -226,6 +331,50 @@ pub struct RunDiagnostic {
 pub fn generated_report_schema_json() -> Result<String> {
     let schema = schemars::schema_for!(RunReport);
     serde_json::to_string_pretty(&schema).context("serialize generated runner report schema")
+}
+
+#[cfg(test)]
+mod provenance_tests {
+    use super::*;
+
+    #[test]
+    fn accepts_release_semver_tags() {
+        assert!(is_release_tag("v0.1.0"));
+        assert!(is_release_tag("v12.34.56"));
+        assert!(!is_release_tag("0.1.0"));
+        assert!(!is_release_tag("v0.1"));
+        assert!(!is_release_tag("v0.1.0-rc.1"));
+    }
+
+    #[test]
+    fn reads_provenance_from_release_bundle() {
+        let tempdir = tempfile::tempdir().unwrap();
+        fs::write(
+            tempdir.path().join(".usagebench-release.json"),
+            r#"{"revision":"abc123","releaseTag":"v0.1.0"}"#,
+        )
+        .unwrap();
+
+        let provenance = resolve_usagebench_provenance(tempdir.path()).unwrap();
+
+        assert_eq!(provenance.revision, "abc123");
+        assert_eq!(provenance.release.as_deref(), Some("v0.1.0"));
+    }
+
+    #[test]
+    fn release_bundle_nested_in_another_worktree_uses_its_manifest() {
+        let tempdir = tempfile::tempdir_in(env!("CARGO_MANIFEST_DIR")).unwrap();
+        fs::write(
+            tempdir.path().join(".usagebench-release.json"),
+            r#"{"revision":"release123","releaseTag":"v1.2.3"}"#,
+        )
+        .unwrap();
+
+        let provenance = resolve_usagebench_provenance(tempdir.path()).unwrap();
+
+        assert_eq!(provenance.revision, "release123");
+        assert_eq!(provenance.release.as_deref(), Some("v1.2.3"));
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]

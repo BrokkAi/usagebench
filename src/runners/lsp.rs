@@ -109,6 +109,7 @@ struct ServerCapabilities {
 pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
     let started_at = unix_seconds_now()?;
     let repo_root = find_repo_root_for_path(&options.case_path)?;
+    let usagebench_provenance = super::resolve_usagebench_provenance(&repo_root)?;
     let profile_path = if options.profile.is_absolute() {
         options.profile.clone()
     } else {
@@ -187,6 +188,8 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
     let runner_name = observed_name.unwrap_or(profile.name.clone());
     let mut report = RunReport {
         usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
+        usagebench_revision: usagebench_provenance.revision,
+        usagebench_release: usagebench_provenance.release,
         runner: RunnerMetadata {
             name: runner_name,
             requested_version: profile.requested_version.clone(),
