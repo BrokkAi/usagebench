@@ -80,9 +80,50 @@ cases:
         Upstream test: crates/ide/src/goto_definition.rs::goto_def_of_trait_impl_type_alias.
         Adapted fixture: fixtures/rust/lsp-parity/.
         Maturity: Output in the impl should resolve to the associated type declared by the Runner trait.
-  - id: rust-parity-macro-generated-function-reference-not-planned
-    notPlanned:
-      reason: Macro-generated Rust declarations are retained for parity tracking but are not scored until the runner has a fair macro expansion model.
+  - id: rust-parity-direct-function-reference
+    declaration:
+      location:
+        uri: benchmark://source/src/lib.rs
+        range:
+          start: { line: 40, character: 7 }
+          end: { line: 40, character: 17 }
+      kind: function
+      displayName: direct_job
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/lib.rs
+          range:
+            start: { line: 45, character: 4 }
+            end: { line: 45, character: 14 }
+        kind: function
+        displayName: direct_job
+    usageLookups:
+      - usage:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 45, character: 4 }
+              end: { line: 45, character: 14 }
+          kind: function
+          displayName: direct_job
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 40, character: 7 }
+              end: { line: 40, character: 17 }
+          kind: function
+          displayName: direct_job
+    verification:
+      method: manual_inspection
+      notes: >
+        Direct control for the generated-function pair, manually checked against fixtures/rust/lsp-parity/src/lib.rs.
+        Parity source: rust-lang/rust-analyzer@cc5f0f8dadfc3297aebe4026d99b6d8f85fb1eb8.
+        Upstream reference: crates/ide/src/references.rs function-reference tests.
+        Server profile: rust-analyzer 2026-07-13; measured as 0.3.2971-standalone (ffcdbbd906 2026-07-13).
+  - id: rust-parity-macro-generated-function-reference
+    expectedFailure:
+      reason: Bifrost does not expand define_job_maker!, so it cannot index the generated function declaration at the macro invocation.
     declaration:
       location:
         uri: benchmark://source/src/lib.rs
@@ -117,9 +158,10 @@ cases:
           kind: function
           displayName: generated_job
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Expected ranges were manually checked against fixtures/rust/lsp-parity/src/lib.rs.
         Parity source: rust-lang/rust-analyzer@cc5f0f8dadfc3297aebe4026d99b6d8f85fb1eb8.
         Upstream reference: crates/ide/src/goto_definition.rs macro-definition tests and crates/ide/src/references.rs::test_find_all_refs_macro_def.
-        Adapted fixture: fixtures/rust/lsp-parity/.
-        Maturity: generated_job is declared through define_job_maker! and called from source; this should remain visible but unscored until macro expansion parity is intentional.
+        Server profile: rust-analyzer 2026-07-13; measured as 0.3.2971-standalone (ffcdbbd906 2026-07-13).
+        Maturity: generated_job is declared through define_job_maker! and called from source; both anchors are file-backed and standard references/definition operations can score them.

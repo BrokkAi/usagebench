@@ -3,10 +3,10 @@ title: C++ — Bifrost and clangd
 description: Compare declaration identity, out-of-line definitions, constructors, aliases, and overrides.
 ---
 
-| Runner | Exact | Policy near | Hard | Unsupported |
+| Runner | Exact | Policy near | Hard or expected gap | Unsupported |
 |---|---:|---:|---:|---:|
-| Bifrost | 13 planned passes | 0 | 0 unexpected | 1 |
-| clangd | 4 | 0 | 9 | 1 |
+| Bifrost | 14 | 0 | 1 expected gap | 1 |
+| clangd | 6 | 0 | 9 | 1 |
 
 ## Where Bifrost satisfies more cases
 
@@ -25,20 +25,22 @@ difference.
 ## Where clangd may have broader capability
 
 clangd is compiler-backed and can consume compilation databases, headers,
-templates, preprocessing, and macro expansion in editor workspaces. The current
-portable corpus barely tests those advantages: one compile-command-dependent
-case is marked unsupported, and macro-expanded references are not represented.
+templates, preprocessing, and macro expansion in editor workspaces. The new
+source-backed minimal pair provides one narrow example: both runners resolve a
+direct function call, while clangd alone resolves the same function name when
+it is supplied as a function-like macro argument. One compile-command-dependent
+case remains unsupported.
 
-It would therefore be unjustified to generalize the current 4/13 exact result
+It would therefore be unjustified to generalize the current 6/15 exact result
 into a claim that Bifrost has stronger C++ analysis overall.
 
 ## Approximation assessment
 
 No current failure proves flow or object insensitivity. The observed categories
 are declaration exclusion, constructor/class grouping, alias-target navigation,
-and override-family expansion. Minimal pairs for macro expansion, conditional
-compilation, and multiple receiver objects should be added before stronger
-claims.
+override-family expansion, and one function-like macro-expansion gap. More
+macro forms plus conditional compilation and multiple receiver objects are
+still needed before stronger claims.
 
 ## Architecture tradeoff
 

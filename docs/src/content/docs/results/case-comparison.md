@@ -3,7 +3,8 @@ title: Case comparison
 description: Case-level disagreements between Bifrost and each measured language server.
 ---
 
-This page lists non-exact cases. “Bifrost pass” means the pinned Bifrost run
+This page lists every non-exact case plus exact controls needed to interpret the
+macro and CommonJS comparisons. “Bifrost pass” means the pinned Bifrost run
 satisfied the authored contract; “Bifrost gap” means a documented expected
 failure. LSP near misses are policy-only binding/export extras. An LSP hard
 result means contract disagreement, not an automatic defect verdict.
@@ -17,13 +18,14 @@ result means contract disagreement, not an automatic defect verdict.
 | `cpp-constructor-call` | Pass | Hard | Reverse navigation returns the related class surface rather than the authored constructor declaration. |
 | `cpp-parity-using-alias-constructor` | Pass | Hard | Missing reference plus alias/class navigation difference. |
 | `cpp-parity-concrete-override-method-call` | Pass | Hard | Missing expected call and extra related declaration/implementation locations. |
+| `cpp-parity-direct-function-call-control` | Exact | Exact | The direct function declaration and call establish the non-macro control for the paired expansion case. |
+| `cpp-parity-function-like-macro-expanded-call` | Gap | Exact | clangd resolves the file-backed function-name macro argument in both reference directions; Bifrost finds the declaration-side usage but cannot navigate the macro argument back to the function. |
 | `cpp-parity-compile-commands-unsupported` | Unsupported | Unsupported | Deliberately outside the current portable corpus boundary. |
 
 ## C#
 
 | Case | Bifrost | Roslyn | Observed distinction |
 |---|---|---|---|
-| `csharp-generic-extension-call` | Gap | Exact | Bifrost retains the object-created receiver edge only as unproven; Roslyn returns the expected reference. |
 | `csharp-parity-interface-receiver-method-call` | Pass | Hard | Roslyn includes a related implementation-family call. |
 | `csharp-parity-concrete-implementation-method-call` | Pass | Hard | Roslyn includes a related interface/implementation-family call. |
 | `csharp-parity-namespace-alias-constructor` | Pass | Hard | Reverse navigation resolves to the namespace alias binding rather than the underlying class declaration. |
@@ -32,7 +34,7 @@ result means contract disagreement, not an automatic defect verdict.
 
 | Case | Bifrost | gopls | Observed distinction |
 |---|---|---|---|
-| `go-interface-receiver-method-call` | Gap | Hard | Both broaden the interface method to two concrete-receiver calls; Bifrost records those candidates as unproven while gopls returns ordinary reference locations. |
+| `go-interface-receiver-method-call` | Pass | Hard | Bifrost satisfies the authored interface-receiver contract; gopls broadens the interface method to two concrete-receiver calls. |
 
 ## Java
 
@@ -50,7 +52,7 @@ result means contract disagreement, not an automatic defect verdict.
 | Nine ES import/re-export cases | Pass | Near | Required references agree; TypeScript LS also returns binding/export locations. |
 | `js-parity-commonjs-destructured-function-call` | Pass | Hard | TypeScript LS omits the destructured CommonJS function call. |
 | `js-commonjs-barrel-class-construction` | Pass | Hard | TypeScript LS omits the construction reached through the CommonJS barrel. |
-| `js-commonjs-barrel-member-call` | Gap | Exact | Bifrost retains the factory-result member call only as unproven; TypeScript LS returns the expected reference. |
+| `js-commonjs-barrel-member-call` | Exact | Exact | Both analyzers satisfy the barrel-member control, isolating the other TypeScript LS CommonJS disagreements to different binding shapes. |
 
 ## PHP
 
@@ -73,7 +75,7 @@ result means contract disagreement, not an automatic defect verdict.
 | Case group | Bifrost | Ruby LSP | Observed distinction |
 |---|---|---|---|
 | Constants, mixins, singleton methods, aliases, autoload, `attr_reader`, class variables, factory/lexical constants | Mostly pass | Hard | Ruby LSP either omits expected dynamic-language edges or returns declaration/same-name locations outside the contract. The individual result does not isolate one approximation mechanism. |
-| `ruby-factory-return-member-call` | Gap | Hard | Bifrost returns the factory-result call only as unproven; Ruby LSP misses the expected call and returns an extra declaration-like location. |
+| `ruby-factory-return-member-call` | Pass | Hard | Bifrost satisfies the factory-result call contract; Ruby LSP misses the expected call and returns an extra declaration-like location. |
 | `ruby-require-relative-class-construction` | Gap | Hard | Bifrost misses the class's self-construction; Ruby LSP finds it but also returns the class declaration, so neither is exact. |
 | `ruby-singleton-field-access` | Exact | Exact | The only planned exact agreement among the Ruby cases. |
 
@@ -82,10 +84,12 @@ result means contract disagreement, not an automatic defect verdict.
 | Case | Bifrost | rust-analyzer | Observed distinction |
 |---|---|---|---|
 | `rust-function-call-and-reexport` | Pass | Near | rust-analyzer additionally returns the re-export binding. |
-| `rust-barrel-trait-static-qualifier` | Gap | Near | rust-analyzer finds every required qualifier plus re-export bindings; Bifrost misses the chained re-export qualifiers. |
-| `rust-ufcs-trait-method-through-barrel` | Gap | Hard | rust-analyzer finds both required calls but also returns the trait declaration; Bifrost misses the calls. |
+| `rust-barrel-trait-static-qualifier` | Pass | Near | Bifrost finds the required qualifiers; rust-analyzer finds them plus re-export bindings. |
+| `rust-ufcs-trait-method-through-barrel` | Pass | Hard | Bifrost satisfies the authored calls; rust-analyzer finds both calls but also returns the trait declaration. |
 | `rust-struct-construction` | Pass | Hard | rust-analyzer adds a re-export plus `Self`/declaration-like locations; only the re-export is policy-allowed. |
 | `rust-parity-module-declaration-definition` | Pass | Hard | rust-analyzer navigates to the module file start rather than the authored `mod workflow` declaration. |
+| `rust-parity-direct-function-reference` | Exact | Exact | The direct declaration and call establish the non-macro control for the paired generated-function case. |
+| `rust-parity-macro-generated-function-reference` | Gap | Exact | rust-analyzer resolves the generated declaration anchor and call exactly; Bifrost does not expand the declarative macro and misses both the usage and reverse definition. |
 
 ## Scala
 
@@ -106,5 +110,6 @@ The highest-value minimal pairs are:
    misses are flow-sensitive, name-resolution, or return-summary boundaries.
 3. Alias chains with and without re-export hops, to isolate binding identity
    from canonical declaration identity.
-4. Macro/generated equivalents of an otherwise identical direct declaration,
-   so compiler expansion support is represented rather than merely discussed.
+4. Proc-macro, derive-generated, synthetic-member, and configured-project
+   equivalents using the same direct-versus-generated pairing now present for
+   Rust declarative macros and C++ function-like macros.

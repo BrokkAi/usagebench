@@ -38,4 +38,14 @@ T choose(T left, T right) {
 std::string configured_only();
 #endif
 
+inline std::string direct_label(const std::string& value) {
+    return value;
+}
+
+inline std::string expanded_label(const std::string& value) {
+    return value;
+}
+
+#define PARITY_CALL(function_name, value) parity::function_name(value)
+
 } // namespace parity

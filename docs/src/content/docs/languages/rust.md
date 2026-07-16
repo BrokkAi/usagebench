@@ -5,19 +5,19 @@ description: Compare re-exports, traits, UFCS, Self aliases, modules, and genera
 
 | Runner | Exact | Policy near | Hard or expected gap | Not planned |
 |---|---:|---:|---:|---:|
-| Bifrost | 10 | 0 | 2 expected gaps | 1 |
-| rust-analyzer | 7 | 2 | 3 | 1 |
+| Bifrost | 13 | 0 | 1 expected gap | 0 |
+| rust-analyzer | 9 | 2 | 3 | 0 |
 
 ## rust-analyzer recall edges
 
 rust-analyzer finds every required `Worker` qualifier through the chained trait
 re-export and is a policy near miss only because it also returns re-export
-bindings. Bifrost misses those qualifiers.
+bindings. Bifrost satisfies those qualifiers as an expected baseline pass.
 
 For the UFCS trait-method-through-barrel case, rust-analyzer finds both expected
-calls but also returns the trait declaration. Bifrost misses the calls. The hard
-status therefore hides a real rust-analyzer recall advantage alongside a
-reference-set precision difference.
+calls but also returns the trait declaration. Its hard status therefore combines
+successful recall with a reference-set precision difference. Bifrost now
+satisfies the authored contract as an expected baseline pass.
 
 These results are consistent with compiler-aware re-export and trait resolution.
 
@@ -33,15 +33,17 @@ only the former matches this benchmark's declaration target.
 
 ## Approximation assessment
 
-The Bifrost misses are specifically chained re-export canonicalization gaps.
-The rust-analyzer extras reflect `Self` equivalence, trait-declaration inclusion,
+The remaining Bifrost miss is the declarative-macro-generated function. The
+rust-analyzer extras reflect `Self` equivalence, trait-declaration inclusion,
 and navigation policy. No current case establishes flow or object sensitivity.
 
-## Fairness gap
+## Macro-generated minimal pair
 
-The macro-generated function case is not planned even though rust-analyzer
-passes it in this fixture. Macro expansion must become a scored, representative
-category before drawing broad Rust conclusions.
+The scored direct and `macro_rules!`-generated function cases have identical
+file-backed declaration/reference expectations. rust-analyzer resolves both
+exactly. Bifrost resolves the direct control but misses the generated call and
+its reverse definition lookup, so the generated case is an expected failure.
+This is one declarative-macro scenario, not broad proc-macro or derive coverage.
 
 ## Architecture tradeoff
 
