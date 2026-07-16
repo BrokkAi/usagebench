@@ -48,7 +48,7 @@ note explaining how the expected declaration and usage locations were checked.
 Runner adapters under `src/runners` translate tool-specific output into one
 analyzer-neutral report shape. Every report records the requested and resolved
 tool version plus per-operation capability levels (`native`, `recovered`, or
-`unsupported`). Reports distinguish exact passes, complete-superset near
+`unsupported`). Reports distinguish exact passes, classified policy-only near
 misses, hard failures, and runner errors. Print the JSON Schema with:
 
 ```bash

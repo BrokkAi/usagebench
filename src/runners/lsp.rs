@@ -2,9 +2,10 @@ use super::bifrost::{command_output_with_timeout, prepare_source_root};
 use super::lsp_protocol::{InitializeResult, LspSession};
 use super::{
     compute_totals, normalize_symbol_location, path_to_slash, score_declaration_locations,
-    symbol_kind_name, CapabilitySupport, CaseRunReport, CaseStatus, DeclarationUsageReport,
-    DocumentRunReport, NormalizedLocation, RunDiagnostic, RunReport, RunTotals, RunnerCapability,
-    RunnerMetadata, RunnerOperation, TypeLookupReport, UsageDefinitionReport,
+    symbol_kind_name, CapabilitySupport, CaseRunReport, CaseStatus, ClassifiedExtraUsage,
+    DeclarationUsageReport, DocumentRunReport, ExtraUsageClassification, ExtraUsageDisposition,
+    NormalizedLocation, RunDiagnostic, RunReport, RunTotals, RunnerCapability, RunnerMetadata,
+    RunnerOperation, TypeLookupReport, UsageDefinitionReport,
 };
 use crate::{
     benchmark_source_path, find_repo_root_for_path, BenchmarkCase, BenchmarkDocument,
@@ -76,6 +77,8 @@ struct LspProfile {
     readiness_timeout_milliseconds: Option<u64>,
     project_context_request: Option<String>,
     #[serde(default)]
+    query_declaration: bool,
+    #[serde(default)]
     accept_first_action_requests: bool,
     #[serde(default)]
     prepare_command: Vec<String>,
@@ -98,6 +101,7 @@ struct ProfileNotification {
 #[derive(Debug, Clone, Default)]
 struct ServerCapabilities {
     references: bool,
+    declaration: bool,
     definition: bool,
     type_definition: bool,
 }
@@ -197,8 +201,13 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
                 ),
                 capability(
                     RunnerOperation::UsageToDeclaration,
-                    capabilities.definition,
-                    "textDocument/definition",
+                    (profile.query_declaration && capabilities.declaration)
+                        || capabilities.definition,
+                    if profile.query_declaration && capabilities.declaration {
+                        "textDocument/declaration with textDocument/definition fallback"
+                    } else {
+                        "textDocument/definition"
+                    },
                 ),
                 capability(
                     RunnerOperation::TypeLookup,
@@ -282,6 +291,7 @@ fn run_document(
         .map(|case| {
             run_case(
                 case,
+                &document.language,
                 profile,
                 source_root,
                 &capabilities,
@@ -295,6 +305,7 @@ fn run_document(
 
 fn run_case(
     case: &BenchmarkCase,
+    language: &str,
     profile: &LspProfile,
     source_root: &Path,
     capabilities: &ServerCapabilities,
@@ -332,6 +343,7 @@ fn run_case(
                 lookup,
                 profile,
                 source_root,
+                profile.query_declaration && capabilities.declaration,
                 capabilities.definition,
                 session,
             )
@@ -354,6 +366,7 @@ fn run_case(
         run_references(
             case,
             declaration,
+            language,
             profile,
             source_root,
             capabilities.references,
@@ -384,6 +397,7 @@ fn run_case(
 fn run_references(
     case: &BenchmarkCase,
     declaration: &SymbolLocation,
+    language: &str,
     profile: &LspProfile,
     source_root: &Path,
     supported: bool,
@@ -391,6 +405,11 @@ fn run_references(
 ) -> DeclarationUsageReport {
     if !supported {
         let mut report = failed_declaration_report(case, "references_not_advertised");
+        report.status = CaseStatus::Unsupported;
+        return report;
+    }
+    if declaration.location.range.start == declaration.location.range.end {
+        let mut report = failed_declaration_report(case, "lsp_selector_has_no_source_token");
         report.status = CaseStatus::Unsupported;
         return report;
     }
@@ -421,7 +440,7 @@ fn run_references(
                 false,
             )
             .unwrap_or_else(|error| error_declaration_report(case, "score_failed", error));
-            classify_complete_superset(&mut report);
+            classify_lsp_extra_usages(&mut report, language, source_root);
             report
         }
         Err(error) => error_declaration_report(case, "references_failed", error),
@@ -432,17 +451,25 @@ fn run_definition(
     lookup: &UsageLookup,
     profile: &LspProfile,
     source_root: &Path,
-    supported: bool,
+    declaration_supported: bool,
+    definition_supported: bool,
     session: &mut LspSession,
 ) -> UsageDefinitionReport {
-    if !supported {
-        return unsupported_definition_report(lookup, "definition_not_advertised");
+    if !declaration_supported && !definition_supported {
+        return unsupported_definition_report(lookup, "declaration_and_definition_not_advertised");
     }
     let expected = normalized_or_invalid(&lookup.expected_declaration);
     let usage = normalized_or_invalid(&lookup.usage);
     let result = position_params_with_context(&lookup.usage, profile, source_root, session)
-        .and_then(|params| session.query("textDocument/definition", params))
-        .and_then(|value| locations_from_response(&value, source_root));
+        .and_then(|params| {
+            navigation_locations(
+                session,
+                params,
+                source_root,
+                declaration_supported,
+                definition_supported,
+            )
+        });
     match result {
         Ok(actual) => {
             let status = location_response_status(&actual, &expected);
@@ -655,15 +682,206 @@ fn location_response_status(
     }
 }
 
-fn classify_complete_superset(report: &mut DeclarationUsageReport) {
+fn navigation_locations(
+    session: &mut LspSession,
+    params: Value,
+    source_root: &Path,
+    declaration_supported: bool,
+    definition_supported: bool,
+) -> Result<Vec<NormalizedLocation>> {
+    let mut locations = Vec::new();
+    if declaration_supported {
+        let value = session.query("textDocument/declaration", params.clone())?;
+        locations.extend(locations_from_response(&value, source_root)?);
+    }
+    if definition_supported {
+        let value = session.query("textDocument/definition", params)?;
+        locations.extend(locations_from_response(&value, source_root)?);
+    }
+    locations.sort();
+    locations.dedup();
+    Ok(locations)
+}
+
+fn classify_lsp_extra_usages(
+    report: &mut DeclarationUsageReport,
+    language: &str,
+    source_root: &Path,
+) {
+    let mut unexpected = Vec::new();
+    for location in std::mem::take(&mut report.unexpected) {
+        let (classification, rationale) = classify_extra_usage(language, source_root, &location);
+        let disposition = if matches!(
+            classification,
+            ExtraUsageClassification::ImportBinding
+                | ExtraUsageClassification::ReexportBinding
+                | ExtraUsageClassification::ExportMetadata
+        ) {
+            ExtraUsageDisposition::AllowedPolicyExtra
+        } else {
+            unexpected.push(location.clone());
+            ExtraUsageDisposition::Unexpected
+        };
+        report.extra_usages.push(ClassifiedExtraUsage {
+            location,
+            classification,
+            disposition,
+            rationale,
+        });
+    }
+
+    report.unexpected = unexpected;
+    let has_allowed_policy_extra = report
+        .extra_usages
+        .iter()
+        .any(|extra| extra.disposition == ExtraUsageDisposition::AllowedPolicyExtra);
     if report.status == CaseStatus::Failed
         && !report.partial
         && report.missing.is_empty()
         && report.missing_unproven.is_empty()
-        && (!report.unexpected.is_empty() || !report.unexpected_unproven.is_empty())
+        && report.unexpected.is_empty()
+        && report.unexpected_unproven.is_empty()
+        && has_allowed_policy_extra
     {
         report.status = CaseStatus::NearMiss;
-        report.raw_statuses.push("complete_superset".to_string());
+        report
+            .raw_statuses
+            .push("allowed_policy_extras".to_string());
+    }
+}
+
+fn classify_extra_usage(
+    language: &str,
+    source_root: &Path,
+    location: &NormalizedLocation,
+) -> (ExtraUsageClassification, String) {
+    let Ok(source) = fs::read_to_string(source_root.join(&location.path)) else {
+        return (
+            ExtraUsageClassification::Unclassified,
+            "source text was unavailable for classification".to_string(),
+        );
+    };
+    let lines = source.lines().collect::<Vec<_>>();
+    let line_index = location.line.saturating_sub(1) as usize;
+    let Some(line) = lines.get(line_index).copied() else {
+        return (
+            ExtraUsageClassification::Unclassified,
+            "reported line was outside the source file".to_string(),
+        );
+    };
+    let trimmed = line.trim_start();
+    let path = location.path.as_str();
+
+    if language == "python" && trimmed.starts_with("__all__") {
+        return (
+            ExtraUsageClassification::ExportMetadata,
+            "Python __all__ export metadata is included by the language server".to_string(),
+        );
+    }
+    if language == "rust" && rust_line_is_in_pub_use(&lines, line_index) {
+        return (
+            ExtraUsageClassification::ReexportBinding,
+            "the language server includes a re-export binding in find-references results"
+                .to_string(),
+        );
+    }
+    if is_reexport_binding(language, path, trimmed) {
+        return (
+            ExtraUsageClassification::ReexportBinding,
+            "the language server includes a re-export binding in find-references results"
+                .to_string(),
+        );
+    }
+    if is_export_metadata(language, trimmed) {
+        return (
+            ExtraUsageClassification::ExportMetadata,
+            "the language server includes export metadata in find-references results".to_string(),
+        );
+    }
+    if is_import_binding(language, trimmed) {
+        return (
+            ExtraUsageClassification::ImportBinding,
+            "the language server includes an import binding in find-references results".to_string(),
+        );
+    }
+    if is_declaration_or_definition(language, trimmed) {
+        return (
+            ExtraUsageClassification::DeclarationOrDefinition,
+            "the extra location appears to be a declaration or definition, despite includeDeclaration=false"
+                .to_string(),
+        );
+    }
+    (
+        ExtraUsageClassification::Unclassified,
+        "the extra location is not an allowed import, re-export, or export-metadata difference"
+            .to_string(),
+    )
+}
+
+fn rust_line_is_in_pub_use(lines: &[&str], line_index: usize) -> bool {
+    for (index, line) in lines[..=line_index].iter().enumerate().rev() {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("pub use ") {
+            return true;
+        }
+        if index < line_index && line.contains(';') {
+            return false;
+        }
+    }
+    false
+}
+
+fn is_reexport_binding(language: &str, path: &str, line: &str) -> bool {
+    match language {
+        "javascript" | "typescript" => {
+            line.starts_with("export * from ")
+                || ((line.starts_with("export {") || line.starts_with("export type {"))
+                    && line.contains(" from "))
+        }
+        "python" => {
+            path.ends_with("/__init__.py")
+                && (line.starts_with("from ") || line.starts_with("import "))
+        }
+        "rust" => line.starts_with("pub use "),
+        _ => false,
+    }
+}
+
+fn is_export_metadata(language: &str, line: &str) -> bool {
+    matches!(language, "javascript" | "typescript")
+        && (line.starts_with("export {") || line.starts_with("export type {"))
+        && !line.contains(" from ")
+}
+
+fn is_import_binding(language: &str, line: &str) -> bool {
+    match language {
+        "javascript" | "typescript" | "java" | "scala" => line.starts_with("import "),
+        "python" => line.starts_with("from ") || line.starts_with("import "),
+        "php" => line.starts_with("use "),
+        "rust" => line.starts_with("use "),
+        "csharp" => line.starts_with("using "),
+        _ => false,
+    }
+}
+
+fn is_declaration_or_definition(language: &str, line: &str) -> bool {
+    match language {
+        "ruby" => {
+            line.starts_with("class ")
+                || line.starts_with("module ")
+                || line.starts_with("def ")
+                || line.starts_with("attr_")
+                || line.starts_with("alias ")
+                || line.starts_with("alias_method ")
+                || line.starts_with("autoload ")
+        }
+        "rust" => line.starts_with("fn ") || line.starts_with("pub fn "),
+        "cpp" => {
+            line.starts_with("class ")
+                || line.starts_with("struct ")
+                || line.starts_with("explicit ")
+        }
+        _ => false,
     }
 }
 
@@ -736,6 +954,7 @@ fn is_generated_workspace_directory(name: &std::ffi::OsStr) -> bool {
 fn capabilities_from_initialize(value: &Value) -> ServerCapabilities {
     ServerCapabilities {
         references: provider_enabled(value.get("referencesProvider")),
+        declaration: provider_enabled(value.get("declarationProvider")),
         definition: provider_enabled(value.get("definitionProvider")),
         type_definition: provider_enabled(value.get("typeDefinitionProvider")),
     }
@@ -1059,6 +1278,7 @@ fn empty_declaration_report(status: CaseStatus, raw_status: &str) -> Declaration
         missing_unproven: Vec::new(),
         unexpected: Vec::new(),
         unexpected_unproven: Vec::new(),
+        extra_usages: Vec::new(),
         partial: false,
         raw_statuses: vec![raw_status.to_string()],
     }
@@ -1144,10 +1364,12 @@ mod tests {
     fn recognizes_boolean_and_options_capabilities() {
         let capabilities = capabilities_from_initialize(&json!({
             "referencesProvider": true,
+            "declarationProvider": {"workDoneProgress": true},
             "definitionProvider": {"workDoneProgress": true},
             "typeDefinitionProvider": false
         }));
         assert!(capabilities.references);
+        assert!(capabilities.declaration);
         assert!(capabilities.definition);
         assert!(!capabilities.type_definition);
     }
@@ -1197,14 +1419,81 @@ mod tests {
     }
 
     #[test]
-    fn complete_reference_superset_is_a_near_miss() {
+    fn import_binding_extra_is_an_allowed_policy_near_miss() {
+        let root = tempfile::tempdir().unwrap();
+        fs::create_dir_all(root.path().join("src")).unwrap();
+        fs::write(
+            root.path().join("src/import.ts"),
+            "import { Widget } from './widget';\n",
+        )
+        .unwrap();
         let mut report = empty_declaration_report(CaseStatus::Failed, "ok");
         report.unexpected.push(test_location("src/import.ts", 1));
-        classify_complete_superset(&mut report);
+        classify_lsp_extra_usages(&mut report, "typescript", root.path());
         assert_eq!(report.status, CaseStatus::NearMiss);
+        assert!(report.unexpected.is_empty());
+        assert_eq!(report.extra_usages.len(), 1);
+        assert_eq!(
+            report.extra_usages[0].classification,
+            ExtraUsageClassification::ImportBinding
+        );
         assert!(report
             .raw_statuses
-            .contains(&"complete_superset".to_string()));
+            .contains(&"allowed_policy_extras".to_string()));
+    }
+
+    #[test]
+    fn unclassified_reference_extra_remains_a_failure() {
+        let root = tempfile::tempdir().unwrap();
+        fs::create_dir_all(root.path().join("src")).unwrap();
+        fs::write(root.path().join("src/use.ts"), "Widget.create();\n").unwrap();
+        let mut report = empty_declaration_report(CaseStatus::Failed, "ok");
+        report.unexpected.push(test_location("src/use.ts", 1));
+        classify_lsp_extra_usages(&mut report, "typescript", root.path());
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(report.unexpected.len(), 1);
+        assert_eq!(
+            report.extra_usages[0].disposition,
+            ExtraUsageDisposition::Unexpected
+        );
+    }
+
+    #[test]
+    fn multiline_rust_reexport_is_an_allowed_policy_extra() {
+        let root = tempfile::tempdir().unwrap();
+        fs::create_dir_all(root.path().join("src")).unwrap();
+        fs::write(
+            root.path().join("src/lib.rs"),
+            "pub use crate::service::{\n    Service, build_service,\n};\n",
+        )
+        .unwrap();
+        let mut report = empty_declaration_report(CaseStatus::Failed, "ok");
+        report.unexpected.push(test_location("src/lib.rs", 2));
+        classify_lsp_extra_usages(&mut report, "rust", root.path());
+        assert_eq!(report.status, CaseStatus::NearMiss);
+        assert_eq!(
+            report.extra_usages[0].classification,
+            ExtraUsageClassification::ReexportBinding
+        );
+    }
+
+    #[test]
+    fn runtime_javascript_export_expression_is_not_a_policy_extra() {
+        let root = tempfile::tempdir().unwrap();
+        fs::create_dir_all(root.path().join("src")).unwrap();
+        fs::write(
+            root.path().join("src/export.ts"),
+            "export default Widget;\n",
+        )
+        .unwrap();
+        let mut report = empty_declaration_report(CaseStatus::Failed, "ok");
+        report.unexpected.push(test_location("src/export.ts", 1));
+        classify_lsp_extra_usages(&mut report, "typescript", root.path());
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(
+            report.extra_usages[0].classification,
+            ExtraUsageClassification::Unclassified
+        );
     }
 
     #[test]

@@ -147,8 +147,36 @@ pub struct DeclarationUsageReport {
     pub unexpected: Vec<NormalizedLocation>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub unexpected_unproven: Vec<NormalizedLocation>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub extra_usages: Vec<ClassifiedExtraUsage>,
     pub partial: bool,
     pub raw_statuses: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ClassifiedExtraUsage {
+    pub location: NormalizedLocation,
+    pub classification: ExtraUsageClassification,
+    pub disposition: ExtraUsageDisposition,
+    pub rationale: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ExtraUsageClassification {
+    ImportBinding,
+    ReexportBinding,
+    ExportMetadata,
+    DeclarationOrDefinition,
+    Unclassified,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ExtraUsageDisposition {
+    AllowedPolicyExtra,
+    Unexpected,
 }
 
 #[derive(Debug, Clone, Serialize, JsonSchema)]
@@ -322,6 +350,7 @@ pub(crate) fn score_declaration_locations(
         missing_unproven,
         unexpected,
         unexpected_unproven,
+        extra_usages: Vec::new(),
         partial,
         raw_statuses,
     })

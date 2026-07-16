@@ -351,6 +351,7 @@ fn run_declaration_to_usages(
                     missing_unproven: Vec::new(),
                     unexpected: Vec::new(),
                     unexpected_unproven: Vec::new(),
+                    extra_usages: Vec::new(),
                     partial: false,
                     raw_statuses: vec!["invalid_expected_location".to_string()],
                 };
@@ -377,6 +378,7 @@ fn run_declaration_to_usages(
                 missing_unproven: expected_unproven,
                 unexpected: Vec::new(),
                 unexpected_unproven: Vec::new(),
+                extra_usages: Vec::new(),
                 partial: false,
                 raw_statuses: vec!["symbol_resolution_failed".to_string()],
             };
@@ -412,6 +414,7 @@ fn run_declaration_to_usages(
                 missing_unproven: expected_unproven,
                 unexpected: Vec::new(),
                 unexpected_unproven: Vec::new(),
+                extra_usages: Vec::new(),
                 partial: false,
                 raw_statuses: vec!["invalid_declaration_location".to_string()],
             };
@@ -444,6 +447,7 @@ fn run_declaration_to_usages(
                 missing_unproven: expected_unproven,
                 unexpected: Vec::new(),
                 unexpected_unproven: Vec::new(),
+                extra_usages: Vec::new(),
                 partial: false,
                 raw_statuses: vec!["scan_usages_failed".to_string()],
             };
@@ -1714,6 +1718,7 @@ mod tests {
                         missing_unproven: Vec::new(),
                         unexpected: vec![normalized_location("src/extra.rs", 1)],
                         unexpected_unproven: Vec::new(),
+                        extra_usages: Vec::new(),
                         partial: false,
                         raw_statuses: vec!["ok".to_string()],
                     }),

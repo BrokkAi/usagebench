@@ -23,10 +23,12 @@ Useful options:
 - `--keep-worktrees` retains isolated workspaces under `target/usagebench/lsp`.
 
 A non-zero exit after a completed run means one or more cases had a hard
-failure; the JSON report is still written. A `near_miss` is a complete reference
-superset with successful navigation, so it does not fail the command, but every
-extra location remains visible. Startup, protocol, and query failures are
-counted as runner errors separately from incorrect results.
+failure; the JSON report is still written. A `near_miss` has complete references
+and successful navigation, with only classified import bindings, re-export
+bindings, or export metadata as extras. Every extra remains visible in `actual`
+and is described in `extraUsages`. Any other superset is a hard failure.
+Startup, protocol, and query failures are counted as runner errors separately
+from incorrect results.
 
 ## Included profiles
 
@@ -79,6 +81,10 @@ Profiles are JSON objects with these core fields:
   `projectContextRequest` describe profile-specific protocol extensions;
 - `acceptFirstActionRequests` lets an isolated benchmark accept a server's
   first setup action, such as Metals' documented “Import build” prompt;
+- `queryDeclaration` explicitly opts a profile into
+  `textDocument/declaration` before the normal definition query when the server
+  advertises it; this is enabled only where the release's behavior has been
+  verified because some servers advertise the method without completing it;
 - `environment` supports `{workspace}` and `{runDir}` substitutions;
 - `workspaceFiles` supplies missing project bootstrap files without replacing
   fixture-owned files;

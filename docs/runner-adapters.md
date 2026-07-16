@@ -59,23 +59,29 @@ For every matching benchmark document the adapter:
 3. performs LSP initialization, answers bidirectional server requests, and
    opens all matching source documents;
 4. queries `textDocument/references` with `includeDeclaration: false`,
-   `textDocument/definition`, and `textDocument/typeDefinition` when advertised;
+   `textDocument/declaration`, `textDocument/definition`, and
+   `textDocument/typeDefinition` when enabled and advertised;
 5. keeps processing bidirectional server requests while the workspace settles;
 6. normalizes `Location` and `LocationLink` responses to repository-relative,
    one-based UsageBench report locations.
 
-The adapter does not silently reinterpret LSP results. Import bindings, aliases,
-header declarations, implementations, and generated locations remain in the
-report exactly as returned. Scoring exposes two successful-coverage tiers:
+The adapter does not silently discard LSP results. Import bindings, re-export
+bindings, export metadata, declarations, implementations, aliases, and
+generated locations remain in `actual`. Every extra location is also recorded
+in `extraUsages` with a classification, disposition, and rationale. Scoring
+exposes two successful-coverage tiers:
 
 - `passed` is an exact reference match with successful reverse/type lookups;
 - `near_miss` has every required reference and successful reverse/type lookups,
-  but the server returns a complete superset of reference locations.
+  and its only extras are the explicitly allowed LSP policy differences
+  `import_binding`, `reexport_binding`, or `export_metadata`.
 
 A near miss is not counted as an exact precision pass or a hard failure. This
 keeps Bifrost's product decision to omit binding-only imports measurable without
-punishing an LSP whose “find references” semantics include them. For
-multi-target definition and type-definition responses, the lookup passes when
+punishing an LSP whose “find references” semantics include them. A complete
+superset containing any other extra remains a hard failure until the location
+is investigated and either the corpus or this policy is deliberately changed.
+For multi-target definition and type-definition responses, the lookup passes when
 the expected target is among the returned locations; every alternate is still
 recorded. Missing required locations, absent definitions, wrong targets,
 partial responses, and protocol failures remain hard failures or errors.
@@ -100,25 +106,27 @@ the comparison below.
 
 ### Popular LSP comparison
 
-The following end-to-end runs were captured on macOS arm64 on 2026-07-15 after
+The following end-to-end runs were captured on macOS arm64 on 2026-07-16 after
 workspace hydration and active bidirectional request handling were enabled.
-“Planned” is `exact + near miss + hard failure`; not-planned and unsupported
-cases are displayed separately. All ten servers completed with zero runner
-errors.
+“Near miss” is limited to the allowed binding/export-policy extras above;
+declarations, same-name symbols, hierarchy expansion, and other supersets stay
+in hard failure. “Planned” is `exact + near miss + hard failure`; not-planned
+and unsupported cases are displayed separately. All ten servers completed with
+zero runner errors.
 
 | Corpus language(s) | Server | Requested release | Server-reported release | Exact | Near miss | Hard failure | Not planned | Unsupported | Errors |
 |---|---|---|---|---:|---:|---:|---:|---:|---:|
-| C++ | clangd | 22.1.6 | Apple clangd 21.0.0 | 4 | 1 | 8 | 0 | 1 | 0 |
-| Go | gopls | 0.23.0 | v0.23.0 | 9 | 1 | 0 | 0 | 1 | 0 |
-| Rust | rust-analyzer | 2026-07-13 | 0.3.2971-standalone | 6 | 4 | 2 | 1 | 0 | 0 |
+| C++ | clangd | 22.1.6 | Apple clangd 21.0.0 | 4 | 0 | 9 | 0 | 1 | 0 |
+| Go | gopls | 0.23.0 | v0.23.0 | 9 | 0 | 1 | 0 | 1 | 0 |
+| Rust | rust-analyzer | 2026-07-13 | 0.3.2971-standalone | 7 | 2 | 3 | 1 | 0 | 0 |
 | JavaScript, TypeScript | typescript-language-server | 5.3.0 + TypeScript 5.9.3 | not reported | 10 | 9 | 2 | 1 | 0 | 0 |
-| Python | Pyright | 1.1.411 | not reported | 6 | 5 | 1 | 2 | 0 | 0 |
+| Python | Pyright | 1.1.411 | not reported | 6 | 4 | 1 | 2 | 1 | 0 |
 | PHP | Intelephense | 1.18.5 | not reported | 9 | 1 | 2 | 1 | 0 | 0 |
-| Ruby | Ruby LSP | 0.26.10 | 0.26.10 | 1 | 11 | 8 | 1 | 0 | 0 |
-| Java | Eclipse JDT LS | 1.61.0-202607142124 | 1.61.0-SNAPSHOT | 7 | 4 | 0 | 0 | 0 | 0 |
-| C# | Roslyn language server | vscode-csharp 2.140.9 | not reported | 4 | 0 | 10 | 1 | 0 | 0 |
+| Ruby | Ruby LSP | 0.26.10 | 0.26.10 | 1 | 0 | 19 | 1 | 0 | 0 |
+| Java | Eclipse JDT LS | 1.61.0-202607142124 | 1.61.0-SNAPSHOT | 9 | 1 | 1 | 0 | 0 | 0 |
+| C# | Roslyn language server | vscode-csharp 2.140.9 | not reported | 11 | 0 | 3 | 1 | 0 | 0 |
 | Scala | Metals | 1.6.7 | 1.6.7 | 8 | 2 | 2 | 1 | 0 | 0 |
-| **Total** | **10 measured servers** |  |  | **64** | **38** | **35** | **8** | **2** | **0** |
+| **Total** | **10 measured servers** |  |  | **74** | **19** | **43** | **8** | **3** | **0** |
 
 The clangd row deliberately records the actual system server used: the profile
 requested upstream 22.1.6, but this machine resolved Apple clangd 21.0.0. It
@@ -127,21 +135,24 @@ is also included for reproducibility, but its published NuGet tool package
 could not be installed because it lacked `DotnetToolSettings.xml`; Roslyn is
 the measured C# implementation.
 
-The strongest compatible-coverage results were gopls at 10/10 and JDT LS at
-11/11. TypeScript reached 19/21, Pyright 11/12, and Ruby LSP 12/20 once complete
-supersets stopped being labeled hard failures. Metals improved from 2/12 to
-8 exact + 2 near misses after the runner accepted its build-import prompt while
-continuing to service server requests; its own earlier log had reported “no
-build target found.”
+The strongest exact-or-policy-allowed coverage is JDT LS at 10/11, gopls at
+9/10, TypeScript at 19/21, Metals at 10/12, and Pyright at 10/11. These are not
+generic editor-quality rankings: the hard-failure bucket includes distinct
+choices such as implementation-family expansion as well as missing results.
+The case-level [LSP result audit](lsp-result-audit.md) records the observed cause
+of each remaining FP-like or FN-like difference.
 
 Roslyn's profile now restores the project, sends the official `project/open`
 notification, waits for `workspace/projectInitializationComplete`, advertises
 the `_vs_projectContext` capability, queries the default project context, and
-attaches it to navigation requests. The baseline fixture builds successfully,
-but cross-file `Consumer.cs` lookups remain absent, so its 4/14 result did not
-receive speculative credit. These are fixture-specific protocol results rather
-than a general ranking of editor quality. Installation and exact reproduction
-details are in `adapters/lsp/README.md`.
+attaches it to navigation requests. With the full project load it resolves 11
+cases exactly; the remaining three are alias or implementation-family semantic
+differences. JDT LS also exposed omissions in two authored Java cases, and Ruby
+LSP exposed one in Ruby; those source-level usages are now
+part of the corpus instead of being counted against the servers. These are
+fixture-specific protocol results rather than a general ranking of editor
+quality. Installation and exact reproduction details are in
+`adapters/lsp/README.md`.
 
 ## Adding another adapter
 

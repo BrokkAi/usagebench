@@ -6,6 +6,8 @@ source:
 language: ruby
 cases:
   - id: ruby-require-relative-class-construction
+    expectedFailure:
+      reason: "Bifrost misses the Invoice self-construction inside Invoice.build."
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb
@@ -20,6 +22,13 @@ cases:
           range:
             start: { line: 6, character: 25 }
             end: { line: 6, character: 32 }
+        kind: class
+        displayName: Invoice
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 28, character: 20 }
+            end: { line: 28, character: 27 }
         kind: class
         displayName: Invoice
     allowedExtraUsages:
@@ -56,7 +65,7 @@ cases:
           displayName: Invoice
     verification:
       method: manual_inspection
-      notes: report.rb requires billing/invoice and calls Billing::Invoice.build; the require_relative binding itself is not a usage.
+      notes: report.rb calls Billing::Invoice.build, and Invoice.build constructs Invoice while recording the last build; the require_relative binding itself is not a usage.
   - id: ruby-relative-nested-constant
     declaration:
       location:

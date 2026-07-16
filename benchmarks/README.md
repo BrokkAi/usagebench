@@ -72,14 +72,18 @@ Each case supports both benchmark directions:
 - Proven locations outside `expectedUsages`, `expectedUnprovenUsages`, and
   `allowedExtraUsages`, and unproven locations outside
   `expectedUnprovenUsages` and `allowedUnprovenUsages`, fail the case.
-- Import or re-export binding sites are not true-positive usages. Do not include
-  them in any usage expectation or allowance; analyzers
-  that report them should surface those locations as unexpected extras.
-- Exact scoring continues to treat those extras as a precision difference for
-  the Bifrost product contract. Cross-analyzer runners may additionally report
-  a `near_miss` when every required location and reverse lookup succeeds and
-  the only difference is a complete superset of reference locations. The
-  extras remain present in the report and are never silently discarded.
+- Import or re-export binding sites are not authored as true-positive usages.
+  Do not put them in case-level expectations or allowances merely to match an
+  LSP's “find references” policy.
+- Exact scoring continues to treat binding sites as a precision difference for
+  the Bifrost product contract. The LSP runner classifies observed import
+  bindings, re-export bindings, and export metadata as `allowed_policy_extra`
+  and may report `near_miss` when they are the only difference and every
+  required reference and reverse lookup succeeds. The locations remain in
+  `actual` and `extraUsages`; they are never silently discarded.
+- Any other extra—including declarations, definitions, same-name symbols, and
+  implementation-family expansion—remains unexpected and fails the case until
+  its cause is investigated and the corpus or policy is deliberately changed.
 - Runtime export expressions that read a local value are usages. For example,
   the `Client` on the right-hand side of `module.exports = { Client }` or
   `exports.Client = Client` belongs in `expectedUsages`.

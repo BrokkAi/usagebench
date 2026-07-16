@@ -6,6 +6,8 @@ source:
 language: java
 cases:
   - id: java-service-class-construction
+    expectedFailure:
+      reason: "Bifrost misses the two Service qualifiers on nested Service.Repository type references."
     declaration:
       location:
         uri: benchmark://source/src/main/java/example/Service.java
@@ -15,6 +17,20 @@ cases:
       kind: class
       displayName: Service
     expectedUsages:
+      - location:
+          uri: benchmark://source/src/test/java/example/ServiceTest.java
+          range:
+            start: { line: 4, character: 8 }
+            end: { line: 4, character: 15 }
+        kind: class
+        displayName: Service
+      - location:
+          uri: benchmark://source/src/test/java/example/ServiceTest.java
+          range:
+            start: { line: 4, character: 44 }
+            end: { line: 4, character: 51 }
+        kind: class
+        displayName: Service
       - location:
           uri: benchmark://source/src/test/java/example/ServiceTest.java
           range:
@@ -55,7 +71,7 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is declared in the fixture production source, constructed in the test fixture, and referenced as a static field qualifier.
+      notes: Service is declared in the fixture production source, qualifies both nested Repository references, is constructed in the test fixture, and qualifies a static field read.
   - id: java-service-method-call
     declaration:
       location:
@@ -138,6 +154,8 @@ cases:
       method: manual_inspection
       notes: DEFAULT_PREFIX is read once in production code and once through Service.DEFAULT_PREFIX in the test.
   - id: java-nested-class-constructor
+    expectedFailure:
+      reason: "Bifrost misses the Repository type usages in Service's field and constructor parameter."
     declaration:
       location:
         uri: benchmark://source/src/main/java/example/Service.java
@@ -147,6 +165,20 @@ cases:
       kind: class
       displayName: Repository
     expectedUsages:
+      - location:
+          uri: benchmark://source/src/main/java/example/Service.java
+          range:
+            start: { line: 5, character: 18 }
+            end: { line: 5, character: 28 }
+        kind: class
+        displayName: Repository
+      - location:
+          uri: benchmark://source/src/main/java/example/Service.java
+          range:
+            start: { line: 7, character: 19 }
+            end: { line: 7, character: 29 }
+        kind: class
+        displayName: Repository
       - location:
           uri: benchmark://source/src/test/java/example/ServiceTest.java
           range:
@@ -180,4 +212,4 @@ cases:
           displayName: Repository
     verification:
       method: manual_inspection
-      notes: Repository is a nested static class referenced and constructed from ServiceTest.
+      notes: Repository is a nested static class used by Service's field and constructor parameter, then referenced and constructed from ServiceTest.

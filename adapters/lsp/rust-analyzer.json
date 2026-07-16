@@ -12,5 +12,5 @@
   "workspaceFiles": {
     "Cargo.toml": "[package]\nname = \"usagebench_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n"
   },
-  "settleMilliseconds": 3000
+  "settleMilliseconds": 8000
 }
