@@ -15,12 +15,12 @@ Bifrost with ten language servers across small, checked-in fixtures.
 <div class="result-summary" aria-label="Current result summary">
   <div class="result-metric">
     <span>Bifrost exact</span>
-    <strong>128 <small>/ 137</small></strong>
+    <strong>136 <small>/ 141</small></strong>
     <p>planned cases</p>
   </div>
   <div class="result-metric">
     <span>Language-server exact</span>
-    <strong>74 <small>/ 136</small></strong>
+    <strong>78 <small>/ 140</small></strong>
     <p>planned, expressible cases</p>
   </div>
   <div class="result-metric">
@@ -57,22 +57,25 @@ navigation target.
 
 | Language | Bifrost exact | Bifrost expected gap | Language server | Exact | Policy-only | Hard disagreement |
 |---|---:|---:|---|---:|---:|---:|
-| [C++](languages/cpp/) | 13 | 0 | clangd | 4 | 0 | 9 |
-| [C#](languages/csharp/) | 13 | 1 | Roslyn | 11 | 0 | 3 |
-| [Go](languages/go/) | 9 | 1 | gopls | 9 | 0 | 1 |
+| [C++](languages/cpp/) | 14 | 1 | clangd | 6 | 0 | 9 |
+| [C#](languages/csharp/) | 14 | 0 | Roslyn | 11 | 0 | 3 |
+| [Go](languages/go/) | 10 | 0 | gopls | 9 | 0 | 1 |
 | [Java](languages/java/) | 9 | 2 | Eclipse JDT LS | 9 | 1 | 1 |
-| [JavaScript, TypeScript](languages/javascript-typescript/) | 20 | 1 | TypeScript LS | 10 | 9 | 2 |
+| [JavaScript, TypeScript](languages/javascript-typescript/) | 21 | 0 | TypeScript LS | 10 | 9 | 2 |
 | [PHP](languages/php/) | 12 | 0 | Intelephense | 9 | 1 | 2 |
 | [Python](languages/python/) | 12 | 0 | Pyright | 6 | 4 | 1 |
-| [Ruby](languages/ruby/) | 18 | 2 | Ruby LSP | 1 | 0 | 19 |
-| [Rust](languages/rust/) | 10 | 2 | rust-analyzer | 7 | 2 | 3 |
+| [Ruby](languages/ruby/) | 19 | 1 | Ruby LSP | 1 | 0 | 19 |
+| [Rust](languages/rust/) | 13 | 1 | rust-analyzer | 9 | 2 | 3 |
 | [Scala](languages/scala/) | 12 | 0 | Metals | 8 | 2 | 2 |
-| **Total** | **128** | **9** | **10 servers** | **74** | **19** | **43** |
+| **Total** | **136** | **5** | **10 servers** | **78** | **19** | **43** |
 
 The denominators differ because Bifrost can address one zero-width Python module
-selector that the generic LSP runner cannot express as a cursor request. Eight
+selector that the generic LSP runner cannot express as a cursor request. Seven
 not-planned cases are outside both denominators; three LSP-unsupported cases and
 two Bifrost-unsupported cases are also outside them.
+
+All 136 exact Bifrost outcomes are expected passes in the current baseline. The
+five expected gaps are the cases that remain non-exact in the current run.
 
 <div class="evidence-note">
   The strongest pattern is not one score: import and re-export policy explains
@@ -85,9 +88,9 @@ two Bifrost-unsupported cases are also outside them.
 
 The [full result snapshot](results/) records the version envelope and
 cross-analyzer patterns. The [case comparison](results/case-comparison/) lists
-every non-exact case and the observed distinction. Language pages discuss the
-evidence and fairness gaps without turning contract differences into unsupported
-defect claims.
+every non-exact case, the new exact macro controls, and the observed
+distinctions. Language pages discuss the evidence and fairness gaps without
+turning contract differences into unsupported defect claims.
 
 For how cases are scored, see the [comparison methodology](methodology/). To run
 the same corpus, use the [reproduction guide](reproduce/).

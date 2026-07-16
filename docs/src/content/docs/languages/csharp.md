@@ -5,7 +5,7 @@ description: Compare project-loaded Roslyn references with Bifrost's narrower us
 
 | Runner | Exact | Policy near | Hard | Not planned |
 |---|---:|---:|---:|---:|
-| Bifrost | 13 | 0 | 1 expected gap | 1 |
+| Bifrost | 14 | 0 | 0 | 1 |
 | Roslyn | 11 | 0 | 3 | 1 |
 
 ## Shared strengths
@@ -29,11 +29,11 @@ Those are contract differences, not proven Roslyn defects. An editor can
 reasonably expose related implementations or make the alias declaration the
 navigation target.
 
-## Roslyn recall edge
+## Resolved extension gap
 
-Roslyn exactly resolves `csharp-generic-extension-call`. Bifrost finds the
-object-created receiver candidate only as an unproven edge, so its conservative
-proof tier does not satisfy the case's proven expectation.
+Roslyn and current Bifrost both exactly resolve
+`csharp-generic-extension-call`; it is now an expected pass in the Bifrost
+baseline.
 
 ## Approximation assessment
 
@@ -47,6 +47,5 @@ receiver-sensitivity label.
 
 Roslyn's compiler workspace provides rich C# semantic identity once the full
 project is loaded. Bifrost uses a persistent repository index and targeted
-language-specific resolution without the same project handshake, while exposing
-uncertainty instead of promoting the extension candidate to proven. Timing and
+language-specific resolution without the same project handshake. Timing and
 memory tradeoffs remain unmeasured.

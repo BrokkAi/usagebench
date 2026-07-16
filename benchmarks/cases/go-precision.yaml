@@ -21,8 +21,6 @@ cases:
         displayName: Record
     verification: { method: manual_inspection, notes: "A dot-imported constructor seeds concrete receivers, including the second binding of a tuple assignment; the interface-typed call remains a valid unproven dispatch candidate for the concrete implementation." }
   - id: go-interface-receiver-method-call
-    expectedFailure:
-      reason: "Bifrost incorrectly returns the concrete receiver calls as unproven interface method usages."
     declaration:
       location: { uri: benchmark://source/worker/worker.go, range: { start: { line: 7, character: 1 }, end: { line: 7, character: 7 } } }
       kind: method

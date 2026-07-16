@@ -5,7 +5,7 @@ description: Compare constants, mixins, singleton members, aliases, generated re
 
 | Runner | Exact | Hard or expected gap | Not planned |
 |---|---:|---:|---:|
-| Bifrost | 18 | 2 expected gaps | 1 |
+| Bifrost | 19 | 1 expected gap | 1 |
 | Ruby LSP | 1 | 19 | 1 |
 
 ## Bifrost corpus strengths
@@ -14,7 +14,8 @@ Bifrost's Ruby-specific usage graph satisfies reviewed cases involving nested
 and script-level constants, superclass references, `include`, `prepend`,
 `extend`, singleton methods and fields, instance and class variables, autoload,
 generated attribute readers, method aliases, module functions, and lexical
-factory constants.
+factory constants, including the factory-return member call now promoted to an
+expected baseline pass.
 
 Ruby LSP often omits the expected edge or returns a declaration/same-name
 location despite `includeDeclaration: false`. Those observations explain its
@@ -23,14 +24,13 @@ all nineteen cases.
 
 ## Bifrost weaknesses
 
-- `ruby-factory-return-member-call` is retained only as an unproven Bifrost
-  candidate, not a proven usage.
 - `ruby-require-relative-class-construction` includes a real `Invoice`
   self-construction that Bifrost misses.
 - Dynamic `public_send` remains not planned.
 
-Bifrost therefore has much stronger coverage on this fixture, but not complete
-Ruby runtime modeling.
+Bifrost therefore has much stronger coverage on this fixture, but the remaining
+self-construction gap and not-planned dynamic dispatch prevent a claim of
+complete Ruby runtime modeling.
 
 ## Approximation assessment
 

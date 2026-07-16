@@ -122,8 +122,8 @@ Initial scenario set:
 - type aliases and generic type parameters;
 - operator and indexing calls where a trait implementation is the meaningful
   target;
-- declarative macro-generated references, marked `notPlanned` when expansion
-  support is outside the planned scoring surface;
+- declarative macro-generated references with stable source anchors, scored as
+  expected failures when a runner does not expand them;
 - proc-macro cases marked `notPlanned` until macro expansion parity becomes an
   intentional target.
 
@@ -140,10 +140,11 @@ Current progress:
 - Added `benchmarks/cases/rust-lsp-parity.yaml` with module path, trait method,
   associated type, and macro-generated function scenarios.
 - Added `fixtures/rust/lsp-parity/` as the first minimal Rust parity fixture.
-- Verified the first Bifrost run against
-  `origin/master` resolved to `6e0b54063ec3cf43c13cd489051cce35c34e22dc`:
-  three cases are expected failures and the macro-generated function case is
-  marked not planned.
+- Added a direct-function control beside the macro-generated function and
+  promoted the generated case into planned scoring.
+- On Bifrost `bdafcb7f`, the direct control passes and the declarative-macro
+  case is an expected failure; rust-analyzer 0.3.2971-standalone resolves both
+  exactly through standard references and definition requests.
 
 Exit criteria:
 
@@ -310,6 +311,10 @@ Current C#/C++ progress:
 - Added `benchmarks/cases/cpp-lsp-parity.yaml` with using alias, virtual base
   method, concrete override method, overload precision, template call, and
   unsupported compile-command-sensitive scenarios.
+- Added a direct/function-like-macro minimal pair whose declaration and
+  macro-argument reference are both file-backed. Apple clangd 21.0.0 resolves
+  both exactly; Bifrost `bdafcb7f` passes the direct control but cannot navigate
+  the macro argument back to its function declaration.
 - Added `fixtures/cpp/lsp-parity/` as the first minimal C++ parity fixture.
 - Verified focused Bifrost runs against `origin/master` resolved to
   `96f5f3a9b099cfe72e83994dbc99dcad3db6b516`.

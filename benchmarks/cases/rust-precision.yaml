@@ -4,8 +4,6 @@ source: { kind: fixture, path: fixtures/rust/precision }
 language: rust
 cases:
   - id: rust-ufcs-trait-method-through-barrel
-    expectedFailure:
-      reason: "Bifrost misses UFCS method calls reached through the chained Worker trait re-export."
     declaration:
       location: { uri: benchmark://source/src/service.rs, range: { start: { line: 1, character: 7 }, end: { line: 1, character: 10 } } }
       kind: method
@@ -19,8 +17,6 @@ cases:
         displayName: run
     verification: { method: manual_inspection, notes: "Worker::run is a UFCS call reached through the public Worker barrel re-export, including an aliased concrete receiver." }
   - id: rust-barrel-trait-static-qualifier
-    expectedFailure:
-      reason: "Bifrost misses the Worker qualifiers reached through the chained trait re-export."
     declaration:
       location: { uri: benchmark://source/src/service.rs, range: { start: { line: 0, character: 10 }, end: { line: 0, character: 16 } } }
       kind: interface

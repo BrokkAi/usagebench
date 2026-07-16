@@ -14,8 +14,6 @@ cases:
         displayName: Tracked
     verification: { method: manual_inspection, notes: "C# attribute suffix elision must resolve [Tracked] to TrackedAttribute." }
   - id: csharp-generic-extension-call
-    expectedFailure:
-      reason: "Bifrost returns the generic extension call on an object-created receiver only as an unproven usage."
     declaration:
       location: { uri: benchmark://source/Precision.cs, range: { start: { line: 10, character: 20 }, end: { line: 10, character: 24 } } }
       kind: method

@@ -5,7 +5,7 @@ description: Compare ES modules, CommonJS, barrels, types, JSX, and conservative
 
 | Runner | Exact | Policy near | Hard or expected gap | Not planned |
 |---|---:|---:|---:|---:|
-| Bifrost | 20 | 0 | 1 expected gap | 1 |
+| Bifrost | 21 | 0 | 0 | 1 |
 | TypeScript LS | 10 | 9 | 2 | 1 |
 
 ## TypeScript agreement after import policy
@@ -18,25 +18,24 @@ usage surface.
 
 Once that policy is separated, the TypeScript corpus has strong agreement.
 
-## Split CommonJS strengths
+## CommonJS split
 
-Bifrost satisfies the destructured-function and barrel-class cases that
-TypeScript LS omits. Its JavaScript usage graph contains explicit CommonJS
-binding/export handling, which supports those expected edges.
+Bifrost satisfies all three authored CommonJS cases. Its JavaScript usage graph
+contains explicit CommonJS binding/export handling, which supports the
+destructured-function and barrel-class edges that TypeScript LS omits.
 
-TypeScript LS, however, exactly resolves `js-commonjs-barrel-member-call`.
-Bifrost finds the factory-result member candidate but retains it as unproven, so
-it does not satisfy the case's proven expectation.
+Both analyzers exactly resolve `js-commonjs-barrel-member-call`, which is now an
+expected Bifrost baseline pass.
 
-This split is more informative than saying either analyzer “supports CommonJS.”
-Different binding and receiver-return shapes exercise different machinery.
+This remains more informative than a single “CommonJS support” label: the
+barrel-member shape agrees, while destructuring and barrel-class construction
+separate the analyzers.
 
 ## Approximation assessment
 
-The factory-result case is compatible with a conservative return-summary or
-receiver-provenance boundary, but it does not prove flow insensitivity. The
-destructuring/barrel misses are compatible with CommonJS binding-resolution
-boundaries, not necessarily value-flow limitations.
+The TypeScript LS destructuring/barrel misses are compatible with CommonJS
+binding-resolution boundaries, not necessarily value-flow limitations. The
+current cases do not prove a general flow-sensitivity difference.
 
 ## Architecture tradeoff
 

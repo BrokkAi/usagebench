@@ -10,9 +10,9 @@ re-export bindings, or export metadata.
 
 | Language | Server | Exact | Allowed-policy | Hard disagreement | Planned |
 |---|---|---:|---:|---:|---:|
-| C++ | clangd | 4 | 0 | 9 | 13 |
+| C++ | clangd | 6 | 0 | 9 | 15 |
 | Go | gopls | 9 | 0 | 1 | 10 |
-| Rust | rust-analyzer | 7 | 2 | 3 | 12 |
+| Rust | rust-analyzer | 9 | 2 | 3 | 14 |
 | JavaScript, TypeScript | TypeScript language server | 10 | 9 | 2 | 21 |
 | Python | Pyright | 6 | 4 | 1 | 11 |
 | PHP | Intelephense | 9 | 1 | 2 | 12 |
@@ -20,13 +20,13 @@ re-export bindings, or export metadata.
 | Java | Eclipse JDT LS | 9 | 1 | 1 | 11 |
 | C# | Roslyn | 11 | 0 | 3 | 14 |
 | Scala | Metals | 8 | 2 | 2 | 12 |
-| **Total** | **10 servers** | **74** | **19** | **43** | **136** |
+| **Total** | **10 servers** | **78** | **19** | **43** | **140** |
 
-There are also 8 not-planned and 3 unsupported LSP cases outside the planned
+There are also 7 not-planned and 3 unsupported LSP cases outside the planned
 denominator. The same corpus run against Bifrost commit
-`4051809aea27b59accb2180a29a6ef2b365f1613` produced 128 exact passes, 9 known
-expected failures, 8 not-planned cases, 2 unsupported cases, and no unexpected
-hard failures or runner errors.
+`bdafcb7f` produced 136 passes, 5 known expected failures, 7 not-planned cases,
+2 unsupported cases, and no improvements, unexpected hard failures, or runner
+errors.
 
 ## Version envelope
 
@@ -58,7 +58,7 @@ The hard-disagreement column combines several different phenomena:
 - a selector that cannot be represented as an LSP cursor token; and
 - dynamic-language or generated-symbol boundaries.
 
-Consequently, `74/136` is not a global LSP accuracy score, and `128/137` is not
+Consequently, `78/140` is not a global LSP accuracy score, and `136/141` is not
 a global Bifrost accuracy score. Read the [case comparison](case-comparison/)
 and the language pages before interpreting a row.
 
@@ -69,13 +69,15 @@ and the language pages before interpreting a row.
 | Binding-surface policy | 19 LSP near misses | The server includes imports/re-exports that UsageBench excludes from true usages. Not a correctness verdict. |
 | Implementation-family expansion | Go, Java, C#, Rust | Related interface, trait, anonymous, or concrete members are grouped. This is not by itself object-insensitivity. |
 | Alias/re-export identity | C++, C#, Python, Rust | Navigation or reference identity stops at a binding, original symbol, or module surface. |
-| CommonJS resolution | JavaScript | Each analyzer wins a different CommonJS case; no single “JS support” score explains the split. |
-| Dynamic Ruby semantics | Ruby | Bifrost's language-specific graph covers many corpus constructs that Ruby LSP omits or broadens, while two Bifrost cases remain conservative/missing. |
+| CommonJS resolution | JavaScript | Bifrost satisfies all three authored cases; TypeScript LS agrees on the barrel-member case but omits the destructured-function and barrel-class usages. |
+| Dynamic Ruby semantics | Ruby | Bifrost's language-specific graph covers many corpus constructs that Ruby LSP omits or broadens; the factory-return case passes, while self-construction remains a Bifrost gap. |
 | Build and readiness | Roslyn, Metals, TypeScript LS, rust-analyzer | Correct project hydration and settle behavior materially changed results; runner readiness must be removed before correctness interpretation. |
 
 ## Missing evidence
 
-The current comparison does not measure time or memory, and it underrepresents
-macro expansion, generated declarations, synthetic members, conditional
-compilation, and external dependency symbols. Those gaps matter because they
-are plausible strengths of compiler-backed language servers.
+The current comparison does not measure time or memory. It now has one
+source-anchored Rust declarative-macro pair and one C++ function-like macro
+pair, but still underrepresents broader macro expansion, generated declarations,
+synthetic members, conditional compilation, and external dependency symbols.
+Those gaps matter because they are plausible strengths of compiler-backed
+language servers.

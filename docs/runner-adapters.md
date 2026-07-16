@@ -116,9 +116,9 @@ zero runner errors.
 
 | Corpus language(s) | Server | Requested release | Server-reported release | Exact | Near miss | Hard failure | Not planned | Unsupported | Errors |
 |---|---|---|---|---:|---:|---:|---:|---:|---:|
-| C++ | clangd | 22.1.6 | Apple clangd 21.0.0 | 4 | 0 | 9 | 0 | 1 | 0 |
+| C++ | clangd | 22.1.6 | Apple clangd 21.0.0 | 6 | 0 | 9 | 0 | 1 | 0 |
 | Go | gopls | 0.23.0 | v0.23.0 | 9 | 0 | 1 | 0 | 1 | 0 |
-| Rust | rust-analyzer | 2026-07-13 | 0.3.2971-standalone | 7 | 2 | 3 | 1 | 0 | 0 |
+| Rust | rust-analyzer | 2026-07-13 | 0.3.2971-standalone | 9 | 2 | 3 | 0 | 0 | 0 |
 | JavaScript, TypeScript | typescript-language-server | 5.3.0 + TypeScript 5.9.3 | not reported | 10 | 9 | 2 | 1 | 0 | 0 |
 | Python | Pyright | 1.1.411 | not reported | 6 | 4 | 1 | 2 | 1 | 0 |
 | PHP | Intelephense | 1.18.5 | not reported | 9 | 1 | 2 | 1 | 0 | 0 |
@@ -126,7 +126,7 @@ zero runner errors.
 | Java | Eclipse JDT LS | 1.61.0-202607142124 | 1.61.0-SNAPSHOT | 9 | 1 | 1 | 0 | 0 | 0 |
 | C# | Roslyn language server | vscode-csharp 2.140.9 | not reported | 11 | 0 | 3 | 1 | 0 | 0 |
 | Scala | Metals | 1.6.7 | 1.6.7 | 8 | 2 | 2 | 1 | 0 | 0 |
-| **Total** | **10 measured servers** |  |  | **74** | **19** | **43** | **8** | **3** | **0** |
+| **Total** | **10 measured servers** |  |  | **78** | **19** | **43** | **7** | **3** | **0** |
 
 The clangd row deliberately records the actual system server used: the profile
 requested upstream 22.1.6, but this machine resolved Apple clangd 21.0.0. It

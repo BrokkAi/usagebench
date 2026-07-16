@@ -5,7 +5,7 @@ use workflow::{Job, Named};
 pub trait Runner {
     type Output;
 
-    fn run(job: Job) -> Self::Output {
+    fn run(job: Job) -> String {
         job.name().to_string()
     }
 }
@@ -36,4 +36,12 @@ define_job_maker!(generated_job);
 
 pub fn call_generated() -> Job {
     generated_job()
+}
+
+pub fn direct_job() -> Job {
+    Job::new("direct")
+}
+
+pub fn call_direct() -> Job {
+    direct_job()
 }

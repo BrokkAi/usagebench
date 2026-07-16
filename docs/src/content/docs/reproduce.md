@@ -62,4 +62,4 @@ When publishing a comparison, retain:
 
 The current site snapshot was captured on macOS arm64 on 2026-07-16. Its
 Bifrost report resolved `origin/master` to
-`4051809aea27b59accb2180a29a6ef2b365f1613`.
+`bdafcb7f2667e5a69351d0275b047f9cd50a5f09`.
