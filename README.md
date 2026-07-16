@@ -91,6 +91,51 @@ Broader analysis contracts should use sibling suites—for example, a future
 so each benchmark can model its own ground truth without tool-specific private
 hooks or weakened semantics.
 
+## Releases, Citation, and License
+
+Benchmark corpus releases use immutable SemVer tags such as `v0.1.0`. The
+benchmark release version is independent from the Rust package version in
+`Cargo.toml` and the benchmark document `schemaVersion`. See
+[`RELEASES.md`](RELEASES.md) for the version policy and curated release contents.
+
+Use the root [`CITATION.cff`](CITATION.cff) when citing UsageBench. It describes
+the latest release and intentionally contains no placeholder DOI. If an archival
+service assigns a DOI later, the real version-specific identifier will be added
+to the citation file and that release's notes.
+
+A run report records:
+
+- `usagebenchVersion`: the Rust CLI and adapter implementation version;
+- `usagebenchRevision`: the exact UsageBench commit, with `-dirty` when local
+  changes prevent commit-only reproduction;
+- `usagebenchRelease`: the `vMAJOR.MINOR.PATCH` corpus tag when available; and
+- the runner's requested and resolved version, including
+  `bifrostResolvedCommit` for Bifrost runs.
+
+To reproduce a clean published Bifrost result, save its JSON report as
+`report.json` and run:
+
+```bash
+usagebench_ref="$(jq -r '.usagebenchRelease // .usagebenchRevision' report.json)"
+bifrost_ref="$(jq -r '.bifrostResolvedCommit' report.json)"
+git clone https://github.com/BrokkAi/usagebench.git
+git -C usagebench checkout --detach "$usagebench_ref"
+git clone https://github.com/BrokkAi/bifrost.git
+git -C bifrost checkout --detach "$bifrost_ref"
+cargo run --manifest-path usagebench/Cargo.toml -- run-bifrost \
+  usagebench/benchmarks/cases \
+  --bifrost-repo ../bifrost \
+  --bifrost-working-tree \
+  --output benchmark-output/reproduced.json
+```
+
+If `usagebenchRevision` ends in `-dirty`, the report identifies an uncommitted
+run and cannot be reproduced from the named commit alone.
+
+UsageBench is licensed under the permissive [MIT License](LICENSE.md), covering
+the corpus fixtures, assertions, adapter profiles, and harness code in this
+repository.
+
 ## Daily Bifrost Benchmark
 
 The daily GitHub Actions workflow in `.github/workflows/benchmark.yml` runs the
@@ -124,6 +169,8 @@ payload with:
 * `error_text`
 * `workflow_run_url`
 * `head_sha_short`
+* `usagebench_revision`
+* `usagebench_release`
 * `bifrost_ref`
 * `bifrost_sha_short`
 * `run_outcome`

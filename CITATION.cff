@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use UsageBench, please cite the benchmark release and record the exact UsageBench and analyzer revisions from the run report."
+title: "UsageBench: Analyzer-neutral static-analysis usage benchmark"
+type: software
+abstract: "UsageBench is a curated multi-language benchmark corpus and reproducible harness for evaluating source-location-based symbol usage discovery."
+authors:
+  - name: "UsageBench contributors"
+    website: "https://github.com/BrokkAi/usagebench/graphs/contributors"
+contact:
+  - name: "Brokk, Inc."
+    website: "https://brokk.ai"
+version: "0.1.0"
+date-released: "2026-07-16"
+repository-code: "https://github.com/BrokkAi/usagebench"
+repository-artifact: "https://github.com/BrokkAi/usagebench/releases"
+url: "https://brokkai.github.io/usagebench/"
+license: MIT
+keywords:
+  - static analysis
+  - benchmark
+  - code intelligence
+  - symbol references
+  - LSP
+  - reproducibility

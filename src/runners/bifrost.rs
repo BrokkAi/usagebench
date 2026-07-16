@@ -1,8 +1,8 @@
 use super::mcp::{McpSession, ToolClient as SearchToolsClient};
 use super::{
-    compute_totals, normalize_symbol_location, path_to_slash, score_declaration_locations,
-    symbol_kind_name, CapabilitySupport, RunReport, RunnerCapability, RunnerMetadata,
-    RunnerOperation,
+    compute_totals, normalize_symbol_location, path_to_slash, resolve_usagebench_provenance,
+    score_declaration_locations, symbol_kind_name, CapabilitySupport, RunReport, RunnerCapability,
+    RunnerMetadata, RunnerOperation,
 };
 pub use super::{
     CaseRunReport, CaseStatus, DeclarationUsageReport, DocumentRunReport, NormalizedLocation,
@@ -77,6 +77,7 @@ pub fn default_bifrost_repo(repo_root: &Path) -> Option<PathBuf> {
 pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     let started_at = unix_seconds_now()?;
     let repo_root = find_repo_root_for_path(&options.case_path)?;
+    let usagebench_provenance = resolve_usagebench_provenance(&repo_root)?;
     let case_files = crate::validate_path(&options.case_path)?;
 
     let work_dir = if options.work_dir.is_absolute() {
@@ -149,6 +150,8 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     };
     let mut report = BifrostRunReport {
         usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
+        usagebench_revision: usagebench_provenance.revision,
+        usagebench_release: usagebench_provenance.release,
         runner,
         bifrost_repo: Some(display_path(&bifrost_source_repo)),
         bifrost_commit: Some(requested_version),
@@ -1665,6 +1668,8 @@ mod tests {
     fn serializes_report_with_stable_camel_case_fields() {
         let report = BifrostRunReport {
             usagebench_version: "0.1.0".to_string(),
+            usagebench_revision: "def456".to_string(),
+            usagebench_release: Some("v0.1.0".to_string()),
             runner: RunnerMetadata {
                 name: "bifrost".to_string(),
                 requested_version: "origin/master".to_string(),
@@ -1732,6 +1737,8 @@ mod tests {
         let json = serde_json::to_value(report).unwrap();
 
         assert_eq!(json["usagebenchVersion"], "0.1.0");
+        assert_eq!(json["usagebenchRevision"], "def456");
+        assert_eq!(json["usagebenchRelease"], "v0.1.0");
         assert_eq!(json["bifrostResolvedCommit"], "abc123");
         assert_eq!(json["totals"]["passed"], 1);
         assert_eq!(
