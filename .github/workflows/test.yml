@@ -13,11 +13,11 @@ jobs:
   usagebench:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - name: Set up Rust
-        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
       - name: Run Rust tests
@@ -25,6 +25,6 @@ jobs:
       - name: Validate benchmark cases
         run: cargo run -- validate benchmarks/cases
       - name: Validate citation metadata
-        uses: citation-file-format/cffconvert-github-action@4cf11baa70a673bfdf9dad0acc7ee33b3f4b6084 # 2.0.0
+        uses: citation-file-format/cffconvert-github-action@2.0.0
         with:
           args: '--validate'
