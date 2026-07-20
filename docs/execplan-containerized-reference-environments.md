@@ -113,7 +113,12 @@ pull request.
 - [x] 2026-07-20: Repeated fully cached builds produced unchanged definition
   and OCI image digests for both reference runners.
 - [x] Milestone 4: reference images and offline execution.
-- [ ] Milestone 5: report-driven reproduction.
+- [x] 2026-07-20: Added a one-command reproduction workflow that resolves the
+  exact released corpus, rebuilds the recorded environment, reruns the same
+  case selection and policy, and performs semantic comparison in the image.
+- [x] 2026-07-20: Reproduced a gopls report from a synthetic extracted release
+  bundle and confirmed that an intentionally changed case outcome is rejected.
+- [x] Milestone 5: report-driven reproduction.
 - [ ] Milestone 6: CI, release packaging, and documentation.
 - [ ] Milestone 7: final validation and review.
 

@@ -5,7 +5,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 manifest="$repo_root/containers/reference/v1/manifest.json"
 
 usage() {
-  echo "usage: $0 RUNNER_ID CORPUS_ROOT OUTPUT_FILE [CASE_PATH] [CASE_ID]" >&2
+  echo "usage: $0 RUNNER_ID CORPUS_ROOT OUTPUT_FILE [CASE_PATH] [CASE_ID] [INCLUDE_UNSUPPORTED]" >&2
   exit 2
 }
 
@@ -14,7 +14,9 @@ corpus_root="${2:-}"
 output_file="${3:-}"
 case_path="${4:-benchmarks/cases}"
 case_id="${5:-}"
+include_unsupported="${6:-false}"
 [[ -n "$runner_id" && -n "$corpus_root" && -n "$output_file" ]] || usage
+[[ "$include_unsupported" == "true" || "$include_unsupported" == "false" ]] || usage
 [[ "$case_path" != /* && "$case_path" != *..* ]] || {
   echo "case path must be relative to the corpus root" >&2
   exit 1
@@ -88,6 +90,9 @@ if [[ "$runner_id" == "bifrost" ]]; then
   if [[ -n "$case_id" ]]; then
     command_args+=(--case-id "$case_id")
   fi
+  if [[ "$include_unsupported" == "true" ]]; then
+    command_args+=(--include-unsupported)
+  fi
   docker "${docker_args[@]}" "${command_args[@]}"
 elif [[ "$runner_id" == "gopls" ]]; then
   command_args=(
@@ -99,6 +104,9 @@ elif [[ "$runner_id" == "gopls" ]]; then
   )
   if [[ -n "$case_id" ]]; then
     command_args+=(--case-id "$case_id")
+  fi
+  if [[ "$include_unsupported" == "true" ]]; then
+    command_args+=(--include-unsupported)
   fi
   docker "${docker_args[@]}" "${command_args[@]}"
 else
