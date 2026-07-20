@@ -1,8 +1,9 @@
 use super::mcp::{McpSession, ToolClient as SearchToolsClient};
 use super::{
-    compute_totals, location_match, navigation_response_status, normalize_symbol_location,
-    path_to_slash, resolve_usagebench_provenance, score_declaration_locations, symbol_kind_name,
-    CapabilitySupport, LocationMatch, RunReport, RunnerCapability, RunnerMetadata, RunnerOperation,
+    combine_case_status, compute_totals, location_match, normalize_symbol_location, path_to_slash,
+    resolve_usagebench_provenance, score_declaration_locations, score_navigation_response,
+    symbol_kind_name, CapabilitySupport, LocationMatch, RunReport, RunnerCapability,
+    RunnerMetadata, RunnerOperation,
 };
 pub use super::{
     CaseRunReport, CaseStatus, DeclarationUsageReport, DocumentRunReport, NormalizedLocation,
@@ -10,7 +11,7 @@ pub use super::{
 };
 use crate::{
     benchmark_source_path, find_repo_root_for_path, BenchmarkCase, BenchmarkDocument, Location,
-    PositionEncoding, ReferencePolicy, Source, SymbolKind, SymbolLocation,
+    NavigationOperation, PositionEncoding, ReferencePolicy, Source, SymbolKind, SymbolLocation,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use serde::Deserialize;
@@ -141,7 +142,12 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
                 notes: "Bifrost scan_usages_by_location MCP output".to_string(),
             },
             RunnerCapability {
-                operation: RunnerOperation::UsageToDeclaration,
+                operation: RunnerOperation::DeclarationLookup,
+                support: CapabilitySupport::Unsupported,
+                notes: "Bifrost does not expose a distinct declaration-navigation tool".to_string(),
+            },
+            RunnerCapability {
+                operation: RunnerOperation::DefinitionLookup,
                 support: CapabilitySupport::Native,
                 notes: "Bifrost get_definitions_by_location MCP output".to_string(),
             },
@@ -285,7 +291,6 @@ fn run_case(
         declaration_to_usages.as_ref(),
         &usage_to_declaration,
         &type_lookups,
-        &diagnostics,
     );
     let expected_failure_reason = case
         .expected_failure
@@ -482,15 +487,49 @@ fn run_declaration_to_usages(
 
     let parsed = parse_scan_usages(&result);
     let has_failure_status = parsed.has_failure_status();
-    let actual = parsed.locations;
-    let unproven = parsed.unproven_locations;
+    let ParsedScanUsages {
+        mut locations,
+        mut unproven_locations,
+        override_declarations,
+        unproven_override_declarations,
+        partial,
+        mut raw_statuses,
+    } = parsed;
+    let override_count = override_declarations.len() + unproven_override_declarations.len();
+    let retained_override_declarations = override_declarations
+        .into_iter()
+        .filter(|location| {
+            expected
+                .iter()
+                .chain(&expected_unproven)
+                .chain(&allowed_extra)
+                .any(|authored| authored.path == location.path && authored.line == location.line)
+        })
+        .collect::<Vec<_>>();
+    let retained_unproven_override_declarations = unproven_override_declarations
+        .into_iter()
+        .filter(|location| {
+            expected_unproven
+                .iter()
+                .chain(&allowed_unproven)
+                .any(|authored| authored.path == location.path && authored.line == location.line)
+        })
+        .collect::<Vec<_>>();
+    let retained_override_count =
+        retained_override_declarations.len() + retained_unproven_override_declarations.len();
+    locations.extend(retained_override_declarations);
+    unproven_locations.extend(retained_unproven_override_declarations);
+    unproven_locations.retain(|location| !locations.contains(location));
+    if retained_override_count < override_count {
+        raw_statuses.push("override_declarations_excluded".to_string());
+    }
     let mut report = score_declaration_locations(
         case,
         Some(selector.selector),
-        actual,
-        unproven,
-        parsed.partial,
-        parsed.raw_statuses,
+        locations,
+        unproven_locations,
+        partial,
+        raw_statuses,
         has_failure_status,
     )
     .expect("expected locations were normalized before scoring");
@@ -529,12 +568,28 @@ fn run_usage_to_declaration(
             display_name: Some(lookup.expected_declaration.display_name.clone()),
             kind: Some(symbol_kind_name(&lookup.expected_declaration.kind).to_string()),
         });
+    if lookup.operation == NavigationOperation::Declaration {
+        return UsageDefinitionReport {
+            status: CaseStatus::Unsupported,
+            operation: lookup.operation,
+            usage,
+            expected_declaration,
+            actual_declarations: Vec::new(),
+            raw_status: "declaration_lookup_unsupported".to_string(),
+            diagnostics: vec![RunDiagnostic {
+                kind: "declaration_lookup_unsupported".to_string(),
+                message: "Bifrost does not expose a declaration-navigation operation distinct from get_definitions_by_location"
+                    .to_string(),
+            }],
+        };
+    }
     let query = match reference_query(&lookup.usage.location, &lookup.usage.display_name, encoding)
     {
         Ok(query) => query,
         Err(error) => {
             return UsageDefinitionReport {
                 status: CaseStatus::Error,
+                operation: lookup.operation,
                 usage,
                 expected_declaration,
                 actual_declarations: Vec::new(),
@@ -562,6 +617,7 @@ fn run_usage_to_declaration(
                 };
             return UsageDefinitionReport {
                 status,
+                operation: lookup.operation,
                 usage,
                 expected_declaration,
                 actual_declarations: Vec::new(),
@@ -575,26 +631,28 @@ fn run_usage_to_declaration(
     };
 
     let parsed = parse_get_definition(&result);
-    let status = if lookup.expect_no_movement {
-        match parsed.raw_status.as_str() {
-            "no_definition" if parsed.actual_declarations.is_empty() => CaseStatus::Passed,
-            "resolved" => {
-                navigation_response_status(&parsed.actual_declarations, &expected_declaration, true)
-            }
-            _ => CaseStatus::Failed,
-        }
-    } else if parsed.raw_status != "resolved" {
-        CaseStatus::Failed
+    let (status, raw_status) = if parsed.raw_status == "resolved"
+        || (lookup.expect_no_movement
+            && parsed.raw_status == "no_definition"
+            && parsed.actual_declarations.is_empty())
+    {
+        let (status, outcome) = score_navigation_response(
+            &parsed.actual_declarations,
+            &expected_declaration,
+            lookup.expect_no_movement,
+        );
+        (status, outcome.to_string())
     } else {
-        navigation_response_status(&parsed.actual_declarations, &expected_declaration, false)
+        (CaseStatus::Failed, parsed.raw_status.clone())
     };
 
     UsageDefinitionReport {
         status,
+        operation: lookup.operation,
         usage,
         expected_declaration,
         actual_declarations: parsed.actual_declarations,
-        raw_status: parsed.raw_status,
+        raw_status,
         diagnostics: parsed.diagnostics,
     }
 }
@@ -719,6 +777,7 @@ fn skipped_definition_lookup(lookup: &crate::UsageLookup) -> UsageDefinitionRepo
         });
     UsageDefinitionReport {
         status: CaseStatus::Skipped,
+        operation: lookup.operation,
         usage,
         expected_declaration,
         actual_declarations: Vec::new(),
@@ -903,6 +962,8 @@ fn count_symbol_occurrences(value: &Value, symbol: &str) -> usize {
 struct ParsedScanUsages {
     locations: Vec<NormalizedLocation>,
     unproven_locations: Vec<NormalizedLocation>,
+    override_declarations: Vec<NormalizedLocation>,
+    unproven_override_declarations: Vec<NormalizedLocation>,
     partial: bool,
     raw_statuses: Vec<String>,
 }
@@ -921,6 +982,8 @@ impl ParsedScanUsages {
 fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
     let mut locations = BTreeSet::new();
     let mut unproven_locations = BTreeSet::new();
+    let mut override_declarations = BTreeSet::new();
+    let mut unproven_override_declarations = BTreeSet::new();
 
     let mut raw_statuses = Vec::new();
     let mut partial = value
@@ -931,8 +994,18 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
 
     if let Some(results) = value.get("results").and_then(Value::as_array) {
         for result in results {
-            collect_scan_usage_locations(result, "files", &mut locations);
-            collect_scan_usage_locations(result, "unproven_files", &mut unproven_locations);
+            collect_scan_usage_locations(
+                result,
+                "files",
+                &mut locations,
+                &mut override_declarations,
+            );
+            collect_scan_usage_locations(
+                result,
+                "unproven_files",
+                &mut unproven_locations,
+                &mut unproven_override_declarations,
+            );
             if let Some(status) = result.get("status").and_then(Value::as_str) {
                 raw_statuses.push(status.to_string());
             }
@@ -952,8 +1025,18 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
             .into_iter()
             .flatten()
         {
-            collect_scan_usage_locations(usage, "files", &mut locations);
-            collect_scan_usage_locations(usage, "unproven_files", &mut unproven_locations);
+            collect_scan_usage_locations(
+                usage,
+                "files",
+                &mut locations,
+                &mut override_declarations,
+            );
+            collect_scan_usage_locations(
+                usage,
+                "unproven_files",
+                &mut unproven_locations,
+                &mut unproven_override_declarations,
+            );
         }
 
         for key in ["not_found", "ambiguous", "failures", "too_many_callsites"] {
@@ -981,7 +1064,6 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
     if partial && !raw_statuses.iter().any(|status| status == "partial") {
         raw_statuses.push("partial".to_string());
     }
-
     // A location reported in both tiers has proven evidence. Keep the stronger
     // classification so downstream scoring does not treat it as an unproven
     // extra as well.
@@ -990,6 +1072,8 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
     ParsedScanUsages {
         locations: locations.into_iter().collect(),
         unproven_locations: unproven_locations.into_iter().collect(),
+        override_declarations: override_declarations.into_iter().collect(),
+        unproven_override_declarations: unproven_override_declarations.into_iter().collect(),
         partial,
         raw_statuses,
     }
@@ -999,6 +1083,7 @@ fn collect_scan_usage_locations(
     value: &Value,
     group: &str,
     locations: &mut BTreeSet<NormalizedLocation>,
+    override_declarations: &mut BTreeSet<NormalizedLocation>,
 ) {
     for file in value
         .get(group)
@@ -1018,7 +1103,7 @@ fn collect_scan_usage_locations(
             let Some(line) = hit.get("line").and_then(Value::as_u64) else {
                 continue;
             };
-            locations.insert(NormalizedLocation {
+            let location = NormalizedLocation {
                 path: path.to_string(),
                 line: line as u32,
                 column: hit
@@ -1035,7 +1120,12 @@ fn collect_scan_usage_locations(
                     .map(|value| value as u32),
                 display_name: None,
                 kind: None,
-            });
+            };
+            if hit.get("kind").and_then(Value::as_str) == Some("override_declaration") {
+                override_declarations.insert(location);
+            } else {
+                locations.insert(location);
+            }
         }
     }
 }
@@ -1265,29 +1355,6 @@ fn symbol_name_matches(symbol: &str, display_name: &str) -> bool {
         || symbol.ends_with(&format!("::{display_name}"))
         || symbol.ends_with(&format!("${display_name}"))
         || symbol.ends_with(&format!("#{display_name}"))
-}
-
-fn combine_case_status(
-    declaration_to_usages: Option<&DeclarationUsageReport>,
-    usage_to_declaration: &[UsageDefinitionReport],
-    type_lookup: &[TypeLookupReport],
-    _diagnostics: &[RunDiagnostic],
-) -> CaseStatus {
-    let statuses = declaration_to_usages
-        .into_iter()
-        .map(|report| report.status)
-        .chain(usage_to_declaration.iter().map(|report| report.status))
-        .chain(type_lookup.iter().map(|report| report.status))
-        .collect::<Vec<_>>();
-    if statuses.contains(&CaseStatus::Error) {
-        CaseStatus::Error
-    } else if statuses.contains(&CaseStatus::Failed) {
-        CaseStatus::Failed
-    } else if statuses.contains(&CaseStatus::PositionUnverified) {
-        CaseStatus::PositionUnverified
-    } else {
-        CaseStatus::Passed
-    }
 }
 
 fn apply_case_expectation(
@@ -2597,7 +2664,7 @@ mod tests {
         let report = run_usage_to_declaration(&lookup, PositionEncoding::Utf16, &mut client);
 
         assert_eq!(report.status, CaseStatus::Passed);
-        assert_eq!(report.raw_status, "no_definition");
+        assert_eq!(report.raw_status, "no_movement");
     }
 
     #[test]
@@ -2613,6 +2680,51 @@ mod tests {
         let report = run_usage_to_declaration(&lookup, PositionEncoding::Utf16, &mut client);
 
         assert_eq!(report.status, CaseStatus::Failed);
+    }
+
+    #[test]
+    fn declaration_lookup_is_unsupported_without_calling_definition_tool() {
+        let mut case = benchmark_case();
+        case.declaration = None;
+        case.usage_lookups[0].operation = crate::NavigationOperation::Declaration;
+        let mut client = MockClient::new(Vec::new());
+
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
+
+        assert_eq!(report.status, CaseStatus::Unsupported);
+        assert_eq!(
+            report.usage_to_declaration[0].raw_status,
+            "declaration_lookup_unsupported"
+        );
+        assert_eq!(
+            report.usage_to_declaration[0].operation,
+            crate::NavigationOperation::Declaration
+        );
+    }
+
+    #[test]
+    fn resolved_definition_alternates_have_a_machine_readable_failure() {
+        let lookup = benchmark_case().usage_lookups.remove(0);
+        let mut client = MockClient::new(vec![tool(
+            GET_DEFINITIONS_BY_LOCATION_TOOL,
+            get_definitions_by_location_json(
+                "resolved",
+                vec![("src/service.rs", 30), ("src/implementation.rs", 12)],
+            ),
+        )]);
+
+        let report = run_usage_to_declaration(&lookup, PositionEncoding::Utf16, &mut client);
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(report.raw_status, "multiple_targets");
     }
 
     #[test]
@@ -2776,6 +2888,49 @@ mod tests {
         );
         assert_eq!(parsed.raw_statuses, vec!["found".to_string()]);
         assert!(!parsed.partial);
+    }
+
+    #[test]
+    fn parse_scan_usages_excludes_labeled_override_declarations() {
+        let parsed = parse_scan_usages(&json!({
+            "summary": {"partial": false},
+            "results": [{
+                "status": "found",
+                "files": [{
+                    "path": "src/Handler.java",
+                    "hits": [
+                        {"line": 5, "kind": "override_declaration"},
+                        {"line": 12}
+                    ]
+                }]
+            }]
+        }));
+
+        assert_eq!(
+            parsed.locations,
+            vec![NormalizedLocation {
+                path: "src/Handler.java".to_string(),
+                line: 12,
+                column: None,
+                end_line: None,
+                end_column: None,
+                display_name: None,
+                kind: None,
+            }]
+        );
+        assert_eq!(parsed.raw_statuses, vec!["found".to_string()]);
+        assert_eq!(
+            parsed.override_declarations,
+            vec![NormalizedLocation {
+                path: "src/Handler.java".to_string(),
+                line: 5,
+                column: None,
+                end_line: None,
+                end_column: None,
+                display_name: None,
+                kind: None,
+            }]
+        );
     }
 
     #[test]

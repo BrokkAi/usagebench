@@ -284,7 +284,8 @@ fn print_usage_definition_issues(reports: &[UsageDefinitionReport]) {
                 .join(", ")
         };
         println!(
-            "  usage lookup {}: {} expected {}, got {} ({})",
+            "  {} lookup {}: {} expected {}, got {} ({})",
+            report.operation.as_str(),
             format_location(&report.usage),
             status_label(report.status),
             format_location(&report.expected_declaration),
