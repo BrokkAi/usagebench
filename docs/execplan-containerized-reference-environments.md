@@ -13,7 +13,7 @@ and exercises images ephemerally but never logs in to a registry, pushes an
 image, or uploads an OCI archive. A future archival release may deposit built
 OCI archives with Zenodo.
 
-## Current State
+## Starting State
 
 UsageBench releases already identify the exact corpus revision and analyzer
 revision. Reports do not yet identify the execution environment or analyzer
@@ -128,7 +128,18 @@ pull request.
   reproduction page at a desktop viewport; staged and inspected a
   release-shaped archive containing the complete build contract.
 - [x] Milestone 6: CI, release packaging, and documentation.
-- [ ] Milestone 7: final validation and review.
+- [x] 2026-07-20: Passed Rust formatting, 92 library tests, 2 CLI tests,
+  doctests, validation of all 34 benchmark documents and the Bifrost smoke
+  document, report/schema generation, shell and workflow syntax checks, and
+  the public documentation check and production build.
+- [x] 2026-07-20: From an extracted release-shaped bundle, built both final
+  images, passed the exact offline Bifrost and gopls smoke cases, reproduced a
+  gopls report with one command, confirmed stable cached image identities, and
+  rejected both a changed result and a stale-output false-success scenario.
+- [x] 2026-07-20: Completed security, infrastructure, architecture/intent,
+  duplication/maintainability, and senior-engineer reviews. Resolved every
+  reported finding and reran the affected validation.
+- [x] Milestone 7: final validation and review.
 
 ## Decision Log
 
@@ -177,6 +188,14 @@ pull request.
   `rust-toolchain.toml`. Its analyzer builder therefore uses a separate
   digest-pinned Rust 1.96.0 base instead of allowing rustup to download that
   toolchain into the shared Rust 1.95.0 harness builder.
+- 2026-07-20: A read-only bind of the corpus is insufficient when another
+  writable bind aliases the same host tree. Reference output now goes through
+  a fresh private staging directory, and only the completed report is copied
+  back to the requested path.
+- 2026-07-20: BuildKit's exported digest did not always identify the local tag
+  loaded by Docker. Build metadata now records the loaded immutable image ID,
+  the wrapper verifies the tag still resolves to it, and Docker runs that ID
+  directly.
 
 ## Acceptance Evidence
 
@@ -191,5 +210,5 @@ The finished branch must demonstrate:
 5. CI builds and tests images but contains no registry login, push, or image
    artifact upload.
 6. The curated release bundle contains everything needed to build locally.
-7. `cargo fmt -- --check`, `cargo test --locked`, and
+7. `cargo fmt --check`, `cargo test --locked`, and
    `cargo run --locked -- validate benchmarks/cases` pass.
