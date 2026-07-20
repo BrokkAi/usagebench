@@ -121,10 +121,13 @@ fn main() -> Result<()> {
             options.keep_worktrees = keep_worktrees;
             let report = run_bifrost(options)?;
             println!(
-                "ran {} planned case(s): {} passed, {} near miss(es), {} improved, {} failed, {} expected failure(s), {} not planned, {} unsupported, {} skipped, {} error(s)",
+                "ran {} planned case(s) ({} development, {} evaluation): {} passed, {} near miss(es), {} position-unverified, {} improved, {} failed, {} expected failure(s), {} not planned, {} unsupported, {} skipped, {} error(s)",
                 report.totals.cases,
+                report.totals.development_cases,
+                report.totals.evaluation_cases,
                 report.totals.passed,
                 report.totals.near_misses,
+                report.totals.position_unverified,
                 report.totals.improved,
                 report.totals.failed,
                 report.totals.expected_failures,
@@ -134,10 +137,14 @@ fn main() -> Result<()> {
                 report.totals.errors
             );
             print_run_details(&report);
-            if report.totals.failed > 0 || report.totals.errors > 0 {
+            if report.totals.failed > 0
+                || report.totals.position_unverified > 0
+                || report.totals.errors > 0
+            {
                 bail!(
-                    "Bifrost benchmark run failed: {} failed, {} error(s)",
+                    "Bifrost benchmark run was not exact: {} failed, {} position-unverified, {} error(s)",
                     report.totals.failed,
+                    report.totals.position_unverified,
                     report.totals.errors
                 );
             }
@@ -161,12 +168,15 @@ fn main() -> Result<()> {
             options.case_id = case_id;
             let report = run_lsp(options)?;
             println!(
-                "ran {} planned case(s) with {} {}: {} passed, {} near miss(es), {} failed, {} not planned, {} unsupported, {} skipped, {} error(s)",
+                "ran {} planned case(s) ({} development, {} evaluation) with {} {}: {} passed, {} near miss(es), {} position-unverified, {} failed, {} not planned, {} unsupported, {} skipped, {} error(s)",
                 report.totals.cases,
+                report.totals.development_cases,
+                report.totals.evaluation_cases,
                 report.runner.name,
                 report.runner.resolved_version,
                 report.totals.passed,
                 report.totals.near_misses,
+                report.totals.position_unverified,
                 report.totals.failed,
                 report.totals.not_planned,
                 report.totals.unsupported,
@@ -174,10 +184,14 @@ fn main() -> Result<()> {
                 report.totals.errors
             );
             print_run_details(&report);
-            if report.totals.failed > 0 || report.totals.errors > 0 {
+            if report.totals.failed > 0
+                || report.totals.position_unverified > 0
+                || report.totals.errors > 0
+            {
                 bail!(
-                    "LSP benchmark run failed: {} failed, {} error(s)",
+                    "LSP benchmark run was not exact: {} failed, {} position-unverified, {} error(s)",
                     report.totals.failed,
+                    report.totals.position_unverified,
                     report.totals.errors
                 );
             }
@@ -194,6 +208,7 @@ fn print_run_details(report: &BifrostRunReport) {
                 if matches!(
                     case.status,
                     CaseStatus::NearMiss
+                        | CaseStatus::PositionUnverified
                         | CaseStatus::Improved
                         | CaseStatus::Failed
                         | CaseStatus::ExpectedFailure
@@ -220,6 +235,7 @@ fn print_run_details(report: &BifrostRunReport) {
                 && !matches!(
                     case.status,
                     CaseStatus::NearMiss
+                        | CaseStatus::PositionUnverified
                         | CaseStatus::Improved
                         | CaseStatus::Failed
                         | CaseStatus::ExpectedFailure
@@ -245,6 +261,7 @@ fn print_run_details(report: &BifrostRunReport) {
             print_locations("missing conservative", &declaration.missing_unproven);
             print_locations("extra", &declaration.unexpected);
             print_locations("extra unproven", &declaration.unexpected_unproven);
+            print_locations("position unverified", &declaration.position_unverified);
             print_usage_definition_issues(&case.usage_to_declaration);
             print_type_lookup_issues(&case.type_lookups);
         }
@@ -349,6 +366,7 @@ fn status_label(status: CaseStatus) -> &'static str {
     match status {
         CaseStatus::Passed => "PASS",
         CaseStatus::NearMiss => "NEAR-MISS",
+        CaseStatus::PositionUnverified => "POSITION-UNVERIFIED",
         CaseStatus::Improved => "IMPROVED",
         CaseStatus::Failed => "FAIL",
         CaseStatus::ExpectedFailure => "XFAIL",
@@ -369,6 +387,8 @@ mod tests {
             path: "src/\u{1b}[31mspoof\nPASS.rs".to_string(),
             line: 7,
             column: Some(3),
+            end_line: Some(7),
+            end_column: Some(4),
             display_name: None,
             kind: None,
         };

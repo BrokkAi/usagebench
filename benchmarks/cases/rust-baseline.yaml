@@ -1,4 +1,11 @@
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 positionEncoding: utf-16
 source:
   kind: fixture
@@ -23,7 +30,8 @@ cases:
         kind: function
         displayName: build_service
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/lib.rs
             range:
@@ -41,7 +49,11 @@ cases:
           displayName: build_service
     verification:
       method: manual_inspection
-      notes: build_service is called from run_demo; the lib.rs re-export binding is not counted as a usage.
+      notes: >
+        Reviewed as correct and clear by DavidBakerEffendi on 2026-07-17.
+        build_service is called from run_demo and definition navigation from
+        that call targets the function body in service.rs. The lib.rs re-export
+        binding is optional under bindings_optional.
   - id: rust-struct-construction
     declaration:
       location:
@@ -69,12 +81,27 @@ cases:
       - location:
           uri: benchmark://source/src/service.rs
           range:
-            start: { line: 30, character: 4 }
-            end: { line: 30, character: 11 }
+              start: { line: 30, character: 4 }
+              end: { line: 30, character: 11 }
         kind: type
         displayName: Service
+      - location:
+          uri: benchmark://source/src/service.rs
+          range:
+              start: { line: 19, character: 48 }
+              end: { line: 19, character: 52 }
+        kind: type
+        displayName: Self
+      - location:
+          uri: benchmark://source/src/service.rs
+          range:
+              start: { line: 20, character: 8 }
+              end: { line: 20, character: 12 }
+        kind: type
+        displayName: Self
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/service.rs
             range:
@@ -92,7 +119,14 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is declared in service.rs, returned by build_service, and used to call Service::new; the lib.rs re-export binding is not counted as a usage.
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. Service is used
+        in the impl header, as build_service's return type, and as the
+        Service::new qualifier. Capital-Self in the new return type and struct
+        expression is also required because Rust defines it as the current
+        implementing type. Lowercase self remains excluded because it is the
+        method's value receiver. The lib.rs re-export is optional under
+        bindings_optional. See BrokkAi/bifrost#882 for the Bifrost parity gap.
   - id: rust-method-call
     declaration:
       location:
@@ -111,7 +145,8 @@ cases:
         kind: method
         displayName: execute
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/lib.rs
             range:
@@ -129,8 +164,11 @@ cases:
           displayName: execute
     verification:
       method: manual_inspection
-      notes: run_demo calls execute on the Service returned by build_service.
-  - id: rust-field-access-and-constant
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. run_demo calls
+        the concrete Service::execute definition returned by build_service; no
+        related method-family or receiver tokens are expected.
+  - id: rust-field-write
     declaration:
       location:
         uri: benchmark://source/src/service.rs
@@ -148,7 +186,8 @@ cases:
         kind: field
         displayName: last
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/service.rs
             range:
@@ -166,7 +205,11 @@ cases:
           displayName: last
     verification:
       method: manual_inspection
-      notes: last is declared on MemoryRepository and assigned inside save.
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. last is declared
+        on MemoryRepository and written inside save. Navigation from the write
+        is declaration-only because the field has no implementation body;
+        lowercase self is not a field or owning-type usage.
   - id: rust-explicit-local-and-parameter-type-lookup
     usageLookups: []
     typeLookups:
@@ -204,7 +247,11 @@ cases:
           displayName: AuditEvent
     verification:
       method: manual_inspection
-      notes: format_audit_event carries explicit parameter and local type annotations used by get_type_by_location.
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. Type-definition
+        lookup on local_label reaches AuditLabel, and lookup on the event
+        parameter use reaches AuditEvent. formatter is intentionally outside
+        this focused case rather than asserted absent.
   - id: rust-imported-type-and-member-type-lookup
     usageLookups: []
     typeLookups:
@@ -242,4 +289,8 @@ cases:
           displayName: AuditLabel
     verification:
       method: manual_inspection
-      notes: run_demo imports AuditFormatter through the fixture re-export, and event.label resolves through the known AuditEvent receiver type.
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. The formatter
+        argument's explicit local annotation resolves through the re-export to
+        AuditFormatter, while event.label resolves through the known AuditEvent
+        receiver and the field's declared AuditLabel type.

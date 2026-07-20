@@ -36,23 +36,27 @@ cargo test
 cargo run -- validate benchmarks/cases
 ```
 
-## Baseline Corpus
+## Development Corpus
 
-The corpus uses small checked-in fixtures for Java, Go, Python, TypeScript,
+The current corpus uses small checked-in fixtures for Java, Go, Python, TypeScript,
 JavaScript, Rust, Scala, C#, PHP, C++, and Ruby. These fixtures are the source
 of truth for issue #8; the older broad
 Java/Go/Python generator stack has been removed from the active benchmark path.
 
-Each fixture case records `verification.method: manual_inspection` with a short
-note explaining how the expected declaration and usage locations were checked.
+Each document is schema v2 and explicitly labeled `development`,
+`analyzer_informed`, and `legacy_unattributed`. It is a regression and diagnosis
+corpus, not yet an independently reviewed evaluation partition. Each fixture
+case records `verification.method: manual_inspection` with a short note
+explaining how its locations were checked.
 
 ## Analyzer Runners
 
 Runner adapters under `src/runners` translate tool-specific output into one
 analyzer-neutral report shape. Every report records the requested and resolved
 tool version plus per-operation capability levels (`native`, `recovered`, or
-`unsupported`). Reports distinguish exact passes, classified policy-only near
-misses, hard failures, and runner errors. Print the JSON Schema with:
+`unsupported`). Reports distinguish exact passes, position-unverified results,
+hard failures, and runner errors, and separate development from evaluation
+totals. Print the JSON Schema with:
 
 ```bash
 cargo run -- report-schema

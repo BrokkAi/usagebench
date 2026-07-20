@@ -1,4 +1,11 @@
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 positionEncoding: utf-16
 source:
   kind: fixture
@@ -7,7 +14,8 @@ language: rust
 cases:
   - id: rust-parity-module-declaration-definition
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/lib.rs
             range:
@@ -32,7 +40,8 @@ cases:
         Maturity: adapted to the concrete source-location contract by resolving the workflow use path back to the mod workflow declaration token.
   - id: rust-parity-ufcs-trait-method-definition
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/lib.rs
             range:
@@ -55,9 +64,11 @@ cases:
         Upstream test: crates/ide/src/goto_definition.rs::goto_def_for_ufcs_trait_methods_through_self.
         Adapted fixture: fixtures/rust/lsp-parity/.
         Maturity: LocalRunner::run is provided by the Runner trait default method, so definition lookup should reach Runner::run.
-  - id: rust-parity-associated-type-impl-definition
+  - id: rust-parity-associated-type-definition-no-movement
     usageLookups:
-      - usage:
+      - operation: definition
+        expectNoMovement: true
+        usage:
           location:
             uri: benchmark://source/src/lib.rs
             range:
@@ -69,17 +80,45 @@ cases:
           location:
             uri: benchmark://source/src/lib.rs
             range:
-              start: { line: 5, character: 9 }
-              end: { line: 5, character: 15 }
+              start: { line: 15, character: 9 }
+              end: { line: 15, character: 15 }
           kind: type
           displayName: Output
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
-        Parity source: rust-lang/rust-analyzer@cc5f0f8dadfc3297aebe4026d99b6d8f85fb1eb8.
-        Upstream test: crates/ide/src/goto_definition.rs::goto_def_of_trait_impl_type_alias.
-        Adapted fixture: fixtures/rust/lsp-parity/.
-        Maturity: Output in the impl should resolve to the associated type declared by the Runner trait.
+        Reviewed by DavidBakerEffendi on 2026-07-17. The cursor is already on
+        the concrete associated-type definition, so ordinary definition
+        navigation may return no result or the exact same token but must not
+        jump to the trait declaration. The rejected expectation was adapted
+        from rust-lang/rust-analyzer's goto_def_of_trait_impl_type_alias test at
+        cc5f0f8dadfc3297aebe4026d99b6d8f85fb1eb8.
+  - id: rust-parity-associated-type-use-definition
+    usageLookups:
+      - operation: definition
+        usage:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 22, character: 62 }
+              end: { line: 22, character: 68 }
+          kind: type
+          displayName: Output
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/lib.rs
+            range:
+              start: { line: 15, character: 9 }
+              end: { line: 15, character: 15 }
+          kind: type
+          displayName: Output
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-17. The fully qualified use
+        <LocalRunner as Runner>::Output statically selects LocalRunner's Runner
+        implementation, whose concrete associated-type definition is
+        type Output = String.
   - id: rust-parity-direct-function-reference
     declaration:
       location:
@@ -98,7 +137,8 @@ cases:
         kind: function
         displayName: direct_job
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/lib.rs
             range:
@@ -117,7 +157,11 @@ cases:
     verification:
       method: manual_inspection
       notes: >
-        Direct control for the generated-function pair, manually checked against fixtures/rust/lsp-parity/src/lib.rs.
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. The function
+        name in pub fn direct_job is the definition, the call is its usage, and
+        the queried definition token is not itself an expected usage. Direct
+        control for the generated-function pair, manually checked against
+        fixtures/rust/lsp-parity/src/lib.rs.
         Parity source: rust-lang/rust-analyzer@cc5f0f8dadfc3297aebe4026d99b6d8f85fb1eb8.
         Upstream reference: crates/ide/src/references.rs function-reference tests.
         Server profile: rust-analyzer 2026-07-13; measured as 0.3.2971-standalone (ffcdbbd906 2026-07-13).
@@ -141,7 +185,8 @@ cases:
         kind: function
         displayName: generated_job
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/lib.rs
             range:
@@ -160,7 +205,11 @@ cases:
     verification:
       method: manual_inspection
       notes: >
-        Expected ranges were manually checked against fixtures/rust/lsp-parity/src/lib.rs.
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. The macro
+        invocation identifier is the file-backed definition anchor for the
+        generated function; the later call is its usage and the invocation
+        anchor is not itself counted as a usage. Expected ranges were manually
+        checked against fixtures/rust/lsp-parity/src/lib.rs.
         Parity source: rust-lang/rust-analyzer@cc5f0f8dadfc3297aebe4026d99b6d8f85fb1eb8.
         Upstream reference: crates/ide/src/goto_definition.rs macro-definition tests and crates/ide/src/references.rs::test_find_all_refs_macro_def.
         Server profile: rust-analyzer 2026-07-13; measured as 0.3.2971-standalone (ffcdbbd906 2026-07-13).

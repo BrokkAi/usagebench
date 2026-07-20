@@ -6,9 +6,27 @@ mirrors the Language Server Protocol `Location` shape: each symbol location has
 `location.uri` and `location.range`, where ranges contain zero-based `line` and
 `character` positions and the end position is exclusive.
 
-The baseline corpus is manually curated. Expected locations should be verified
-by reading the checked-in fixture source and recorded with
-`verification.method: manual_inspection`.
+Every schema-v2 document declares its methodology state. The current checked-in
+corpus is explicitly `development`, `analyzer_informed`, and
+`legacy_unattributed`; it is useful for regression work, but is not a frozen,
+independently reviewed evaluation set.
+
+```yaml
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
+```
+
+Expected locations should still be verified by reading the checked-in fixture
+source and recorded with `verification.method: manual_inspection`. Promotion to
+`evaluation` additionally requires `selection: pre_registered`, a non-empty
+`freezeId`, `groundTruth.status: independently_reviewed`, and at least two named
+reviewers. Validation enforces those requirements.
 
 ## Source URIs
 
@@ -40,7 +58,7 @@ Positions are LSP-shaped and zero-based. `positionEncoding` defaults to
 `utf-16`, matching LSP's default, and can be set to `utf-8` or `utf-32` when a
 case corpus requires it.
 
-Exact token ranges are preferred. Fixture validation checks that each range is
+Exact token ranges are required for an exact result. Fixture validation checks that each range is
 within the referenced file's line bounds using UTF-16 character offsets.
 Non-zero fixture ranges must select text equal to the location's `displayName`.
 Keep fixtures ASCII unless a case is specifically intended to exercise encoding.
@@ -54,8 +72,10 @@ range:
 disambiguation: first_matching_symbol
 ```
 
-The disambiguation rule means the runner should select the first symbol on that
-line matching the location's `kind` and `displayName`.
+The disambiguation rule means the runner may select the first symbol on that
+line matching the location's `kind` and `displayName`. A result that supplies
+only a path and line is `position_unverified`, never exact, even when that line
+contains the expected token.
 
 ## Case Semantics
 
@@ -66,21 +86,28 @@ Each case supports both benchmark directions:
   returned as either proven or unproven, so increasing analyzer confidence does
   not break the case.
 - `usageLookups` tests usage-to-declaration lookup.
+  Each lookup has an `operation`: `declaration`, `definition`, or the temporary
+  development-only `profile_default`. Evaluation cases must choose explicitly;
+  declaration lookups never fall back to definition, or vice versa.
+  A reviewed negative lookup may set `expectNoMovement: true` and repeat the
+  usage location as `expectedDeclaration`; no result and an exact self-target
+  pass, while navigation to any other token fails.
 - `allowedExtraUsages` documents acceptable analyzer-specific broader matches.
 - `allowedUnprovenUsages` documents optional conservative candidates that are
   acceptable only while they remain unproven.
 - Proven locations outside `expectedUsages`, `expectedUnprovenUsages`, and
   `allowedExtraUsages`, and unproven locations outside
   `expectedUnprovenUsages` and `allowedUnprovenUsages`, fail the case.
-- Import or re-export binding sites are not authored as true-positive usages.
-  Do not put them in case-level expectations or allowances merely to match an
-  LSP's “find references” policy.
-- Exact scoring continues to treat binding sites as a precision difference for
-  the Bifrost product contract. The LSP runner classifies observed import
-  bindings, re-export bindings, and export metadata as `allowed_policy_extra`
-  and may report `near_miss` when they are the only difference and every
-  required reference and reverse lookup succeeds. The locations remain in
-  `actual` and `extraUsages`; they are never silently discarded.
+- `referencePolicy` defines the document-wide reference surface:
+  `external_usages` excludes binding-only imports/re-exports;
+  `bindings_optional` accepts their presence or absence; and
+  `bindings_required` requires authored binding locations in `expectedUsages`.
+  The current development corpus uses `bindings_optional`.
+- Under `bindings_optional`, classified import bindings, re-export bindings,
+  and export metadata are recorded in `actual` and `extraUsages` but do not
+  prevent an exact pass. They are never silently discarded. Unclassified extras
+  still fail. Under the other policies, unauthored bindings fail like any other
+  unexpected location.
 - Any other extra—including declarations, definitions, same-name symbols, and
   implementation-family expansion—remains unexpected and fails the case until
   its cause is investigated and the corpus or policy is deliberately changed.

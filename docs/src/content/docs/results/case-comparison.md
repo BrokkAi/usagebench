@@ -9,6 +9,10 @@ satisfied the authored contract; “Bifrost gap” means a documented expected
 failure. LSP near misses are policy-only binding/export extras. An LSP hard
 result means contract disagreement, not an automatic defect verdict.
 
+> This is the case-level audit for the legacy 2026-07-16 development run. Its
+> labels preserve that run's former line-level and policy-near-miss semantics;
+> they are not schema-v2 evaluation outcomes.
+
 ## C++
 
 | Case | Bifrost | clangd | Observed distinction |
@@ -43,7 +47,7 @@ result means contract disagreement, not an automatic defect verdict.
 | `java-service-class-construction` | Gap | Exact | Bifrost misses two `Service` qualifiers in `Service.Repository`. |
 | `java-nested-class-constructor` | Gap | Exact | Bifrost misses the nested `Repository` field and constructor-parameter type usages. |
 | `java-parity-static-import-method-call` | Pass | Near | JDT LS additionally returns the static-import binding. |
-| `java-parity-concrete-implementation-method-call` | Pass | Hard | JDT LS includes a call on an anonymous implementation when querying the concrete method. |
+| `java-parity-concrete-implementation-method-call` | Pass | Hard | Policy difference: JDT LS expands the concrete-method query across the implementation family and includes an anonymous `Handler` call. The reviewed ground truth keeps concrete method identity narrow, so this is documented rather than accepted as an allowed extra. |
 
 ## JavaScript and TypeScript
 
@@ -86,7 +90,7 @@ result means contract disagreement, not an automatic defect verdict.
 | `rust-function-call-and-reexport` | Pass | Near | rust-analyzer additionally returns the re-export binding. |
 | `rust-barrel-trait-static-qualifier` | Pass | Near | Bifrost finds the required qualifiers; rust-analyzer finds them plus re-export bindings. |
 | `rust-ufcs-trait-method-through-barrel` | Pass | Hard | Bifrost satisfies the authored calls; rust-analyzer finds both calls but also returns the trait declaration. |
-| `rust-struct-construction` | Pass | Hard | rust-analyzer adds a re-export plus `Self`/declaration-like locations; only the re-export is policy-allowed. |
+| `rust-struct-construction` | Legacy | Legacy | Human review now requires capital-`Self` type references and excludes lowercase `self`; rerun both analyzers against the corrected ground truth. |
 | `rust-parity-module-declaration-definition` | Pass | Hard | rust-analyzer navigates to the module file start rather than the authored `mod workflow` declaration. |
 | `rust-parity-direct-function-reference` | Exact | Exact | The direct declaration and call establish the non-macro control for the paired generated-function case. |
 | `rust-parity-macro-generated-function-reference` | Gap | Exact | rust-analyzer resolves the generated declaration anchor and call exactly; Bifrost does not expand the declarative macro and misses both the usage and reverse definition. |

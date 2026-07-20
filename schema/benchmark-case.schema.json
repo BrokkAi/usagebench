@@ -4,10 +4,20 @@
   "title": "Usage Benchmark Case Document",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "source", "language", "cases"],
+  "required": ["schemaVersion", "corpus", "groundTruth", "referencePolicy", "source", "language", "cases"],
   "properties": {
     "schemaVersion": {
-      "const": 1
+      "const": 2
+    },
+    "corpus": {
+      "$ref": "#/$defs/corpus"
+    },
+    "groundTruth": {
+      "$ref": "#/$defs/groundTruth"
+    },
+    "referencePolicy": {
+      "type": "string",
+      "enum": ["external_usages", "bindings_optional", "bindings_required"]
     },
     "positionEncoding": {
       "type": "string",
@@ -29,6 +39,44 @@
     }
   },
   "$defs": {
+    "corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["partition", "selection"],
+      "properties": {
+        "partition": {
+          "type": "string",
+          "enum": ["development", "evaluation"]
+        },
+        "selection": {
+          "type": "string",
+          "enum": ["analyzer_informed", "pre_registered"]
+        },
+        "freezeId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "groundTruth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reviewers"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["legacy_unattributed", "author_reviewed", "independently_reviewed"]
+        },
+        "reviewers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
     "source": {
       "oneOf": [
         {
@@ -219,6 +267,15 @@
       "additionalProperties": false,
       "required": ["usage", "expectedDeclaration"],
       "properties": {
+        "operation": {
+          "type": "string",
+          "enum": ["profile_default", "declaration", "definition"],
+          "default": "profile_default"
+        },
+        "expectNoMovement": {
+          "type": "boolean",
+          "default": false
+        },
         "usage": {
           "$ref": "#/$defs/symbolLocation"
         },

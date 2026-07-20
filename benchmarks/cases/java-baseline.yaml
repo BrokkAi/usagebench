@@ -1,4 +1,11 @@
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 positionEncoding: utf-16
 source:
   kind: fixture
@@ -53,7 +60,8 @@ cases:
         kind: class
         displayName: Service
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/test/java/example/ServiceTest.java
             range:
@@ -71,7 +79,12 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is declared in the fixture production source, qualifies both nested Repository references, is constructed in the test fixture, and qualifies a static field read.
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. The five class
+        usages are two Service.Repository qualifiers, the variable type, the
+        construction, and the static-field qualifier. The class and constructor
+        definition tokens are not usages. Definition navigation from new
+        Service reaches the constructor body.
   - id: java-service-method-call
     declaration:
       location:
@@ -90,7 +103,8 @@ cases:
         kind: method
         displayName: execute
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/test/java/example/ServiceTest.java
             range:
@@ -108,7 +122,10 @@ cases:
           displayName: execute
     verification:
       method: manual_inspection
-      notes: The test calls service.execute and the fixture contains a single execute declaration.
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. The receiver is
+        concretely Service and the fixture has one execute implementation, so
+        the call navigates directly to that method definition.
   - id: java-static-field-access
     declaration:
       location:
@@ -134,7 +151,8 @@ cases:
         kind: field
         displayName: DEFAULT_PREFIX
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/test/java/example/ServiceTest.java
             range:
@@ -152,7 +170,11 @@ cases:
           displayName: DEFAULT_PREFIX
     verification:
       method: manual_inspection
-      notes: DEFAULT_PREFIX is read once in production code and once through Service.DEFAULT_PREFIX in the test.
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. DEFAULT_PREFIX
+        is read once inside Service and once through Service.DEFAULT_PREFIX in
+        the test. Navigation reaches the field declarator; the Service qualifier
+        is a separate class usage.
   - id: java-nested-class-constructor
     expectedFailure:
       reason: "Bifrost misses the Repository type usages in Service's field and constructor parameter."
@@ -194,7 +216,8 @@ cases:
         kind: constructor
         displayName: Repository
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/test/java/example/ServiceTest.java
             range:
@@ -212,4 +235,9 @@ cases:
           displayName: Repository
     verification:
       method: manual_inspection
-      notes: Repository is a nested static class used by Service's field and constructor parameter, then referenced and constructed from ServiceTest.
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-18. Repository is
+        used as Service's field and constructor-parameter type, then referenced
+        and constructed from ServiceTest. Definition lookup from the
+        construction reaches the nested class because its default constructor
+        is implicit; outer Service qualifiers belong to the outer-class case.

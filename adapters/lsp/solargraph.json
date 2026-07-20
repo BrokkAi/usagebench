@@ -1,0 +1,11 @@
+{
+  "id": "solargraph",
+  "name": "Solargraph",
+  "languages": ["ruby"],
+  "requestedVersion": "0.60.2",
+  "source": "https://github.com/castwide/solargraph/tree/v0.60.2",
+  "command": ["solargraph", "stdio"],
+  "fileExtensions": [".rb", ".rake"],
+  "languageIds": {".rb": "ruby", ".rake": "ruby"},
+  "settleMilliseconds": 1500
+}

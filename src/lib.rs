@@ -20,7 +20,57 @@ pub struct BenchmarkDocument {
     pub position_encoding: PositionEncoding,
     pub source: Source,
     pub language: String,
+    pub corpus: CorpusMetadata,
+    pub ground_truth: GroundTruthReview,
+    pub reference_policy: ReferencePolicy,
     pub cases: Vec<BenchmarkCase>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CorpusMetadata {
+    pub partition: CorpusPartition,
+    pub selection: CorpusSelection,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub freeze_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum CorpusPartition {
+    Development,
+    Evaluation,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum CorpusSelection {
+    AnalyzerInformed,
+    PreRegistered,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct GroundTruthReview {
+    pub status: GroundTruthReviewStatus,
+    #[serde(default)]
+    pub reviewers: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GroundTruthReviewStatus {
+    LegacyUnattributed,
+    AuthorReviewed,
+    IndependentlyReviewed,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ReferencePolicy {
+    ExternalUsages,
+    BindingsOptional,
+    BindingsRequired,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -126,8 +176,25 @@ pub enum Disambiguation {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UsageLookup {
+    #[serde(default)]
+    pub operation: NavigationOperation,
+    /// Accept either no result or an exact self-target, but reject navigation
+    /// to any other token. `expectedDeclaration` must equal `usage`.
+    #[serde(default)]
+    pub expect_no_movement: bool,
     pub usage: SymbolLocation,
     pub expected_declaration: SymbolLocation,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum NavigationOperation {
+    /// Preserve the legacy profile-selected endpoint while development cases
+    /// are reviewed. Frozen evaluation cases must choose an explicit operation.
+    #[default]
+    ProfileDefault,
+    Declaration,
+    Definition,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -171,7 +238,9 @@ pub enum VerificationMethod {
 }
 
 pub fn generated_schema_json() -> Result<String> {
-    let schema = schemars::schema_for!(BenchmarkDocument);
+    let schema: serde_json::Value =
+        serde_json::from_str(include_str!("../schema/benchmark-case.schema.json"))
+            .context("parse checked-in benchmark schema")?;
     serde_json::to_string_pretty(&schema).context("serialize generated benchmark schema")
 }
 
@@ -293,6 +362,12 @@ impl BenchmarkDocument {
     }
 
     fn validate_with_base(&self, base_dir: &Path) -> Result<()> {
+        if self.schema_version != 2 {
+            bail!(
+                "schemaVersion must be 2 for corpus, ground-truth, and reference-policy metadata"
+            );
+        }
+        self.validate_methodology_metadata()?;
         let fixture_root = match &self.source {
             Source::Fixture { path } => {
                 validate_fixture_source_path(path)?;
@@ -326,6 +401,48 @@ impl BenchmarkDocument {
             case.validate(fixture_root.as_deref(), self.position_encoding)?;
         }
 
+        Ok(())
+    }
+
+    fn validate_methodology_metadata(&self) -> Result<()> {
+        let unique_reviewers = self
+            .ground_truth
+            .reviewers
+            .iter()
+            .map(|reviewer| reviewer.trim())
+            .filter(|reviewer| !reviewer.is_empty())
+            .collect::<std::collections::BTreeSet<_>>();
+        if unique_reviewers.len() != self.ground_truth.reviewers.len() {
+            bail!("groundTruth reviewers must be non-empty and unique");
+        }
+        if self.ground_truth.status == GroundTruthReviewStatus::IndependentlyReviewed
+            && unique_reviewers.len() < 2
+        {
+            bail!("independently_reviewed ground truth requires at least two reviewers");
+        }
+        if self.corpus.partition == CorpusPartition::Evaluation {
+            if self.corpus.selection != CorpusSelection::PreRegistered {
+                bail!("evaluation corpus documents must use pre_registered selection");
+            }
+            if self.ground_truth.status != GroundTruthReviewStatus::IndependentlyReviewed {
+                bail!("evaluation corpus documents must be independently_reviewed");
+            }
+            if self
+                .corpus
+                .freeze_id
+                .as_deref()
+                .is_none_or(|freeze_id| freeze_id.trim().is_empty())
+            {
+                bail!("evaluation corpus documents require a non-empty freezeId");
+            }
+            if self.cases.iter().any(|case| {
+                case.usage_lookups
+                    .iter()
+                    .any(|lookup| lookup.operation == NavigationOperation::ProfileDefault)
+            }) {
+                bail!("evaluation corpus usageLookups require an explicit navigation operation");
+            }
+        }
         Ok(())
     }
 }
@@ -386,6 +503,14 @@ impl BenchmarkCase {
                 .expected_declaration
                 .validate(fixture_root, encoding)
                 .with_context(|| format!("case {} usageLookups expectedDeclaration", self.id))?;
+            if lookup.expect_no_movement
+                && lookup.expected_declaration.location != lookup.usage.location
+            {
+                bail!(
+                    "case {} no-movement lookup expectedDeclaration must equal its usage location",
+                    self.id
+                );
+            }
         }
 
         for lookup in &self.type_lookups {
@@ -662,7 +787,14 @@ mod tests {
     #[test]
     fn default_position_encoding_is_utf16() {
         let yaml = r#"
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 source:
   kind: fixture
   path: fixtures/java/basic
@@ -673,6 +805,18 @@ cases: []
         let document = serde_yaml::from_str::<BenchmarkDocument>(yaml).unwrap();
 
         assert_eq!(document.position_encoding, PositionEncoding::Utf16);
+    }
+
+    #[test]
+    fn schema_command_uses_checked_schema_v2_contract() {
+        let schema: serde_json::Value =
+            serde_json::from_str(&generated_schema_json().unwrap()).unwrap();
+
+        assert_eq!(schema["properties"]["schemaVersion"]["const"], 2);
+        assert_eq!(
+            schema["properties"]["referencePolicy"]["enum"],
+            serde_json::json!(["external_usages", "bindings_optional", "bindings_required"])
+        );
     }
 
     #[test]
@@ -688,7 +832,14 @@ cases: []
         fs::create_dir_all(tempdir.path().join("fixtures/fixture")).unwrap();
         let document = serde_yaml::from_str::<BenchmarkDocument>(
             r#"
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 source:
   kind: fixture
   path: fixtures/fixture
@@ -714,7 +865,14 @@ cases:
         fs::create_dir_all(tempdir.path().join("fixtures/fixture")).unwrap();
         let document = serde_yaml::from_str::<BenchmarkDocument>(
             r#"
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 source:
   kind: fixture
   path: fixtures/fixture
@@ -748,7 +906,14 @@ cases:
         fs::write(fixture.join("sample.txt"), "let value = 1\n").unwrap();
         let document = serde_yaml::from_str::<BenchmarkDocument>(
             r#"
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 source:
   kind: fixture
   path: fixtures/fixture
@@ -779,7 +944,14 @@ cases:
         let tempdir = tempfile::tempdir().unwrap();
         let document = serde_yaml::from_str::<BenchmarkDocument>(
             r#"
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 source:
   kind: fixture
   path: /tmp
@@ -802,7 +974,14 @@ cases: []
         fs::write(fixture.join("sample.txt"), "let café = 1\n").unwrap();
         let document = serde_yaml::from_str::<BenchmarkDocument>(
             r#"
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 positionEncoding: utf-8
 source:
   kind: fixture
@@ -845,7 +1024,14 @@ cases:
         fs::write(
             cases.join("sample.yaml"),
             r#"
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 source:
   kind: fixture
   path: fixtures/fixture
@@ -869,5 +1055,128 @@ cases:
         let files = validate_path(&cases).unwrap();
 
         assert_eq!(files, vec![cases.join("sample.yaml")]);
+    }
+
+    #[test]
+    fn evaluation_corpus_requires_preregistered_selection() {
+        let document = methodology_document(
+            "evaluation",
+            "analyzer_informed",
+            "independently_reviewed",
+            "  freezeId: eval-v1\n",
+            "  reviewers: [reviewer-a, reviewer-b]",
+        );
+
+        let error = document.validate_methodology_metadata().unwrap_err();
+
+        assert!(format!("{error:#}").contains("pre_registered"));
+    }
+
+    #[test]
+    fn evaluation_corpus_requires_two_independent_reviewers() {
+        let document = methodology_document(
+            "evaluation",
+            "pre_registered",
+            "independently_reviewed",
+            "  freezeId: eval-v1\n",
+            "  reviewers: [reviewer-a]",
+        );
+
+        let error = document.validate_methodology_metadata().unwrap_err();
+
+        assert!(format!("{error:#}").contains("at least two reviewers"));
+    }
+
+    #[test]
+    fn evaluation_corpus_requires_freeze_id() {
+        let document = methodology_document(
+            "evaluation",
+            "pre_registered",
+            "independently_reviewed",
+            "",
+            "  reviewers: [reviewer-a, reviewer-b]",
+        );
+
+        let error = document.validate_methodology_metadata().unwrap_err();
+
+        assert!(format!("{error:#}").contains("freezeId"));
+    }
+
+    #[test]
+    fn accepts_frozen_independently_reviewed_evaluation_corpus() {
+        let document = methodology_document(
+            "evaluation",
+            "pre_registered",
+            "independently_reviewed",
+            "  freezeId: eval-v1\n",
+            "  reviewers: [reviewer-a, reviewer-b]",
+        );
+
+        document.validate_methodology_metadata().unwrap();
+    }
+
+    #[test]
+    fn evaluation_corpus_requires_explicit_navigation_operations() {
+        let mut document = methodology_document(
+            "evaluation",
+            "pre_registered",
+            "independently_reviewed",
+            "  freezeId: eval-v1\n",
+            "  reviewers: [reviewer-a, reviewer-b]",
+        );
+        document.cases.push(
+            serde_yaml::from_str(
+                r#"id: implicit-navigation
+usageLookups:
+  - usage:
+      location:
+        uri: benchmark://source/src/lib.rs
+        range:
+          start: { line: 1, character: 4 }
+          end: { line: 1, character: 8 }
+      kind: module
+      displayName: item
+    expectedDeclaration:
+      location:
+        uri: benchmark://source/src/lib.rs
+        range:
+          start: { line: 0, character: 4 }
+          end: { line: 0, character: 8 }
+      kind: module
+      displayName: item
+"#,
+            )
+            .unwrap(),
+        );
+
+        let error = document.validate_methodology_metadata().unwrap_err();
+
+        assert!(format!("{error:#}").contains("explicit navigation operation"));
+    }
+
+    fn methodology_document(
+        partition: &str,
+        selection: &str,
+        review_status: &str,
+        freeze_id: &str,
+        reviewers: &str,
+    ) -> BenchmarkDocument {
+        serde_yaml::from_str(&format!(
+            r#"schemaVersion: 2
+corpus:
+  partition: {partition}
+  selection: {selection}
+{freeze_id}groundTruth:
+  status: {review_status}
+{reviewers}
+referencePolicy: bindings_optional
+source:
+  kind: fixture
+  path: fixtures/fixture
+language: text
+cases: []
+"#
+        ))
+        .unwrap()
     }
 }

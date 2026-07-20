@@ -29,7 +29,10 @@ The Bifrost adapter uses its public MCP tools. `search_symbols` maps authored
 declaration locations to a Bifrost selector, `scan_usages_by_location` provides
 usage locations, and the location-based definition and type tools implement
 the reverse probes. A git revision is resolved before execution and recorded in
-the report.
+the report. When the document permits bindings, the adapter requests
+`include_bindings: true`; compatible Bifrost releases may include imports and
+re-exports. Releases that return only path/line locations are reported as
+`position_unverified` until they expose exact token ranges.
 
 The original `usagebench::bifrost_runner` module remains as a compatibility
 re-export while the implementation lives in `usagebench::runners::bifrost`.
@@ -58,9 +61,10 @@ For every matching benchmark document the adapter:
    or a project file;
 3. performs LSP initialization, answers bidirectional server requests, and
    opens all matching source documents;
-4. queries `textDocument/references` with `includeDeclaration: false`,
-   `textDocument/declaration`, `textDocument/definition`, and
-   `textDocument/typeDefinition` when enabled and advertised;
+4. queries `textDocument/references` with `includeDeclaration: false`; for
+   navigation it uses `textDocument/declaration` when explicitly enabled and
+   advertised, otherwise `textDocument/definition`, without unioning the two;
+   and queries `textDocument/typeDefinition` when advertised;
 5. keeps processing bidirectional server requests while the workspace settles;
 6. normalizes `Location` and `LocationLink` responses to repository-relative,
    one-based UsageBench report locations.
@@ -68,23 +72,18 @@ For every matching benchmark document the adapter:
 The adapter does not silently discard LSP results. Import bindings, re-export
 bindings, export metadata, declarations, implementations, aliases, and
 generated locations remain in `actual`. Every extra location is also recorded
-in `extraUsages` with a classification, disposition, and rationale. Scoring
-exposes two successful-coverage tiers:
+in `extraUsages` with a classification, disposition, and rationale.
 
-- `passed` is an exact reference match with successful reverse/type lookups;
-- `near_miss` has every required reference and successful reverse/type lookups,
-  and its only extras are the explicitly allowed LSP policy differences
-  `import_binding`, `reexport_binding`, or `export_metadata`.
+Scoring requires exact start and end ranges. A path/line-only result is
+`position_unverified`, not a pass. The document's `referencePolicy` decides
+whether classified binding/export locations are excluded, optional, or
+required. Optional binding extras remain visible but do not prevent `passed`;
+any other superset is a hard failure.
 
-A near miss is not counted as an exact precision pass or a hard failure. This
-keeps Bifrost's product decision to omit binding-only imports measurable without
-punishing an LSP whose “find references” semantics include them. A complete
-superset containing any other extra remains a hard failure until the location
-is investigated and either the corpus or this policy is deliberately changed.
-For multi-target definition and type-definition responses, the lookup passes when
-the expected target is among the returned locations; every alternate is still
-recorded. Missing required locations, absent definitions, wrong targets,
-partial responses, and protocol failures remain hard failures or errors.
+Definition and type-definition navigation passes only when the response has one
+location and its complete range exactly matches the authored target. An
+expected target hidden among alternates is a failure. Missing required
+locations, partial responses, and protocol failures remain failures or errors.
 
 Profiles record both a requested version and the server's `serverInfo.version`
 when available. Servers that omit it are reported as `not reported`; the
@@ -104,10 +103,13 @@ cargo run -- run-lsp benchmarks/cases \
 cases carrying corpus-level unsupported markers; it is intentionally off for
 the comparison below.
 
-### Popular LSP comparison
+### Legacy popular-LSP comparison
 
-The following end-to-end runs were captured on macOS arm64 on 2026-07-16 after
-workspace hydration and active bidirectional request handling were enabled.
+The following end-to-end runs were captured on macOS arm64 on 2026-07-16 with
+the former line-level scorer and former binding-policy near-miss category. They
+are retained as a historical diagnostic snapshot, not a schema-v2 evaluation
+result. Re-run every profile before publishing a hardened aggregate. The legacy
+runs were captured after workspace hydration and active bidirectional request handling were enabled.
 “Near miss” is limited to the allowed binding/export-policy extras above;
 declarations, same-name symbols, hierarchy expansion, and other supersets stay
 in hard failure. “Planned” is `exact + near miss + hard failure`; not-planned

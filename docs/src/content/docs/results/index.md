@@ -1,7 +1,12 @@
 ---
-title: Result snapshot
-description: Current Bifrost and language-server results, with policy-only near misses separated from hard disagreements.
+title: Legacy result snapshot
+description: Historical 2026-07-16 diagnostic results produced before exact-range and evaluation-corpus hardening.
 ---
+
+> **Historical, not an evaluation result.** This snapshot used line-level
+> matching, accepted expected navigation targets among alternates, and predates
+> the schema-v2 corpus partition and independent-review requirements. It must be
+> re-run under the hardened scorer before its aggregate is cited.
 
 This snapshot was captured on macOS arm64 on 2026-07-16. Every measured server
 completed with zero runner errors. “Allowed-policy” means that all required

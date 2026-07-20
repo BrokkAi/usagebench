@@ -35,6 +35,12 @@ release tag when the run came from a clean tagged checkout. A revision ending in
 `-dirty` records that local changes were present and the run is not reproducible
 from the commit alone.
 
+Only documents marked `corpus.partition: evaluation` belong in a published
+accuracy aggregate. Validation requires those documents to be pre-registered,
+independently reviewed by at least two named reviewers, and assigned a
+`freezeId`. Any assertion change after review creates a new freeze and at least
+a minor corpus release; the prior report and freeze remain available.
+
 ## Release contents
 
 The tag workflow publishes a curated `usagebench-vMAJOR.MINOR.PATCH.tar.gz`

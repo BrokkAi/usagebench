@@ -1,15 +1,16 @@
 use super::bifrost::{command_output_with_timeout, prepare_source_root};
 use super::lsp_protocol::{InitializeResult, LspSession};
 use super::{
-    compute_totals, normalize_symbol_location, path_to_slash, score_declaration_locations,
-    symbol_kind_name, CapabilitySupport, CaseRunReport, CaseStatus, ClassifiedExtraUsage,
-    DeclarationUsageReport, DocumentRunReport, ExtraUsageClassification, ExtraUsageDisposition,
-    NormalizedLocation, RunDiagnostic, RunReport, RunTotals, RunnerCapability, RunnerMetadata,
-    RunnerOperation, TypeLookupReport, UsageDefinitionReport,
+    compute_totals, location_match, navigation_response_status, normalize_symbol_location,
+    path_to_slash, score_declaration_locations, symbol_kind_name, CapabilitySupport, CaseRunReport,
+    CaseStatus, ClassifiedExtraUsage, DeclarationUsageReport, DocumentRunReport,
+    ExtraUsageClassification, ExtraUsageDisposition, LocationMatch, NormalizedLocation,
+    RunDiagnostic, RunReport, RunTotals, RunnerCapability, RunnerMetadata, RunnerOperation,
+    TypeLookupReport, UsageDefinitionReport,
 };
 use crate::{
     benchmark_source_path, find_repo_root_for_path, BenchmarkCase, BenchmarkDocument,
-    SymbolLocation, TypeLookup, UsageLookup,
+    NavigationOperation, ReferencePolicy, SymbolLocation, TypeLookup, UsageLookup,
 };
 use anyhow::{bail, Context, Result};
 use serde::Deserialize;
@@ -164,6 +165,10 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
                     case_file: display_path(case_file),
                     language: document.language,
                     source_root: display_path(&source_root),
+                    corpus_partition: document.corpus.partition,
+                    corpus_selection: document.corpus.selection,
+                    ground_truth_status: document.ground_truth.status,
+                    reference_policy: document.reference_policy,
                     cases,
                 });
             }
@@ -173,6 +178,10 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
                     case_file: display_path(case_file),
                     language: document.language,
                     source_root: display_path(&source_root),
+                    corpus_partition: document.corpus.partition,
+                    corpus_selection: document.corpus.selection,
+                    ground_truth_status: document.ground_truth.status,
+                    reference_policy: document.reference_policy,
                     cases: document
                         .cases
                         .iter()
@@ -207,7 +216,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
                     (profile.query_declaration && capabilities.declaration)
                         || capabilities.definition,
                     if profile.query_declaration && capabilities.declaration {
-                        "textDocument/declaration with textDocument/definition fallback"
+                        "textDocument/declaration (definition only when declaration is unavailable)"
                     } else {
                         "textDocument/definition"
                     },
@@ -295,6 +304,7 @@ fn run_document(
             run_case(
                 case,
                 &document.language,
+                document.reference_policy,
                 profile,
                 source_root,
                 &capabilities,
@@ -309,6 +319,7 @@ fn run_document(
 fn run_case(
     case: &BenchmarkCase,
     language: &str,
+    reference_policy: ReferencePolicy,
     profile: &LspProfile,
     source_root: &Path,
     capabilities: &ServerCapabilities,
@@ -341,16 +352,7 @@ fn run_case(
     let usage_to_declaration = case
         .usage_lookups
         .iter()
-        .map(|lookup| {
-            run_definition(
-                lookup,
-                profile,
-                source_root,
-                profile.query_declaration && capabilities.declaration,
-                capabilities.definition,
-                session,
-            )
-        })
+        .map(|lookup| run_definition(lookup, profile, source_root, capabilities, session))
         .collect::<Vec<_>>();
     let type_lookups = case
         .type_lookups
@@ -370,6 +372,7 @@ fn run_case(
             case,
             declaration,
             language,
+            reference_policy,
             profile,
             source_root,
             capabilities.references,
@@ -401,6 +404,7 @@ fn run_references(
     case: &BenchmarkCase,
     declaration: &SymbolLocation,
     language: &str,
+    reference_policy: ReferencePolicy,
     profile: &LspProfile,
     source_root: &Path,
     supported: bool,
@@ -443,7 +447,7 @@ fn run_references(
                 false,
             )
             .unwrap_or_else(|error| error_declaration_report(case, "score_failed", error));
-            classify_lsp_extra_usages(&mut report, language, source_root);
+            classify_reference_policy_extras(&mut report, language, source_root, reference_policy);
             report
         }
         Err(error) => error_declaration_report(case, "references_failed", error),
@@ -454,40 +458,48 @@ fn run_definition(
     lookup: &UsageLookup,
     profile: &LspProfile,
     source_root: &Path,
-    declaration_supported: bool,
-    definition_supported: bool,
+    capabilities: &ServerCapabilities,
     session: &mut LspSession,
 ) -> UsageDefinitionReport {
-    if !declaration_supported && !definition_supported {
-        return unsupported_definition_report(lookup, "declaration_and_definition_not_advertised");
-    }
+    let Some(method) = navigation_method(lookup.operation, profile, capabilities) else {
+        let reason = match lookup.operation {
+            NavigationOperation::Declaration => "declaration_not_advertised",
+            NavigationOperation::Definition => "definition_not_advertised",
+            NavigationOperation::ProfileDefault => "profile_navigation_operation_not_advertised",
+        };
+        return unsupported_definition_report(lookup, reason);
+    };
     let expected = normalized_or_invalid(&lookup.expected_declaration);
     let usage = normalized_or_invalid(&lookup.usage);
     let result = position_params_with_context(&lookup.usage, profile, source_root, session)
-        .and_then(|params| {
-            navigation_locations(
-                session,
-                params,
-                source_root,
-                declaration_supported,
-                definition_supported,
-            )
-        });
+        .and_then(|params| session.query(method, params))
+        .and_then(|value| locations_from_response(&value, source_root));
     match result {
         Ok(actual) => {
-            let status = location_response_status(&actual, &expected);
+            let status = navigation_response_status(&actual, &expected, lookup.expect_no_movement);
             UsageDefinitionReport {
                 status,
                 usage,
-                expected_declaration: expected,
-                raw_status: if actual.is_empty() {
+                expected_declaration: expected.clone(),
+                raw_status: if lookup.expect_no_movement
+                    && status == CaseStatus::Passed
+                    && actual.is_empty()
+                {
+                    "no_movement".to_string()
+                } else if lookup.expect_no_movement && status == CaseStatus::Passed {
+                    "self_target".to_string()
+                } else if actual.is_empty() {
                     "no_definition".to_string()
                 } else if status == CaseStatus::Passed {
-                    if actual.len() == 1 {
-                        "ok".to_string()
-                    } else {
-                        "resolved_with_alternates".to_string()
-                    }
+                    "ok".to_string()
+                } else if status == CaseStatus::PositionUnverified {
+                    "position_unverified".to_string()
+                } else if actual.len() > 1
+                    && actual
+                        .iter()
+                        .any(|location| location_match(location, &expected) == LocationMatch::Exact)
+                {
+                    "unexpected_alternate_definitions".to_string()
                 } else {
                     "mismatched_definition".to_string()
                 },
@@ -533,19 +545,23 @@ fn run_type_definition(
         .and_then(|value| locations_from_response(&value, source_root));
     match result {
         Ok(actual) => {
-            let status = location_response_status(&actual, &expected_type);
+            let status = navigation_response_status(&actual, &expected_type, false);
             TypeLookupReport {
                 status,
                 expression,
-                expected_type,
+                expected_type: expected_type.clone(),
                 raw_status: if actual.is_empty() {
                     "no_type_definition".to_string()
                 } else if status == CaseStatus::Passed {
-                    if actual.len() == 1 {
-                        "ok".to_string()
-                    } else {
-                        "resolved_with_alternates".to_string()
-                    }
+                    "ok".to_string()
+                } else if status == CaseStatus::PositionUnverified {
+                    "position_unverified".to_string()
+                } else if actual.len() > 1
+                    && actual.iter().any(|location| {
+                        location_match(location, &expected_type) == LocationMatch::Exact
+                    })
+                {
+                    "unexpected_alternate_types".to_string()
                 } else {
                     "mismatched_type_definition".to_string()
                 },
@@ -650,6 +666,14 @@ fn normalize_lsp_location(value: &Value, source_root: &Path) -> Result<Normalize
         .pointer("/start/character")
         .and_then(Value::as_u64)
         .context("LSP location missing start character")? as u32;
+    let end_line = range
+        .pointer("/end/line")
+        .and_then(Value::as_u64)
+        .context("LSP location missing end line")? as u32;
+    let end_column = range
+        .pointer("/end/character")
+        .and_then(Value::as_u64)
+        .context("LSP location missing end character")? as u32;
     let url = Url::parse(uri).with_context(|| format!("parse LSP location URI `{uri}`"))?;
     let path = if url.scheme() == "file" {
         let absolute = url
@@ -666,60 +690,53 @@ fn normalize_lsp_location(value: &Value, source_root: &Path) -> Result<Normalize
         path,
         line: line + 1,
         column: Some(column + 1),
+        end_line: Some(end_line + 1),
+        end_column: Some(end_column + 1),
         display_name: None,
         kind: None,
     })
 }
 
-fn location_response_status(
-    actual: &[NormalizedLocation],
-    expected: &NormalizedLocation,
-) -> CaseStatus {
-    if actual
-        .iter()
-        .any(|location| location.path == expected.path && location.line == expected.line)
-    {
-        CaseStatus::Passed
-    } else {
-        CaseStatus::Failed
+fn navigation_method(
+    operation: NavigationOperation,
+    profile: &LspProfile,
+    capabilities: &ServerCapabilities,
+) -> Option<&'static str> {
+    match operation {
+        NavigationOperation::Declaration if capabilities.declaration => {
+            Some("textDocument/declaration")
+        }
+        NavigationOperation::Definition if capabilities.definition => {
+            Some("textDocument/definition")
+        }
+        NavigationOperation::ProfileDefault
+            if profile.query_declaration && capabilities.declaration =>
+        {
+            Some("textDocument/declaration")
+        }
+        NavigationOperation::ProfileDefault if capabilities.definition => {
+            Some("textDocument/definition")
+        }
+        _ => None,
     }
 }
 
-fn navigation_locations(
-    session: &mut LspSession,
-    params: Value,
-    source_root: &Path,
-    declaration_supported: bool,
-    definition_supported: bool,
-) -> Result<Vec<NormalizedLocation>> {
-    let mut locations = Vec::new();
-    if declaration_supported {
-        let value = session.query("textDocument/declaration", params.clone())?;
-        locations.extend(locations_from_response(&value, source_root)?);
-    }
-    if definition_supported {
-        let value = session.query("textDocument/definition", params)?;
-        locations.extend(locations_from_response(&value, source_root)?);
-    }
-    locations.sort();
-    locations.dedup();
-    Ok(locations)
-}
-
-fn classify_lsp_extra_usages(
+pub(crate) fn classify_reference_policy_extras(
     report: &mut DeclarationUsageReport,
     language: &str,
     source_root: &Path,
+    reference_policy: ReferencePolicy,
 ) {
     let mut unexpected = Vec::new();
     for location in std::mem::take(&mut report.unexpected) {
         let (classification, rationale) = classify_extra_usage(language, source_root, &location);
-        let disposition = if matches!(
+        let is_binding = matches!(
             classification,
             ExtraUsageClassification::ImportBinding
                 | ExtraUsageClassification::ReexportBinding
                 | ExtraUsageClassification::ExportMetadata
-        ) {
+        );
+        let disposition = if is_binding && reference_policy == ReferencePolicy::BindingsOptional {
             ExtraUsageDisposition::AllowedPolicyExtra
         } else {
             unexpected.push(location.clone());
@@ -738,18 +755,21 @@ fn classify_lsp_extra_usages(
         .extra_usages
         .iter()
         .any(|extra| extra.disposition == ExtraUsageDisposition::AllowedPolicyExtra);
-    if report.status == CaseStatus::Failed
-        && !report.partial
+    if !report.partial
         && report.missing.is_empty()
         && report.missing_unproven.is_empty()
         && report.unexpected.is_empty()
         && report.unexpected_unproven.is_empty()
         && has_allowed_policy_extra
     {
-        report.status = CaseStatus::NearMiss;
+        report.status = if report.position_unverified.is_empty() {
+            CaseStatus::Passed
+        } else {
+            CaseStatus::PositionUnverified
+        };
         report
             .raw_statuses
-            .push("allowed_policy_extras".to_string());
+            .push("optional_binding_extras".to_string());
     }
 }
 
@@ -1281,6 +1301,7 @@ fn empty_declaration_report(status: CaseStatus, raw_status: &str) -> Declaration
         missing_unproven: Vec::new(),
         unexpected: Vec::new(),
         unexpected_unproven: Vec::new(),
+        position_unverified: Vec::new(),
         extra_usages: Vec::new(),
         partial: false,
         raw_statuses: vec![raw_status.to_string()],
@@ -1292,6 +1313,8 @@ fn normalized_or_invalid(location: &SymbolLocation) -> NormalizedLocation {
         path: "<invalid>".to_string(),
         line: 0,
         column: None,
+        end_line: None,
+        end_column: None,
         display_name: Some(location.display_name.clone()),
         kind: Some(symbol_kind_name(&location.kind).to_string()),
     })
@@ -1314,6 +1337,8 @@ fn combine_case_status(
         CaseStatus::Failed
     } else if statuses.contains(&CaseStatus::Unsupported) {
         CaseStatus::Unsupported
+    } else if statuses.contains(&CaseStatus::PositionUnverified) {
+        CaseStatus::PositionUnverified
     } else if statuses.contains(&CaseStatus::NearMiss) {
         CaseStatus::NearMiss
     } else if statuses.is_empty() || statuses.iter().all(|status| *status == CaseStatus::Skipped) {
@@ -1378,6 +1403,27 @@ mod tests {
     }
 
     #[test]
+    fn explicit_declaration_lookup_never_falls_back_to_definition() {
+        let profile = load_profile(
+            &Path::new(env!("CARGO_MANIFEST_DIR")).join("adapters/lsp/rust-analyzer.json"),
+        )
+        .unwrap();
+        let capabilities = ServerCapabilities {
+            definition: true,
+            ..ServerCapabilities::default()
+        };
+
+        assert_eq!(
+            navigation_method(NavigationOperation::Declaration, &profile, &capabilities),
+            None
+        );
+        assert_eq!(
+            navigation_method(NavigationOperation::Definition, &profile, &capabilities),
+            Some("textDocument/definition")
+        );
+    }
+
+    #[test]
     fn parses_locations_and_location_links() {
         let root = Path::new("/tmp/workspace");
         let locations = locations_from_response(
@@ -1412,17 +1458,53 @@ mod tests {
     }
 
     #[test]
-    fn definition_response_passes_when_expected_target_is_among_alternates() {
+    fn definition_response_fails_when_expected_target_is_among_alternates() {
         let expected = test_location("src/interface.cs", 7);
         let actual = vec![expected.clone(), test_location("src/implementation.cs", 19)];
         assert_eq!(
-            location_response_status(&actual, &expected),
+            navigation_response_status(&actual, &expected, false),
+            CaseStatus::Failed
+        );
+    }
+
+    #[test]
+    fn definition_response_requires_the_exact_token_range() {
+        let expected = test_location("src/interface.cs", 7);
+        let mut wrong_token = expected.clone();
+        wrong_token.column = Some(4);
+        wrong_token.end_column = Some(5);
+
+        assert_eq!(
+            navigation_response_status(&[wrong_token], &expected, false),
+            CaseStatus::Failed
+        );
+        assert_eq!(
+            navigation_response_status(&[expected.clone()], &expected, false),
             CaseStatus::Passed
         );
     }
 
     #[test]
-    fn import_binding_extra_is_an_allowed_policy_near_miss() {
+    fn no_movement_accepts_empty_or_exact_self_target_only() {
+        let self_target = test_location("src/lib.rs", 16);
+        let trait_target = test_location("src/lib.rs", 6);
+
+        assert_eq!(
+            navigation_response_status(&[], &self_target, true),
+            CaseStatus::Passed
+        );
+        assert_eq!(
+            navigation_response_status(&[self_target.clone()], &self_target, true),
+            CaseStatus::Passed
+        );
+        assert_eq!(
+            navigation_response_status(&[trait_target], &self_target, true),
+            CaseStatus::Failed
+        );
+    }
+
+    #[test]
+    fn import_binding_extra_passes_when_bindings_are_optional() {
         let root = tempfile::tempdir().unwrap();
         fs::create_dir_all(root.path().join("src")).unwrap();
         fs::write(
@@ -1432,8 +1514,13 @@ mod tests {
         .unwrap();
         let mut report = empty_declaration_report(CaseStatus::Failed, "ok");
         report.unexpected.push(test_location("src/import.ts", 1));
-        classify_lsp_extra_usages(&mut report, "typescript", root.path());
-        assert_eq!(report.status, CaseStatus::NearMiss);
+        classify_reference_policy_extras(
+            &mut report,
+            "typescript",
+            root.path(),
+            ReferencePolicy::BindingsOptional,
+        );
+        assert_eq!(report.status, CaseStatus::Passed);
         assert!(report.unexpected.is_empty());
         assert_eq!(report.extra_usages.len(), 1);
         assert_eq!(
@@ -1442,7 +1529,7 @@ mod tests {
         );
         assert!(report
             .raw_statuses
-            .contains(&"allowed_policy_extras".to_string()));
+            .contains(&"optional_binding_extras".to_string()));
     }
 
     #[test]
@@ -1452,7 +1539,12 @@ mod tests {
         fs::write(root.path().join("src/use.ts"), "Widget.create();\n").unwrap();
         let mut report = empty_declaration_report(CaseStatus::Failed, "ok");
         report.unexpected.push(test_location("src/use.ts", 1));
-        classify_lsp_extra_usages(&mut report, "typescript", root.path());
+        classify_reference_policy_extras(
+            &mut report,
+            "typescript",
+            root.path(),
+            ReferencePolicy::BindingsOptional,
+        );
         assert_eq!(report.status, CaseStatus::Failed);
         assert_eq!(report.unexpected.len(), 1);
         assert_eq!(
@@ -1472,8 +1564,13 @@ mod tests {
         .unwrap();
         let mut report = empty_declaration_report(CaseStatus::Failed, "ok");
         report.unexpected.push(test_location("src/lib.rs", 2));
-        classify_lsp_extra_usages(&mut report, "rust", root.path());
-        assert_eq!(report.status, CaseStatus::NearMiss);
+        classify_reference_policy_extras(
+            &mut report,
+            "rust",
+            root.path(),
+            ReferencePolicy::BindingsOptional,
+        );
+        assert_eq!(report.status, CaseStatus::Passed);
         assert_eq!(
             report.extra_usages[0].classification,
             ExtraUsageClassification::ReexportBinding
@@ -1491,12 +1588,40 @@ mod tests {
         .unwrap();
         let mut report = empty_declaration_report(CaseStatus::Failed, "ok");
         report.unexpected.push(test_location("src/export.ts", 1));
-        classify_lsp_extra_usages(&mut report, "typescript", root.path());
+        classify_reference_policy_extras(
+            &mut report,
+            "typescript",
+            root.path(),
+            ReferencePolicy::BindingsOptional,
+        );
         assert_eq!(report.status, CaseStatus::Failed);
         assert_eq!(
             report.extra_usages[0].classification,
             ExtraUsageClassification::Unclassified
         );
+    }
+
+    #[test]
+    fn import_binding_extra_fails_when_policy_excludes_bindings() {
+        let root = tempfile::tempdir().unwrap();
+        fs::create_dir_all(root.path().join("src")).unwrap();
+        fs::write(
+            root.path().join("src/import.ts"),
+            "import { Widget } from './widget';\n",
+        )
+        .unwrap();
+        let mut report = empty_declaration_report(CaseStatus::Failed, "ok");
+        report.unexpected.push(test_location("src/import.ts", 1));
+
+        classify_reference_policy_extras(
+            &mut report,
+            "typescript",
+            root.path(),
+            ReferencePolicy::ExternalUsages,
+        );
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(report.unexpected.len(), 1);
     }
 
     #[test]
@@ -1552,6 +1677,8 @@ mod tests {
             path: path.to_string(),
             line,
             column: Some(1),
+            end_line: Some(line),
+            end_column: Some(2),
             display_name: None,
             kind: None,
         }

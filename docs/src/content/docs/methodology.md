@@ -11,13 +11,45 @@ different public grouping policy without containing an implementation bug.
 
 | Category | Meaning |
 |---|---|
-| Exact | Required locations and navigation targets match, with no unallowed extras. |
-| Allowed-policy near miss | The only extras are classified import bindings, re-export bindings, or export metadata. |
+| Exact | Required complete token ranges and navigation targets match, with no unallowed extras. Under `bindings_optional`, classified binding/export extras may be present and remain recorded. |
+| Position unverified | Path and line agree, but the analyzer did not return enough range information to prove the token. |
 | Recall difference | At least one reviewed expected location or target is absent. |
 | Precision or identity difference | The analyzer returns another declaration, same-name symbol, constructor, implementation-family member, or other unallowed location. |
 | Navigation-target difference | The analyzer navigates to a related but different surface, such as an alias binding or module file. |
 | Unsupported | The runner cannot express the authored selector or the server does not advertise the required operation. |
 | Harness failure | The server did not become ready, the project did not load, or the protocol failed. This is not scored as an analyzer correctness result. |
+
+Navigation responses are intentionally strict: declaration and definition
+requests are not unioned, and an expected target among multiple alternates does
+not pass. The selected operation must return exactly one target with the
+authored complete range. Every evaluation lookup explicitly selects declaration
+or definition; a server that does not advertise that operation is unsupported
+for the case rather than silently queried through the other endpoint.
+
+## Corpus partitions and ground truth
+
+Development cases may be analyzer-informed and may retain legacy review notes.
+They are appropriate for regression work and diagnosis, but their aggregate is
+not an evaluation claim. Each current case document declares this status.
+
+An evaluation document is accepted only when all of these are true:
+
+1. case selection was pre-registered before running the compared analyzers;
+2. the document has an immutable `freezeId`;
+3. at least two named reviewers independently checked source locations; and
+4. disagreements were adjudicated before the freeze.
+
+Changing a frozen assertion creates a new freeze and preserves the old report.
+Reports include partition, selection, review status, and reference policy, and
+their totals separate development from evaluation cases.
+
+## Import and binding policy
+
+`external_usages` excludes binding-only imports/re-exports;
+`bindings_optional` accepts their presence or absence; and `bindings_required`
+requires binding locations to be authored as expectations. The current
+development corpus uses `bindings_optional`, matching Bifrost's optional binding
+surface while keeping all returned binding locations visible for audit.
 
 ## Claim strength
 
