@@ -2,7 +2,7 @@ use super::mcp::{McpSession, ToolClient as SearchToolsClient};
 use super::{
     combine_case_status, compute_totals, location_match, normalize_symbol_location, path_to_slash,
     resolve_usagebench_provenance, score_declaration_locations, score_navigation_response,
-    symbol_kind_name, CapabilitySupport, LocationMatch, RunReport, RunnerCapability,
+    symbol_kind_name, CapabilitySupport, LocationMatch, RunInvocation, RunReport, RunnerCapability,
     RunnerMetadata, RunnerOperation,
 };
 pub use super::{
@@ -99,6 +99,10 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     let bifrost_resolved_commit = git_output(&bifrost_checkout, ["rev-parse", "HEAD"])?;
     build_bifrost(&bifrost_checkout)?;
     let bifrost_binary = bifrost_binary_path(&bifrost_checkout);
+    let environment = super::environment::capture_execution_environment(
+        super::environment::executable_provenance(&Command::new(&bifrost_binary))?,
+        &["rustc", "cargo"],
+    )?;
 
     let mut documents = Vec::new();
     for case_file in &case_files {
@@ -163,6 +167,13 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         usagebench_revision: usagebench_provenance.revision,
         usagebench_release: usagebench_provenance.release,
         runner,
+        invocation: RunInvocation {
+            include_unsupported: options.include_unsupported,
+            include_definition_lookups: options.include_definition_lookups,
+            profile: None,
+            case_id: None,
+        },
+        environment,
         bifrost_repo: Some(display_path(&bifrost_source_repo)),
         bifrost_commit: Some(requested_version),
         bifrost_resolved_commit: Some(bifrost_resolved_commit),
@@ -1827,6 +1838,33 @@ mod tests {
                 adapter_version: "0.1.0".to_string(),
                 capabilities: Vec::new(),
             },
+            invocation: RunInvocation {
+                include_unsupported: false,
+                include_definition_lookups: true,
+                profile: None,
+                case_id: None,
+            },
+            environment: super::super::ExecutionEnvironment {
+                operating_system: "linux".to_string(),
+                architecture: "x86_64".to_string(),
+                execution_mode: super::super::ExecutionMode::Container,
+                platform_scope: super::super::PlatformScope::CanonicalReference,
+                reference_environment: Some(super::super::ReferenceEnvironmentProvenance {
+                    version: "1".to_string(),
+                    definition_digest: format!("sha256:{}", "a".repeat(64)),
+                    canonical_platform: "linux/amd64".to_string(),
+                }),
+                container: Some(super::super::ContainerProvenance {
+                    image_reference: "usagebench-reference:v0.1.0-env1-bifrost".to_string(),
+                    image_digest: format!("sha256:{}", "b".repeat(64)),
+                }),
+                analyzer_executable: super::super::ExecutableProvenance {
+                    command: "/usr/local/bin/bifrost".to_string(),
+                    resolved_path: Some("/usr/local/bin/bifrost".to_string()),
+                    sha256: Some("c".repeat(64)),
+                },
+                toolchains: std::collections::BTreeMap::new(),
+            },
             bifrost_repo: Some("/repo/bifrost".to_string()),
             bifrost_commit: Some("origin/master".to_string()),
             bifrost_resolved_commit: Some("abc123".to_string()),
@@ -1897,6 +1935,16 @@ mod tests {
         assert_eq!(json["usagebenchRevision"], "def456");
         assert_eq!(json["usagebenchRelease"], "v0.1.0");
         assert_eq!(json["bifrostResolvedCommit"], "abc123");
+        assert_eq!(json["invocation"]["includeUnsupported"], false);
+        assert_eq!(json["environment"]["executionMode"], "container");
+        assert_eq!(
+            json["environment"]["referenceEnvironment"]["canonicalPlatform"],
+            "linux/amd64"
+        );
+        assert_eq!(
+            json["environment"]["analyzerExecutable"]["sha256"],
+            "c".repeat(64)
+        );
         assert_eq!(json["totals"]["passed"], 1);
         assert_eq!(
             json["documents"][0]["cases"][0]["declarationToUsages"]["unexpected"][0]["path"],

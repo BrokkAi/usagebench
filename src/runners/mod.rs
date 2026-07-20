@@ -13,9 +13,15 @@ use serde::{Deserialize, Serialize};
 use std::{fs, path::Path, process::Command};
 
 pub mod bifrost;
+mod environment;
 pub mod lsp;
 mod lsp_protocol;
 mod mcp;
+
+pub use environment::{
+    ContainerProvenance, ExecutableProvenance, ExecutionEnvironment, ExecutionMode, PlatformScope,
+    ReferenceEnvironmentProvenance,
+};
 
 #[derive(Debug, Clone, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -64,6 +70,8 @@ pub struct RunReport {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub usagebench_release: Option<String>,
     pub runner: RunnerMetadata,
+    pub invocation: RunInvocation,
+    pub environment: ExecutionEnvironment,
     /// Compatibility fields retained for existing Bifrost report consumers.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bifrost_repo: Option<String>,
@@ -76,6 +84,17 @@ pub struct RunReport {
     pub case_files: Vec<String>,
     pub totals: RunTotals,
     pub documents: Vec<DocumentRunReport>,
+}
+
+#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct RunInvocation {
+    pub include_unsupported: bool,
+    pub include_definition_lookups: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub case_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

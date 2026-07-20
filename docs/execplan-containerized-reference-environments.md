@@ -99,7 +99,10 @@ pull request.
 - [x] 2026-07-20: Added and validated the version 1 reference-environment
   manifest and JSON Schema.
 - [x] Milestone 1: reference-environment contract.
-- [ ] Milestone 2: report provenance.
+- [x] 2026-07-20: Added invocation, native/container platform scope,
+  reference-image identity, analyzer executable checksums, and observed
+  toolchains to the shared report schema.
+- [x] Milestone 2: report provenance.
 - [ ] Milestone 3: semantic comparison.
 - [ ] Milestone 4: reference images and offline execution.
 - [ ] Milestone 5: report-driven reproduction.
