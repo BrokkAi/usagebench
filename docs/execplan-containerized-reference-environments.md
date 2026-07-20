@@ -119,7 +119,15 @@ pull request.
 - [x] 2026-07-20: Reproduced a gopls report from a synthetic extracted release
   bundle and confirmed that an intentionally changed case outcome is rejected.
 - [x] Milestone 5: report-driven reproduction.
-- [ ] Milestone 6: CI, release packaging, and documentation.
+- [x] 2026-07-20: Added ephemeral CI builds and exact offline smoke runs for
+  both reference images without registry authentication, image pushes, OCI
+  exports, or image artifact uploads.
+- [x] 2026-07-20: Added the artifact-review guide, public reproduction and
+  versioning documentation, and container tooling to curated release bundles.
+- [x] 2026-07-20: Validated the docs build and inspected the rendered
+  reproduction page at a desktop viewport; staged and inspected a
+  release-shaped archive containing the complete build contract.
+- [x] Milestone 6: CI, release packaging, and documentation.
 - [ ] Milestone 7: final validation and review.
 
 ## Decision Log

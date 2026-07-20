@@ -94,8 +94,8 @@ jobs:
           set -euo pipefail
           stage="usagebench-${RELEASE_TAG}"
           mkdir -p "dist/$stage"
-          cp -R benchmarks fixtures adapters schema src "dist/$stage/"
-          cp Cargo.toml Cargo.lock README.md RELEASES.md CITATION.cff LICENSE.md "dist/$stage/"
+          cp -R benchmarks fixtures adapters schema src containers scripts "dist/$stage/"
+          cp Cargo.toml Cargo.lock README.md RELEASES.md ARTIFACT.md CITATION.cff LICENSE.md .dockerignore "dist/$stage/"
           jq -n \
             --arg releaseTag "$RELEASE_TAG" \
             --arg releaseVersion "$RELEASE_VERSION" \

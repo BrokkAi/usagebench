@@ -7,11 +7,14 @@ benchmark result.
 
 ## Version boundaries
 
-The benchmark release, Rust package, and YAML schema have separate version
-contracts:
+The benchmark release, reference environment, Rust package, and YAML schema
+have separate version contracts:
 
 - The Git tag is the public benchmark-corpus version. It is the version to cite
   and use when comparing published results.
+- `containers/reference/vN` is the canonical execution-environment contract.
+  It changes when the platform, isolation, build, or analyzer-packaging
+  contract changes, independently of corpus content.
 - `Cargo.toml` is the Rust CLI and adapter implementation version. It may change
   without creating a new corpus release, and a corpus release is not required to
   use the same number.
@@ -48,7 +51,16 @@ asset containing only the public benchmark surface:
 
 - `benchmarks/` and `fixtures/` for assertions and code examples;
 - `adapters/`, `schema/`, and `src/` for profiles, contracts, and harness code;
-- Cargo metadata, citation metadata, the license, and concise reproduction docs.
+- `containers/` and `scripts/` for digest-pinned local image construction,
+  offline execution, and semantic report comparison; and
+- Cargo metadata, citation metadata, the license, `ARTIFACT.md`, and concise
+  reproduction docs.
+
+The bundle does not contain a built OCI image. CI builds Bifrost and gopls
+images ephemerally but never pushes them to GitHub Container Registry or
+uploads them as workflow artifacts. A future version-specific Zenodo deposit
+may add OCI archives after review without changing the checked-in build-only
+contract.
 
 The docs site sources and internal execution plans are intentionally omitted.
 GitHub also creates its standard repository source archives automatically; use

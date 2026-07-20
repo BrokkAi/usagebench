@@ -1,0 +1,91 @@
+name: Reference environments
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke:
+    name: ${{ matrix.runner }} reference image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: bifrost
+            case_path: containers/reference/v1/smoke/bifrost-case.yaml
+            case_id: reference-bifrost-unused-function
+          - runner: gopls
+            case_path: benchmarks/cases/go-baseline.yaml
+            case_id: go-package-function-call
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Stage release-shaped corpus
+        shell: bash
+        env:
+          RELEASE_REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          corpus=target/reference-corpus
+          mkdir -p "$corpus"
+          cp -R benchmarks fixtures adapters schema containers "$corpus/"
+          cp Cargo.toml "$corpus/"
+          jq -n \
+            --arg releaseTag v0.0.0 \
+            --arg releaseVersion 0.0.0 \
+            --arg revision "$RELEASE_REVISION" \
+            '{releaseTag: $releaseTag, releaseVersion: $releaseVersion, revision: $revision}' \
+            > "$corpus/.usagebench-release.json"
+
+      - name: Build local image
+        run: scripts/reference-image.sh "${{ matrix.runner }}" v0.0.0
+
+      - name: Run exact offline smoke case
+        run: |
+          mkdir -p target/reference-smoke
+          scripts/run-reference.sh \
+            "${{ matrix.runner }}" \
+            target/reference-corpus \
+            "target/reference-smoke/${{ matrix.runner }}.json" \
+            "${{ matrix.case_path }}" \
+            "${{ matrix.case_id }}"
+
+      - name: Verify provenance envelope
+        shell: bash
+        env:
+          RUNNER_ID: ${{ matrix.runner }}
+          RELEASE_REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          report="target/reference-smoke/$RUNNER_ID.json"
+          jq -e \
+            --arg runner "$RUNNER_ID" \
+            --arg revision "$RELEASE_REVISION" \
+            '.usagebenchRelease == "v0.0.0"
+             and .usagebenchRevision == $revision
+             and .runner.name == $runner
+             and .environment.executionMode == "container"
+             and .environment.platformScope == "canonical_reference"
+             and .environment.referenceEnvironment.version == "1"
+             and .environment.referenceEnvironment.canonicalPlatform == "linux/amd64"
+             and (.environment.referenceEnvironment.definitionDigest | test("^sha256:[0-9a-f]{64}$"))
+             and (.environment.container.imageDigest | test("^sha256:[0-9a-f]{64}$"))
+             and (.environment.analyzerExecutable.sha256 | test("^[0-9a-f]{64}$"))
+             and .totals.passed == 1
+             and .totals.failed == 0
+             and .totals.errors == 0' \
+            "$report"
+
+      # Images stay in this ephemeral runner. This workflow intentionally has
+      # no registry login, push, OCI export, or artifact-upload step.
