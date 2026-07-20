@@ -197,6 +197,16 @@ pub enum NavigationOperation {
     Definition,
 }
 
+impl NavigationOperation {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::ProfileDefault => "profile_default",
+            Self::Declaration => "declaration",
+            Self::Definition => "definition",
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TypeLookup {

@@ -162,8 +162,12 @@ jobs:
               echo
               jq -r '
                 .totals
-                | "- Documents: \(.documents)\n- Planned cases: \(.cases)\n- Passed: \(.passed)\n- Failed: \(.failed)\n- Expected failures: \(.expectedFailures)\n- Not planned: \(.notPlanned // 0)\n- Unsupported: \(.unsupported // 0)\n- Skipped: \(.skipped)\n- Errors: \(.errors)"
+                | "- Documents: \(.documents)\n- Planned cases: \(.cases)\n- Development cases: \(.developmentCases // 0)\n- Evaluation cases: \(.evaluationCases // 0)\n- Passed: \(.passed)\n- Near misses: \(.nearMisses // 0)\n- Position-unverified cases: \(.positionUnverified // 0)\n- Improved: \(.improved // 0)\n- Failed: \(.failed)\n- Expected failures: \(.expectedFailures)\n- Not planned: \(.notPlanned // 0)\n- Unsupported cases: \(.unsupported // 0)\n- Skipped: \(.skipped)\n- Errors: \(.errors)"
               ' "$REPORT_PATH"
+              unsupported_navigation_lookups="$(
+                jq '[.documents[]?.cases[]?.usageToDeclaration[]? | select(.status == "unsupported")] | length' "$REPORT_PATH"
+              )"
+              echo "- Unsupported navigation lookups: $unsupported_navigation_lookups"
               failing_cases="$(
                 jq -r '
                   [
@@ -173,15 +177,18 @@ jobs:
                     | "- \(.status): \(.id) (\($document.caseFile))"
                       + (
                         if .declarationToUsages then
-                          " missing=\(.declarationToUsages.missing | length), extra=\(.declarationToUsages.unexpected | length)"
+                          " references=\(.declarationToUsages.status):\(.declarationToUsages.rawStatuses | join(",")) missing=\(.declarationToUsages.missing | length), extra=\(.declarationToUsages.unexpected | length)"
                         else
                           ""
                         end
                       )
                       + (
-                        ((.usageToDeclaration // []) | map(select(.status == "failed" or .status == "error")) | length) as $usage_issues
-                        | if $usage_issues > 0 then
-                            " usageLookupIssues=\($usage_issues)"
+                        ((.usageToDeclaration // [])
+                          | map(select(.status == "failed" or .status == "error" or .status == "unsupported"))
+                          | map("\(.operation // "profile_default")=\(.status):\(.rawStatus),targets=\(.actualDeclarations | length)")
+                          | join("; ")) as $navigation_issues
+                        | if ($navigation_issues | length) > 0 then
+                            " navigation=[\($navigation_issues)]"
                           else
                             ""
                           end
@@ -228,12 +235,15 @@ jobs:
           bifrost_sha_short=""
           cases_count="0"
           passed_count="0"
+          near_misses_count="0"
+          position_unverified_count="0"
           improved_count="0"
           total_passed_count="0"
           failed_count="0"
           expected_failures_count="0"
           not_planned_count="0"
           unsupported_count="0"
+          unsupported_navigation_lookups_count="0"
           skipped_count="0"
           errors_count="0"
           failing_cases=""
@@ -242,12 +252,17 @@ jobs:
             bifrost_sha_short="$(printf '%s' "$bifrost_resolved_commit" | cut -c1-7)"
             cases_count="$(jq -r '.totals.cases // 0' "$report_path")"
             passed_count="$(jq -r '.totals.passed // 0' "$report_path")"
+            near_misses_count="$(jq -r '.totals.nearMisses // 0' "$report_path")"
+            position_unverified_count="$(jq -r '.totals.positionUnverified // 0' "$report_path")"
             improved_count="$(jq -r '.totals.improved // 0' "$report_path")"
             total_passed_count="$((passed_count + improved_count))"
             failed_count="$(jq -r '.totals.failed // 0' "$report_path")"
             expected_failures_count="$(jq -r '.totals.expectedFailures // 0' "$report_path")"
             not_planned_count="$(jq -r '.totals.notPlanned // 0' "$report_path")"
             unsupported_count="$(jq -r '.totals.unsupported // 0' "$report_path")"
+            unsupported_navigation_lookups_count="$(
+              jq '[.documents[]?.cases[]?.usageToDeclaration[]? | select(.status == "unsupported")] | length' "$report_path"
+            )"
             skipped_count="$(jq -r '.totals.skipped // 0' "$report_path")"
             errors_count="$(jq -r '.totals.errors // 0' "$report_path")"
             failing_cases="$(
@@ -259,15 +274,18 @@ jobs:
                   | "- \(.status): \(.id) (\($document.caseFile))"
                     + (
                       if .declarationToUsages then
-                        " missing=\(.declarationToUsages.missing | length), extra=\(.declarationToUsages.unexpected | length)"
+                        " references=\(.declarationToUsages.status):\(.declarationToUsages.rawStatuses | join(",")) missing=\(.declarationToUsages.missing | length), extra=\(.declarationToUsages.unexpected | length)"
                       else
                         ""
                       end
                     )
                     + (
-                      ((.usageToDeclaration // []) | map(select(.status == "failed" or .status == "error")) | length) as $usage_issues
-                      | if $usage_issues > 0 then
-                          " usageLookupIssues=\($usage_issues)"
+                      ((.usageToDeclaration // [])
+                        | map(select(.status == "failed" or .status == "error" or .status == "unsupported"))
+                        | map("\(.operation // "profile_default")=\(.status):\(.rawStatus),targets=\(.actualDeclarations | length)")
+                        | join("; ")) as $navigation_issues
+                      | if ($navigation_issues | length) > 0 then
+                          " navigation=[\($navigation_issues)]"
                         else
                           ""
                         end
@@ -316,12 +334,15 @@ jobs:
               --argjson ok "$ok" \
               --argjson cases_count "$cases_count" \
               --argjson passed_count "$passed_count" \
+              --argjson near_misses_count "$near_misses_count" \
+              --argjson position_unverified_count "$position_unverified_count" \
               --argjson improved_count "$improved_count" \
               --argjson total_passed_count "$total_passed_count" \
               --argjson failed_count "$failed_count" \
               --argjson expected_failures_count "$expected_failures_count" \
               --argjson not_planned_count "$not_planned_count" \
               --argjson unsupported_count "$unsupported_count" \
+              --argjson unsupported_navigation_lookups_count "$unsupported_navigation_lookups_count" \
               --argjson skipped_count "$skipped_count" \
               --argjson errors_count "$errors_count" \
               '{
@@ -336,12 +357,15 @@ jobs:
                 run_outcome: $run_outcome,
                 cases_count: $cases_count,
                 passed_count: $passed_count,
+                near_misses_count: $near_misses_count,
+                position_unverified_count: $position_unverified_count,
                 improved_count: $improved_count,
                 total_passed_count: $total_passed_count,
                 failed_count: $failed_count,
                 expected_failures_count: $expected_failures_count,
                 not_planned_count: $not_planned_count,
                 unsupported_count: $unsupported_count,
+                unsupported_navigation_lookups_count: $unsupported_navigation_lookups_count,
                 skipped_count: $skipped_count,
                 errors_count: $errors_count
               }'

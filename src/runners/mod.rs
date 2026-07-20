@@ -5,7 +5,7 @@
 
 use crate::{
     benchmark_source_path, BenchmarkCase, CorpusPartition, CorpusSelection,
-    GroundTruthReviewStatus, ReferencePolicy, SymbolKind, SymbolLocation,
+    GroundTruthReviewStatus, NavigationOperation, ReferencePolicy, SymbolKind, SymbolLocation,
 };
 use anyhow::{bail, Context, Result};
 use schemars::JsonSchema;
@@ -40,7 +40,8 @@ pub struct RunnerCapability {
 #[serde(rename_all = "snake_case")]
 pub enum RunnerOperation {
     DeclarationToUsages,
-    UsageToDeclaration,
+    DeclarationLookup,
+    DefinitionLookup,
     TypeLookup,
 }
 
@@ -303,6 +304,7 @@ pub enum ExtraUsageDisposition {
 #[serde(rename_all = "camelCase")]
 pub struct UsageDefinitionReport {
     pub status: CaseStatus,
+    pub operation: NavigationOperation,
     pub usage: NormalizedLocation,
     pub expected_declaration: NormalizedLocation,
     pub actual_declarations: Vec<NormalizedLocation>,
@@ -441,16 +443,57 @@ pub(crate) fn navigation_response_status(
     expected: &NormalizedLocation,
     expect_no_movement: bool,
 ) -> CaseStatus {
-    if expect_no_movement && actual.is_empty() {
-        return CaseStatus::Passed;
+    score_navigation_response(actual, expected, expect_no_movement).0
+}
+
+pub(crate) fn score_navigation_response(
+    actual: &[NormalizedLocation],
+    expected: &NormalizedLocation,
+    expect_no_movement: bool,
+) -> (CaseStatus, &'static str) {
+    if actual.is_empty() {
+        return if expect_no_movement {
+            (CaseStatus::Passed, "no_movement")
+        } else {
+            (CaseStatus::Failed, "no_definition")
+        };
     }
     if actual.len() != 1 {
-        return CaseStatus::Failed;
+        return (CaseStatus::Failed, "multiple_targets");
     }
     match location_match(&actual[0], expected) {
-        LocationMatch::Exact => CaseStatus::Passed,
-        LocationMatch::LineOnly => CaseStatus::PositionUnverified,
-        LocationMatch::None => CaseStatus::Failed,
+        LocationMatch::Exact if expect_no_movement => (CaseStatus::Passed, "self_target"),
+        LocationMatch::Exact => (CaseStatus::Passed, "ok"),
+        LocationMatch::LineOnly => (CaseStatus::PositionUnverified, "position_unverified"),
+        LocationMatch::None => (CaseStatus::Failed, "wrong_target"),
+    }
+}
+
+pub(crate) fn combine_case_status(
+    declaration: Option<&DeclarationUsageReport>,
+    definitions: &[UsageDefinitionReport],
+    types: &[TypeLookupReport],
+) -> CaseStatus {
+    let statuses = declaration
+        .into_iter()
+        .map(|report| report.status)
+        .chain(definitions.iter().map(|report| report.status))
+        .chain(types.iter().map(|report| report.status))
+        .collect::<Vec<_>>();
+    if statuses.contains(&CaseStatus::Error) {
+        CaseStatus::Error
+    } else if statuses.contains(&CaseStatus::Failed) {
+        CaseStatus::Failed
+    } else if statuses.contains(&CaseStatus::Unsupported) {
+        CaseStatus::Unsupported
+    } else if statuses.contains(&CaseStatus::PositionUnverified) {
+        CaseStatus::PositionUnverified
+    } else if statuses.contains(&CaseStatus::NearMiss) {
+        CaseStatus::NearMiss
+    } else if statuses.is_empty() || statuses.iter().all(|status| *status == CaseStatus::Skipped) {
+        CaseStatus::Skipped
+    } else {
+        CaseStatus::Passed
     }
 }
 

@@ -1,12 +1,12 @@
 use super::bifrost::{command_output_with_timeout, prepare_source_root};
 use super::lsp_protocol::{InitializeResult, LspSession};
 use super::{
-    compute_totals, location_match, navigation_response_status, normalize_symbol_location,
-    path_to_slash, score_declaration_locations, symbol_kind_name, CapabilitySupport, CaseRunReport,
-    CaseStatus, ClassifiedExtraUsage, DeclarationUsageReport, DocumentRunReport,
-    ExtraUsageClassification, ExtraUsageDisposition, LocationMatch, NormalizedLocation,
-    RunDiagnostic, RunReport, RunTotals, RunnerCapability, RunnerMetadata, RunnerOperation,
-    TypeLookupReport, UsageDefinitionReport,
+    combine_case_status, compute_totals, location_match, navigation_response_status,
+    normalize_symbol_location, path_to_slash, score_declaration_locations,
+    score_navigation_response, symbol_kind_name, CapabilitySupport, CaseRunReport, CaseStatus,
+    ClassifiedExtraUsage, DeclarationUsageReport, DocumentRunReport, ExtraUsageClassification,
+    ExtraUsageDisposition, LocationMatch, NormalizedLocation, RunDiagnostic, RunReport, RunTotals,
+    RunnerCapability, RunnerMetadata, RunnerOperation, TypeLookupReport, UsageDefinitionReport,
 };
 use crate::{
     benchmark_source_path, find_repo_root_for_path, BenchmarkCase, BenchmarkDocument,
@@ -105,6 +105,14 @@ struct ServerCapabilities {
     declaration: bool,
     definition: bool,
     type_definition: bool,
+}
+
+struct CaseRunContext<'a> {
+    language: &'a str,
+    reference_policy: ReferencePolicy,
+    profile: &'a LspProfile,
+    source_root: &'a Path,
+    capabilities: &'a ServerCapabilities,
 }
 
 pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
@@ -212,14 +220,14 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
                     "textDocument/references with includeDeclaration=false",
                 ),
                 capability(
-                    RunnerOperation::UsageToDeclaration,
-                    (profile.query_declaration && capabilities.declaration)
-                        || capabilities.definition,
-                    if profile.query_declaration && capabilities.declaration {
-                        "textDocument/declaration (definition only when declaration is unavailable)"
-                    } else {
-                        "textDocument/definition"
-                    },
+                    RunnerOperation::DeclarationLookup,
+                    capabilities.declaration,
+                    "textDocument/declaration",
+                ),
+                capability(
+                    RunnerOperation::DefinitionLookup,
+                    capabilities.definition,
+                    "textDocument/definition",
                 ),
                 capability(
                     RunnerOperation::TypeLookup,
@@ -287,6 +295,13 @@ fn run_document(
         )?;
     }
     let capabilities = capabilities_from_initialize(&initialize.capabilities);
+    let context = CaseRunContext {
+        language: &document.language,
+        reference_policy: document.reference_policy,
+        profile,
+        source_root,
+        capabilities: &capabilities,
+    };
     open_source_files(profile, source_root, &mut session)?;
     if profile.settle_milliseconds > 0 {
         session.pump_for(Duration::from_millis(profile.settle_milliseconds))?;
@@ -300,29 +315,14 @@ fn run_document(
                 .as_ref()
                 .is_none_or(|case_id| case.id == *case_id)
         })
-        .map(|case| {
-            run_case(
-                case,
-                &document.language,
-                document.reference_policy,
-                profile,
-                source_root,
-                &capabilities,
-                &mut session,
-                options.include_unsupported,
-            )
-        })
+        .map(|case| run_case(case, &context, &mut session, options.include_unsupported))
         .collect();
     Ok((cases, initialize))
 }
 
 fn run_case(
     case: &BenchmarkCase,
-    language: &str,
-    reference_policy: ReferencePolicy,
-    profile: &LspProfile,
-    source_root: &Path,
-    capabilities: &ServerCapabilities,
+    context: &CaseRunContext<'_>,
     session: &mut LspSession,
     include_unsupported: bool,
 ) -> CaseRunReport {
@@ -352,7 +352,15 @@ fn run_case(
     let usage_to_declaration = case
         .usage_lookups
         .iter()
-        .map(|lookup| run_definition(lookup, profile, source_root, capabilities, session))
+        .map(|lookup| {
+            run_definition(
+                lookup,
+                context.profile,
+                context.source_root,
+                context.capabilities,
+                session,
+            )
+        })
         .collect::<Vec<_>>();
     let type_lookups = case
         .type_lookups
@@ -360,25 +368,17 @@ fn run_case(
         .map(|lookup| {
             run_type_definition(
                 lookup,
-                profile,
-                source_root,
-                capabilities.type_definition,
+                context.profile,
+                context.source_root,
+                context.capabilities.type_definition,
                 session,
             )
         })
         .collect::<Vec<_>>();
-    let declaration_to_usages = case.declaration.as_ref().map(|declaration| {
-        run_references(
-            case,
-            declaration,
-            language,
-            reference_policy,
-            profile,
-            source_root,
-            capabilities.references,
-            session,
-        )
-    });
+    let declaration_to_usages = case
+        .declaration
+        .as_ref()
+        .map(|declaration| run_references(case, declaration, context, session));
     let mut status = combine_case_status(
         declaration_to_usages.as_ref(),
         &usage_to_declaration,
@@ -403,14 +403,10 @@ fn run_case(
 fn run_references(
     case: &BenchmarkCase,
     declaration: &SymbolLocation,
-    language: &str,
-    reference_policy: ReferencePolicy,
-    profile: &LspProfile,
-    source_root: &Path,
-    supported: bool,
+    context: &CaseRunContext<'_>,
     session: &mut LspSession,
 ) -> DeclarationUsageReport {
-    if !supported {
+    if !context.capabilities.references {
         let mut report = failed_declaration_report(case, "references_not_advertised");
         report.status = CaseStatus::Unsupported;
         return report;
@@ -420,7 +416,12 @@ fn run_references(
         report.status = CaseStatus::Unsupported;
         return report;
     }
-    let params = match position_params_with_context(declaration, profile, source_root, session) {
+    let params = match position_params_with_context(
+        declaration,
+        context.profile,
+        context.source_root,
+        session,
+    ) {
         Ok(mut params) => {
             params["context"] = json!({"includeDeclaration": false});
             params
@@ -429,7 +430,7 @@ fn run_references(
     };
     match session
         .query("textDocument/references", params)
-        .and_then(|result| locations_from_response(&result, source_root))
+        .and_then(|result| locations_from_response(&result, context.source_root))
     {
         Ok(actual) => {
             let mut report = score_declaration_locations(
@@ -447,7 +448,12 @@ fn run_references(
                 false,
             )
             .unwrap_or_else(|error| error_declaration_report(case, "score_failed", error));
-            classify_reference_policy_extras(&mut report, language, source_root, reference_policy);
+            classify_reference_policy_extras(
+                &mut report,
+                context.language,
+                context.source_root,
+                context.reference_policy,
+            );
             report
         }
         Err(error) => error_declaration_report(case, "references_failed", error),
@@ -476,39 +482,21 @@ fn run_definition(
         .and_then(|value| locations_from_response(&value, source_root));
     match result {
         Ok(actual) => {
-            let status = navigation_response_status(&actual, &expected, lookup.expect_no_movement);
+            let (status, raw_status) =
+                score_navigation_response(&actual, &expected, lookup.expect_no_movement);
             UsageDefinitionReport {
                 status,
+                operation: lookup.operation,
                 usage,
                 expected_declaration: expected.clone(),
-                raw_status: if lookup.expect_no_movement
-                    && status == CaseStatus::Passed
-                    && actual.is_empty()
-                {
-                    "no_movement".to_string()
-                } else if lookup.expect_no_movement && status == CaseStatus::Passed {
-                    "self_target".to_string()
-                } else if actual.is_empty() {
-                    "no_definition".to_string()
-                } else if status == CaseStatus::Passed {
-                    "ok".to_string()
-                } else if status == CaseStatus::PositionUnverified {
-                    "position_unverified".to_string()
-                } else if actual.len() > 1
-                    && actual
-                        .iter()
-                        .any(|location| location_match(location, &expected) == LocationMatch::Exact)
-                {
-                    "unexpected_alternate_definitions".to_string()
-                } else {
-                    "mismatched_definition".to_string()
-                },
+                raw_status: raw_status.to_string(),
                 actual_declarations: actual,
                 diagnostics: Vec::new(),
             }
         }
         Err(error) => UsageDefinitionReport {
             status: CaseStatus::Error,
+            operation: lookup.operation,
             usage,
             expected_declaration: expected,
             actual_declarations: Vec::new(),
@@ -1255,6 +1243,7 @@ fn error_case(case: &BenchmarkCase, kind: &str, message: &str) -> CaseRunReport 
 fn unsupported_definition_report(lookup: &UsageLookup, raw_status: &str) -> UsageDefinitionReport {
     UsageDefinitionReport {
         status: CaseStatus::Unsupported,
+        operation: lookup.operation,
         usage: normalized_or_invalid(&lookup.usage),
         expected_declaration: normalized_or_invalid(&lookup.expected_declaration),
         actual_declarations: Vec::new(),
@@ -1318,34 +1307,6 @@ fn normalized_or_invalid(location: &SymbolLocation) -> NormalizedLocation {
         display_name: Some(location.display_name.clone()),
         kind: Some(symbol_kind_name(&location.kind).to_string()),
     })
-}
-
-fn combine_case_status(
-    declaration: Option<&DeclarationUsageReport>,
-    definitions: &[UsageDefinitionReport],
-    types: &[TypeLookupReport],
-) -> CaseStatus {
-    let statuses = declaration
-        .into_iter()
-        .map(|report| report.status)
-        .chain(definitions.iter().map(|report| report.status))
-        .chain(types.iter().map(|report| report.status))
-        .collect::<Vec<_>>();
-    if statuses.contains(&CaseStatus::Error) {
-        CaseStatus::Error
-    } else if statuses.contains(&CaseStatus::Failed) {
-        CaseStatus::Failed
-    } else if statuses.contains(&CaseStatus::Unsupported) {
-        CaseStatus::Unsupported
-    } else if statuses.contains(&CaseStatus::PositionUnverified) {
-        CaseStatus::PositionUnverified
-    } else if statuses.contains(&CaseStatus::NearMiss) {
-        CaseStatus::NearMiss
-    } else if statuses.is_empty() || statuses.iter().all(|status| *status == CaseStatus::Skipped) {
-        CaseStatus::Skipped
-    } else {
-        CaseStatus::Passed
-    }
 }
 
 fn benchmark_path(location: &SymbolLocation) -> String {
@@ -1479,7 +1440,7 @@ mod tests {
             CaseStatus::Failed
         );
         assert_eq!(
-            navigation_response_status(&[expected.clone()], &expected, false),
+            navigation_response_status(std::slice::from_ref(&expected), &expected, false),
             CaseStatus::Passed
         );
     }
@@ -1494,7 +1455,7 @@ mod tests {
             CaseStatus::Passed
         );
         assert_eq!(
-            navigation_response_status(&[self_target.clone()], &self_target, true),
+            navigation_response_status(std::slice::from_ref(&self_target), &self_target, true),
             CaseStatus::Passed
         );
         assert_eq!(

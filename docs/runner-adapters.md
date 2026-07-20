@@ -12,7 +12,8 @@ An adapter must record:
 - the tool name and requested version or revision;
 - the resolved immutable version or commit actually executed;
 - the tool repository or distribution source;
-- support for declaration-to-usage, usage-to-declaration, and type lookup;
+- support for declaration-to-usage, declaration navigation, definition
+  navigation, and type lookup;
 - any location-recovery step that is not part of the tool's native output;
 - unsupported and abstained operations separately from empty successful
   results.
@@ -28,11 +29,18 @@ an unverified version as if it were compatible.
 The Bifrost adapter uses its public MCP tools. `search_symbols` maps authored
 declaration locations to a Bifrost selector, `scan_usages_by_location` provides
 usage locations, and the location-based definition and type tools implement
-the reverse probes. A git revision is resolved before execution and recorded in
-the report. When the document permits bindings, the adapter requests
+definition and type reverse probes. Bifrost does not currently expose a
+distinct declaration-navigation tool, so explicit `operation: declaration`
+lookups are reported as unsupported rather than falling back to definition. A
+git revision is resolved before execution and recorded in the report. When the
+document permits bindings, the adapter requests
 `include_bindings: true`; compatible Bifrost releases may include imports and
 re-exports. Releases that return only path/line locations are reported as
-`position_unverified` until they expose exact token ranges.
+`position_unverified` until they expose exact token ranges. Hits explicitly
+labeled `override_declaration` count only when the authored case expects or
+allows that declaration; other override declarations are excluded from
+ordinary usage scoring and recorded as `override_declarations_excluded` in
+`rawStatuses`. Unlabeled supersets remain failures.
 
 The original `usagebench::bifrost_runner` module remains as a compatibility
 re-export while the implementation lives in `usagebench::runners::bifrost`.
