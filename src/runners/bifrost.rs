@@ -133,6 +133,9 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     let environment = super::environment::capture_execution_environment(
         super::environment::executable_provenance(&Command::new(&bifrost_binary))?,
         &["rustc", "cargo"],
+        "bifrost",
+        &usagebench_provenance.revision,
+        usagebench_provenance.release.as_deref(),
     )?;
 
     let mut documents = Vec::new();

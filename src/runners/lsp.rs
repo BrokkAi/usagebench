@@ -160,9 +160,15 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         let source_root = run_dir.join(format!("source-{index}"));
         copy_source_tree(&source, &source_root)?;
         write_workspace_files(&profile, &source_root)?;
-        match run_document(&options, &profile, &document, &source_root, &run_dir) {
-            Ok((cases, initialize, executable)) => {
-                observed_executable.get_or_insert(executable);
+        match run_document(
+            &options,
+            &profile,
+            &document,
+            &source_root,
+            &run_dir,
+            &mut observed_executable,
+        ) {
+            Ok((cases, initialize)) => {
                 observed_name = observed_name.or(initialize.server_name);
                 observed_version = observed_version.or_else(|| {
                     initialize
@@ -218,6 +224,9 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         } else {
             &["rustc", "cargo"]
         },
+        &profile.id,
+        &usagebench_provenance.revision,
+        usagebench_provenance.release.as_deref(),
     )?;
     let mut report = RunReport {
         usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
@@ -290,17 +299,15 @@ fn run_document(
     document: &BenchmarkDocument,
     source_root: &Path,
     run_dir: &Path,
-) -> Result<(
-    Vec<CaseRunReport>,
-    InitializeResult,
-    super::ExecutableProvenance,
-)> {
+    observed_executable: &mut Option<super::ExecutableProvenance>,
+) -> Result<(Vec<CaseRunReport>, InitializeResult)> {
     run_prepare_command(profile, source_root, run_dir)?;
     let workspace_uri = Url::from_directory_path(source_root)
         .map_err(|_| anyhow::anyhow!("convert {} to file URI", source_root.display()))?
         .to_string();
     let mut command = lsp_command(options, profile, source_root, run_dir)?;
     let executable = super::environment::executable_provenance(&command)?;
+    observed_executable.get_or_insert(executable);
     let mut session = LspSession::start(
         &mut command,
         &profile.name,
@@ -345,7 +352,7 @@ fn run_document(
         })
         .map(|case| run_case(case, &context, &mut session, options.include_unsupported))
         .collect();
-    Ok((cases, initialize, executable))
+    Ok((cases, initialize))
 }
 
 fn run_case(

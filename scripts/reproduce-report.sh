@@ -8,7 +8,7 @@ usage() {
   exit 2
 }
 
-for command_name in docker git jq; do
+for command_name in docker git jq tar; do
   command -v "$command_name" >/dev/null 2>&1 || {
     echo "required command not found: $command_name" >&2
     exit 1
@@ -22,6 +22,8 @@ output_input="${2:-reproduced-report.json}"
 published_report="$(cd "$(dirname "$published_input")" && pwd)/$(basename "$published_input")"
 mkdir -p "$(dirname "$output_input")"
 output_report="$(cd "$(dirname "$output_input")" && pwd)/$(basename "$output_input")"
+output_dir="$(dirname "$output_report")"
+output_name="$(basename "$output_report")"
 [[ "$published_report" != "$output_report" ]] || {
   echo "output report must not overwrite the published report" >&2
   exit 1
@@ -107,13 +109,18 @@ current_revision=""
 if [[ -f "$release_root/.usagebench-release.json" ]]; then
   current_release="$(jq -r '.releaseTag // ""' "$release_root/.usagebench-release.json")"
   current_revision="$(jq -r '.revision // ""' "$release_root/.usagebench-release.json")"
-elif git -C "$release_root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  current_revision="$(git -C "$release_root" rev-parse HEAD)"
-  current_release="$(git -C "$release_root" tag --points-at HEAD --list "$release_tag" | head -n 1)"
 fi
 
 reproduction_tmp=""
+run_tmp=""
+output_tmp=""
 cleanup() {
+  if [[ -n "$output_tmp" ]]; then
+    rm -f -- "$output_tmp"
+  fi
+  if [[ -n "$run_tmp" && "$run_tmp" == /tmp/usagebench-reproduced-report.* ]]; then
+    rm -rf -- "$run_tmp"
+  fi
   if [[ -n "$reproduction_tmp" && "$reproduction_tmp" == /tmp/* ]]; then
     rm -rf -- "$reproduction_tmp"
   fi
@@ -123,13 +130,24 @@ trap cleanup EXIT
 if [[ "$current_release" != "$release_tag" || "$current_revision" != "$release_revision" ]]; then
   reproduction_tmp="$(mktemp -d /tmp/usagebench-reproduce.XXXXXX)"
   release_root="$reproduction_tmp/usagebench"
-  git clone --quiet --depth 1 --branch "$release_tag" \
-    https://github.com/BrokkAi/usagebench.git "$release_root"
-  cloned_revision="$(git -C "$release_root" rev-parse HEAD)"
+  source_checkout="$reproduction_tmp/source"
+  mkdir -p "$release_root"
+  git init --quiet "$source_checkout"
+  git -C "$source_checkout" remote add origin https://github.com/BrokkAi/usagebench.git
+  git -C "$source_checkout" fetch --quiet --depth 1 origin \
+    "refs/tags/$release_tag:refs/tags/$release_tag"
+  cloned_revision="$(git -C "$source_checkout" rev-parse "refs/tags/$release_tag^{commit}")"
   [[ "$cloned_revision" == "$release_revision" ]] || {
     echo "release $release_tag resolved to $cloned_revision, expected $release_revision" >&2
     exit 1
   }
+  git -C "$source_checkout" archive "$cloned_revision" | tar -x -C "$release_root"
+  jq -n \
+    --arg releaseTag "$release_tag" \
+    --arg releaseVersion "${release_tag#v}" \
+    --arg revision "$release_revision" \
+    '{releaseTag: $releaseTag, releaseVersion: $releaseVersion, revision: $revision}' \
+    > "$release_root/.usagebench-release.json"
 fi
 
 [[ -x "$release_root/scripts/reference-image.sh" && -x "$release_root/scripts/run-reference.sh" ]] || {
@@ -141,7 +159,7 @@ fi
   exit 1
 }
 
-"$release_root/scripts/reference-image.sh" "$runner_id" "$release_tag"
+"$release_root/scripts/reference-image.sh" "$runner_id" "$release_tag" "$release_revision"
 image_metadata="$release_root/target/reference/${runner_id}.json"
 built_definition_digest="$(jq -r '.definitionDigest' "$image_metadata")"
 [[ "$built_definition_digest" == "$reported_definition_digest" ]] || {
@@ -149,31 +167,40 @@ built_definition_digest="$(jq -r '.definitionDigest' "$image_metadata")"
   exit 1
 }
 
+run_tmp="$(mktemp -d /tmp/usagebench-reproduced-report.XXXXXX)"
+candidate_report="$run_tmp/report.json"
 set +e
 "$release_root/scripts/run-reference.sh" \
-  "$runner_id" "$release_root" "$output_report" "$case_path" "$case_id" "$include_unsupported"
+  "$runner_id" "$release_root" "$candidate_report" "$case_path" "$case_id" "$include_unsupported"
 run_status=$?
 set -e
-[[ -f "$output_report" ]] || {
+[[ -f "$candidate_report" ]] || {
   echo "reference run exited with status $run_status without writing a report" >&2
+  if [[ "$run_status" == "0" ]]; then
+    exit 1
+  fi
   exit "$run_status"
 }
+output_tmp="$(mktemp "$output_dir/.usagebench-reproduced.XXXXXX")"
+cp -- "$candidate_report" "$output_tmp"
+mv -f -- "$output_tmp" "$output_report"
+output_tmp=""
+rm -rf -- "$run_tmp"
+run_tmp=""
 
-image_reference="$(jq -r '.imageReference' "$image_metadata")"
+image_digest="$(jq -r '.imageDigest' "$image_metadata")"
 canonical_platform="$(jq -r '.canonicalPlatform' "$image_metadata")"
 published_dir="$(dirname "$published_report")"
 published_name="$(basename "$published_report")"
-output_dir="$(dirname "$output_report")"
-output_name="$(basename "$output_report")"
 
 docker run --rm \
   --platform "$canonical_platform" \
   --network none \
   --read-only \
-  --user "$(id -u):$(id -g)" \
+  --user 65532:65532 \
   --mount "type=bind,src=$published_dir,dst=/expected,readonly" \
   --mount "type=bind,src=$output_dir,dst=/actual,readonly" \
-  "$image_reference" \
+  "$image_digest" \
   compare-reports "/expected/$published_name" "/actual/$output_name"
 
 echo "reproduced report: $output_report"

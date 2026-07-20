@@ -25,10 +25,10 @@ reports are semantically equivalent
 ```
 
 The comparator ignores timestamps, temporary workspace roots, local paths,
-and the locally rebuilt OCI digest. It still requires matching release and
-revision provenance, environment definition, executable checksum, resolved
-analyzer version, capabilities, locations, diagnostics, case outcomes, and
-totals.
+and the locally rebuilt image identity. It still requires matching release and
+revision provenance, environment definition, executable checksum, requested
+and resolved analyzer versions, capabilities, locations, diagnostics, case
+outcomes, and totals.
 
 ## Build-only distribution
 
@@ -40,7 +40,8 @@ upload. A future archival release may place reviewed OCI archives on Zenodo.
 Image construction needs network access to retrieve digest-pinned bases and
 checksum-protected analyzer inputs. Benchmark execution itself uses
 `--network none`, runs as a non-root user, mounts the released corpus read-only,
-and writes only to isolated work and output mounts.
+and writes only to isolated work and private output staging. The wrapper copies
+only the completed report to its requested host path.
 
 The full reviewer procedure, resource expectations, integrity boundaries, and
 troubleshooting guidance are in the repository's `ARTIFACT.md`.
@@ -67,8 +68,10 @@ image. To run a selected gopls case against an extracted release bundle:
 ```
 
 Every canonical report records `executionMode: container`,
-`platformScope: canonical_reference`, the environment and local image digests,
-the actual analyzer executable SHA-256, and declared toolchain versions.
+`platformScope: canonical_reference`, the environment digest and locally loaded
+image ID, the actual analyzer executable SHA-256, and declared toolchain
+versions. The wrapper binds that identity to the corpus release and revision
+before executing the immutable local image ID.
 
 ## Native development runs
 

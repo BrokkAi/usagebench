@@ -13,6 +13,7 @@ use std::{
 };
 
 const REFERENCE_ENVIRONMENT_VARIABLE: &str = "USAGEBENCH_REFERENCE_ENVIRONMENT";
+const REFERENCE_ENVIRONMENT_MARKER: &str = "/usr/local/share/usagebench/reference-environment.json";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -76,8 +77,22 @@ struct ReferenceEnvironmentDescriptor {
     canonical_platform: String,
     image_reference: String,
     image_digest: String,
+    usagebench_release: String,
+    usagebench_revision: String,
+    runner_id: String,
     #[serde(default)]
     toolchains: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct EmbeddedReferenceEnvironment {
+    version: String,
+    definition_digest: String,
+    canonical_platform: String,
+    usagebench_release: String,
+    usagebench_revision: String,
+    runner_id: String,
 }
 
 pub(crate) fn executable_provenance(command: &Command) -> Result<ExecutableProvenance> {
@@ -95,6 +110,9 @@ pub(crate) fn unresolved_executable(command: &OsStr) -> ExecutableProvenance {
 pub(crate) fn capture_execution_environment(
     analyzer_executable: ExecutableProvenance,
     observed_toolchains: &[&str],
+    expected_runner: &str,
+    usagebench_revision: &str,
+    usagebench_release: Option<&str>,
 ) -> Result<ExecutionEnvironment> {
     let descriptor = env::var(REFERENCE_ENVIRONMENT_VARIABLE)
         .ok()
@@ -112,6 +130,12 @@ pub(crate) fn capture_execution_environment(
     let (execution_mode, platform_scope, reference_environment, container) =
         if let Some(descriptor) = descriptor {
             validate_descriptor(&descriptor)?;
+            validate_embedded_environment(
+                &descriptor,
+                expected_runner,
+                usagebench_revision,
+                usagebench_release,
+            )?;
             toolchains.extend(descriptor.toolchains.clone());
             (
                 ExecutionMode::Container,
@@ -223,6 +247,12 @@ fn validate_descriptor(descriptor: &ReferenceEnvironmentDescriptor) -> Result<()
     if descriptor.image_reference.is_empty() {
         bail!("reference image reference must not be empty");
     }
+    if descriptor.runner_id.is_empty()
+        || descriptor.usagebench_release.is_empty()
+        || descriptor.usagebench_revision.is_empty()
+    {
+        bail!("reference environment identity fields must not be empty");
+    }
     for (field, digest) in [
         ("definitionDigest", descriptor.definition_digest.as_str()),
         ("imageDigest", descriptor.image_digest.as_str()),
@@ -230,6 +260,65 @@ fn validate_descriptor(descriptor: &ReferenceEnvironmentDescriptor) -> Result<()
         if !is_sha256_digest(digest) {
             bail!("reference environment {field} must be a sha256 digest");
         }
+    }
+    Ok(())
+}
+
+fn validate_embedded_environment(
+    descriptor: &ReferenceEnvironmentDescriptor,
+    expected_runner: &str,
+    usagebench_revision: &str,
+    usagebench_release: Option<&str>,
+) -> Result<()> {
+    if env::consts::OS != "linux" || env::consts::ARCH != "x86_64" {
+        bail!("canonical reference metadata requires a linux/amd64 harness");
+    }
+    let marker: EmbeddedReferenceEnvironment = serde_json::from_slice(
+        &fs::read(REFERENCE_ENVIRONMENT_MARKER)
+            .with_context(|| format!("read {REFERENCE_ENVIRONMENT_MARKER}"))?,
+    )
+    .with_context(|| format!("parse {REFERENCE_ENVIRONMENT_MARKER}"))?;
+    validate_embedded_identity(
+        descriptor,
+        &marker,
+        expected_runner,
+        usagebench_revision,
+        usagebench_release,
+    )
+}
+
+fn validate_embedded_identity(
+    descriptor: &ReferenceEnvironmentDescriptor,
+    marker: &EmbeddedReferenceEnvironment,
+    expected_runner: &str,
+    usagebench_revision: &str,
+    usagebench_release: Option<&str>,
+) -> Result<()> {
+    let supplied = EmbeddedReferenceEnvironment {
+        version: descriptor.version.clone(),
+        definition_digest: descriptor.definition_digest.clone(),
+        canonical_platform: descriptor.canonical_platform.clone(),
+        usagebench_release: descriptor.usagebench_release.clone(),
+        usagebench_revision: descriptor.usagebench_revision.clone(),
+        runner_id: descriptor.runner_id.clone(),
+    };
+    if marker != &supplied {
+        bail!("runtime reference descriptor does not match the embedded image identity");
+    }
+    if marker.runner_id != expected_runner {
+        bail!(
+            "reference image runner `{}` does not match `{expected_runner}`",
+            marker.runner_id
+        );
+    }
+    if marker.usagebench_revision != usagebench_revision {
+        bail!(
+            "reference image revision `{}` does not match corpus `{usagebench_revision}`",
+            marker.usagebench_revision
+        );
+    }
+    if usagebench_release != Some(marker.usagebench_release.as_str()) {
+        bail!("reference image release does not match corpus release provenance");
     }
     Ok(())
 }
@@ -249,5 +338,53 @@ mod tests {
         assert!(is_sha256_digest(&format!("sha256:{}", "a".repeat(64))));
         assert!(!is_sha256_digest(&format!("sha256:{}", "g".repeat(64))));
         assert!(!is_sha256_digest(&"a".repeat(64)));
+    }
+
+    #[test]
+    fn embedded_identity_binds_runner_and_corpus() {
+        let descriptor = ReferenceEnvironmentDescriptor {
+            version: "1".to_string(),
+            definition_digest: format!("sha256:{}", "a".repeat(64)),
+            canonical_platform: "linux/amd64".to_string(),
+            image_reference: "usagebench-reference:v1.0.0-env1-gopls".to_string(),
+            image_digest: format!("sha256:{}", "b".repeat(64)),
+            usagebench_release: "v1.0.0".to_string(),
+            usagebench_revision: "c".repeat(40),
+            runner_id: "gopls".to_string(),
+            toolchains: BTreeMap::new(),
+        };
+        let marker = EmbeddedReferenceEnvironment {
+            version: descriptor.version.clone(),
+            definition_digest: descriptor.definition_digest.clone(),
+            canonical_platform: descriptor.canonical_platform.clone(),
+            usagebench_release: descriptor.usagebench_release.clone(),
+            usagebench_revision: descriptor.usagebench_revision.clone(),
+            runner_id: descriptor.runner_id.clone(),
+        };
+
+        validate_embedded_identity(
+            &descriptor,
+            &marker,
+            "gopls",
+            &"c".repeat(40),
+            Some("v1.0.0"),
+        )
+        .unwrap();
+        assert!(validate_embedded_identity(
+            &descriptor,
+            &marker,
+            "bifrost",
+            &"c".repeat(40),
+            Some("v1.0.0"),
+        )
+        .is_err());
+        assert!(validate_embedded_identity(
+            &descriptor,
+            &marker,
+            "gopls",
+            &"d".repeat(40),
+            Some("v1.0.0"),
+        )
+        .is_err());
     }
 }

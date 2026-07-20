@@ -27,36 +27,30 @@ jobs:
             case_id: go-package-function-call
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           persist-credentials: false
 
       - name: Stage release-shaped corpus
+        id: bundle
         shell: bash
         env:
           RELEASE_REVISION: ${{ github.sha }}
         run: |
           set -euo pipefail
-          corpus=target/reference-corpus
-          mkdir -p "$corpus"
-          cp -R benchmarks fixtures adapters schema containers "$corpus/"
-          cp Cargo.toml "$corpus/"
-          jq -n \
-            --arg releaseTag v0.0.0 \
-            --arg releaseVersion 0.0.0 \
-            --arg revision "$RELEASE_REVISION" \
-            '{releaseTag: $releaseTag, releaseVersion: $releaseVersion, revision: $revision}' \
-            > "$corpus/.usagebench-release.json"
+          corpus=target/usagebench-v0.0.0
+          scripts/stage-release-bundle.sh . "$corpus" v0.0.0 "$RELEASE_REVISION"
+          echo "root=$corpus" >> "$GITHUB_OUTPUT"
 
       - name: Build local image
-        run: scripts/reference-image.sh "${{ matrix.runner }}" v0.0.0
+        run: scripts/reference-image.sh "${{ matrix.runner }}" v0.0.0 "${{ github.sha }}"
 
       - name: Run exact offline smoke case
         run: |
           mkdir -p target/reference-smoke
           scripts/run-reference.sh \
             "${{ matrix.runner }}" \
-            target/reference-corpus \
+            "${{ steps.bundle.outputs.root }}" \
             "target/reference-smoke/${{ matrix.runner }}.json" \
             "${{ matrix.case_path }}" \
             "${{ matrix.case_id }}"
@@ -86,6 +80,12 @@ jobs:
              and .totals.failed == 0
              and .totals.errors == 0' \
             "$report"
+
+      - name: Reproduce from extracted release bundle
+        run: |
+          "${{ steps.bundle.outputs.root }}/scripts/reproduce-report.sh" \
+            "target/reference-smoke/${{ matrix.runner }}.json" \
+            "target/reference-smoke/${{ matrix.runner }}-reproduced.json"
 
       # Images stay in this ephemeral runner. This workflow intentionally has
       # no registry login, push, OCI export, or artifact-upload step.

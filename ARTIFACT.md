@@ -44,8 +44,8 @@ The command verifies that the input is a canonical container report, then:
 
 1. reads its UsageBench release, exact revision, environment version, runner,
    case selection, and inclusion policy;
-2. uses the current bundle when it matches, or clones and verifies the exact
-   release tag and commit;
+2. uses the current bundle when it matches, or fetches the exact tag, verifies
+   its commit, and exports it into a release-shaped corpus;
 3. builds the local `linux/amd64` image from digest-pinned definitions;
 4. reruns the same selection with networking disabled, as a non-root user,
    with the release corpus mounted read-only; and
@@ -59,11 +59,11 @@ reproduced report: .../reproduced-report.json
 ```
 
 The comparator ignores only timestamps, temporary workspace roots, local
-filesystem paths, and the locally rebuilt OCI digest. It still compares the
-release and revision, reference-environment definition digest, executable
-checksum, resolved analyzer version, capabilities, case statuses, locations,
-diagnostics, and totals. A changed outcome exits nonzero and identifies the
-case-level field that differs.
+filesystem paths, and the locally rebuilt image identity. It still compares
+the release and revision, reference-environment definition digest, executable
+checksum, requested and resolved analyzer versions, capabilities, case
+statuses, locations, diagnostics, and totals. A changed outcome exits nonzero
+and identifies the case-level field that differs.
 
 ## Build and inspect the environments directly
 
@@ -75,8 +75,8 @@ Use the release tag recorded in the report:
 ```
 
 Build metadata is written under `target/reference/`. It contains the local tag,
-canonical platform, stable definition digest, and locally built image digest.
-No command pushes the image.
+canonical platform, stable definition digest, source release and revision, the
+loaded image ID, and BuildKit's output digest. No command pushes the image.
 
 To run one released case directly:
 
@@ -89,10 +89,12 @@ To run one released case directly:
   go-package-function-call
 ```
 
-The corpus root must contain `.usagebench-release.json`. The wrapper enforces
-`--network none`, a read-only root filesystem, a non-root UID/GID, a read-only
-corpus mount, and isolated writable tmpfs work directories. Only the selected
-output directory is writable on the host.
+The corpus root must contain `.usagebench-release.json`. The wrapper verifies
+that its release and revision match the image labels and embedded identity,
+then enforces `--network none`, a read-only root filesystem, a non-root UID/GID,
+a read-only corpus mount, and isolated writable tmpfs work directories. A fresh
+private directory receives the container output; only the completed report is
+copied to the requested host path.
 
 Inspect the evidence envelope with:
 
@@ -115,10 +117,12 @@ jq '{usagebenchRelease, usagebenchRevision, runner, invocation, environment}' \
 - Cargo lockfile checksums and the pinned Go module graph protect transitive
   build inputs.
 - Reports checksum the analyzer executable that actually ran.
+- The wrapper verifies the mutable local tag, then executes the immutable local
+  image ID recorded immediately after `docker buildx --load`.
 
-Repeated cached builds during development produced identical OCI digests for
+Repeated cached builds during development produced identical image IDs for
 both version 1 images. Cross-builder byte identity is not the scientific claim:
-the semantic comparator intentionally permits the local OCI digest to differ
+the semantic comparator intentionally permits the local image identity to differ
 while requiring the stable definition digest, executable checksum, and result
 semantics to match.
 

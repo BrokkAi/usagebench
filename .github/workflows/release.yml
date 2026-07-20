@@ -24,7 +24,7 @@ jobs:
       commit: ${{ steps.tag.outputs.commit }}
     steps:
       - name: Checkout release tag
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
           fetch-depth: 0
@@ -66,12 +66,12 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
           toolchain: stable
 
       - name: Cache cargo + target
-        uses: swatinem/rust-cache@v2
+        uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
       - name: Test harness
         run: cargo test --locked
@@ -80,7 +80,7 @@ jobs:
         run: cargo run --locked -- validate benchmarks/cases
 
       - name: Validate citation metadata
-        uses: citation-file-format/cffconvert-github-action@2.0.0
+        uses: citation-file-format/cffconvert-github-action@4cf11baa70a673bfdf9dad0acc7ee33b3f4b6084 # 2.0.0
         with:
           args: '--validate'
 
@@ -88,20 +88,11 @@ jobs:
         shell: bash
         env:
           RELEASE_TAG: ${{ steps.tag.outputs.name }}
-          RELEASE_VERSION: ${{ steps.tag.outputs.version }}
           RELEASE_COMMIT: ${{ steps.tag.outputs.commit }}
         run: |
           set -euo pipefail
           stage="usagebench-${RELEASE_TAG}"
-          mkdir -p "dist/$stage"
-          cp -R benchmarks fixtures adapters schema src containers scripts "dist/$stage/"
-          cp Cargo.toml Cargo.lock README.md RELEASES.md ARTIFACT.md CITATION.cff LICENSE.md .dockerignore "dist/$stage/"
-          jq -n \
-            --arg releaseTag "$RELEASE_TAG" \
-            --arg releaseVersion "$RELEASE_VERSION" \
-            --arg revision "$RELEASE_COMMIT" \
-            '{releaseTag: $releaseTag, releaseVersion: $releaseVersion, revision: $revision}' \
-            > "dist/$stage/.usagebench-release.json"
+          scripts/stage-release-bundle.sh . "dist/$stage" "$RELEASE_TAG" "$RELEASE_COMMIT"
           tar -C dist -czf "dist/$stage.tar.gz" "$stage"
           (
             cd dist
@@ -109,7 +100,7 @@ jobs:
           )
 
       - name: Upload release assets
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-assets
           path: |
@@ -127,13 +118,13 @@ jobs:
     environment: release
     steps:
       - name: Download release assets
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: release-assets
           path: dist
 
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3
         with:
           tag_name: ${{ needs.build.outputs.tag }}
           name: ${{ needs.build.outputs.tag }}

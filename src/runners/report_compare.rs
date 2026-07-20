@@ -11,9 +11,9 @@ pub struct ReportDifference {
 }
 
 pub fn compare_report_files(expected: &Path, actual: &Path) -> Result<Vec<ReportDifference>> {
-    let expected_report = read_report(expected)?;
-    let actual_report = read_report(actual)?;
-    Ok(compare_reports(&expected_report, &actual_report))
+    let expected = read_report_value(expected)?;
+    let actual = read_report_value(actual)?;
+    Ok(compare_values(expected, actual))
 }
 
 pub fn read_report(path: &Path) -> Result<RunReport> {
@@ -23,7 +23,24 @@ pub fn read_report(path: &Path) -> Result<RunReport> {
     .with_context(|| format!("parse benchmark report {}", path.display()))
 }
 
+fn read_report_value(path: &Path) -> Result<Value> {
+    let bytes =
+        fs::read(path).with_context(|| format!("read benchmark report {}", path.display()))?;
+    let value: Value = serde_json::from_slice(&bytes)
+        .with_context(|| format!("parse benchmark report {}", path.display()))?;
+    serde_json::from_value::<RunReport>(value.clone())
+        .with_context(|| format!("validate benchmark report {}", path.display()))?;
+    Ok(value)
+}
+
 pub fn compare_reports(expected: &RunReport, actual: &RunReport) -> Vec<ReportDifference> {
+    compare_values(
+        serde_json::to_value(expected).expect("RunReport serialization cannot fail"),
+        serde_json::to_value(actual).expect("RunReport serialization cannot fail"),
+    )
+}
+
+fn compare_values(expected: Value, actual: Value) -> Vec<ReportDifference> {
     let expected = semantic_value(expected);
     let actual = semantic_value(actual);
     let mut differences = Vec::new();
@@ -31,14 +48,16 @@ pub fn compare_reports(expected: &RunReport, actual: &RunReport) -> Vec<ReportDi
     differences
 }
 
-fn semantic_value(report: &RunReport) -> Value {
-    let source_roots = report
-        .documents
-        .iter()
-        .map(|document| document.source_root.clone())
+fn semantic_value(mut value: Value) -> Value {
+    let source_roots = value
+        .get("documents")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|document| document.get("sourceRoot").and_then(Value::as_str))
         .filter(|root| !root.is_empty())
+        .map(str::to_string)
         .collect::<Vec<_>>();
-    let mut value = serde_json::to_value(report).expect("RunReport serialization cannot fail");
     replace_source_roots(&mut value, &source_roots);
 
     let Value::Object(root) = &mut value else {
@@ -50,7 +69,6 @@ fn semantic_value(report: &RunReport) -> Value {
     root.remove("bifrostCommit");
 
     if let Some(Value::Object(runner)) = root.get_mut("runner") {
-        runner.remove("requestedVersion");
         if runner
             .get("source")
             .and_then(Value::as_str)
@@ -85,7 +103,7 @@ fn semantic_value(report: &RunReport) -> Value {
 }
 
 fn keyed_documents(documents: Vec<Value>) -> Value {
-    let mut keyed = BTreeMap::new();
+    let mut grouped = BTreeMap::<String, Vec<Value>>::new();
     for mut document in documents {
         let Some(object) = document.as_object_mut() else {
             continue;
@@ -100,28 +118,41 @@ fn keyed_documents(documents: Vec<Value>) -> Value {
             Value::String("<source-root>".to_string()),
         );
         key_array(object, "cases", "id");
-        keyed.insert(key, document);
+        grouped.entry(key).or_default().push(document);
     }
-    Value::Object(keyed.into_iter().collect())
+    grouped_value(grouped)
 }
 
 fn key_array(object: &mut Map<String, Value>, field: &str, key_field: &str) {
     let Some(Value::Array(items)) = object.remove(field) else {
         return;
     };
-    let mut keyed = BTreeMap::new();
+    let mut grouped = BTreeMap::<String, Vec<Value>>::new();
     for item in items {
         let key = item
             .get(key_field)
             .and_then(Value::as_str)
             .unwrap_or("<unknown>")
             .to_string();
-        keyed.insert(key, item);
+        grouped.entry(key).or_default().push(item);
     }
-    object.insert(
-        field.to_string(),
-        Value::Object(keyed.into_iter().collect()),
-    );
+    object.insert(field.to_string(), grouped_value(grouped));
+}
+
+fn grouped_value(grouped: BTreeMap<String, Vec<Value>>) -> Value {
+    Value::Object(
+        grouped
+            .into_iter()
+            .map(|(key, mut values)| {
+                if values.len() == 1 {
+                    (key, values.pop().expect("one grouped value"))
+                } else {
+                    values.sort_by_key(|value| serde_json::to_string(value).unwrap_or_default());
+                    (key, Value::Array(values))
+                }
+            })
+            .collect(),
+    )
 }
 
 fn replace_source_roots(value: &mut Value, roots: &[String]) {
@@ -283,6 +314,53 @@ mod tests {
         assert!(differences[0].path.ends_with("status"));
         assert_eq!(differences[0].expected, "\"passed\"");
         assert_eq!(differences[0].actual, "\"failed\"");
+    }
+
+    #[test]
+    fn compares_requested_analyzer_version() {
+        let expected = report();
+        let mut actual = expected.clone();
+        actual.runner.requested_version = "another-version".to_string();
+
+        let differences = compare_reports(&expected, &actual);
+
+        assert_eq!(differences.len(), 1);
+        assert_eq!(differences[0].path, "$.runner.requestedVersion");
+    }
+
+    #[test]
+    fn preserves_duplicate_case_ids_during_comparison() {
+        let expected = report();
+        let mut actual = expected.clone();
+        let mut duplicate = actual.documents[0].cases[0].clone();
+        duplicate.status = super::super::CaseStatus::Failed;
+        actual.documents[0].cases.push(duplicate);
+
+        let differences = compare_reports(&expected, &actual);
+
+        assert!(differences
+            .iter()
+            .any(|difference| difference.path.contains("sample-case")));
+    }
+
+    #[test]
+    fn file_comparison_preserves_unknown_semantic_fields() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let expected_path = tempdir.path().join("expected.json");
+        let actual_path = tempdir.path().join("actual.json");
+        let expected = serde_json::to_value(report()).unwrap();
+        let mut actual = expected.clone();
+        actual
+            .as_object_mut()
+            .unwrap()
+            .insert("futureSemanticField".to_string(), Value::Bool(true));
+        fs::write(&expected_path, serde_json::to_vec(&expected).unwrap()).unwrap();
+        fs::write(&actual_path, serde_json::to_vec(&actual).unwrap()).unwrap();
+
+        let differences = compare_report_files(&expected_path, &actual_path).unwrap();
+
+        assert_eq!(differences.len(), 1);
+        assert_eq!(differences[0].path, "$.futureSemanticField");
     }
 
     fn report() -> RunReport {

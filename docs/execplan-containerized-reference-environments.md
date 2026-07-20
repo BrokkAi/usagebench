@@ -38,7 +38,7 @@ Version `1` uses:
 - semantic report equality after documented volatile fields are removed.
 
 Every containerized report records both the stable definition digest and the
-OCI digest of the locally built image. Rebuilding the same definition is a
+immutable ID of the locally loaded image. Rebuilding the same definition is a
 functional reproducibility promise. Byte-for-byte identical rebuilt images are
 only claimed if clean double-build validation demonstrates it.
 
@@ -67,7 +67,7 @@ capabilities, outcomes, locations, diagnostics, and scoring at case granularity.
 Add digest-pinned Dockerfiles and build/run helpers. Bifrost must support an
 already-built executable so runtime never fetches or compiles it. Run both
 images with networking disabled, a non-root user, a read-only corpus, and
-isolated writable work/output mounts.
+  isolated writable work and private output staging.
 
 ### 5. Reproduce from a prior report
 
@@ -105,13 +105,13 @@ pull request.
 - [x] Milestone 2: report provenance.
 - [x] 2026-07-20: Added typed report deserialization and a case-keyed semantic
   comparator that ignores only timestamps, local source/executable paths, and
-  the newly rebuilt OCI digest.
+  the newly rebuilt local image identity.
 - [x] Milestone 3: semantic comparison.
 - [x] 2026-07-20: Built digest-pinned Bifrost and gopls images for
   `linux/amd64`; both exact smoke cases passed with networking disabled, a
   non-root user, a read-only released corpus, and isolated tmpfs workspaces.
 - [x] 2026-07-20: Repeated fully cached builds produced unchanged definition
-  and OCI image digests for both reference runners.
+  digests and local image IDs for both reference runners.
 - [x] Milestone 4: reference images and offline execution.
 - [x] 2026-07-20: Added a one-command reproduction workflow that resolves the
   exact released corpus, rebuilds the recorded environment, reruns the same
@@ -137,10 +137,10 @@ pull request.
   paper reviewers.
 - 2026-07-20: Version the environment contract independently from the corpus,
   CLI, and benchmark YAML schema.
-- 2026-07-20: Record both a stable build-definition digest and the locally
-  produced OCI digest; do not imply that a local tag is globally retrievable.
-- 2026-07-20: Preserve the repository's current GitHub Action version-tag
-  policy. Reproducibility is rooted in pinned container inputs and the released
+- 2026-07-20: Record both a stable build-definition digest and the immutable
+  local image ID; do not imply that a local tag is globally retrievable.
+- 2026-07-20: Pin newly introduced GitHub Actions by full commit SHA while
+  keeping reproducibility rooted in pinned container inputs and the released
   local build contract, not in retained CI images.
 
 ## Risks and Mitigations
@@ -151,7 +151,7 @@ pull request.
   inputs rather than resolving mutable packages during future rebuilds.
 - Reports contain absolute temporary paths. Normalize only known workspace-root
   fields and test that semantic path/location changes still fail comparison.
-- A rebuilt OCI digest may differ despite identical inputs. Double-build and
+- A rebuilt local image ID may differ despite identical inputs. Double-build and
   report this honestly; a later Zenodo OCI archive can provide byte-identical
   distribution when required.
 - Cross-platform emulation can be slow on arm64 developer machines. Keep
