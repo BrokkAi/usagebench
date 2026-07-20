@@ -9,6 +9,7 @@
     "environmentVersion",
     "canonicalPlatform",
     "distribution",
+    "buildFrontend",
     "localTagTemplate",
     "runners"
   ],
@@ -17,6 +18,7 @@
     "environmentVersion": { "type": "string", "pattern": "^[1-9][0-9]*$" },
     "canonicalPlatform": { "const": "linux/amd64" },
     "distribution": { "const": "build_only" },
+    "buildFrontend": { "$ref": "#/$defs/pinnedImage" },
     "localTagTemplate": {
       "type": "string",
       "pattern": "\\{usagebenchRelease\\}.*\\{environmentVersion\\}.*\\{runnerId\\}"
@@ -52,12 +54,22 @@
     "runner": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "dockerfile", "baseImage", "analyzer", "toolchains"],
+      "required": ["kind", "dockerfile", "target", "baseImages", "analyzer", "toolchains"],
       "properties": {
         "kind": { "enum": ["bifrost", "lsp"] },
         "profile": { "type": "string", "minLength": 1 },
         "dockerfile": { "type": "string", "minLength": 1 },
-        "baseImage": { "$ref": "#/$defs/pinnedImage" },
+        "target": { "type": "string", "minLength": 1 },
+        "baseImages": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["harnessBuilder", "analyzerBuilder", "runtime"],
+          "properties": {
+            "harnessBuilder": { "$ref": "#/$defs/pinnedImage" },
+            "analyzerBuilder": { "$ref": "#/$defs/pinnedImage" },
+            "runtime": { "$ref": "#/$defs/pinnedImage" }
+          }
+        },
         "analyzer": { "$ref": "#/$defs/analyzer" },
         "toolchains": {
           "type": "object",
@@ -68,4 +80,3 @@
     }
   }
 }
-

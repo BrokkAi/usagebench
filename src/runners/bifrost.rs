@@ -29,6 +29,7 @@ use std::{
 use url::{Host, Url};
 
 const DEFAULT_BIFROST_COMMIT: &str = "origin/master";
+const BIFROST_SOURCE_URL: &str = "https://github.com/BrokkAi/bifrost";
 const GET_DEFINITIONS_BY_LOCATION_TOOL: &str = "get_definitions_by_location";
 const GET_TYPE_BY_LOCATION_TOOL: &str = "get_type_by_location";
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(10 * 60);
@@ -39,11 +40,14 @@ pub struct RunBifrostOptions {
     pub bifrost_repo: Option<PathBuf>,
     pub bifrost_commit: String,
     pub bifrost_working_tree: bool,
+    pub bifrost_binary: Option<PathBuf>,
+    pub bifrost_resolved_commit: Option<String>,
     pub work_dir: PathBuf,
     pub output: Option<PathBuf>,
     pub include_unsupported: bool,
     pub include_definition_lookups: bool,
     pub keep_worktrees: bool,
+    pub case_id: Option<String>,
 }
 
 impl RunBifrostOptions {
@@ -53,11 +57,14 @@ impl RunBifrostOptions {
             bifrost_repo: None,
             bifrost_commit: DEFAULT_BIFROST_COMMIT.to_string(),
             bifrost_working_tree: false,
+            bifrost_binary: None,
+            bifrost_resolved_commit: None,
             work_dir: PathBuf::from("target/usagebench"),
             output: None,
             include_unsupported: false,
             include_definition_lookups: true,
             keep_worktrees: false,
+            case_id: None,
         }
     }
 }
@@ -89,16 +96,40 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     fs::create_dir_all(&work_dir).with_context(|| format!("create {}", work_dir.display()))?;
     let _source_cleanup = CleanupGuard::new(work_dir.join("sources"), !options.keep_worktrees);
 
-    let bifrost_source_repo =
-        resolve_bifrost_source_repo(&repo_root, options.bifrost_repo.as_ref())?;
-    let bifrost_checkout = if options.bifrost_working_tree {
-        bifrost_source_repo.clone()
-    } else {
-        prepare_bifrost_checkout(&bifrost_source_repo, &options.bifrost_commit, &work_dir)?
-    };
-    let bifrost_resolved_commit = git_output(&bifrost_checkout, ["rev-parse", "HEAD"])?;
-    build_bifrost(&bifrost_checkout)?;
-    let bifrost_binary = bifrost_binary_path(&bifrost_checkout);
+    let (bifrost_source, bifrost_resolved_commit, bifrost_binary) =
+        if let Some(binary) = &options.bifrost_binary {
+            if !binary.is_file() {
+                bail!("Bifrost executable does not exist: {}", binary.display());
+            }
+            let resolved_commit = options
+                .bifrost_resolved_commit
+                .clone()
+                .context("--bifrost-resolved-commit is required with --bifrost-binary")?;
+            (
+                options
+                    .bifrost_repo
+                    .as_ref()
+                    .map(|path| display_path(path))
+                    .unwrap_or_else(|| BIFROST_SOURCE_URL.to_string()),
+                resolved_commit,
+                binary.clone(),
+            )
+        } else {
+            let bifrost_source_repo =
+                resolve_bifrost_source_repo(&repo_root, options.bifrost_repo.as_ref())?;
+            let bifrost_checkout = if options.bifrost_working_tree {
+                bifrost_source_repo.clone()
+            } else {
+                prepare_bifrost_checkout(&bifrost_source_repo, &options.bifrost_commit, &work_dir)?
+            };
+            let resolved_commit = git_output(&bifrost_checkout, ["rev-parse", "HEAD"])?;
+            build_bifrost(&bifrost_checkout)?;
+            (
+                display_path(&bifrost_source_repo),
+                resolved_commit,
+                bifrost_binary_path(&bifrost_checkout),
+            )
+        };
     let environment = super::environment::capture_execution_environment(
         super::environment::executable_provenance(&Command::new(&bifrost_binary))?,
         &["rustc", "cargo"],
@@ -117,6 +148,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             &bifrost_binary,
             options.include_unsupported,
             options.include_definition_lookups,
+            options.case_id.as_deref(),
         )
         .with_context(|| format!("run benchmark cases {}", case_file.display()))?;
         documents.push(DocumentRunReport {
@@ -132,12 +164,16 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     }
 
     let finished_at = unix_seconds_now()?;
-    let requested_version = options.bifrost_commit.clone();
+    let requested_version = if options.bifrost_binary.is_some() {
+        bifrost_resolved_commit.clone()
+    } else {
+        options.bifrost_commit.clone()
+    };
     let runner = RunnerMetadata {
         name: "bifrost".to_string(),
         requested_version: requested_version.clone(),
         resolved_version: bifrost_resolved_commit.clone(),
-        source: display_path(&bifrost_source_repo),
+        source: bifrost_source.clone(),
         adapter_version: env!("CARGO_PKG_VERSION").to_string(),
         capabilities: vec![
             RunnerCapability {
@@ -171,10 +207,10 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             include_unsupported: options.include_unsupported,
             include_definition_lookups: options.include_definition_lookups,
             profile: None,
-            case_id: None,
+            case_id: options.case_id.clone(),
         },
         environment,
-        bifrost_repo: Some(display_path(&bifrost_source_repo)),
+        bifrost_repo: Some(bifrost_source),
         bifrost_commit: Some(requested_version),
         bifrost_resolved_commit: Some(bifrost_resolved_commit),
         started_at_unix_seconds: started_at,
@@ -207,6 +243,7 @@ fn run_document_cases(
     bifrost_binary: &Path,
     include_unsupported: bool,
     include_definition_lookups: bool,
+    case_id: Option<&str>,
 ) -> Result<Vec<CaseRunReport>> {
     let mut command = Command::new(bifrost_binary);
     command
@@ -218,7 +255,11 @@ fn run_document_cases(
     session.initialize()?;
 
     let mut reports = Vec::new();
-    for case in &document.cases {
+    for case in document
+        .cases
+        .iter()
+        .filter(|case| case_id.is_none_or(|case_id| case.id == case_id))
+    {
         reports.push(run_case(
             case,
             document.position_encoding,
@@ -1762,6 +1803,7 @@ mod tests {
 
         assert!(options.include_definition_lookups);
         assert!(!options.bifrost_working_tree);
+        assert!(options.case_id.is_none());
     }
 
     #[test]

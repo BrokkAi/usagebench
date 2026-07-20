@@ -107,7 +107,12 @@ pull request.
   comparator that ignores only timestamps, local source/executable paths, and
   the newly rebuilt OCI digest.
 - [x] Milestone 3: semantic comparison.
-- [ ] Milestone 4: reference images and offline execution.
+- [x] 2026-07-20: Built digest-pinned Bifrost and gopls images for
+  `linux/amd64`; both exact smoke cases passed with networking disabled, a
+  non-root user, a read-only released corpus, and isolated tmpfs workspaces.
+- [x] 2026-07-20: Repeated fully cached builds produced unchanged definition
+  and OCI image digests for both reference runners.
+- [x] Milestone 4: reference images and offline execution.
 - [ ] Milestone 5: report-driven reproduction.
 - [ ] Milestone 6: CI, release packaging, and documentation.
 - [ ] Milestone 7: final validation and review.
@@ -138,6 +143,27 @@ pull request.
   distribution when required.
 - Cross-platform emulation can be slow on arm64 developer machines. Keep
   `linux/amd64` canonical and make the expected cost explicit in `ARTIFACT.md`.
+
+## Surprises and Discoveries
+
+- 2026-07-20: The gopls `v0.23.0` module requires Go 1.26 or newer. The first
+  clean build deliberately disabled automatic toolchain download and rejected
+  the initially selected Go 1.25.6 builder, so the manifest was corrected to a
+  digest-pinned Go 1.26.0 image.
+- 2026-07-20: The UsageBench binary embeds the checked-in benchmark JSON
+  Schema with `include_str!`, so the harness build stage must copy `schema/`
+  even though the runtime image contains only the compiled executable.
+- 2026-07-20: BuildKit's default provenance attestation changes the loaded
+  manifest-list digest between otherwise identical builds. Local reference
+  builds disable that attestation and retain explicit definition digests plus
+  executable checksums in benchmark reports.
+- 2026-07-20: gopls shells out to the Go command while loading a workspace.
+  The offline runtime therefore includes the same pinned Go toolchain used by
+  the analyzer builder, rather than only the statically built gopls binary.
+- 2026-07-20: The pinned Bifrost revision declares Rust 1.96.0 in its
+  `rust-toolchain.toml`. Its analyzer builder therefore uses a separate
+  digest-pinned Rust 1.96.0 base instead of allowing rustup to download that
+  toolchain into the shared Rust 1.95.0 harness builder.
 
 ## Acceptance Evidence
 
