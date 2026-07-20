@@ -103,7 +103,10 @@ pull request.
   reference-image identity, analyzer executable checksums, and observed
   toolchains to the shared report schema.
 - [x] Milestone 2: report provenance.
-- [ ] Milestone 3: semantic comparison.
+- [x] 2026-07-20: Added typed report deserialization and a case-keyed semantic
+  comparator that ignores only timestamps, local source/executable paths, and
+  the newly rebuilt OCI digest.
+- [x] Milestone 3: semantic comparison.
 - [ ] Milestone 4: reference images and offline execution.
 - [ ] Milestone 5: report-driven reproduction.
 - [ ] Milestone 6: CI, release packaging, and documentation.

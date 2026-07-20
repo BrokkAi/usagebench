@@ -29,6 +29,13 @@ enum Command {
     /// Deprecated compatibility alias for `report-schema`.
     #[command(hide = true)]
     BifrostReportSchema,
+    /// Compare two reports after removing documented volatile fields.
+    CompareReports {
+        /// Previously published report.
+        expected: PathBuf,
+        /// Newly reproduced report.
+        actual: PathBuf,
+    },
     /// Run benchmark case YAML files against Bifrost.
     RunBifrost {
         /// Case file or directory to run.
@@ -99,6 +106,21 @@ fn main() -> Result<()> {
         }
         Command::ReportSchema | Command::BifrostReportSchema => {
             println!("{}", usagebench::runners::generated_report_schema_json()?);
+        }
+        Command::CompareReports { expected, actual } => {
+            let differences =
+                usagebench::runners::report_compare::compare_report_files(&expected, &actual)?;
+            if differences.is_empty() {
+                println!("reports are semantically equivalent");
+            } else {
+                for difference in &differences {
+                    println!(
+                        "{}: expected {}, actual {}",
+                        difference.path, difference.expected, difference.actual
+                    );
+                }
+                bail!("reports differ in {} semantic field(s)", differences.len());
+            }
         }
         Command::RunBifrost {
             path,

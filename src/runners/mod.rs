@@ -17,13 +17,14 @@ mod environment;
 pub mod lsp;
 mod lsp_protocol;
 mod mcp;
+pub mod report_compare;
 
 pub use environment::{
     ContainerProvenance, ExecutableProvenance, ExecutionEnvironment, ExecutionMode, PlatformScope,
     ReferenceEnvironmentProvenance,
 };
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RunnerMetadata {
     pub name: String,
@@ -34,7 +35,7 @@ pub struct RunnerMetadata {
     pub capabilities: Vec<RunnerCapability>,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RunnerCapability {
     pub operation: RunnerOperation,
@@ -42,7 +43,7 @@ pub struct RunnerCapability {
     pub notes: String,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum RunnerOperation {
     DeclarationToUsages,
@@ -51,7 +52,7 @@ pub enum RunnerOperation {
     TypeLookup,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum CapabilitySupport {
     Native,
@@ -59,7 +60,7 @@ pub enum CapabilitySupport {
     Unsupported,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RunReport {
     /// Version of the Rust CLI and runner adapters.
@@ -86,7 +87,7 @@ pub struct RunReport {
     pub documents: Vec<DocumentRunReport>,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RunInvocation {
     pub include_unsupported: bool,
@@ -196,7 +197,7 @@ fn is_release_tag(tag: &str) -> bool {
             .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
 }
 
-#[derive(Debug, Clone, Default, Serialize, JsonSchema)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RunTotals {
     pub documents: usize,
@@ -215,7 +216,7 @@ pub struct RunTotals {
     pub errors: usize,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DocumentRunReport {
     pub case_file: String,
@@ -228,7 +229,7 @@ pub struct DocumentRunReport {
     pub cases: Vec<CaseRunReport>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum CaseStatus {
     Passed,
@@ -243,7 +244,7 @@ pub enum CaseStatus {
     Error,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CaseRunReport {
     pub id: String,
@@ -264,7 +265,7 @@ pub struct CaseRunReport {
     pub diagnostics: Vec<RunDiagnostic>,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DeclarationUsageReport {
     pub status: CaseStatus,
@@ -293,7 +294,7 @@ pub struct DeclarationUsageReport {
     pub raw_statuses: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ClassifiedExtraUsage {
     pub location: NormalizedLocation,
@@ -302,7 +303,7 @@ pub struct ClassifiedExtraUsage {
     pub rationale: String,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExtraUsageClassification {
     ImportBinding,
@@ -312,14 +313,14 @@ pub enum ExtraUsageClassification {
     Unclassified,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExtraUsageDisposition {
     AllowedPolicyExtra,
     Unexpected,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UsageDefinitionReport {
     pub status: CaseStatus,
@@ -332,7 +333,7 @@ pub struct UsageDefinitionReport {
     pub diagnostics: Vec<RunDiagnostic>,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TypeLookupReport {
     pub status: CaseStatus,
@@ -344,7 +345,9 @@ pub struct TypeLookupReport {
     pub diagnostics: Vec<RunDiagnostic>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, JsonSchema)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, JsonSchema,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct NormalizedLocation {
     pub path: String,
@@ -361,7 +364,7 @@ pub struct NormalizedLocation {
     pub kind: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RunDiagnostic {
     pub kind: String,

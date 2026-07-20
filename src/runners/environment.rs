@@ -14,21 +14,21 @@ use std::{
 
 const REFERENCE_ENVIRONMENT_VARIABLE: &str = "USAGEBENCH_REFERENCE_ENVIRONMENT";
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecutionMode {
     Native,
     Container,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum PlatformScope {
     HostSpecific,
     CanonicalReference,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ExecutableProvenance {
     pub command: String,
@@ -38,7 +38,7 @@ pub struct ExecutableProvenance {
     pub sha256: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ReferenceEnvironmentProvenance {
     pub version: String,
@@ -46,14 +46,14 @@ pub struct ReferenceEnvironmentProvenance {
     pub canonical_platform: String,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ContainerProvenance {
     pub image_reference: String,
     pub image_digest: String,
 }
 
-#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ExecutionEnvironment {
     pub operating_system: String,
