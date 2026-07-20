@@ -1,0 +1,15 @@
+{
+  "id": "phpactor",
+  "name": "Phpactor",
+  "languages": ["php"],
+  "requestedVersion": "2026.06.25.0",
+  "source": "https://github.com/phpactor/phpactor/releases/tag/2026.06.25.0",
+  "command": ["phpactor", "language-server"],
+  "fileExtensions": [".php"],
+  "languageIds": {".php": "php"},
+  "initializationOptions": {
+    "language_server_phpstan.enabled": false,
+    "language_server_psalm.enabled": false
+  },
+  "settleMilliseconds": 1500
+}

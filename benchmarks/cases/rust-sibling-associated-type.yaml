@@ -1,13 +1,21 @@
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 positionEncoding: utf-16
 source:
   kind: fixture
   path: fixtures/rust/sibling-associated-type
 language: rust
 cases:
-  - id: rust-sibling-module-associated-type-segment-definition
+  - id: rust-sibling-module-type-segment-definition
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/main.rs
             range:
@@ -25,4 +33,9 @@ cases:
           displayName: AppState
     verification:
       method: manual_inspection
-      notes: AppState is imported from the sibling state module and used as the type segment of AppState::with_environment; the lookup should resolve to the struct declaration, not the impl block.
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. AppState is
+        imported from the sibling state module and used as the type qualifier
+        of AppState::with_environment. Definition lookup reaches the unit struct
+        definition, not the impl block or associated function. The former case
+        ID incorrectly called this an associated-type segment.

@@ -1,8 +1,8 @@
 use super::mcp::{McpSession, ToolClient as SearchToolsClient};
 use super::{
-    compute_totals, normalize_symbol_location, path_to_slash, resolve_usagebench_provenance,
-    score_declaration_locations, symbol_kind_name, CapabilitySupport, RunReport, RunnerCapability,
-    RunnerMetadata, RunnerOperation,
+    compute_totals, location_match, navigation_response_status, normalize_symbol_location,
+    path_to_slash, resolve_usagebench_provenance, score_declaration_locations, symbol_kind_name,
+    CapabilitySupport, LocationMatch, RunReport, RunnerCapability, RunnerMetadata, RunnerOperation,
 };
 pub use super::{
     CaseRunReport, CaseStatus, DeclarationUsageReport, DocumentRunReport, NormalizedLocation,
@@ -10,7 +10,7 @@ pub use super::{
 };
 use crate::{
     benchmark_source_path, find_repo_root_for_path, BenchmarkCase, BenchmarkDocument, Location,
-    PositionEncoding, Source, SymbolKind, SymbolLocation,
+    PositionEncoding, ReferencePolicy, Source, SymbolKind, SymbolLocation,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use serde::Deserialize;
@@ -118,6 +118,10 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             case_file: display_path(case_file),
             language: document.language,
             source_root: display_path(&source_root),
+            corpus_partition: document.corpus.partition,
+            corpus_selection: document.corpus.selection,
+            ground_truth_status: document.ground_truth.status,
+            reference_policy: document.reference_policy,
             cases,
         });
     }
@@ -201,6 +205,8 @@ fn run_document_cases(
         reports.push(run_case(
             case,
             document.position_encoding,
+            document.reference_policy,
+            Some((&document.language, source_root)),
             &mut session,
             include_unsupported,
             include_definition_lookups,
@@ -212,6 +218,8 @@ fn run_document_cases(
 fn run_case(
     case: &BenchmarkCase,
     encoding: PositionEncoding,
+    reference_policy: ReferencePolicy,
+    reference_context: Option<(&str, &Path)>,
     session: &mut impl SearchToolsClient,
     include_unsupported: bool,
     include_definition_lookups: bool,
@@ -240,7 +248,15 @@ fn run_case(
 
     let mut diagnostics = Vec::new();
     let declaration_to_usages = case.declaration.as_ref().map(|declaration| {
-        run_declaration_to_usages(case, declaration, encoding, session, &mut diagnostics)
+        run_declaration_to_usages(
+            case,
+            declaration,
+            encoding,
+            reference_policy,
+            reference_context,
+            session,
+            &mut diagnostics,
+        )
     });
     let usage_to_declaration = if include_definition_lookups {
         case.usage_lookups
@@ -305,6 +321,8 @@ fn run_declaration_to_usages(
     case: &BenchmarkCase,
     declaration: &SymbolLocation,
     encoding: PositionEncoding,
+    reference_policy: ReferencePolicy,
+    reference_context: Option<(&str, &Path)>,
     session: &mut impl SearchToolsClient,
     diagnostics: &mut Vec<RunDiagnostic>,
 ) -> DeclarationUsageReport {
@@ -354,6 +372,7 @@ fn run_declaration_to_usages(
                     missing_unproven: Vec::new(),
                     unexpected: Vec::new(),
                     unexpected_unproven: Vec::new(),
+                    position_unverified: Vec::new(),
                     extra_usages: Vec::new(),
                     partial: false,
                     raw_statuses: vec!["invalid_expected_location".to_string()],
@@ -381,6 +400,7 @@ fn run_declaration_to_usages(
                 missing_unproven: expected_unproven,
                 unexpected: Vec::new(),
                 unexpected_unproven: Vec::new(),
+                position_unverified: Vec::new(),
                 extra_usages: Vec::new(),
                 partial: false,
                 raw_statuses: vec!["symbol_resolution_failed".to_string()],
@@ -417,6 +437,7 @@ fn run_declaration_to_usages(
                 missing_unproven: expected_unproven,
                 unexpected: Vec::new(),
                 unexpected_unproven: Vec::new(),
+                position_unverified: Vec::new(),
                 extra_usages: Vec::new(),
                 partial: false,
                 raw_statuses: vec!["invalid_declaration_location".to_string()],
@@ -429,6 +450,7 @@ fn run_declaration_to_usages(
         json!({
             "targets": [target],
             "include_tests": true,
+            "include_bindings": reference_policy != ReferencePolicy::ExternalUsages,
         }),
     ) {
         Ok(result) => result,
@@ -450,6 +472,7 @@ fn run_declaration_to_usages(
                 missing_unproven: expected_unproven,
                 unexpected: Vec::new(),
                 unexpected_unproven: Vec::new(),
+                position_unverified: Vec::new(),
                 extra_usages: Vec::new(),
                 partial: false,
                 raw_statuses: vec!["scan_usages_failed".to_string()],
@@ -461,7 +484,7 @@ fn run_declaration_to_usages(
     let has_failure_status = parsed.has_failure_status();
     let actual = parsed.locations;
     let unproven = parsed.unproven_locations;
-    score_declaration_locations(
+    let mut report = score_declaration_locations(
         case,
         Some(selector.selector),
         actual,
@@ -470,7 +493,16 @@ fn run_declaration_to_usages(
         parsed.raw_statuses,
         has_failure_status,
     )
-    .expect("expected locations were normalized before scoring")
+    .expect("expected locations were normalized before scoring");
+    if let Some((language, source_root)) = reference_context {
+        super::lsp::classify_reference_policy_extras(
+            &mut report,
+            language,
+            source_root,
+            reference_policy,
+        );
+    }
+    report
 }
 
 fn run_usage_to_declaration(
@@ -482,6 +514,8 @@ fn run_usage_to_declaration(
         path: "<invalid>".to_string(),
         line: 0,
         column: None,
+        end_line: None,
+        end_column: None,
         display_name: Some(lookup.usage.display_name.clone()),
         kind: Some(symbol_kind_name(&lookup.usage.kind).to_string()),
     });
@@ -490,6 +524,8 @@ fn run_usage_to_declaration(
             path: "<invalid>".to_string(),
             line: 0,
             column: None,
+            end_line: None,
+            end_column: None,
             display_name: Some(lookup.expected_declaration.display_name.clone()),
             kind: Some(symbol_kind_name(&lookup.expected_declaration.kind).to_string()),
         });
@@ -539,16 +575,18 @@ fn run_usage_to_declaration(
     };
 
     let parsed = parse_get_definition(&result);
-    let status = if parsed.raw_status != "resolved" {
+    let status = if lookup.expect_no_movement {
+        match parsed.raw_status.as_str() {
+            "no_definition" if parsed.actual_declarations.is_empty() => CaseStatus::Passed,
+            "resolved" => {
+                navigation_response_status(&parsed.actual_declarations, &expected_declaration, true)
+            }
+            _ => CaseStatus::Failed,
+        }
+    } else if parsed.raw_status != "resolved" {
         CaseStatus::Failed
-    } else if parsed
-        .actual_declarations
-        .iter()
-        .any(|actual| same_path_line(actual, &expected_declaration))
-    {
-        CaseStatus::Passed
     } else {
-        CaseStatus::Failed
+        navigation_response_status(&parsed.actual_declarations, &expected_declaration, false)
     };
 
     UsageDefinitionReport {
@@ -571,6 +609,8 @@ fn run_type_lookup(
             path: "<invalid>".to_string(),
             line: 0,
             column: None,
+            end_line: None,
+            end_column: None,
             display_name: Some(lookup.expression.display_name.clone()),
             kind: Some(symbol_kind_name(&lookup.expression.kind).to_string()),
         });
@@ -579,6 +619,8 @@ fn run_type_lookup(
             path: "<invalid>".to_string(),
             line: 0,
             column: None,
+            end_line: None,
+            end_column: None,
             display_name: Some(lookup.expected_type.display_name.clone()),
             kind: Some(symbol_kind_name(&lookup.expected_type.kind).to_string()),
         });
@@ -629,16 +671,20 @@ fn run_type_lookup(
     };
 
     let parsed = parse_get_type(&result);
-    let status = if parsed.raw_status != "resolved" {
+    let status = if parsed.raw_status != "resolved" || parsed.actual_types.len() != 1 {
         CaseStatus::Failed
-    } else if parsed
-        .actual_types
-        .iter()
-        .any(|actual| same_type_location(actual, &expected_type))
-    {
-        CaseStatus::Passed
     } else {
-        CaseStatus::Failed
+        match location_match(&parsed.actual_types[0], &expected_type) {
+            LocationMatch::Exact if type_name_matches(&parsed.actual_types[0], &expected_type) => {
+                CaseStatus::Passed
+            }
+            LocationMatch::LineOnly
+                if type_name_matches(&parsed.actual_types[0], &expected_type) =>
+            {
+                CaseStatus::PositionUnverified
+            }
+            _ => CaseStatus::Failed,
+        }
     };
 
     TypeLookupReport {
@@ -656,6 +702,8 @@ fn skipped_definition_lookup(lookup: &crate::UsageLookup) -> UsageDefinitionRepo
         path: "<invalid>".to_string(),
         line: 0,
         column: None,
+        end_line: None,
+        end_column: None,
         display_name: Some(lookup.usage.display_name.clone()),
         kind: Some(symbol_kind_name(&lookup.usage.kind).to_string()),
     });
@@ -664,6 +712,8 @@ fn skipped_definition_lookup(lookup: &crate::UsageLookup) -> UsageDefinitionRepo
             path: "<invalid>".to_string(),
             line: 0,
             column: None,
+            end_line: None,
+            end_column: None,
             display_name: Some(lookup.expected_declaration.display_name.clone()),
             kind: Some(symbol_kind_name(&lookup.expected_declaration.kind).to_string()),
         });
@@ -686,6 +736,8 @@ fn skipped_type_lookup(lookup: &crate::TypeLookup) -> TypeLookupReport {
             path: "<invalid>".to_string(),
             line: 0,
             column: None,
+            end_line: None,
+            end_column: None,
             display_name: Some(lookup.expression.display_name.clone()),
             kind: Some(symbol_kind_name(&lookup.expression.kind).to_string()),
         });
@@ -694,6 +746,8 @@ fn skipped_type_lookup(lookup: &crate::TypeLookup) -> TypeLookupReport {
             path: "<invalid>".to_string(),
             line: 0,
             column: None,
+            end_line: None,
+            end_column: None,
             display_name: Some(lookup.expected_type.display_name.clone()),
             kind: Some(symbol_kind_name(&lookup.expected_type.kind).to_string()),
         });
@@ -967,7 +1021,18 @@ fn collect_scan_usage_locations(
             locations.insert(NormalizedLocation {
                 path: path.to_string(),
                 line: line as u32,
-                column: None,
+                column: hit
+                    .get("column")
+                    .and_then(Value::as_u64)
+                    .map(|value| value as u32),
+                end_line: hit
+                    .get("end_line")
+                    .and_then(Value::as_u64)
+                    .map(|value| value as u32),
+                end_column: hit
+                    .get("end_column")
+                    .and_then(Value::as_u64)
+                    .map(|value| value as u32),
                 display_name: None,
                 kind: None,
             });
@@ -1020,7 +1085,18 @@ fn parse_get_definition(value: &Value) -> ParsedGetDefinition {
             Some(NormalizedLocation {
                 path: path.to_string(),
                 line: line as u32,
-                column: None,
+                column: definition
+                    .get("start_column")
+                    .and_then(Value::as_u64)
+                    .map(|value| value as u32),
+                end_line: definition
+                    .get("end_line")
+                    .and_then(Value::as_u64)
+                    .map(|value| value as u32),
+                end_column: definition
+                    .get("end_column")
+                    .and_then(Value::as_u64)
+                    .map(|value| value as u32),
                 display_name: definition
                     .get("fqn")
                     .and_then(Value::as_str)
@@ -1095,7 +1171,18 @@ fn parse_get_type(value: &Value) -> ParsedGetType {
                     Some(NormalizedLocation {
                         path: path.to_string(),
                         line: line as u32,
-                        column: None,
+                        column: definition
+                            .get("start_column")
+                            .and_then(Value::as_u64)
+                            .map(|value| value as u32),
+                        end_line: definition
+                            .get("end_line")
+                            .and_then(Value::as_u64)
+                            .map(|value| value as u32),
+                        end_column: definition
+                            .get("end_column")
+                            .and_then(Value::as_u64)
+                            .map(|value| value as u32),
                         display_name: definition
                             .get("fqn")
                             .and_then(Value::as_str)
@@ -1164,19 +1251,12 @@ fn one_based_position(location: &Location, encoding: PositionEncoding) -> Result
     })
 }
 
-fn same_path_line(left: &NormalizedLocation, right: &NormalizedLocation) -> bool {
-    left.path == right.path && left.line == right.line
-}
-
-fn same_type_location(actual: &NormalizedLocation, expected: &NormalizedLocation) -> bool {
-    same_path_line(actual, expected)
-        && actual
-            .display_name
-            .as_deref()
-            .zip(expected.display_name.as_deref())
-            .is_some_and(|(actual_name, expected_name)| {
-                symbol_name_matches(actual_name, expected_name)
-            })
+fn type_name_matches(actual: &NormalizedLocation, expected: &NormalizedLocation) -> bool {
+    actual
+        .display_name
+        .as_deref()
+        .zip(expected.display_name.as_deref())
+        .is_some_and(|(actual_name, expected_name)| symbol_name_matches(actual_name, expected_name))
 }
 
 fn symbol_name_matches(symbol: &str, display_name: &str) -> bool {
@@ -1203,6 +1283,8 @@ fn combine_case_status(
         CaseStatus::Error
     } else if statuses.contains(&CaseStatus::Failed) {
         CaseStatus::Failed
+    } else if statuses.contains(&CaseStatus::PositionUnverified) {
+        CaseStatus::PositionUnverified
     } else {
         CaseStatus::Passed
     }
@@ -1687,8 +1769,11 @@ mod tests {
             totals: RunTotals {
                 documents: 1,
                 cases: 1,
+                development_cases: 1,
+                evaluation_cases: 0,
                 passed: 1,
                 near_misses: 0,
+                position_unverified: 0,
                 improved: 0,
                 failed: 0,
                 expected_failures: 0,
@@ -1701,6 +1786,10 @@ mod tests {
                 case_file: "benchmarks/cases/rust.yaml".to_string(),
                 language: "rust".to_string(),
                 source_root: "/repo/fixtures/rust".to_string(),
+                corpus_partition: crate::CorpusPartition::Development,
+                corpus_selection: crate::CorpusSelection::AnalyzerInformed,
+                ground_truth_status: crate::GroundTruthReviewStatus::LegacyUnattributed,
+                reference_policy: ReferencePolicy::BindingsOptional,
                 cases: vec![CaseRunReport {
                     id: "rust-function".to_string(),
                     status: CaseStatus::Passed,
@@ -1723,6 +1812,7 @@ mod tests {
                         missing_unproven: Vec::new(),
                         unexpected: vec![normalized_location("src/extra.rs", 1)],
                         unexpected_unproven: Vec::new(),
+                        position_unverified: Vec::new(),
                         extra_usages: Vec::new(),
                         partial: false,
                         raw_statuses: vec!["ok".to_string()],
@@ -1765,12 +1855,90 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
         assert_eq!(report.status, CaseStatus::Passed);
         assert_eq!(
             client.calls[1].1["targets"][0]["symbol"],
             "example.build_service"
+        );
+        assert_eq!(client.calls[1].1["include_bindings"], true);
+    }
+
+    #[test]
+    fn external_usage_policy_does_not_request_bindings() {
+        let case = benchmark_case();
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages_by_location",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+        ]);
+
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::ExternalUsages,
+            None,
+            &mut client,
+            false,
+            false,
+        );
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(client.calls[1].1["include_bindings"], false);
+    }
+
+    #[test]
+    fn bifrost_binding_extra_passes_when_bindings_are_optional() {
+        let root = tempfile::tempdir().unwrap();
+        fs::create_dir_all(root.path().join("src")).unwrap();
+        fs::write(
+            root.path().join("src/import.rs"),
+            "pub use crate::service::build_service;\n",
+        )
+        .unwrap();
+        let case = benchmark_case();
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages_by_location",
+                scan_usages_json(vec![("src/lib.rs", 8), ("src/import.rs", 1)], false),
+            ),
+        ]);
+
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            Some(("rust", root.path())),
+            &mut client,
+            false,
+            false,
+        );
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        let declaration = report.declaration_to_usages.unwrap();
+        assert!(declaration.unexpected.is_empty());
+        assert_eq!(declaration.extra_usages.len(), 1);
+        assert_eq!(
+            declaration.extra_usages[0].classification,
+            crate::runners::ExtraUsageClassification::ReexportBinding
         );
     }
 
@@ -1800,7 +1968,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
         assert_eq!(report.status, CaseStatus::Passed);
         assert_eq!(report.type_lookups[0].status, CaseStatus::Passed);
@@ -1835,7 +2011,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
         assert_eq!(report.status, CaseStatus::Failed);
         assert_eq!(report.type_lookups[0].status, CaseStatus::Failed);
@@ -1856,7 +2040,15 @@ mod tests {
             get_type_by_location_json("resolved", vec![("src/service.rs", 15)]),
         )]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
         assert_eq!(report.status, CaseStatus::Passed);
         assert!(report.declaration_to_usages.is_none());
@@ -1881,7 +2073,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
         assert_eq!(report.status, CaseStatus::Failed);
         let declaration = report.declaration_to_usages.unwrap();
@@ -1913,13 +2113,21 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
         assert_eq!(report.status, CaseStatus::Passed);
     }
 
     #[test]
-    fn scorer_accepts_only_explicitly_expected_or_allowed_unproven_locations() {
+    fn scorer_marks_line_only_unproven_locations_position_unverified() {
         let mut case = benchmark_case();
         case.expected_unproven_usages = std::mem::take(&mut case.expected_usages);
         case.allowed_unproven_usages.push(symbol_location(
@@ -1957,9 +2165,17 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
-        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(report.status, CaseStatus::PositionUnverified);
         let declaration = report.declaration_to_usages.unwrap();
         assert!(declaration.actual.is_empty());
         assert_eq!(declaration.unproven.len(), 2);
@@ -1967,6 +2183,7 @@ mod tests {
         assert!(declaration.missing_unproven.is_empty());
         assert!(declaration.unexpected.is_empty());
         assert!(declaration.unexpected_unproven.is_empty());
+        assert_eq!(declaration.position_unverified.len(), 1);
     }
 
     #[test]
@@ -1997,7 +2214,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
         assert_eq!(report.status, CaseStatus::Failed);
         let declaration = report.declaration_to_usages.unwrap();
@@ -2023,7 +2248,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
         assert_eq!(report.status, CaseStatus::Failed);
         let declaration = report.declaration_to_usages.unwrap();
@@ -2049,7 +2282,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
         assert_eq!(report.status, CaseStatus::Failed);
         let declaration = report.declaration_to_usages.unwrap();
@@ -2075,7 +2316,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
 
         assert_eq!(report.status, CaseStatus::ExpectedFailure);
         assert_eq!(
@@ -2086,10 +2335,16 @@ mod tests {
             case_file: "benchmarks/cases/rust.yaml".to_string(),
             language: "rust".to_string(),
             source_root: "/repo/fixtures/rust".to_string(),
+            corpus_partition: crate::CorpusPartition::Development,
+            corpus_selection: crate::CorpusSelection::AnalyzerInformed,
+            ground_truth_status: crate::GroundTruthReviewStatus::LegacyUnattributed,
+            reference_policy: ReferencePolicy::BindingsOptional,
             cases: vec![report],
         }]);
         assert_eq!(totals.failed, 0);
         assert_eq!(totals.expected_failures, 1);
+        assert_eq!(totals.development_cases, 1);
+        assert_eq!(totals.evaluation_cases, 0);
     }
 
     #[test]
@@ -2118,7 +2373,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
 
         assert_eq!(report.status, CaseStatus::ExpectedFailure);
         assert_eq!(
@@ -2144,7 +2407,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
 
         assert_eq!(report.status, CaseStatus::NotPlanned);
         assert_eq!(
@@ -2159,6 +2430,10 @@ mod tests {
             case_file: "benchmarks/cases/rust.yaml".to_string(),
             language: "rust".to_string(),
             source_root: "/repo/fixtures/rust".to_string(),
+            corpus_partition: crate::CorpusPartition::Development,
+            corpus_selection: crate::CorpusSelection::AnalyzerInformed,
+            ground_truth_status: crate::GroundTruthReviewStatus::LegacyUnattributed,
+            reference_policy: ReferencePolicy::BindingsOptional,
             cases: vec![report],
         }]);
         assert_eq!(totals.cases, 0);
@@ -2213,7 +2488,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
 
         assert_eq!(report.status, CaseStatus::Improved);
         assert_eq!(report.diagnostics[0].kind, "expected_failure_passed");
@@ -2221,6 +2504,10 @@ mod tests {
             case_file: "benchmarks/cases/rust.yaml".to_string(),
             language: "rust".to_string(),
             source_root: "/repo/fixtures/rust".to_string(),
+            corpus_partition: crate::CorpusPartition::Development,
+            corpus_selection: crate::CorpusSelection::AnalyzerInformed,
+            ground_truth_status: crate::GroundTruthReviewStatus::LegacyUnattributed,
+            reference_policy: ReferencePolicy::BindingsOptional,
             cases: vec![report],
         }]);
         assert_eq!(totals.failed, 0);
@@ -2235,7 +2522,15 @@ mod tests {
         });
         let mut client = MockClient::new(Vec::new());
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
 
         assert_eq!(report.status, CaseStatus::Unsupported);
         assert_eq!(
@@ -2246,6 +2541,10 @@ mod tests {
             case_file: "benchmarks/cases/rust.yaml".to_string(),
             language: "rust".to_string(),
             source_root: "/repo/fixtures/rust".to_string(),
+            corpus_partition: crate::CorpusPartition::Development,
+            corpus_selection: crate::CorpusSelection::AnalyzerInformed,
+            ground_truth_status: crate::GroundTruthReviewStatus::LegacyUnattributed,
+            reference_policy: ReferencePolicy::BindingsOptional,
             cases: vec![report],
         }]);
         assert_eq!(totals.cases, 0);
@@ -2271,10 +2570,49 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
         assert_eq!(report.status, CaseStatus::Failed);
         assert_eq!(report.usage_to_declaration[0].status, CaseStatus::Failed);
+    }
+
+    #[test]
+    fn no_movement_lookup_accepts_explicit_no_definition() {
+        let mut lookup = benchmark_case().usage_lookups.remove(0);
+        lookup.expect_no_movement = true;
+        lookup.expected_declaration = lookup.usage.clone();
+        let mut client = MockClient::new(vec![tool(
+            GET_DEFINITIONS_BY_LOCATION_TOOL,
+            get_definitions_by_location_json("no_definition", Vec::new()),
+        )]);
+
+        let report = run_usage_to_declaration(&lookup, PositionEncoding::Utf16, &mut client);
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(report.raw_status, "no_definition");
+    }
+
+    #[test]
+    fn no_movement_lookup_rejects_navigation_to_another_token() {
+        let mut lookup = benchmark_case().usage_lookups.remove(0);
+        lookup.expect_no_movement = true;
+        lookup.expected_declaration = lookup.usage.clone();
+        let mut client = MockClient::new(vec![tool(
+            GET_DEFINITIONS_BY_LOCATION_TOOL,
+            get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
+        )]);
+
+        let report = run_usage_to_declaration(&lookup, PositionEncoding::Utf16, &mut client);
+
+        assert_eq!(report.status, CaseStatus::Failed);
     }
 
     #[test]
@@ -2307,7 +2645,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
 
         assert_eq!(report.status, CaseStatus::Passed);
         assert_eq!(report.usage_to_declaration[0].status, CaseStatus::Skipped);
@@ -2331,7 +2677,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
 
         assert_eq!(report.status, CaseStatus::Failed);
         let declaration = report.declaration_to_usages.unwrap();
@@ -2355,6 +2709,8 @@ mod tests {
                     path: "src/main.cpp".to_string(),
                     line: 7,
                     column: None,
+                    end_line: None,
+                    end_column: None,
                     display_name: None,
                     kind: None,
                 },
@@ -2362,6 +2718,8 @@ mod tests {
                     path: "src/service.cpp".to_string(),
                     line: 17,
                     column: None,
+                    end_line: None,
+                    end_column: None,
                     display_name: None,
                     kind: None,
                 }
@@ -2398,6 +2756,8 @@ mod tests {
                 path: "src/service_test.go".to_string(),
                 line: 9,
                 column: None,
+                end_line: None,
+                end_column: None,
                 display_name: None,
                 kind: None,
             }]
@@ -2408,6 +2768,8 @@ mod tests {
                 path: "src/service.go".to_string(),
                 line: 29,
                 column: None,
+                end_line: None,
+                end_column: None,
                 display_name: None,
                 kind: None,
             }]
@@ -2463,6 +2825,8 @@ mod tests {
                 path: "src/lib.rs".to_string(),
                 line: 8,
                 column: None,
+                end_line: None,
+                end_column: None,
                 display_name: None,
                 kind: None,
             }]
@@ -2473,6 +2837,8 @@ mod tests {
                 path: "src/conservative.rs".to_string(),
                 line: 12,
                 column: None,
+                end_line: None,
+                end_column: None,
                 display_name: None,
                 kind: None,
             }]
@@ -2512,7 +2878,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
 
         assert_eq!(report.status, CaseStatus::Passed);
     }
@@ -2548,7 +2922,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
 
         assert_eq!(report.status, CaseStatus::Passed);
         assert_eq!(
@@ -2584,7 +2966,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, true);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
 
         assert_eq!(report.status, CaseStatus::Failed);
         assert_eq!(report.diagnostics[0].kind, "symbol_resolution_failed");
@@ -2619,7 +3009,15 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(&case, PositionEncoding::Utf16, &mut client, false, false);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
 
         assert_eq!(report.status, CaseStatus::Passed);
     }
@@ -2712,6 +3110,8 @@ mod tests {
             path: path.to_string(),
             line,
             column: None,
+            end_line: None,
+            end_column: None,
             display_name: None,
             kind: None,
         }
@@ -2738,6 +3138,8 @@ mod tests {
             allowed_extra_usages: Vec::new(),
             allowed_unproven_usages: Vec::new(),
             usage_lookups: vec![UsageLookup {
+                operation: crate::NavigationOperation::ProfileDefault,
+                expect_no_movement: false,
                 usage: symbol_location("src/lib.rs", 7, 18, "build_service", SymbolKind::Function),
                 expected_declaration: symbol_location(
                     "src/service.rs",
@@ -2813,9 +3215,16 @@ mod tests {
                 "total_hits": locations.len(),
                 "rendering": "full",
                 "files": locations.into_iter().map(|(path, line)| {
+                    let column = if path == "src/lib.rs" && line == 8 { 19 } else { 1 };
                     json!({
                         "path": path,
-                        "hits": [{"line": line, "enclosing": "run_demo"}]
+                        "hits": [{
+                            "line": line,
+                            "column": column,
+                            "end_line": line,
+                            "end_column": column + 1,
+                            "enclosing": "run_demo"
+                        }]
                     })
                 }).collect::<Vec<_>>()
             }]
@@ -2874,7 +3283,9 @@ mod tests {
                             "fqn": fqn,
                             "path": path,
                             "start_line": line,
+                            "start_column": 12,
                             "end_line": line,
+                            "end_column": 13,
                             "kind": "class",
                             "language": "rust"
                         })
@@ -2895,7 +3306,9 @@ mod tests {
                         "fqn": "example.build_service",
                         "path": path,
                         "start_line": line,
+                        "start_column": 8,
                         "end_line": line,
+                        "end_column": 9,
                         "kind": "function",
                         "language": "rust"
                     })

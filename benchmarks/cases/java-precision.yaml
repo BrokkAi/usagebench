@@ -1,4 +1,11 @@
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 positionEncoding: utf-16
 source: { kind: fixture, path: fixtures/java/precision }
 language: java
@@ -12,7 +19,22 @@ cases:
       - location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 12, character: 43 }, end: { line: 12, character: 50 } } }
         kind: method
         displayName: execute
-    verification: { method: manual_inspection, notes: "The lambda body invokes Worker.execute on an inline constructed receiver." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 12, character: 43 }, end: { line: 12, character: 50 } } }
+          kind: method
+          displayName: execute
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 3, character: 9 }, end: { line: 3, character: 16 } } }
+          kind: method
+          displayName: execute
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-18. The lambda body
+        invokes Worker.execute on an inline concrete receiver, and definition
+        navigation reaches that method body. task.run is unrelated.
   - id: java-record-type-reference
     declaration:
       location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 6, character: 7 }, end: { line: 6, character: 12 } } }
@@ -25,7 +47,23 @@ cases:
       - location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 14, character: 26 }, end: { line: 14, character: 31 } } }
         kind: class
         displayName: Entry
-    verification: { method: manual_inspection, notes: "A record type is used both as a local type annotation and constructor owner." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 14, character: 26 }, end: { line: 14, character: 31 } } }
+          kind: class
+          displayName: Entry
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 6, character: 7 }, end: { line: 6, character: 12 } } }
+          kind: class
+          displayName: Entry
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-18. Entry is used
+        as the local type and constructor owner. Definition navigation from the
+        construction reaches the record definition because its canonical
+        constructor is implicit.
   - id: java-static-qualified-method-call
     declaration:
       location: { uri: benchmark://source/src/main/java/precision/Helpers.java, range: { start: { line: 3, character: 16 }, end: { line: 3, character: 19 } } }
@@ -35,4 +73,19 @@ cases:
       - location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 16, character: 16 }, end: { line: 16, character: 19 } } }
         kind: method
         displayName: log
-    verification: { method: manual_inspection, notes: "A static method call through its owner type is a method usage, not a type-only reference." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/main/java/precision/Precision.java, range: { start: { line: 16, character: 16 }, end: { line: 16, character: 19 } } }
+          kind: method
+          displayName: log
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/main/java/precision/Helpers.java, range: { start: { line: 3, character: 16 }, end: { line: 3, character: 19 } } }
+          kind: method
+          displayName: log
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-18. log is a static
+        method usage and definition navigation reaches the concrete method body;
+        Helpers is a separate type qualifier.

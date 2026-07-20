@@ -3,11 +3,14 @@
 //! Each adapter is responsible for preparing an exact tool version and
 //! translating that tool's public query surface into UsageBench locations.
 
-use crate::{benchmark_source_path, BenchmarkCase, SymbolKind, SymbolLocation};
+use crate::{
+    benchmark_source_path, BenchmarkCase, CorpusPartition, CorpusSelection,
+    GroundTruthReviewStatus, ReferencePolicy, SymbolKind, SymbolLocation,
+};
 use anyhow::{bail, Context, Result};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeSet, fs, path::Path, process::Command};
+use std::{fs, path::Path, process::Command};
 
 pub mod bifrost;
 pub mod lsp;
@@ -178,8 +181,11 @@ fn is_release_tag(tag: &str) -> bool {
 pub struct RunTotals {
     pub documents: usize,
     pub cases: usize,
+    pub development_cases: usize,
+    pub evaluation_cases: usize,
     pub passed: usize,
     pub near_misses: usize,
+    pub position_unverified: usize,
     pub improved: usize,
     pub failed: usize,
     pub expected_failures: usize,
@@ -195,6 +201,10 @@ pub struct DocumentRunReport {
     pub case_file: String,
     pub language: String,
     pub source_root: String,
+    pub corpus_partition: CorpusPartition,
+    pub corpus_selection: CorpusSelection,
+    pub ground_truth_status: GroundTruthReviewStatus,
+    pub reference_policy: ReferencePolicy,
     pub cases: Vec<CaseRunReport>,
 }
 
@@ -203,6 +213,7 @@ pub struct DocumentRunReport {
 pub enum CaseStatus {
     Passed,
     NearMiss,
+    PositionUnverified,
     Improved,
     Failed,
     ExpectedFailure,
@@ -252,6 +263,10 @@ pub struct DeclarationUsageReport {
     pub unexpected: Vec<NormalizedLocation>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub unexpected_unproven: Vec<NormalizedLocation>,
+    /// Expected locations for which the adapter returned only path/line data.
+    /// These are not exact matches because the token range was not verified.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub position_unverified: Vec<NormalizedLocation>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub extra_usages: Vec<ClassifiedExtraUsage>,
     pub partial: bool,
@@ -316,6 +331,10 @@ pub struct NormalizedLocation {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub column: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub end_line: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub end_column: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub kind: Option<String>,
@@ -377,19 +396,84 @@ mod provenance_tests {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-struct LocationLine {
-    path: String,
-    line: u32,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum LocationMatch {
+    None,
+    LineOnly,
+    Exact,
 }
 
-impl From<&NormalizedLocation> for LocationLine {
-    fn from(location: &NormalizedLocation) -> Self {
-        Self {
-            path: location.path.clone(),
-            line: location.line,
-        }
+pub(crate) fn location_match(
+    actual: &NormalizedLocation,
+    expected: &NormalizedLocation,
+) -> LocationMatch {
+    if actual.path != expected.path || actual.line != expected.line {
+        return LocationMatch::None;
     }
+    match (
+        actual.column,
+        actual.end_line,
+        actual.end_column,
+        expected.column,
+        expected.end_line,
+        expected.end_column,
+    ) {
+        (
+            Some(actual_column),
+            Some(actual_end_line),
+            Some(actual_end_column),
+            Some(expected_column),
+            Some(expected_end_line),
+            Some(expected_end_column),
+        ) if actual_column == expected_column
+            && actual_end_line == expected_end_line
+            && actual_end_column == expected_end_column =>
+        {
+            LocationMatch::Exact
+        }
+        (None, _, _, _, _, _) | (_, None, None, _, _, _) => LocationMatch::LineOnly,
+        _ => LocationMatch::None,
+    }
+}
+
+pub(crate) fn navigation_response_status(
+    actual: &[NormalizedLocation],
+    expected: &NormalizedLocation,
+    expect_no_movement: bool,
+) -> CaseStatus {
+    if expect_no_movement && actual.is_empty() {
+        return CaseStatus::Passed;
+    }
+    if actual.len() != 1 {
+        return CaseStatus::Failed;
+    }
+    match location_match(&actual[0], expected) {
+        LocationMatch::Exact => CaseStatus::Passed,
+        LocationMatch::LineOnly => CaseStatus::PositionUnverified,
+        LocationMatch::None => CaseStatus::Failed,
+    }
+}
+
+fn best_location_match(
+    actual: &[NormalizedLocation],
+    expected: &NormalizedLocation,
+) -> LocationMatch {
+    actual
+        .iter()
+        .map(|location| location_match(location, expected))
+        .max_by_key(|quality| match quality {
+            LocationMatch::None => 0,
+            LocationMatch::LineOnly => 1,
+            LocationMatch::Exact => 2,
+        })
+        .unwrap_or(LocationMatch::None)
+}
+
+fn matches_any_expected<'a>(
+    actual: &NormalizedLocation,
+    mut expected: impl Iterator<Item = &'a NormalizedLocation>,
+) -> bool {
+    expected.any(|location| location_match(actual, location) != LocationMatch::None)
 }
 
 pub(crate) fn score_declaration_locations(
@@ -421,56 +505,45 @@ pub(crate) fn score_declaration_locations(
         .iter()
         .map(normalize_symbol_location)
         .collect::<Result<Vec<_>>>()?;
-    let expected_keys = expected
-        .iter()
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
-    let expected_unproven_keys = expected_unproven
-        .iter()
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
-    let allowed_keys = allowed_extra
-        .iter()
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
-    let allowed_unproven_keys = allowed_unproven
-        .iter()
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
-    let actual_keys = actual
-        .iter()
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
-    let all_actual_keys = actual
-        .iter()
-        .chain(&unproven)
-        .map(LocationLine::from)
-        .collect::<BTreeSet<_>>();
     let missing = expected
         .iter()
-        .filter(|location| !actual_keys.contains(&LocationLine::from(*location)))
+        .filter(|location| best_location_match(&actual, location) == LocationMatch::None)
         .cloned()
         .collect::<Vec<_>>();
     let missing_unproven = expected_unproven
         .iter()
-        .filter(|location| !all_actual_keys.contains(&LocationLine::from(*location)))
+        .filter(|location| {
+            best_location_match(&actual, location) == LocationMatch::None
+                && best_location_match(&unproven, location) == LocationMatch::None
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    let position_unverified = expected
+        .iter()
+        .filter(|location| best_location_match(&actual, location) == LocationMatch::LineOnly)
+        .chain(expected_unproven.iter().filter(|location| {
+            best_location_match(&actual, location) == LocationMatch::LineOnly
+                || best_location_match(&unproven, location) == LocationMatch::LineOnly
+        }))
         .cloned()
         .collect::<Vec<_>>();
     let unexpected = actual
         .iter()
         .filter(|location| {
-            let key = LocationLine::from(*location);
-            !expected_keys.contains(&key)
-                && !expected_unproven_keys.contains(&key)
-                && !allowed_keys.contains(&key)
+            !matches_any_expected(
+                location,
+                expected
+                    .iter()
+                    .chain(&expected_unproven)
+                    .chain(&allowed_extra),
+            )
         })
         .cloned()
         .collect::<Vec<_>>();
     let unexpected_unproven = unproven
         .iter()
         .filter(|location| {
-            let key = LocationLine::from(*location);
-            !expected_unproven_keys.contains(&key) && !allowed_unproven_keys.contains(&key)
+            !matches_any_expected(location, expected_unproven.iter().chain(&allowed_unproven))
         })
         .cloned()
         .collect::<Vec<_>>();
@@ -482,6 +555,8 @@ pub(crate) fn score_declaration_locations(
         || !unexpected_unproven.is_empty()
     {
         CaseStatus::Failed
+    } else if !position_unverified.is_empty() {
+        CaseStatus::PositionUnverified
     } else {
         CaseStatus::Passed
     };
@@ -499,6 +574,7 @@ pub(crate) fn score_declaration_locations(
         missing_unproven,
         unexpected,
         unexpected_unproven,
+        position_unverified,
         extra_usages: Vec::new(),
         partial,
         raw_statuses,
@@ -511,6 +587,8 @@ pub(crate) fn normalize_symbol_location(symbol: &SymbolLocation) -> Result<Norma
         path: path_to_slash(&path),
         line: symbol.location.range.start.line + 1,
         column: Some(symbol.location.range.start.character + 1),
+        end_line: Some(symbol.location.range.end.line + 1),
+        end_column: Some(symbol.location.range.end.character + 1),
         display_name: Some(symbol.display_name.clone()),
         kind: Some(symbol_kind_name(&symbol.kind).to_string()),
     })
@@ -545,23 +623,30 @@ pub(crate) fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
         documents: documents.len(),
         ..RunTotals::default()
     };
-    for case in documents.iter().flat_map(|document| &document.cases) {
-        if !matches!(
-            case.status,
-            CaseStatus::NotPlanned | CaseStatus::Unsupported | CaseStatus::Skipped
-        ) {
-            totals.cases += 1;
-        }
-        match case.status {
-            CaseStatus::Passed => totals.passed += 1,
-            CaseStatus::NearMiss => totals.near_misses += 1,
-            CaseStatus::Improved => totals.improved += 1,
-            CaseStatus::Failed => totals.failed += 1,
-            CaseStatus::ExpectedFailure => totals.expected_failures += 1,
-            CaseStatus::NotPlanned => totals.not_planned += 1,
-            CaseStatus::Unsupported => totals.unsupported += 1,
-            CaseStatus::Skipped => totals.skipped += 1,
-            CaseStatus::Error => totals.errors += 1,
+    for document in documents {
+        for case in &document.cases {
+            if !matches!(
+                case.status,
+                CaseStatus::NotPlanned | CaseStatus::Unsupported | CaseStatus::Skipped
+            ) {
+                totals.cases += 1;
+                match document.corpus_partition {
+                    CorpusPartition::Development => totals.development_cases += 1,
+                    CorpusPartition::Evaluation => totals.evaluation_cases += 1,
+                }
+            }
+            match case.status {
+                CaseStatus::Passed => totals.passed += 1,
+                CaseStatus::NearMiss => totals.near_misses += 1,
+                CaseStatus::PositionUnverified => totals.position_unverified += 1,
+                CaseStatus::Improved => totals.improved += 1,
+                CaseStatus::Failed => totals.failed += 1,
+                CaseStatus::ExpectedFailure => totals.expected_failures += 1,
+                CaseStatus::NotPlanned => totals.not_planned += 1,
+                CaseStatus::Unsupported => totals.unsupported += 1,
+                CaseStatus::Skipped => totals.skipped += 1,
+                CaseStatus::Error => totals.errors += 1,
+            }
         }
     }
     totals

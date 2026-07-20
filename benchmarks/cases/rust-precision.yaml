@@ -1,4 +1,11 @@
-schemaVersion: 1
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
 positionEncoding: utf-16
 source: { kind: fixture, path: fixtures/rust/precision }
 language: rust
@@ -15,7 +22,34 @@ cases:
       - location: { uri: benchmark://source/src/lib.rs, range: { start: { line: 8, character: 12 }, end: { line: 8, character: 15 } } }
         kind: method
         displayName: run
-    verification: { method: manual_inspection, notes: "Worker::run is a UFCS call reached through the public Worker barrel re-export, including an aliased concrete receiver." }
+    usageLookups:
+      - operation: declaration
+        usage:
+          location: { uri: benchmark://source/src/lib.rs, range: { start: { line: 6, character: 12 }, end: { line: 6, character: 15 } } }
+          kind: method
+          displayName: run
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/service.rs, range: { start: { line: 1, character: 7 }, end: { line: 1, character: 10 } } }
+          kind: method
+          displayName: run
+      - operation: declaration
+        usage:
+          location: { uri: benchmark://source/src/lib.rs, range: { start: { line: 8, character: 12 }, end: { line: 8, character: 15 } } }
+          kind: method
+          displayName: run
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/service.rs, range: { start: { line: 1, character: 7 }, end: { line: 1, character: 10 } } }
+          kind: method
+          displayName: run
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. Both
+        Worker::run UFCS calls refer to the trait method declaration through the
+        public barrel re-export, including the LocalAlias receiver. Ordinary
+        declaration navigation should reach the trait contract rather than
+        guess a runtime implementation; the concrete override belongs to a
+        distinct implementation operation.
   - id: rust-barrel-trait-static-qualifier
     declaration:
       location: { uri: benchmark://source/src/service.rs, range: { start: { line: 0, character: 10 }, end: { line: 0, character: 16 } } }
@@ -31,4 +65,29 @@ cases:
       - location: { uri: benchmark://source/src/lib.rs, range: { start: { line: 8, character: 4 }, end: { line: 8, character: 10 } } }
         kind: interface
         displayName: Worker
-    verification: { method: manual_inspection, notes: "The UFCS qualifier refers to the re-exported Worker trait, not the import binding." }
+    usageLookups:
+      - operation: declaration
+        usage:
+          location: { uri: benchmark://source/src/lib.rs, range: { start: { line: 6, character: 4 }, end: { line: 6, character: 10 } } }
+          kind: interface
+          displayName: Worker
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/service.rs, range: { start: { line: 0, character: 10 }, end: { line: 0, character: 16 } } }
+          kind: interface
+          displayName: Worker
+      - operation: declaration
+        usage:
+          location: { uri: benchmark://source/src/lib.rs, range: { start: { line: 8, character: 4 }, end: { line: 8, character: 10 } } }
+          kind: interface
+          displayName: Worker
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/service.rs, range: { start: { line: 0, character: 10 }, end: { line: 0, character: 16 } } }
+          kind: interface
+          displayName: Worker
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed as correct by DavidBakerEffendi on 2026-07-17. Worker in the
+        impl clause and both Worker::run qualifiers are semantic trait usages.
+        Declaration navigation from either qualifier reaches pub trait Worker;
+        both barrel re-export bindings are optional under bindings_optional.
