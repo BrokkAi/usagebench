@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "environmentVersion": "1",
+  "canonicalPlatform": "linux/amd64",
+  "distribution": "build_only",
+  "localTagTemplate": "usagebench-reference:{usagebenchRelease}-env{environmentVersion}-{runnerId}",
+  "runners": {}
+}

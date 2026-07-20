@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brokk.ai/usagebench/reference-environment.schema.json",
+  "title": "UsageBench reference environment manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "environmentVersion",
+    "canonicalPlatform",
+    "distribution",
+    "localTagTemplate",
+    "runners"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "environmentVersion": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+    "canonicalPlatform": { "const": "linux/amd64" },
+    "distribution": { "const": "build_only" },
+    "localTagTemplate": {
+      "type": "string",
+      "pattern": "\\{usagebenchRelease\\}.*\\{environmentVersion\\}.*\\{runnerId\\}"
+    },
+    "runners": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/runner" }
+    }
+  },
+  "$defs": {
+    "pinnedImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference", "digest"],
+      "properties": {
+        "reference": { "type": "string", "minLength": 1 },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "analyzer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "requestedVersion", "source"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "requestedVersion": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "format": "uri" },
+        "revision": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "moduleChecksum": { "type": "string", "pattern": "^h1:[A-Za-z0-9+/=]+$" }
+      }
+    },
+    "runner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "dockerfile", "baseImage", "analyzer", "toolchains"],
+      "properties": {
+        "kind": { "enum": ["bifrost", "lsp"] },
+        "profile": { "type": "string", "minLength": 1 },
+        "dockerfile": { "type": "string", "minLength": 1 },
+        "baseImage": { "$ref": "#/$defs/pinnedImage" },
+        "analyzer": { "$ref": "#/$defs/analyzer" },
+        "toolchains": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}
+
