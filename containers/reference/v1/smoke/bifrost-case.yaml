@@ -1,0 +1,27 @@
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: pre_registered
+groundTruth:
+  status: author_reviewed
+  reviewers: [usagebench-maintainers]
+referencePolicy: bindings_optional
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/reference/bifrost
+language: rust
+cases:
+  - id: reference-bifrost-unused-function
+    declaration:
+      location:
+        uri: benchmark://source/unused.rs
+        range:
+          start: { line: 0, character: 3 }
+          end: { line: 0, character: 13 }
+      kind: function
+      displayName: unused_api
+    expectedUsages: []
+    verification:
+      method: manual_inspection
+      notes: The fixture contains only an unused function declaration.

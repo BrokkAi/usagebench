@@ -1,0 +1,6 @@
+.git
+target
+benchmark-output
+docs/node_modules
+docs/dist
+

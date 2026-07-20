@@ -18,6 +18,8 @@ sites, and reverse usage-to-declaration probes using LSP-shaped ranges.
 * `schema`: JSON Schema for benchmark case documents.
 * `src`: Rust validation CLI, schema model, and analyzer runner adapters.
 * `adapters/lsp`: Versioned language-server profiles and reproduction notes.
+* `containers/reference`: Versioned, digest-pinned reference environments.
+* `scripts`: Local image build, offline execution, and report reproduction tools.
 * `docs`: Public Starlight content plus adapter design notes and execution plans.
 
 ## Validating Benchmark Cases
@@ -113,28 +115,29 @@ A run report records:
 - `usagebenchRevision`: the exact UsageBench commit, with `-dirty` when local
   changes prevent commit-only reproduction;
 - `usagebenchRelease`: the `vMAJOR.MINOR.PATCH` corpus tag when available; and
-- the runner's requested and resolved version, including
-  `bifrostResolvedCommit` for Bifrost runs.
+- the logical invocation, native or container platform scope, analyzer
+  executable checksum, toolchains, reference-environment definition, and
+  runner's requested and resolved version.
 
-To reproduce a clean published Bifrost result, save its JSON report as
-`report.json` and run:
+Reference environment version 1 provides the canonical `linux/amd64` path for
+Bifrost and gopls. Save a published container report as `report.json`, extract
+the release bundle named by the report, and run one command:
 
 ```bash
-usagebench_ref="$(jq -r '.usagebenchRelease // .usagebenchRevision' report.json)"
-bifrost_ref="$(jq -r '.bifrostResolvedCommit' report.json)"
-git clone https://github.com/BrokkAi/usagebench.git
-git -C usagebench checkout --detach "$usagebench_ref"
-git clone https://github.com/BrokkAi/bifrost.git
-git -C bifrost checkout --detach "$bifrost_ref"
-cargo run --manifest-path usagebench/Cargo.toml -- run-bifrost \
-  usagebench/benchmarks/cases \
-  --bifrost-repo ../bifrost \
-  --bifrost-working-tree \
-  --output benchmark-output/reproduced.json
+./scripts/reproduce-report.sh report.json reproduced.json
 ```
 
-If `usagebenchRevision` ends in `-dirty`, the report identifies an uncommitted
-run and cannot be reproduced from the named commit alone.
+The command builds the recorded environment locally, reruns without network
+access, and compares the reports semantically. The project intentionally does
+not publish images to GHCR or promise a ready-built image; release bundles
+contain everything needed to build them. See [`ARTIFACT.md`](ARTIFACT.md) for
+the artifact-review procedure, security boundary, expected build cost, and
+manual commands. Native runner commands remain available for development but
+are labeled host-specific and are not the canonical reproducibility claim.
+
+If `usagebenchRevision` ends in `-dirty` or `usagebenchRelease` is absent, the
+report identifies a development run and is rejected by the canonical
+reproduction command.
 
 UsageBench is licensed under the permissive [MIT License](LICENSE.md), covering
 the corpus fixtures, assertions, adapter profiles, and harness code in this

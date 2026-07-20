@@ -29,6 +29,13 @@ enum Command {
     /// Deprecated compatibility alias for `report-schema`.
     #[command(hide = true)]
     BifrostReportSchema,
+    /// Compare two reports after removing documented volatile fields.
+    CompareReports {
+        /// Previously published report.
+        expected: PathBuf,
+        /// Newly reproduced report.
+        actual: PathBuf,
+    },
     /// Run benchmark case YAML files against Bifrost.
     RunBifrost {
         /// Case file or directory to run.
@@ -42,6 +49,12 @@ enum Command {
         /// Build and run the provided Bifrost checkout directly, including local commits and uncommitted changes.
         #[arg(long)]
         bifrost_working_tree: bool,
+        /// Run an already-built Bifrost executable without fetching or compiling at runtime.
+        #[arg(long, requires = "bifrost_resolved_commit")]
+        bifrost_binary: Option<PathBuf>,
+        /// Exact source commit used to build --bifrost-binary.
+        #[arg(long, requires = "bifrost_binary")]
+        bifrost_resolved_commit: Option<String>,
         /// Directory for temporary checkouts and runner artifacts.
         #[arg(long, default_value = "target/usagebench")]
         work_dir: PathBuf,
@@ -57,6 +70,9 @@ enum Command {
         /// Keep temporary git source checkouts after the run.
         #[arg(long)]
         keep_worktrees: bool,
+        /// Run only the matching case ID.
+        #[arg(long)]
+        case_id: Option<String>,
     },
     /// Run benchmark cases against a versioned language-server profile.
     RunLsp {
@@ -100,25 +116,46 @@ fn main() -> Result<()> {
         Command::ReportSchema | Command::BifrostReportSchema => {
             println!("{}", usagebench::runners::generated_report_schema_json()?);
         }
+        Command::CompareReports { expected, actual } => {
+            let differences =
+                usagebench::runners::report_compare::compare_report_files(&expected, &actual)?;
+            if differences.is_empty() {
+                println!("reports are semantically equivalent");
+            } else {
+                for difference in &differences {
+                    println!(
+                        "{}: expected {}, actual {}",
+                        difference.path, difference.expected, difference.actual
+                    );
+                }
+                bail!("reports differ in {} semantic field(s)", differences.len());
+            }
+        }
         Command::RunBifrost {
             path,
             bifrost_repo,
             bifrost_commit,
             bifrost_working_tree,
+            bifrost_binary,
+            bifrost_resolved_commit,
             work_dir,
             output,
             include_unsupported,
             include_definition_lookups: _,
             keep_worktrees,
+            case_id,
         } => {
             let mut options = RunBifrostOptions::with_defaults(path);
             options.bifrost_repo = bifrost_repo;
             options.bifrost_commit = bifrost_commit;
             options.bifrost_working_tree = bifrost_working_tree;
+            options.bifrost_binary = bifrost_binary;
+            options.bifrost_resolved_commit = bifrost_resolved_commit;
             options.work_dir = work_dir;
             options.output = output;
             options.include_unsupported = include_unsupported;
             options.keep_worktrees = keep_worktrees;
+            options.case_id = case_id;
             let report = run_bifrost(options)?;
             println!(
                 "ran {} planned case(s) ({} development, {} evaluation): {} passed, {} near miss(es), {} position-unverified, {} improved, {} failed, {} expected failure(s), {} not planned, {} unsupported, {} skipped, {} error(s)",

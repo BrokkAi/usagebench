@@ -1,65 +1,105 @@
 ---
 title: Reproduce the comparison
-description: Validate cases and run Bifrost or a pinned LSP profile against the same corpus.
+description: Rebuild a versioned reference environment, rerun a published report offline, and compare it semantically.
 ---
 
-## Validate the corpus
+## Canonical reproduction
+
+Reference environment version 1 fixes the canonical platform at
+`linux/amd64` and covers Bifrost and gopls. Given a published canonical report,
+the release bundle can reproduce it with one command:
+
+```bash
+./scripts/reproduce-report.sh published-report.json reproduced-report.json
+```
+
+The command reads the exact UsageBench release and revision, environment
+version, runner, case selection, and inclusion policy from the report. It then
+builds the matching local image, reruns with networking disabled, and invokes
+the semantic comparator inside the image.
+
+A successful reproduction ends with:
+
+```text
+reports are semantically equivalent
+```
+
+The comparator ignores timestamps, temporary workspace roots, local paths,
+and the locally rebuilt image identity. It still requires matching release and
+revision provenance, environment definition, executable checksum, requested
+and resolved analyzer versions, capabilities, locations, diagnostics, case
+outcomes, and totals.
+
+## Build-only distribution
+
+UsageBench checks in the complete image definitions but does not publish
+ready-built images to GHCR. CI builds and smoke-tests both reference images
+ephemerally without a registry login, push, OCI export, or image artifact
+upload. A future archival release may place reviewed OCI archives on Zenodo.
+
+Image construction needs network access to retrieve digest-pinned bases and
+checksum-protected analyzer inputs. Benchmark execution itself uses
+`--network none`, runs as a non-root user, mounts the released corpus read-only,
+and writes only to isolated work and private output staging. The wrapper copies
+only the completed report to its requested host path.
+
+The full reviewer procedure, resource expectations, integrity boundaries, and
+troubleshooting guidance are in the repository's `ARTIFACT.md`.
+
+## Direct inspection
+
+Build either version 1 image using the release tag recorded in a report:
+
+```bash
+./scripts/reference-image.sh bifrost vMAJOR.MINOR.PATCH
+./scripts/reference-image.sh gopls vMAJOR.MINOR.PATCH
+```
+
+The scripts write local metadata under `target/reference/` and never push an
+image. To run a selected gopls case against an extracted release bundle:
+
+```bash
+./scripts/run-reference.sh \
+  gopls \
+  /path/to/usagebench-vMAJOR.MINOR.PATCH \
+  benchmark-output/gopls.json \
+  benchmarks/cases/go-baseline.yaml \
+  go-package-function-call
+```
+
+Every canonical report records `executionMode: container`,
+`platformScope: canonical_reference`, the environment digest and locally loaded
+image ID, the actual analyzer executable SHA-256, and declared toolchain
+versions. The wrapper binds that identity to the corpus release and revision
+before executing the immutable local image ID.
+
+## Native development runs
+
+Native runners remain useful for development and are explicitly labeled
+`host_specific` in their reports:
 
 ```bash
 cargo test
 cargo run -- validate benchmarks/cases
-```
-
-## Run Bifrost
-
-Pin the Bifrost revision so the report records both the requested ref and the
-resolved commit. The report also records the exact UsageBench source revision
-and its release tag when the checkout is clean and tagged:
-
-```bash
 cargo run -- run-bifrost benchmarks/cases \
   --bifrost-repo ../bifrost \
   --bifrost-commit origin/master \
-  --output benchmark-output/bifrost.json
-```
-
-## Run a language server
-
-Profiles under `adapters/lsp/` pin the requested release and describe workspace
-hydration, language IDs, readiness, and protocol extensions:
-
-```bash
+  --output benchmark-output/bifrost-native.json
 cargo run -- run-lsp benchmarks/cases \
   --profile adapters/lsp/rust-analyzer.json \
-  --output benchmark-output/rust-analyzer.json
+  --output benchmark-output/rust-analyzer-native.json
 ```
 
-Use `--server-command` when the pinned executable is not on `PATH`. The report
-retains the server-reported release separately; a local fallback must not
-masquerade as the requested version.
+These commands preserve analyzer and host provenance but are not the canonical
+cross-machine reproducibility claim.
 
-## Cite a release
+## Evidence scope
 
-Use the repository root `CITATION.cff` for the latest citation metadata and pin
-the `usagebenchRelease` value from the JSON report. Benchmark release tags are
-separate from the Rust CLI version and YAML `schemaVersion`; the policy is in
-`RELEASES.md`.
+The current checked-in cases are a development and diagnosis corpus. Their
+ground-truth metadata remains `legacy_unattributed` unless a document says
+otherwise. Container reproducibility makes execution repeatable; it does not
+upgrade the independent-review status of the expected locations.
 
-No DOI is claimed until an archival service assigns one. A real
-version-specific DOI will be added to the citation metadata and release notes
-when available.
-
-## Preserve the evidence envelope
-
-When publishing a comparison, retain:
-
-- `usagebenchRevision` and `usagebenchRelease` from the report;
-- requested and resolved analyzer versions;
-- operating system and architecture;
-- workspace bootstrap and settle configuration;
-- the complete JSON reports, including diagnostics and capability fields; and
-- whether unsupported and not-planned cases were included in a denominator.
-
-The current site snapshot was captured on macOS arm64 on 2026-07-16. Its
-Bifrost report resolved `origin/master` to
-`bdafcb7f2667e5a69351d0275b047f9cd50a5f09`.
+Use `CITATION.cff` for citation metadata and retain the complete JSON reports.
+Benchmark release tags, reference-environment versions, the Rust CLI version,
+and YAML `schemaVersion` are separate compatibility boundaries.

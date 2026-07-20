@@ -5,8 +5,9 @@ use super::{
     normalize_symbol_location, path_to_slash, score_declaration_locations,
     score_navigation_response, symbol_kind_name, CapabilitySupport, CaseRunReport, CaseStatus,
     ClassifiedExtraUsage, DeclarationUsageReport, DocumentRunReport, ExtraUsageClassification,
-    ExtraUsageDisposition, LocationMatch, NormalizedLocation, RunDiagnostic, RunReport, RunTotals,
-    RunnerCapability, RunnerMetadata, RunnerOperation, TypeLookupReport, UsageDefinitionReport,
+    ExtraUsageDisposition, LocationMatch, NormalizedLocation, RunDiagnostic, RunInvocation,
+    RunReport, RunTotals, RunnerCapability, RunnerMetadata, RunnerOperation, TypeLookupReport,
+    UsageDefinitionReport,
 };
 use crate::{
     benchmark_source_path, find_repo_root_for_path, BenchmarkCase, BenchmarkDocument,
@@ -143,6 +144,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
     let mut observed_name = None;
     let mut observed_version = None;
     let mut observed_capabilities = None;
+    let mut observed_executable = None;
     let mut executed_case_files = Vec::new();
     for (index, case_file) in case_files.iter().enumerate() {
         let yaml = fs::read_to_string(case_file)
@@ -158,7 +160,14 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         let source_root = run_dir.join(format!("source-{index}"));
         copy_source_tree(&source, &source_root)?;
         write_workspace_files(&profile, &source_root)?;
-        match run_document(&options, &profile, &document, &source_root, &run_dir) {
+        match run_document(
+            &options,
+            &profile,
+            &document,
+            &source_root,
+            &run_dir,
+            &mut observed_executable,
+        ) {
             Ok((cases, initialize)) => {
                 observed_name = observed_name.or(initialize.server_name);
                 observed_version = observed_version.or_else(|| {
@@ -203,6 +212,22 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
     let capabilities = observed_capabilities.unwrap_or_default();
     let resolved_version = observed_version.unwrap_or_else(|| "not reported".to_string());
     let runner_name = observed_name.unwrap_or(profile.name.clone());
+    let fallback_executable = profile
+        .command
+        .first()
+        .map(|command| super::environment::unresolved_executable(command.as_ref()))
+        .unwrap_or_else(|| super::environment::unresolved_executable("unknown".as_ref()));
+    let environment = super::environment::capture_execution_environment(
+        observed_executable.unwrap_or(fallback_executable),
+        if profile.id == "gopls" {
+            &["rustc", "cargo", "go"]
+        } else {
+            &["rustc", "cargo"]
+        },
+        &profile.id,
+        &usagebench_provenance.revision,
+        usagebench_provenance.release.as_deref(),
+    )?;
     let mut report = RunReport {
         usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
         usagebench_revision: usagebench_provenance.revision,
@@ -236,6 +261,13 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
                 ),
             ],
         },
+        invocation: RunInvocation {
+            include_unsupported: options.include_unsupported,
+            include_definition_lookups: true,
+            profile: Some(profile.id.clone()),
+            case_id: options.case_id.clone(),
+        },
+        environment,
         bifrost_repo: None,
         bifrost_commit: None,
         bifrost_resolved_commit: None,
@@ -267,12 +299,15 @@ fn run_document(
     document: &BenchmarkDocument,
     source_root: &Path,
     run_dir: &Path,
+    observed_executable: &mut Option<super::ExecutableProvenance>,
 ) -> Result<(Vec<CaseRunReport>, InitializeResult)> {
     run_prepare_command(profile, source_root, run_dir)?;
     let workspace_uri = Url::from_directory_path(source_root)
         .map_err(|_| anyhow::anyhow!("convert {} to file URI", source_root.display()))?
         .to_string();
     let mut command = lsp_command(options, profile, source_root, run_dir)?;
+    let executable = super::environment::executable_provenance(&command)?;
+    observed_executable.get_or_insert(executable);
     let mut session = LspSession::start(
         &mut command,
         &profile.name,

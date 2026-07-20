@@ -830,6 +830,25 @@ cases: []
     }
 
     #[test]
+    fn reference_environment_manifest_matches_schema() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let schema: serde_json::Value = serde_json::from_slice(
+            &fs::read(root.join("schema/reference-environment.schema.json")).unwrap(),
+        )
+        .unwrap();
+        let manifest: serde_json::Value = serde_json::from_slice(
+            &fs::read(root.join("containers/reference/v1/manifest.json")).unwrap(),
+        )
+        .unwrap();
+        let compiled = jsonschema::JSONSchema::compile(&schema).unwrap();
+
+        if let Err(errors) = compiled.validate(&manifest) {
+            let messages = errors.map(|error| error.to_string()).collect::<Vec<_>>();
+            panic!("reference environment manifest did not validate: {messages:?}");
+        };
+    }
+
+    #[test]
     fn validates_example_cases() {
         let files = validate_path("benchmarks/cases").unwrap();
 
