@@ -113,6 +113,7 @@ fi
 
 reproduction_tmp=""
 run_tmp=""
+comparison_tmp=""
 output_tmp=""
 cleanup() {
   if [[ -n "$output_tmp" ]]; then
@@ -120,6 +121,10 @@ cleanup() {
   fi
   if [[ -n "$run_tmp" && "$run_tmp" == /tmp/usagebench-reproduced-report.* ]]; then
     rm -rf -- "$run_tmp"
+  fi
+  if [[ -n "$comparison_tmp" && "$comparison_tmp" == /tmp/usagebench-report-comparison.* ]]; then
+    chmod 0700 "$comparison_tmp"
+    rm -rf -- "$comparison_tmp"
   fi
   if [[ -n "$reproduction_tmp" && "$reproduction_tmp" == /tmp/* ]]; then
     rm -rf -- "$reproduction_tmp"
@@ -190,17 +195,19 @@ run_tmp=""
 
 image_digest="$(jq -r '.imageDigest' "$image_metadata")"
 canonical_platform="$(jq -r '.canonicalPlatform' "$image_metadata")"
-published_dir="$(dirname "$published_report")"
-published_name="$(basename "$published_report")"
+comparison_tmp="$(mktemp -d /tmp/usagebench-report-comparison.XXXXXX)"
+cp -- "$published_report" "$comparison_tmp/expected.json"
+cp -- "$output_report" "$comparison_tmp/actual.json"
+chmod 0444 "$comparison_tmp/expected.json" "$comparison_tmp/actual.json"
+chmod 0555 "$comparison_tmp"
 
 docker run --rm \
   --platform "$canonical_platform" \
   --network none \
   --read-only \
   --user 65532:65532 \
-  --mount "type=bind,src=$published_dir,dst=/expected,readonly" \
-  --mount "type=bind,src=$output_dir,dst=/actual,readonly" \
+  --mount "type=bind,src=$comparison_tmp,dst=/reports,readonly" \
   "$image_digest" \
-  compare-reports "/expected/$published_name" "/actual/$output_name"
+  compare-reports /reports/expected.json /reports/actual.json
 
 echo "reproduced report: $output_report"

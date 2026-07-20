@@ -83,6 +83,7 @@ jobs:
 
       - name: Reproduce from extracted release bundle
         run: |
+          chmod 0600 "target/reference-smoke/${{ matrix.runner }}.json"
           "${{ steps.bundle.outputs.root }}/scripts/reproduce-report.sh" \
             "target/reference-smoke/${{ matrix.runner }}.json" \
             "target/reference-smoke/${{ matrix.runner }}-reproduced.json"
