@@ -36,6 +36,7 @@ from incorrect results.
 | Profile | Corpus language(s) | Requested release | Default command source |
 |---|---|---|---|
 | `clangd.json` | C++ | 22.1.6 | installed `clangd` |
+| `clangd-configured.json` | C++ configured regression | 22.1.6 | installed `clangd` |
 | `ccls.json` | C++ | 0.20250815.1 | installed `ccls` |
 | `roslyn.json` | C# | vscode-csharp 2.140.9 | extracted official C# extension server |
 | `csharp-ls.json` | C# | 0.26.0 | installed `csharp-ls` |
@@ -83,6 +84,23 @@ engine rather than independent corroboration.
 This matrix is deliberately about implementation diversity, not profile count.
 A wrapper around the same semantic engine can still be useful for editor
 integration, but it is weak evidence against a methodology or harness bug.
+
+### Configured C++ regression
+
+`clangd-configured.json` is an opt-in regression profile rather than a separate
+comparison implementation. It disables the runner's generated compilation
+database so clangd consumes the supplied `compile_flags.txt`, including
+`-DENABLE_PARITY_FEATURE`. Run the guarded parity case with:
+
+```bash
+cargo run -- run-lsp benchmarks/cases/cpp-lsp-parity.yaml \
+  --profile adapters/lsp/clangd-configured.json \
+  --case-id cpp-parity-compile-commands-unsupported \
+  --include-unsupported
+```
+
+The case stays unsupported in default cross-tool reports because those runs do
+not yet define a runner-equivalent configured-project contract.
 
 The npm profiles need Node.js and fetch their pinned packages themselves.
 Metals needs Coursier's `cs` launcher and performs a real

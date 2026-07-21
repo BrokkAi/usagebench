@@ -16,23 +16,50 @@ cases:
       kind: method
       displayName: execute
     expectedUsages:
-      - location: { uri: benchmark://source/src/worker.cpp, range: { start: { line: 4, character: 13 }, end: { line: 4, character: 20 } } }
-        kind: method
-        displayName: execute
       - location: { uri: benchmark://source/src/consumer.cpp, range: { start: { line: 4, character: 9 }, end: { line: 4, character: 16 } } }
         kind: method
         displayName: execute
-    verification: { method: manual_inspection, notes: "Worker::execute is declared in a header, defined out of line, and called through a typed receiver; a comment and string mention are deliberately excluded." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/consumer.cpp, range: { start: { line: 4, character: 9 }, end: { line: 4, character: 16 } } }
+          kind: method
+          displayName: execute
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/worker.cpp, range: { start: { line: 4, character: 13 }, end: { line: 4, character: 20 } } }
+          kind: method
+          displayName: execute
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. The concrete
+        worker.execute call is the method usage; the out-of-line method body is
+        a definition rather than a usage. Definition navigation reaches the
+        unique Worker::execute body. The comment and string mention are
+        deliberately excluded.
   - id: cpp-overload-string-call-is-narrow
     declaration:
       location: { uri: benchmark://source/include/worker.h, range: { start: { line: 9, character: 4 }, end: { line: 9, character: 10 } } }
       kind: function
       displayName: select
     expectedUsages:
-      - location: { uri: benchmark://source/src/worker.cpp, range: { start: { line: 7, character: 4 }, end: { line: 7, character: 10 } } }
-        kind: function
-        displayName: select
       - location: { uri: benchmark://source/src/consumer.cpp, range: { start: { line: 5, character: 25 }, end: { line: 5, character: 31 } } }
         kind: function
         displayName: select
-    verification: { method: manual_inspection, notes: "The const char* overload must not merge with the int overload." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/consumer.cpp, range: { start: { line: 5, character: 25 }, end: { line: 5, character: 31 } } }
+          kind: function
+          displayName: select
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/worker.cpp, range: { start: { line: 7, character: 4 }, end: { line: 7, character: 10 } } }
+          kind: function
+          displayName: select
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. The string literal call
+        selects only the const char* overload. Its out-of-line body is a
+        definition rather than a usage. Definition navigation must reach that
+        exact overload body and must not merge with the int overload.
