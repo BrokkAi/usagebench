@@ -13,8 +13,6 @@ source:
 language: java
 cases:
   - id: java-service-class-construction
-    expectedFailure:
-      reason: "Bifrost misses the two Service qualifiers on nested Service.Repository type references."
     declaration:
       location:
         uri: benchmark://source/src/main/java/example/Service.java
@@ -176,8 +174,6 @@ cases:
         the test. Navigation reaches the field declarator; the Service qualifier
         is a separate class usage.
   - id: java-nested-class-constructor
-    expectedFailure:
-      reason: "Bifrost misses the Repository type usages in Service's field and constructor parameter."
     declaration:
       location:
         uri: benchmark://source/src/main/java/example/Service.java
