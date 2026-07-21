@@ -1,0 +1,25 @@
+{
+  "id": "clangd-configured",
+  "name": "clangd (ENABLE_PARITY_FEATURE)",
+  "languages": ["cpp"],
+  "requestedVersion": "22.1.6",
+  "source": "https://github.com/clangd/clangd/releases/tag/22.1.6",
+  "command": ["clangd", "--background-index", "--clang-tidy=false"],
+  "fileExtensions": [".c", ".cc", ".cpp", ".cxx", ".h", ".hh", ".hpp", ".hxx"],
+  "languageIds": {
+    ".c": "c",
+    ".cc": "cpp",
+    ".cpp": "cpp",
+    ".cxx": "cpp",
+    ".h": "cpp",
+    ".hh": "cpp",
+    ".hpp": "cpp",
+    ".hxx": "cpp"
+  },
+  "queryDeclaration": true,
+  "workspaceFiles": {
+    "compile_flags.txt": "-std=c++20\n-I.\n-Iinclude\n-DENABLE_PARITY_FEATURE\n"
+  },
+  "settleMilliseconds": 1500,
+  "generateCompileCommands": false
+}

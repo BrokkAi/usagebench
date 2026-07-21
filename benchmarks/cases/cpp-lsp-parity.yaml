@@ -51,15 +51,33 @@ cases:
         kind: class
         displayName: HandlerAlias
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/main.cpp
             range:
               start: { line: 6, character: 12 }
               end: { line: 6, character: 24 }
-          kind: class
+          kind: type
           displayName: HandlerAlias
         expectedDeclaration:
+          location:
+            uri: benchmark://source/include/parity.h
+            range:
+              start: { line: 26, character: 6 }
+              end: { line: 26, character: 18 }
+          kind: type
+          displayName: HandlerAlias
+    typeLookups:
+      - expression:
+          location:
+            uri: benchmark://source/src/main.cpp
+            range:
+              start: { line: 6, character: 12 }
+              end: { line: 6, character: 24 }
+          kind: type
+          displayName: HandlerAlias
+        expectedType:
           location:
             uri: benchmark://source/include/parity.h
             range:
@@ -68,12 +86,18 @@ cases:
           kind: class
           displayName: ConsoleHandler
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. HandlerAlias is an
+        immutable C++ type alias for ConsoleHandler, so constructing through
+        it is a transitive usage of the underlying class. Ordinary declaration
+        navigation from the spelled alias stops at the HandlerAlias binding;
+        type-definition lookup separately reaches the ConsoleHandler class.
         Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
         Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp scenarios for aliases, declarations, and definitions.
         Adapted fixture: fixtures/cpp/lsp-parity/.
-        Maturity: HandlerAlias should resolve through the using alias to the ConsoleHandler class declaration.
+        Maturity: alias identity and underlying type identity are asserted by
+        distinct navigation operations.
   - id: cpp-parity-virtual-base-method-call
     declaration:
       location:
@@ -92,7 +116,8 @@ cases:
         kind: method
         displayName: handle
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/main.cpp
             range:
@@ -109,8 +134,14 @@ cases:
           kind: method
           displayName: handle
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. The call is made through
+        a BaseHandler reference, so conservative static navigation targets the
+        pure-virtual BaseHandler::handle declaration. It must not guess the
+        ConsoleHandler override from this receiver expression. Declaration is
+        explicit because the pure-virtual member has no executable definition
+        in the fixture.
         Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
         Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp and FindTargetTests.cpp scenarios for virtual methods and overridden members.
         Adapted fixture: fixtures/cpp/lsp-parity/.
@@ -126,13 +157,6 @@ cases:
       displayName: handle
     expectedUsages:
       - location:
-          uri: benchmark://source/src/parity.cpp
-          range:
-            start: { line: 10, character: 28 }
-            end: { line: 10, character: 34 }
-        kind: method
-        displayName: handle
-      - location:
           uri: benchmark://source/src/main.cpp
           range:
             start: { line: 9, character: 26 }
@@ -140,7 +164,8 @@ cases:
         kind: method
         displayName: handle
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/main.cpp
             range:
@@ -150,15 +175,20 @@ cases:
           displayName: handle
         expectedDeclaration:
           location:
-            uri: benchmark://source/include/parity.h
+            uri: benchmark://source/src/parity.cpp
             range:
-              start: { line: 20, character: 16 }
-              end: { line: 20, character: 22 }
+              start: { line: 10, character: 28 }
+              end: { line: 10, character: 34 }
           kind: method
           displayName: handle
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. handler has the concrete
+        static type ConsoleHandler, so handler.handle names the override and
+        definition navigation reaches its unique out-of-line body. That body
+        is a definition rather than a usage. base.handle is excluded because
+        its static receiver type is BaseHandler.
         Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
         Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp scenarios for member definitions and member-call references.
         Adapted fixture: fixtures/cpp/lsp-parity/.
@@ -174,13 +204,6 @@ cases:
       displayName: format
     expectedUsages:
       - location:
-          uri: benchmark://source/src/parity.cpp
-          range:
-            start: { line: 15, character: 12 }
-            end: { line: 15, character: 18 }
-        kind: function
-        displayName: format
-      - location:
           uri: benchmark://source/src/main.cpp
           range:
             start: { line: 10, character: 29 }
@@ -188,7 +211,8 @@ cases:
         kind: function
         displayName: format
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/main.cpp
             range:
@@ -198,19 +222,24 @@ cases:
           displayName: format
         expectedDeclaration:
           location:
-            uri: benchmark://source/include/parity.h
+            uri: benchmark://source/src/parity.cpp
             range:
-              start: { line: 28, character: 12 }
-              end: { line: 28, character: 18 }
+              start: { line: 15, character: 12 }
+              end: { line: 15, character: 18 }
           kind: function
           displayName: format
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. format(first) selects the
+        const std::string& overload and is its only usage in this fixture. The
+        out-of-line body is a definition rather than a usage, and definition
+        navigation reaches that exact body without merging the int overload.
         Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
         Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp scenarios for overloaded functions and call-target precision.
         Adapted fixture: fixtures/cpp/lsp-parity/.
-        Maturity: the string overload of format should collect only the std::string definition and call, not the int overload or int call.
+        Maturity: the string overload of format should collect only the
+        std::string call, not either definition, the int overload, or int call.
   - id: cpp-parity-template-function-call
     declaration:
       location:
@@ -229,7 +258,8 @@ cases:
         kind: function
         displayName: choose
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/main.cpp
             range:
@@ -246,12 +276,17 @@ cases:
           kind: function
           displayName: choose
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. The explicit
+        choose<std::string> specialization call is a usage of the function
+        template. Definition navigation reaches the authored template body;
+        the implicit specialization has no separate authored source body.
         Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
         Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp and FindTargetTests.cpp scenarios for template definitions and specialization calls.
         Adapted fixture: fixtures/cpp/lsp-parity/.
-        Maturity: an explicit template function call should resolve to the template declaration.
+        Maturity: an explicit template function call should resolve to the
+        template definition.
   - id: cpp-parity-direct-function-call-control
     declaration:
       location:
@@ -270,7 +305,8 @@ cases:
         kind: function
         displayName: direct_label
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/main.cpp
             range:
@@ -289,13 +325,17 @@ cases:
     verification:
       method: manual_inspection
       notes: >
-        Direct control for the macro-expanded call pair, manually checked against fixtures/cpp/lsp-parity/.
+        Reviewed by DavidBakerEffendi on 2026-07-21. The direct_label token in
+        main.cpp is an ordinary direct function call and definition navigation
+        reaches the inline function body. This is the non-macro control for the
+        paired expanded_label case. Manually checked against
+        fixtures/cpp/lsp-parity/.
         Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
         Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp macro and function-reference scenarios.
         Server profile: clangd 22.1.6; measured locally with Apple clangd 21.0.0 (clang-2100.1.1.101).
   - id: cpp-parity-function-like-macro-expanded-call
     expectedFailure:
-      reason: Bifrost does not expand PARITY_CALL, so it cannot resolve the function-name macro argument as a call to expanded_label.
+      reason: Bifrost finds the PARITY_CALL function-name argument as a line-level usage, but reverse navigation from that macro argument does not resolve to the expanded_label definition.
     declaration:
       location:
         uri: benchmark://source/include/parity.h
@@ -313,7 +353,8 @@ cases:
         kind: function
         displayName: expanded_label
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/main.cpp
             range:
@@ -332,14 +373,20 @@ cases:
     verification:
       method: manual_inspection
       notes: >
-        The function declaration and macro-argument reference were manually checked against fixtures/cpp/lsp-parity/.
+        Reviewed by DavidBakerEffendi on 2026-07-21. The file-backed
+        expanded_label macro argument is the only visible source token that
+        preprocessing substitutes into the function-call position, so it is
+        the expected usage and definition-navigation origin. The macro
+        parameter name function_name is not an expanded_label usage. The
+        function definition and macro-argument reference were manually checked
+        against fixtures/cpp/lsp-parity/.
         Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
         Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp macro-expansion references and definition scenarios.
         Server profile: clangd 22.1.6; measured locally with Apple clangd 21.0.0 (clang-2100.1.1.101).
         Maturity: expanded_label is a file-backed macro argument that PARITY_CALL expands into a normal function call; no virtual document is required.
   - id: cpp-parity-compile-commands-unsupported
     unsupported:
-      reason: C++ compile-command-sensitive inactive code is retained for parity tracking but is not scored until the runner exposes deliberate compile command and preprocessor configuration.
+      reason: This configured regression case requires -DENABLE_PARITY_FEATURE and is excluded from default cross-tool scoring; run it explicitly with adapters/lsp/clangd-configured.json and --include-unsupported.
     declaration:
       location:
         uri: benchmark://source/include/parity.h
@@ -348,11 +395,44 @@ cases:
           end: { line: 37, character: 27 }
       kind: function
       displayName: configured_only
-    usageLookups: []
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/main.cpp
+          range:
+            start: { line: 16, character: 30 }
+            end: { line: 16, character: 45 }
+        kind: function
+        displayName: configured_only
+    usageLookups:
+      - operation: declaration
+        usage:
+          location:
+            uri: benchmark://source/src/main.cpp
+            range:
+              start: { line: 16, character: 30 }
+              end: { line: 16, character: 45 }
+          kind: function
+          displayName: configured_only
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/include/parity.h
+            range:
+              start: { line: 37, character: 12 }
+              end: { line: 37, character: 27 }
+          kind: function
+          displayName: configured_only
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. When
+        ENABLE_PARITY_FEATURE is defined, configured_only is declared and the
+        guarded main.cpp call is its usage. Because the fixture provides no
+        function body, navigation is explicitly declaration-only. The case is
+        an opt-in configured clangd regression test and remains outside default
+        cross-tool scoring until equivalent deliberate configuration is
+        supplied for each runner.
         Parity source: llvm/llvm-project@6087989da294a85291d7e562e03714dbdd231624.
         Upstream reference: clang-tools-extra/clangd tests for compile commands, preprocessor configuration, and inactive-code navigation.
         Adapted fixture: fixtures/cpp/lsp-parity/.
-        Maturity: preprocessor/compile-command-sensitive behavior is intentionally unscored in the first C++ parity fixture.
+        Maturity: run with adapters/lsp/clangd-configured.json and
+        --include-unsupported to enable and score the guarded source tokens.

@@ -23,13 +23,6 @@ cases:
       displayName: build_service
     expectedUsages:
       - location:
-          uri: benchmark://source/src/service.cpp
-          range:
-            start: { line: 16, character: 8 }
-            end: { line: 16, character: 21 }
-        kind: function
-        displayName: build_service
-      - location:
           uri: benchmark://source/src/main.cpp
           range:
             start: { line: 6, character: 19 }
@@ -37,7 +30,8 @@ cases:
         kind: function
         displayName: build_service
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/main.cpp
             range:
@@ -47,15 +41,20 @@ cases:
           displayName: build_service
         expectedDeclaration:
           location:
-            uri: benchmark://source/include/service.h
+            uri: benchmark://source/src/service.cpp
             range:
-              start: { line: 22, character: 8 }
-              end: { line: 22, character: 21 }
+              start: { line: 16, character: 8 }
+              end: { line: 16, character: 21 }
           kind: function
           displayName: build_service
     verification:
       method: manual_inspection
-      notes: build_service is declared in the header, defined in service.cpp, and called by run_demo.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-20. The call is the usage of
+        build_service. The out-of-line function body is a definition and also
+        a C++ declaration, not a usage; it is therefore excluded from the
+        reference set. Explicit definition navigation from the call reaches
+        the unique body in service.cpp.
   - id: cpp-class-reference
     declaration:
       location:
@@ -94,8 +93,16 @@ cases:
             end: { line: 11, character: 19 }
         kind: class
         displayName: Service
+      - location:
+          uri: benchmark://source/src/service.cpp
+          range:
+            start: { line: 17, character: 11 }
+            end: { line: 17, character: 18 }
+        kind: class
+        displayName: Service
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/service.cpp
             range:
@@ -113,7 +120,13 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is declared as a class, used as the build_service return type in the header and implementation, and used as the explicit qualifier in out-of-line member definitions.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. Service is used as the
+        build_service return type in the header and implementation, as the
+        explicit qualifier in both out-of-line member definitions, and as the
+        type named by the construction expression. Constructor declaration and
+        definition tokens are not class usages. Definition navigation from a
+        type usage reaches the class body.
   - id: cpp-constructor-call
     declaration:
       location:
@@ -132,7 +145,8 @@ cases:
         kind: constructor
         displayName: Service
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/service.cpp
             range:
@@ -144,13 +158,19 @@ cases:
           location:
             uri: benchmark://source/include/service.h
             range:
-              start: { line: 13, character: 13 }
-              end: { line: 13, character: 20 }
-          kind: constructor
+              start: { line: 11, character: 6 }
+              end: { line: 11, character: 13 }
+          kind: class
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service has an explicit constructor declared in the header and invoked by build_service; the out-of-line definition is not counted as a usage.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. The construction
+        expression is the constructor usage. The out-of-line constructor body
+        is a definition rather than a usage. In C++ functional construction,
+        the source token names the Service type even though it causes a
+        constructor call, so ordinary definition navigation reaches the class
+        body rather than a constructor declaration or body.
   - id: cpp-method-call
     declaration:
       location:
@@ -162,13 +182,6 @@ cases:
       displayName: execute
     expectedUsages:
       - location:
-          uri: benchmark://source/src/service.cpp
-          range:
-            start: { line: 11, character: 21 }
-            end: { line: 11, character: 28 }
-        kind: method
-        displayName: execute
-      - location:
           uri: benchmark://source/src/main.cpp
           range:
             start: { line: 7, character: 26 }
@@ -176,7 +189,8 @@ cases:
         kind: method
         displayName: execute
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/main.cpp
             range:
@@ -186,15 +200,20 @@ cases:
           displayName: execute
         expectedDeclaration:
           location:
-            uri: benchmark://source/include/service.h
+            uri: benchmark://source/src/service.cpp
             range:
-              start: { line: 14, character: 16 }
-              end: { line: 14, character: 23 }
+              start: { line: 11, character: 21 }
+              end: { line: 11, character: 28 }
           kind: method
           displayName: execute
     verification:
       method: manual_inspection
-      notes: execute is declared in the header, defined in service.cpp, and called on service in run_demo.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. The concrete
+        service.execute call is the method usage. The out-of-line method body
+        is a definition rather than a usage. Definition navigation from the
+        call reaches Service::execute in service.cpp; explicit declaration
+        navigation would reach the header declaration.
   - id: cpp-field-access
     declaration:
       location:
@@ -227,7 +246,8 @@ cases:
         kind: field
         displayName: last
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/main.cpp
             range:
@@ -245,7 +265,12 @@ cases:
           displayName: last
     verification:
       method: manual_inspection
-      notes: Repository::last is declared in the header, assigned/read by save, and read from run_demo.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. Repository::last is
+        written and read through the implicit this receiver in save, and read
+        through the concrete Repository receiver in run_demo. All three are
+        field usages. Declaration navigation reaches the field token in the
+        class body.
   - id: cpp-constant-access
     declaration:
       location:
@@ -271,7 +296,8 @@ cases:
         kind: constant
         displayName: DefaultPrefix
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/main.cpp
             range:
@@ -289,4 +315,9 @@ cases:
           displayName: DefaultPrefix
     verification:
       method: manual_inspection
-      notes: DefaultPrefix is declared inline in the header and read from service.cpp and main.cpp.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. DefaultPrefix is an inline
+        constexpr binding declared and defined at one header token, then read
+        from service.cpp and main.cpp. Both reads are usages. Declaration
+        navigation reaches the header binding without relying on fallback to
+        definition navigation.

@@ -31,7 +31,7 @@ they do not claim that the server's broader editor semantics are defective.
 
 | Server | Allowed policy extras | Remaining FP-like differences | Remaining FN-like or navigation differences |
 |---|---|---|---|
-| clangd | None in the measured cases | `cpp-class-reference` includes constructor-family locations; alias and override cases broaden to related declarations/implementations | Six call cases omit expected out-of-line definitions from references; constructor and using-alias navigation target a class or alias surface rather than the authored declaration |
+| clangd | None in the measured cases | Human review confirmed that `cpp-class-reference` includes constructor declaration/definition tokens even though the C++ language and Clang AST classify them separately; the using-alias case likewise includes the constructor declaration. The reviewed concrete-override query broadens to the pure-virtual base declaration and base-typed call. | `cpp-function-call`, `cpp-constructor-call`, `cpp-method-call`, `cpp-out-of-line-member-call`, both reviewed overload cases, the reviewed virtual-base call, explicit template-function call, direct inline-function control, and macro-expanded function call are exact after human review corrected their usage/navigation contracts. In the reviewed using-alias case, declaration navigation to the alias and type-definition navigation to the underlying class are both exact, but references omit the two out-of-line class qualifiers and the construction through the alias. Definition navigation from the concrete override call stops at the header declaration rather than its out-of-line body. |
 | gopls | None | `go-interface-receiver-method-call` includes two concrete-receiver calls while querying the interface method | None |
 | rust-analyzer | Re-export bindings in two cases | The reviewed `rust-struct-construction` ground truth now requires capital-`Self`; rerun to isolate any remaining receiver/declaration-like extras. `rust-ufcs-trait-method-through-barrel` includes the trait declaration. | Module navigation opens `workflow.rs` rather than returning the authored `mod workflow` declaration |
 | TypeScript language server | Import and re-export bindings in nine cases | None | CommonJS destructuring and a CommonJS barrel omit the expected call/construction reference |
@@ -54,3 +54,10 @@ they do not claim that the server's broader editor semantics are defective.
 These corrections are analyzer-neutral source facts. They are included in the
 ground truth even if another runner subsequently exposes a new gap against
 them.
+
+The configured C++ parity case is intentionally separated from the default
+comparison: `clangd-configured.json` activates `ENABLE_PARITY_FEATURE` and
+passes the guarded usage/declaration regression with `--include-unsupported`,
+while ordinary clangd fails the same assertions with the branch inactive.
+Default cross-tool reports continue to classify the case as unsupported rather
+than counting the opt-in regression result in their totals.
