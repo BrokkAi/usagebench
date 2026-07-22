@@ -36,13 +36,6 @@ cases:
             end: { line: 23, character: 58 }
         kind: constructor
         displayName: Service
-      - location:
-          uri: benchmark://source/src/main/scala/example/Consumer.scala
-          range:
-            start: { line: 5, character: 18 }
-            end: { line: 5, character: 25 }
-        kind: class
-        displayName: Service
     usageLookups:
       - usage:
           location:
@@ -62,7 +55,7 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is declared in Service.scala, referenced through the companion build call, and constructed by the companion build method.
+      notes: Service is declared in Service.scala and constructed by the companion build method.
   - id: scala-companion-function-call
     declaration:
       location:
