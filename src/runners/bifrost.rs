@@ -30,6 +30,7 @@ use url::{Host, Url};
 
 const DEFAULT_BIFROST_COMMIT: &str = "origin/master";
 const BIFROST_SOURCE_URL: &str = "https://github.com/BrokkAi/bifrost";
+const GET_DECLARATIONS_BY_LOCATION_TOOL: &str = "get_declarations_by_location";
 const GET_DEFINITIONS_BY_LOCATION_TOOL: &str = "get_definitions_by_location";
 const GET_TYPE_BY_LOCATION_TOOL: &str = "get_type_by_location";
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(10 * 60);
@@ -186,8 +187,8 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             },
             RunnerCapability {
                 operation: RunnerOperation::DeclarationLookup,
-                support: CapabilitySupport::Unsupported,
-                notes: "Bifrost does not expose a distinct declaration-navigation tool".to_string(),
+                support: CapabilitySupport::Native,
+                notes: "Bifrost get_declarations_by_location MCP output".to_string(),
             },
             RunnerCapability {
                 operation: RunnerOperation::DefinitionLookup,
@@ -623,21 +624,6 @@ fn run_usage_to_declaration(
             display_name: Some(lookup.expected_declaration.display_name.clone()),
             kind: Some(symbol_kind_name(&lookup.expected_declaration.kind).to_string()),
         });
-    if lookup.operation == NavigationOperation::Declaration {
-        return UsageDefinitionReport {
-            status: CaseStatus::Unsupported,
-            operation: lookup.operation,
-            usage,
-            expected_declaration,
-            actual_declarations: Vec::new(),
-            raw_status: "declaration_lookup_unsupported".to_string(),
-            diagnostics: vec![RunDiagnostic {
-                kind: "declaration_lookup_unsupported".to_string(),
-                message: "Bifrost does not expose a declaration-navigation operation distinct from get_definitions_by_location"
-                    .to_string(),
-            }],
-        };
-    }
     let query = match reference_query(&lookup.usage.location, &lookup.usage.display_name, encoding)
     {
         Ok(query) => query,
@@ -657,38 +643,46 @@ fn run_usage_to_declaration(
         }
     };
 
-    let result = match session.call_tool(
-        GET_DEFINITIONS_BY_LOCATION_TOOL,
-        json!({ "references": [query] }),
-    ) {
+    let (tool_name, candidates_key, no_result_status) = match lookup.operation {
+        NavigationOperation::Declaration => (
+            GET_DECLARATIONS_BY_LOCATION_TOOL,
+            "declarations",
+            "no_declaration",
+        ),
+        NavigationOperation::Definition | NavigationOperation::ProfileDefault => (
+            GET_DEFINITIONS_BY_LOCATION_TOOL,
+            "definitions",
+            "no_definition",
+        ),
+    };
+    let result = match session.call_tool(tool_name, json!({ "references": [query] })) {
         Ok(result) => result,
         Err(error) => {
             let message = format!("{error:#}");
-            let (status, raw_status) =
-                if message.contains("Unknown tool: get_definitions_by_location") {
-                    (CaseStatus::Failed, "unsupported_tool")
-                } else {
-                    (CaseStatus::Error, "get_definitions_by_location_failed")
-                };
+            let (status, raw_status) = if message.contains(&format!("Unknown tool: {tool_name}")) {
+                (CaseStatus::Failed, "unsupported_tool".to_string())
+            } else {
+                (CaseStatus::Error, format!("{tool_name}_failed"))
+            };
             return UsageDefinitionReport {
                 status,
                 operation: lookup.operation,
                 usage,
                 expected_declaration,
                 actual_declarations: Vec::new(),
-                raw_status: raw_status.to_string(),
+                raw_status: raw_status.clone(),
                 diagnostics: vec![RunDiagnostic {
-                    kind: raw_status.to_string(),
+                    kind: raw_status,
                     message,
                 }],
             };
         }
     };
 
-    let parsed = parse_get_definition(&result);
+    let parsed = parse_navigation(&result, candidates_key, tool_name);
     let (status, raw_status) = if parsed.raw_status == "resolved"
         || (lookup.expect_no_movement
-            && parsed.raw_status == "no_definition"
+            && parsed.raw_status == no_result_status
             && parsed.actual_declarations.is_empty())
     {
         let (status, outcome) = score_navigation_response(
@@ -1199,7 +1193,7 @@ struct ParsedGetType {
     diagnostics: Vec<RunDiagnostic>,
 }
 
-fn parse_get_definition(value: &Value) -> ParsedGetDefinition {
+fn parse_navigation(value: &Value, candidates_key: &str, tool_name: &str) -> ParsedGetDefinition {
     let Some(result) = value
         .get("results")
         .and_then(Value::as_array)
@@ -1210,7 +1204,7 @@ fn parse_get_definition(value: &Value) -> ParsedGetDefinition {
             actual_declarations: Vec::new(),
             diagnostics: vec![RunDiagnostic {
                 kind: "missing_result".to_string(),
-                message: "get_definitions_by_location returned no result".to_string(),
+                message: format!("{tool_name} returned no result"),
             }],
         };
     };
@@ -1220,7 +1214,7 @@ fn parse_get_definition(value: &Value) -> ParsedGetDefinition {
         .unwrap_or("missing_status")
         .to_string();
     let actual_declarations = result
-        .get("definitions")
+        .get(candidates_key)
         .and_then(Value::as_array)
         .into_iter()
         .flatten()
@@ -2776,11 +2770,14 @@ mod tests {
     }
 
     #[test]
-    fn declaration_lookup_is_unsupported_without_calling_definition_tool() {
+    fn declaration_lookup_uses_distinct_declaration_tool() {
         let mut case = benchmark_case();
         case.declaration = None;
         case.usage_lookups[0].operation = crate::NavigationOperation::Declaration;
-        let mut client = MockClient::new(Vec::new());
+        let mut client = MockClient::new(vec![tool(
+            GET_DECLARATIONS_BY_LOCATION_TOOL,
+            get_declarations_by_location_json("resolved", vec![("src/service.rs", 30)]),
+        )]);
 
         let report = run_case(
             &case,
@@ -2792,15 +2789,29 @@ mod tests {
             true,
         );
 
-        assert_eq!(report.status, CaseStatus::Unsupported);
-        assert_eq!(
-            report.usage_to_declaration[0].raw_status,
-            "declaration_lookup_unsupported"
-        );
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(report.usage_to_declaration[0].raw_status, "ok");
         assert_eq!(
             report.usage_to_declaration[0].operation,
             crate::NavigationOperation::Declaration
         );
+        assert_eq!(client.calls[0].0, GET_DECLARATIONS_BY_LOCATION_TOOL);
+    }
+
+    #[test]
+    fn missing_get_declarations_by_location_tool_is_scored_failure() {
+        let mut lookup = benchmark_case().usage_lookups.remove(0);
+        lookup.operation = crate::NavigationOperation::Declaration;
+        let mut client = ErrorClient {
+            message:
+                "Bifrost tool `get_declarations_by_location` failed: Unknown tool: get_declarations_by_location"
+                    .to_string(),
+        };
+
+        let report = run_usage_to_declaration(&lookup, PositionEncoding::Utf16, &mut client);
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(report.raw_status, "unsupported_tool");
     }
 
     #[test]
@@ -3550,6 +3561,28 @@ mod tests {
                 "query": {"path": "src/lib.rs", "line": 8, "column": 19, "symbol": "build_service"},
                 "status": status,
                 "definitions": locations.into_iter().map(|(path, line)| {
+                    json!({
+                        "fqn": "example.build_service",
+                        "path": path,
+                        "start_line": line,
+                        "start_column": 8,
+                        "end_line": line,
+                        "end_column": 9,
+                        "kind": "function",
+                        "language": "rust"
+                    })
+                }).collect::<Vec<_>>(),
+                "diagnostics": []
+            }]
+        })
+    }
+
+    fn get_declarations_by_location_json(status: &str, locations: Vec<(&str, usize)>) -> Value {
+        json!({
+            "results": [{
+                "query": {"path": "src/lib.rs", "line": 8, "column": 19, "symbol": "build_service"},
+                "status": status,
+                "declarations": locations.into_iter().map(|(path, line)| {
                     json!({
                         "fqn": "example.build_service",
                         "path": path,
