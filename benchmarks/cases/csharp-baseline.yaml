@@ -29,8 +29,16 @@ cases:
             end: { line: 7, character: 15 }
         kind: class
         displayName: Service
+      - location:
+          uri: benchmark://source/src/Consumer.cs
+          range:
+            start: { line: 7, character: 30 }
+            end: { line: 7, character: 37 }
+        kind: constructor
+        displayName: Service
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumer.cs
             range:
@@ -48,7 +56,12 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is declared in Service.cs and used as an explicit local variable type in Consumer.Run.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. Service is used as both
+        the explicit local variable type and the type named by the construction
+        expression in Consumer.Run. The construction token also participates
+        in the separate constructor case. Definition navigation from the
+        explicit type reaches the class body.
   - id: csharp-constructor-call
     declaration:
       location:
@@ -67,7 +80,8 @@ cases:
         kind: constructor
         displayName: Service
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumer.cs
             range:
@@ -85,7 +99,11 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Consumer.Run constructs Service through its explicit constructor.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. The Service token in new
+        Service(repository) invokes the constructor and is the required usage;
+        the class declaration and explicit local variable type do not invoke
+        it. Definition navigation reaches the matching constructor body.
   - id: csharp-method-call
     declaration:
       location:
@@ -104,7 +122,8 @@ cases:
         kind: method
         displayName: Execute
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumer.cs
             range:
@@ -122,7 +141,11 @@ cases:
           displayName: Execute
     verification:
       method: manual_inspection
-      notes: Consumer.Run calls Execute on the constructed Service instance.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. Consumer.Run calls the
+        non-virtual Execute method through a receiver whose static type is
+        Service, so the call has one exact method identity. Definition
+        navigation reaches the Execute body.
   - id: csharp-repository-method-call
     declaration:
       location:
@@ -141,7 +164,8 @@ cases:
         kind: method
         displayName: Save
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Service.cs
             range:
@@ -159,7 +183,11 @@ cases:
           displayName: Save
     verification:
       method: manual_inspection
-      notes: Service.Execute calls Repository.Save.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. Service.Execute calls the
+        non-virtual Save method through a receiver whose static type is
+        Repository, giving the call one exact method identity. Definition
+        navigation reaches the Save body.
   - id: csharp-property-access
     declaration:
       location:
@@ -192,7 +220,8 @@ cases:
         kind: property
         displayName: Last
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumer.cs
             range:
@@ -210,7 +239,13 @@ cases:
           displayName: Last
     verification:
       method: manual_inspection
-      notes: Last is declared on Repository, assigned/read in Save, and read from Consumer.Run.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. Last is written through
+        its setter and read through its getter in Repository.Save, then read
+        through its getter in Consumer.Run. These are all references to the
+        property symbol; the property declaration is excluded. With no
+        separate authored accessor body, definition navigation reaches the
+        auto-property token.
   - id: csharp-constant-access
     declaration:
       location:
@@ -236,7 +271,8 @@ cases:
         kind: constant
         displayName: Prefix
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumer.cs
             range:
@@ -254,4 +290,8 @@ cases:
           displayName: Prefix
     verification:
       method: manual_inspection
-      notes: Prefix is declared on Defaults and read from Service.Execute and Consumer.Run.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. Prefix is defined by its
+        initialized const declarator and read once from Service.Execute and
+        once from Consumer.Run. The declarator token is excluded from usages;
+        definition navigation from a read reaches that identifier.

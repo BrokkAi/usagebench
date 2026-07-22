@@ -938,3 +938,365 @@ The first independent human review of every case currently in
 `cpp-lsp-parity.yaml` is complete. Its document metadata remains
 `legacy_unattributed` until a second independent reviewer completes the
 promotion requirement; this log preserves the first review meanwhile.
+
+## csharp-baseline.yaml
+
+### csharp-class-reference
+
+- Source: `fixtures/csharp/baseline/src/Service.cs` and `src/Consumer.cs`.
+- Authored declaration: `Service` in `public class Service`.
+- Required usages: the explicit local type and the `Service` type named by
+  `new Service(repository)`.
+- Excluded location: the constructor-definition token in `public
+  Service(Repository repository)`.
+- Ground-truth decision: **correct after adding the construction type usage**
+- Operation decision: **definition** from the explicit local type to the class
+  body.
+- Reviewer rationale: as in the reviewed Java case, the construction token has
+  two compatible semantic roles: it names the class type and invokes the
+  selected constructor. It therefore participates in both the class-reference
+  and constructor-call cases, while the constructor definition remains a
+  definition rather than an ordinary class usage.
+- Outcome revealed after review: the official Roslyn language server from the
+  macOS ARM64 C# extension `v2.140.9` returned both required class references
+  and navigated from the explicit local type to the class body. The original
+  one-location contract consequently reported the construction token as a
+  proven extra before this correction.
+- Harness observation: Roslyn's MSBuild host requires a local named pipe. When
+  sandboxing denied that pipe, project loading failed and Roslyn fell back to
+  separate `Miscellaneous Files` contexts, but the runner reported ordinary
+  missing-reference and no-definition failures rather than a setup error. The
+  valid result above came from a run in which the MSBuild host could create its
+  pipe. A future runner guard should reject miscellaneous-file contexts for
+  project-backed cases or otherwise surface project-load failure explicitly.
+- Bifrost outcome at `a84d6df418e8975019007a60872e5788320ff54f`: no semantic
+  result was obtained. Both the cached workspace and a fresh temporary work
+  directory failed while publishing analyzer epochs with `attempt to write a
+  readonly database`; this is recorded as an infrastructure error rather than
+  evidence about the two reviewed class usages.
+
+### csharp-constructor-call
+
+- Source: `fixtures/csharp/baseline/src/Service.cs` and `src/Consumer.cs`.
+- Authored definition: `Service` in `public Service(Repository repository)`.
+- Required usage: `Service` in `new Service(repository)`.
+- Excluded locations: the class declaration and the explicit local variable
+  type, neither of which invokes the constructor.
+- Ground-truth decision: **correct after making definition navigation
+  explicit**
+- Operation decision: **definition** from the construction token to the
+  matching constructor body.
+- Reviewer rationale: the construction token has a constructor-invocation
+  identity in addition to its class-reference identity from the preceding
+  case. The parameter list statically selects the only constructor, while the
+  constructor body is a definition rather than an ordinary usage.
+- Outcome revealed after review: the official Roslyn language server returned
+  only the required construction token and navigated from it to the exact
+  constructor definition.
+
+### csharp-method-call
+
+- Source: `fixtures/csharp/baseline/src/Service.cs` and `src/Consumer.cs`.
+- Authored definition: the `Service.Execute` method body.
+- Required usage: `service.Execute(" Ada ")`.
+- Ground-truth decision: **correct after making definition navigation
+  explicit**
+- Operation decision: **definition** from the call to the `Execute` body.
+- Reviewer rationale: the receiver has the static type `Service`, and
+  `Execute` is non-virtual because C# instance methods are non-virtual unless
+  declared otherwise. The call therefore has one exact statically resolved
+  method identity with no dynamic-dispatch ambiguity.
+- Outcome revealed after review: the official Roslyn language server returned
+  only the required `Execute` call and navigated from it to the exact method
+  definition.
+
+### csharp-repository-method-call
+
+- Source: `fixtures/csharp/baseline/src/Service.cs`.
+- Authored definition: the `Repository.Save` method body.
+- Required usage: `repository.Save(name)` in `Service.Execute`.
+- Ground-truth decision: **correct after making definition navigation
+  explicit**
+- Operation decision: **definition** from the call to the `Save` body.
+- Reviewer rationale: the field receiver has the static type `Repository`, and
+  `Save` is non-virtual. The call therefore has one exact statically resolved
+  method identity with no dynamic-dispatch ambiguity.
+- Outcome revealed after review: the official Roslyn language server returned
+  only the required `Save` call and navigated from it to the exact method
+  definition.
+
+### csharp-property-access
+
+- Source: `fixtures/csharp/baseline/src/Service.cs` and `src/Consumer.cs`.
+- Authored property: `Last` in `public string Last { get; private set; }`.
+- Required usages: the setter access in `Last = value.Trim()`, the getter
+  access in `return Last`, and the qualified getter access in
+  `repository.Last`.
+- Excluded location: the property declaration token itself.
+- Ground-truth decision: **correct after making definition navigation
+  explicit**
+- Operation decision: **definition** from `repository.Last` to the
+  auto-property token.
+- Reviewer rationale: the benchmark operates at property-symbol granularity,
+  so getter reads and the setter write all reference `Repository.Last`. The
+  auto-property has no separate authored accessor body; ordinary source
+  definition navigation should therefore land on its declaration token.
+- Outcome revealed after review: the official Roslyn language server returned
+  exactly the setter and two getter usages. Definition navigation selected the
+  four-character `Last` identifier in the auto-property declaration, not an
+  accessor keyword or a synthetic backing-field location.
+
+### csharp-constant-access
+
+- Source: `fixtures/csharp/baseline/src/Service.cs` and `src/Consumer.cs`.
+- Authored definition: `Prefix` in `public const string Prefix = "job"`.
+- Required usages: `Defaults.Prefix` in `Service.Execute` and in
+  `Consumer.Run`.
+- Excluded location: the defining const declarator token.
+- Ground-truth decision: **correct after making definition navigation
+  explicit**
+- Operation decision: **definition** from a qualified read to the `Prefix`
+  identifier.
+- Reviewer rationale: the initialized const declarator both declares and fully
+  defines the C# constant. There is no separate authored body or external
+  definition, so ordinary definition navigation should return that identifier
+  while the two reads remain the complete usage set.
+- Outcome revealed after review: the official Roslyn language server returned
+  exactly the two qualified reads and navigated from the Consumer read to the
+  six-character `Prefix` identifier in the const definition.
+
+The first independent human review of every case currently in
+`csharp-baseline.yaml` is complete. Its document metadata remains
+`legacy_unattributed` until a second independent reviewer completes the
+promotion requirement; this log preserves the first review meanwhile.
+
+## csharp-precision.yaml
+
+### csharp-attribute-shorthand-reference
+
+- Source: `fixtures/csharp/precision/Precision.cs`.
+- Authored definition: the class `TrackedAttribute`.
+- Required usage: the shorter `Tracked` token in `[Tracked]`.
+- Excluded location: the class definition token.
+- Ground-truth decision: **correct, with reverse definition navigation added**
+- Operation decision: **definition** from the seven-character `Tracked` token
+  to the sixteen-character `TrackedAttribute` identifier.
+- Reviewer rationale: C# attribute binding permits omission of the
+  conventional `Attribute` suffix. Only `TrackedAttribute` is available here,
+  so the shorter source token has one exact class identity. The benchmark must
+  preserve the different authored token ranges rather than normalize their
+  display text.
+- Outcome revealed after review: the official Roslyn language server returned
+  only the seven-character shorthand usage and navigated from it to the exact
+  sixteen-character class-definition token.
+
+### csharp-generic-extension-call
+
+- Source: `fixtures/csharp/precision/Precision.cs`.
+- Authored definition: the generic extension method `Extensions.Echo<T>`.
+- Required usage: `Echo()` on the constructed `Registered` receiver.
+- Excluded location: the method definition token.
+- Ground-truth decision: **correct, with reverse definition navigation added**
+- Operation decision: **definition** from the extension-call token to the
+  generic method definition.
+- Reviewer rationale: extension-method binding resolves the call to the static
+  generic method with `T` inferred as `Registered`. There are no competing
+  overloads, and the constructed generic method has no separate authored body,
+  so the call retains the source definition's method identity.
+- Outcome revealed after review: the official Roslyn language server returned
+  only the `Echo()` extension call and navigated from it to the exact generic
+  method-definition token.
+
+### csharp-static-qualified-method-call
+
+- Source: `fixtures/csharp/precision/Precision.cs`.
+- Authored definition: the static method `Labels.Create`.
+- Required usage: `Labels.Create()` in `Consumer.Label`.
+- Excluded location: the method definition token.
+- Ground-truth decision: **correct, with reverse definition navigation added**
+- Operation decision: **definition** from the call to the expression-bodied
+  method definition.
+- Reviewer rationale: the class qualifier and exact method name make this a
+  direct, unambiguous static call. The neighboring consumer method `Label`
+  shares neither the symbol identity nor the complete token spelling and must
+  not be conflated with `Labels.Create`.
+- Outcome revealed after review: the official Roslyn language server returned
+  only the class-qualified `Create()` call and navigated from it to the exact
+  expression-bodied method definition.
+
+The first independent human review of every case currently in
+`csharp-precision.yaml` is complete. Its document metadata remains
+`legacy_unattributed` until a second independent reviewer completes the
+promotion requirement; this log preserves the first review meanwhile.
+
+## csharp-lsp-parity.yaml
+
+### csharp-parity-namespace-alias-constructor
+
+- Source: `fixtures/csharp/lsp-parity/src/Handlers.cs` and `src/Consumers.cs`.
+- Authored definition: the class `ConsoleHandler`.
+- Required usages: `WorkerAlias` in the aliased construction and the three
+  directly spelled `ConsoleHandler` construction tokens across `Consumers.cs`
+  and `Polymorphism.cs`.
+- Optional binding usage: the `ConsoleHandler` token on the alias directive's
+  right-hand side, allowed by `bindings_optional`.
+- Ground-truth decision: **correct after separating alias definition from type
+  definition**
+- Operation decisions: **definition** from the construction token to the
+  `WorkerAlias` binding; **type definition** from the same token to the
+  underlying `ConsoleHandler` class.
+- Reviewer rationale: the aliased construction is a transitive usage of the
+  underlying class, but ordinary definition navigation preserves the spelled
+  source alias. The distinct type-definition operation exposes the canonical
+  underlying type. This matches the reviewed C++ alias split despite the
+  languages' different alias syntax.
+- Roslyn tie-breaker: the official language server returned both required
+  construction usages plus the optional alias-RHS binding. Definition
+  navigation landed on the `WorkerAlias` binding, while a focused
+  type-definition probe landed on the `ConsoleHandler` class.
+- Expanded-fixture outcome: after adding the two new directly spelled
+  constructions in `Polymorphism.cs`, Roslyn returned all four required class
+  usages plus the optional alias-RHS binding and passed both navigation
+  operations exactly.
+
+### csharp-parity-interface-receiver-method-call
+
+- Source: `fixtures/csharp/lsp-parity/src/Handlers.cs` and `src/Consumers.cs`.
+- Authored declaration: `Handle` in the `IHandler` interface.
+- Required usages: both `handler.Handle("Ada")` calls through `IHandler`-typed
+  locals, including the new call whose factory can return either of two
+  implementations.
+- Excluded locations: the concrete `ConsoleHandler.Handle` definition and
+  `concrete.Handle("Ben")` through a concrete receiver.
+- Ground-truth decision: **correct after making declaration navigation
+  explicit**
+- Operation decision: **declaration** from the interface-typed call because
+  the interface member has no body.
+- Reviewer rationale: callers receive only the declared `IHandler` contract;
+  the factory's current implementation is not a sound basis for assigning the
+  call to `ConsoleHandler.Handle`. Static analysis should preserve the
+  interface member identity rather than guess a runtime implementation.
+- Type-lookup decision: the `handler` local in `PolymorphismConsumer` has the
+  static type `IHandler` despite its two possible runtime implementations.
+- Coverage expansion: `BufferHandler` and a runtime-dependent factory branch
+  were added during review. The original call remains a one-implementation
+  control; the new call has multiple possible runtime implementations but an
+  unambiguous static identity as `IHandler.Handle`, paired with exact direct
+  calls to both implementations.
+- Outcome revealed after review: after the expansion, Roslyn returned both
+  required interface-typed calls and the exact `IHandler` type definition, but
+  also cascaded the interface reference query to all three concrete calls: two
+  on `ConsoleHandler` and one on `BufferHandler`. Those calls statically bind
+  to their respective concrete methods and remain false positives under this
+  benchmark's symbol-identity contract. Roslyn does not advertise
+  `textDocument/declaration`, so the reviewed reverse operation was separately
+  reported unsupported.
+
+### csharp-parity-concrete-implementation-method-call
+
+- Source: `fixtures/csharp/lsp-parity/src/Handlers.cs`, `src/Consumers.cs`, and
+  `src/Polymorphism.cs`.
+- Authored definition: the concrete `ConsoleHandler.Handle` body.
+- Required usages: `concrete.Handle("Ben")` and `console.Handle("Ben")` through
+  `ConsoleHandler`-typed locals.
+- Excluded locations: both interface-typed calls and the direct
+  `BufferHandler.Handle` call.
+- Ground-truth decision: **correct after adding the second concrete control**
+- Operation decision: **definition** from each concrete call to the
+  `ConsoleHandler.Handle` body.
+- Reviewer rationale: both receivers have the exact static type
+  `ConsoleHandler`, so both invocations bind to its concrete method. The
+  interface contract and sibling implementation remain distinct symbol
+  identities.
+- Outcome revealed after review: Roslyn returned both required concrete calls
+  and navigated each to the exact `ConsoleHandler.Handle` definition, but also
+  cascaded the reference query upward to both interface-typed calls. Those two
+  extras are retained as false-positive family noise under the reviewed exact
+  symbol-identity contract.
+
+### csharp-parity-buffer-implementation-method-call
+
+- Source: `fixtures/csharp/lsp-parity/src/Polymorphism.cs`.
+- Authored definition: the concrete `BufferHandler.Handle` body.
+- Required usage: `buffer.Handle("Cal")` through a `BufferHandler`-typed local.
+- Excluded locations: both interface-typed calls and both direct
+  `ConsoleHandler` calls.
+- Ground-truth decision: **correct as the second concrete implementation
+  control**
+- Operation decision: **definition** from the concrete call to the
+  `BufferHandler.Handle` body.
+- Reviewer rationale: the receiver's static type is exactly `BufferHandler`,
+  so the invocation binds to that concrete method. The interface and sibling
+  implementation remain separate symbol identities despite their
+  implementation relationship.
+- Outcome revealed after review: Roslyn returned the required BufferHandler
+  call and exact definition target but also cascaded the reference query upward
+  to both interface-typed calls. The two extras are retained as the same
+  family-oriented editor-policy expansion, not allowed usages.
+
+### csharp-parity-extension-method-call
+
+- Source: `fixtures/csharp/lsp-parity/src/Handlers.cs` and `src/Consumers.cs`.
+- Authored definition: the static extension method `HandlerExtensions.Tag`.
+- Required usages: `Name.Tag()` and `handler.Handle("Ada").Tag()`.
+- Excluded location: the extension-method definition token.
+- Ground-truth decision: **correct after adding definition navigation from
+  both calls**
+- Operation decision: **definition** from either extension call to the static
+  method body.
+- Reviewer rationale: both receiver expressions have the static type `string`,
+  so extension-method binding selects `HandlerExtensions.Tag` exactly. The
+  interface dispatch that produces one receiver value does not make the
+  subsequent extension call ambiguous.
+- Outcome revealed after review: Roslyn returned exactly both `Tag()` calls and
+  navigated each to the precise `HandlerExtensions.Tag` definition token.
+
+### csharp-parity-partial-property-access
+
+- Source: `fixtures/csharp/lsp-parity/src/Handlers.cs` and `src/Consumers.cs`.
+- Authored property: `EventRecord.Name` in the `Handlers.cs` partial part.
+- Required usages: the constructor assignment, the unqualified read from the
+  other partial part, and the external `record.Name` read.
+- Excluded location: the property definition token.
+- Ground-truth decision: **correct after adding definition navigation from all
+  three usages**
+- Operation decision: **definition** from each access to the `Name` property
+  identifier.
+- Reviewer rationale: the constructor may initialize the getter-only
+  auto-property, and both partial class declarations form one `EventRecord`
+  type. All three source tokens therefore share the same property identity;
+  the cross-file unqualified read is the key regression and the constructor
+  assignment provides a same-file control.
+- Outcome revealed after review: Roslyn returned exactly all three property
+  usages and navigated each to the precise `Name` identifier in `Handlers.cs`.
+
+### csharp-source-generator-partial-method-call
+
+- Source: `fixtures/csharp/source-generator/`.
+- Environment decision: move the source-generator scenario out of the shared
+  parity project and make it a real two-project compiler setup. The consumer
+  project builds the checked-in generator project as an analyzer; the
+  generator emits the implementation half of `GeneratedName` for the authored
+  partial declaration.
+- Required usage: the authored `GeneratedName()` call in `Read`.
+- Ground-truth decision: **correct and scoreable for forward references**
+- Reviewer rationale: the call is a stable file-backed usage of the authored
+  partial method declaration. The generated implementation is the method's
+  definition counterpart, not another ordinary usage.
+- Methodology boundary: navigation to the implementation in Roslyn's virtual
+  generated document remains unscored until UsageBench can express a stable
+  generated-source URI. This does not prevent the authored declaration-to-call
+  relationship from being a normal planned case now.
+- Build verification: a clean temporary fixture copy builds with .NET SDK
+  8.0.418 with zero warnings and zero errors. This removes the `CS8795`
+  compile error that previously affected every case sharing the C# parity
+  fixture.
+- Outcome revealed after review: the official language server loaded the
+  custom project outside the restricted sandbox and returned exactly the
+  authored `GeneratedName()` call from a reference query on the partial
+  declaration.
+- Bifrost outcome: Bifrost 0.8.5 at
+  `a84d6df418e8975019007a60872e5788320ff54f` returned no usage for the same
+  declaration. The planned case therefore records a concrete file-backed
+  parity gap without requiring Bifrost to materialize or navigate Roslyn's
+  virtual generated document.

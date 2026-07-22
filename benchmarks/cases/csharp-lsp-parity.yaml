@@ -36,16 +36,48 @@ cases:
             end: { line: 16, character: 41 }
         kind: class
         displayName: ConsoleHandler
+      - location:
+          uri: benchmark://source/src/Polymorphism.cs
+          range:
+            start: { line: 15, character: 18 }
+            end: { line: 15, character: 32 }
+        kind: class
+        displayName: ConsoleHandler
+      - location:
+          uri: benchmark://source/src/Polymorphism.cs
+          range:
+            start: { line: 27, character: 26 }
+            end: { line: 27, character: 40 }
+        kind: class
+        displayName: ConsoleHandler
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Handlers.cs
             range:
               start: { line: 57, character: 19 }
               end: { line: 57, character: 30 }
-          kind: class
+          kind: type
           displayName: WorkerAlias
         expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 0, character: 6 }
+              end: { line: 0, character: 17 }
+          kind: type
+          displayName: WorkerAlias
+    typeLookups:
+      - expression:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 57, character: 19 }
+              end: { line: 57, character: 30 }
+          kind: type
+          displayName: WorkerAlias
+        expectedType:
           location:
             uri: benchmark://source/src/Handlers.cs
             range:
@@ -54,12 +86,19 @@ cases:
           kind: class
           displayName: ConsoleHandler
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. Both the alias-spelled and
+        directly spelled construction tokens are usages of ConsoleHandler; the
+        ConsoleHandler token on the alias directive RHS remains an optional
+        import-binding usage under bindings_optional. Definition navigation
+        from WorkerAlias preserves the alias binding, while type-definition
+        navigation reaches the underlying ConsoleHandler class.
         Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
         Upstream reference: Roslyn LanguageServerProtocol definition and references tests for aliases and constructor/class navigation.
         Adapted fixture: fixtures/csharp/lsp-parity/.
-        Maturity: a namespace alias used as a constructor/class reference should resolve to the aliased class declaration.
+        Maturity: a namespace alias used as a constructor/class reference
+        should preserve both its source binding and underlying class identity.
   - id: csharp-parity-interface-receiver-method-call
     declaration:
       location:
@@ -77,8 +116,16 @@ cases:
             end: { line: 15, character: 34 }
         kind: method
         displayName: Handle
+      - location:
+          uri: benchmark://source/src/Polymorphism.cs
+          range:
+            start: { line: 25, character: 35 }
+            end: { line: 25, character: 41 }
+        kind: method
+        displayName: Handle
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/Consumers.cs
             range:
@@ -94,13 +141,39 @@ cases:
               end: { line: 6, character: 17 }
           kind: method
           displayName: Handle
+    typeLookups:
+      - expression:
+          location:
+            uri: benchmark://source/src/Polymorphism.cs
+            range:
+              start: { line: 24, character: 17 }
+              end: { line: 24, character: 24 }
+          kind: variable
+          displayName: handler
+        expectedType:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 4, character: 17 }
+              end: { line: 4, character: 25 }
+          kind: interface
+          displayName: IHandler
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. handler has the declared
+        static type IHandler, so handler.Handle is a usage of the interface
+        member and must not be attributed to ConsoleHandler.Handle. The
+        interface member has no body, so reverse navigation is explicitly to
+        its declaration. The original call remains a one-implementation
+        control, while PolymorphismConsumer adds a runtime branch between
+        ConsoleHandler and BufferHandler; its handler local still has the
+        static type IHandler, which type-definition lookup explicitly checks.
         Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
         Upstream reference: Roslyn LanguageServerProtocol definition, references, and implementation tests for interface methods.
         Adapted fixture: fixtures/csharp/lsp-parity/.
-        Maturity: handler.Handle is called through an IHandler-typed local and should resolve to the interface method declaration.
+        Maturity: handler.Handle is called through an IHandler-typed local and
+        should resolve to the interface method declaration.
   - id: csharp-parity-concrete-implementation-method-call
     declaration:
       location:
@@ -118,8 +191,16 @@ cases:
             end: { line: 17, character: 36 }
         kind: method
         displayName: Handle
+      - location:
+          uri: benchmark://source/src/Polymorphism.cs
+          range:
+            start: { line: 28, character: 33 }
+            end: { line: 28, character: 39 }
+        kind: method
+        displayName: Handle
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumers.cs
             range:
@@ -135,13 +216,79 @@ cases:
               end: { line: 38, character: 24 }
           kind: method
           displayName: Handle
+      - operation: definition
+        usage:
+          location:
+            uri: benchmark://source/src/Polymorphism.cs
+            range:
+              start: { line: 28, character: 33 }
+              end: { line: 28, character: 39 }
+          kind: method
+          displayName: Handle
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 38, character: 18 }
+              end: { line: 38, character: 24 }
+          kind: method
+          displayName: Handle
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Both concrete and console
+        have the exact static type ConsoleHandler, so their Handle calls are
+        usages of ConsoleHandler.Handle and definition navigation from each
+        reaches its body. IHandler-typed calls and BufferHandler.Handle remain
+        separate symbol identities.
         Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
         Upstream reference: Roslyn LanguageServerProtocol implementation and references tests for override/interface implementations.
         Adapted fixture: fixtures/csharp/lsp-parity/.
-        Maturity: concrete.Handle is called through a ConsoleHandler local and should resolve to ConsoleHandler.Handle.
+        Maturity: both concrete calls resolve to ConsoleHandler.Handle without
+        absorbing interface-typed or sibling-implementation calls.
+  - id: csharp-parity-buffer-implementation-method-call
+    declaration:
+      location:
+        uri: benchmark://source/src/Polymorphism.cs
+        range:
+          start: { line: 4, character: 18 }
+          end: { line: 4, character: 24 }
+      kind: method
+      displayName: Handle
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/Polymorphism.cs
+          range:
+            start: { line: 31, character: 31 }
+            end: { line: 31, character: 37 }
+        kind: method
+        displayName: Handle
+    usageLookups:
+      - operation: definition
+        usage:
+          location:
+            uri: benchmark://source/src/Polymorphism.cs
+            range:
+              start: { line: 31, character: 31 }
+              end: { line: 31, character: 37 }
+          kind: method
+          displayName: Handle
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Polymorphism.cs
+            range:
+              start: { line: 4, character: 18 }
+              end: { line: 4, character: 24 }
+          kind: method
+          displayName: Handle
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22 as part of the
+        multi-implementation polymorphism expansion. buffer has the exact
+        static type BufferHandler, so buffer.Handle resolves to the concrete
+        BufferHandler.Handle definition. Interface-typed and ConsoleHandler
+        calls are not usages of this concrete method identity.
   - id: csharp-parity-extension-method-call
     declaration:
       location:
@@ -167,7 +314,25 @@ cases:
         kind: method
         displayName: Tag
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
+          location:
+            uri: benchmark://source/src/Consumers.cs
+            range:
+              start: { line: 6, character: 20 }
+              end: { line: 6, character: 23 }
+          kind: method
+          displayName: Tag
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 47, character: 25 }
+              end: { line: 47, character: 28 }
+          kind: method
+          displayName: Tag
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumers.cs
             range:
@@ -184,12 +349,17 @@ cases:
           kind: method
           displayName: Tag
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Name and the result of
+        handler.Handle both have the static type string, so each Tag extension
+        call resolves exactly to HandlerExtensions.Tag. Definition navigation
+        from either call reaches the same static method body.
         Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
         Upstream reference: Roslyn LanguageServerProtocol definition and references tests for extension methods.
         Adapted fixture: fixtures/csharp/lsp-parity/.
-        Maturity: extension-call syntax should resolve back to the static extension method declaration.
+        Maturity: extension-call syntax should resolve back to the exact static
+        extension method definition.
   - id: csharp-parity-partial-property-access
     declaration:
       location:
@@ -222,7 +392,42 @@ cases:
         kind: property
         displayName: Name
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 25, character: 8 }
+              end: { line: 25, character: 12 }
+          kind: property
+          displayName: Name
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 21, character: 18 }
+              end: { line: 21, character: 22 }
+          kind: property
+          displayName: Name
+      - operation: definition
+        usage:
+          location:
+            uri: benchmark://source/src/Consumers.cs
+            range:
+              start: { line: 6, character: 15 }
+              end: { line: 6, character: 19 }
+          kind: property
+          displayName: Name
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/Handlers.cs
+            range:
+              start: { line: 21, character: 18 }
+              end: { line: 21, character: 22 }
+          kind: property
+          displayName: Name
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumers.cs
             range:
@@ -239,28 +444,15 @@ cases:
           kind: property
           displayName: Name
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The constructor assignment,
+        cross-partial unqualified read, and external qualified read all refer
+        to the one EventRecord.Name property. Definition navigation from each
+        usage reaches the property identifier in Handlers.cs; the partial
+        declarations form one type surface.
         Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
         Upstream reference: Roslyn LanguageServerProtocol references tests for properties and partial-class declarations.
         Adapted fixture: fixtures/csharp/lsp-parity/.
-        Maturity: partial EventRecord members should share one type surface, and Name accesses in the other partial file should resolve to the property declaration.
-  - id: csharp-parity-source-generator-not-planned
-    notPlanned:
-      reason: C# source-generator-produced members are retained for parity tracking but are not scored until the runner has a deliberate generated-source model.
-    declaration:
-      location:
-        uri: benchmark://source/src/Consumers.cs
-        range:
-          start: { line: 25, character: 26 }
-          end: { line: 25, character: 39 }
-      kind: method
-      displayName: GeneratedName
-    usageLookups: []
-    verification:
-      method: analyzer_comparison
-      notes: >
-        Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
-        Upstream reference: Roslyn LanguageServerProtocol tests for generated files and source-generated members.
-        Adapted fixture: fixtures/csharp/lsp-parity/.
-        Maturity: source-generator-produced members are intentionally unscored in the first C# parity fixture.
+        Maturity: partial EventRecord members should share one type surface,
+        and all Name accesses should resolve to the property definition.
