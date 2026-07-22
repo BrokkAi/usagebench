@@ -1300,3 +1300,288 @@ promotion requirement; this log preserves the first review meanwhile.
   declaration. The planned case therefore records a concrete file-backed
   parity gap without requiring Bifrost to materialize or navigate Roslyn's
   virtual generated document.
+
+## go-baseline.yaml
+
+### go-package-function-call
+
+- Source: `fixtures/go/baseline/src/example/service.go` and
+  `src/example/service_test.go`.
+- Authored definition: the package-level function `NewService`.
+- Required usage: `NewService(repository)` in `ExampleService`.
+- Excluded locations: the function definition token and `Service` in the
+  returned composite literal, which is a separate type usage.
+- Ground-truth decision: **correct**
+- Operation decision: **definition** from the call to the package-level
+  function body.
+- Reviewer rationale: Go has no constructor declaration here; `NewService` is
+  an ordinary package-level function with one exact call. Its body makes the
+  authored target an executable definition rather than a declaration-only
+  contract.
+- Outcome revealed after review: gopls 0.23.0 returned exactly the one
+  `NewService(repository)` usage and navigated from it to the precise
+  `NewService` definition token.
+
+### go-value-receiver-method-call
+
+- Source: `fixtures/go/baseline/src/example/service.go` and
+  `src/example/service_test.go`.
+- Authored definition: `Execute` on the `Service` value receiver.
+- Required usage: `service.Execute("Ada")` through a `Service` value.
+- Excluded locations: the method definition token and the `Service` receiver
+  type, which is a separate type usage.
+- Ground-truth decision: **correct**
+- Operation decision: **definition** from the call to the value-receiver
+  method body.
+- Reviewer rationale: the receiver has the exact static type `Service` and
+  there is no competing method or dispatch ambiguity. The method has an
+  executable body, so definition navigation is the appropriate operation.
+- Outcome revealed after review: gopls 0.23.0 returned exactly the one
+  `service.Execute("Ada")` usage and navigated from it to the precise
+  `Service.Execute` definition token.
+
+### go-pointer-receiver-method-call
+
+- Source: `fixtures/go/baseline/src/example/service.go` and
+  `src/example/service_test.go`.
+- Authored definition: `Save` on the `*MemoryRepository` pointer receiver.
+- Required usage: `repository.Save("Grace")` through an exact
+  `*MemoryRepository` local.
+- Unproven usage: `s.repository.Save(name)` through the `Repository` interface.
+- Ground-truth decision: **correct with the interface call retained only as an
+  unproven implementation candidate**
+- Operation decision: **definition** from the direct concrete call to the
+  pointer-receiver method body.
+- Reviewer rationale: the direct receiver has exact concrete identity. The
+  interface-typed call binds statically to `Repository.Save` and may dispatch
+  to another implementation, so it cannot be a proven concrete usage; it is
+  nevertheless a sound conservative candidate for the implementation family.
+- gopls tie-breaker: an exact-only concrete probe failed because gopls 0.23.0
+  returned both calls. The original two-tier contract passed. A reciprocal
+  interface probe also passed: gopls treated the interface call as proven and
+  the direct concrete call as an unproven family candidate.
+- Navigation evidence: the direct call navigated to
+  `(*MemoryRepository).Save`, while the interface call navigated to the
+  `Repository.Save` declaration. gopls therefore expands reference queries
+  across the method family while preserving distinct static navigation
+  identities.
+
+### go-struct-field-access
+
+- Source: `fixtures/go/baseline/src/example/service.go` and
+  `src/example/service_test.go`.
+- Authored declaration: `Last` in the `MemoryRepository` struct.
+- Required usages: the `m.Last` write in `Save` and the `repository.Last` read
+  in `ExampleService`.
+- Excluded location: the field declaration token itself.
+- Ground-truth decision: **correct**
+- Operation decision: **declaration** from the qualified read to the struct
+  field declaration.
+- Reviewer rationale: both receivers have exact `MemoryRepository` identity,
+  and reads and writes both use the field. The field has no executable body or
+  separate authored definition target.
+- Outcome revealed after review: gopls 0.23.0 returned exactly the write and
+  read usages. It does not advertise `textDocument/declaration`, so the reverse
+  operation is correctly reported unsupported rather than falling back to
+  `textDocument/definition`.
+
+### go-package-constant-access
+
+- Source: `fixtures/go/baseline/src/example/service.go` and
+  `src/example/service_test.go`.
+- Authored declaration: the initialized package constant `DefaultPrefix`.
+- Required usages: the reads in `Service.Execute` and `ExampleService`.
+- Excluded location: the constant declaration token itself.
+- Ground-truth decision: **correct after separating package-variable coverage**
+- Operation decision: **declaration** from the test read to the initialized
+  constant binding.
+- Reviewer rationale: both source tokens are reads of the same package
+  constant. The initialized binding has no executable body or separate
+  authored definition target.
+- Outcome revealed after review: gopls 0.23.0 returned exactly both constant
+  reads. It does not advertise `textDocument/declaration`, so reverse
+  navigation is reported unsupported without falling back to definition.
+
+### go-package-variable-access
+
+- Source: `fixtures/go/baseline/src/example/service.go` and
+  `src/example/service_test.go`.
+- Authored declaration: the initialized package variable `DefaultRepository`.
+- Required usage: the read in `ExampleService`.
+- Excluded locations: the variable declaration token and `MemoryRepository` in
+  its initializer, which is a separate type/construction usage.
+- Ground-truth decision: **added because the former combined case did not
+  actually score its advertised package-variable coverage**
+- Operation decision: **declaration** from the read to the initialized package
+  variable binding.
+- Fixture correction: changed the initializer from `MemoryRepository{}` to
+  `&MemoryRepository{}`. Only `*MemoryRepository` implements `Repository`
+  because `Save` has a pointer receiver; the original fixture failed to
+  compile.
+- Reviewer rationale: the variable has one exact package-level read and no
+  separate executable definition body. The variable and concrete type in its
+  initializer retain distinct symbol identities.
+- Outcome revealed after review: the corrected fixture passes `go test`.
+  gopls 0.23.0 returned exactly the one `DefaultRepository` read and reported
+  the separate declaration lookup unsupported, as expected.
+
+The first independent human review of every case currently in
+`go-baseline.yaml` is complete. Its document metadata remains
+`legacy_unattributed` until a second independent reviewer completes the
+promotion requirement; this log preserves the first review meanwhile.
+
+## go-precision.yaml
+
+### go-dot-import-concrete-receiver-call
+
+- Source: `fixtures/go/precision/cmd/app/main.go` and
+  `worker/worker.go`.
+- Authored definition: `Record` on the concrete `Worker` receiver.
+- Required usages: `worker.Record()` and `paired.Record()` through exact
+  `Worker` values.
+- Unproven usage: `recorder.Record()` through the `Recorder` interface.
+- Ground-truth decision: **correct**
+- Operation decision: **definition** from both concrete calls to the
+  `Worker.Record` method body.
+- Reviewer rationale: `NewWorker` returns `Worker`, and tuple assignment does
+  not weaken the inferred type of its second binding. The dot import affects
+  how package symbols enter scope, not the method identities selected by the
+  receivers. The interface call keeps its distinct static identity while
+  remaining a conservative implementation-family candidate.
+- Outcome revealed after review: the fixture passes `go test`, and gopls
+  0.23.0 returned both concrete calls plus the interface-family candidate with
+  no extras or omissions. Definition navigation from each concrete call
+  reached the exact `Worker.Record` method body.
+
+### go-interface-receiver-method-call
+
+- Source: `fixtures/go/precision/cmd/app/main.go` and
+  `worker/worker.go`.
+- Authored declaration: the bodyless `Record` member on `Recorder`.
+- Required usage: `recorder.Record()` through the `Recorder`-typed local.
+- Unproven usages: the two direct `Worker.Record` calls as implementation-family
+  candidates.
+- Ground-truth decision: **correct after making the reciprocal family
+  candidates explicit**
+- Operation decision: **declaration** from the interface call to the bodyless
+  interface member.
+- Reviewer rationale: assigning a `Worker` to the interface local does not
+  change the call's static identity, and the local remains assignable to other
+  implementations. The concrete calls are not proven interface-member usages,
+  but are sound conservative method-family candidates.
+- Outcome revealed after review: gopls 0.23.0 returned the interface call plus
+  both concrete family candidates with no extras or omissions. It does not
+  advertise `textDocument/declaration`, so reverse navigation is reported
+  unsupported without falling back to definition.
+
+The first independent human review of every case currently in
+`go-precision.yaml` is complete. Its document metadata remains
+`legacy_unattributed` until a second independent reviewer completes the
+promotion requirement; this log preserves the first review meanwhile.
+
+## go-lsp-parity.yaml
+
+### go-parity-cross-package-import-alias-function-call
+
+- Source: `fixtures/go/lsp-parity/pkg/service/service.go` and
+  `cmd/app/main.go`.
+- Authored definition: the package-level function `service.NewWorker`.
+- Required usage: `NewWorker` in `svc.NewWorker()`.
+- Excluded locations: the `svc` package alias and the `Worker`/`AuditLog` type
+  tokens in the function body.
+- Ground-truth decision: **correct**
+- Operation decision: **definition** from the imported selector call to the
+  package-level function body.
+- Reviewer rationale: Go constructor naming does not create a distinct
+  constructor symbol; `NewWorker` is an ordinary function. The import alias
+  changes only how the package qualifier is spelled at the call site.
+- Outcome revealed after review: the fixture passes `go test`, and gopls
+  0.23.0 returned exactly the `svc.NewWorker()` selector usage and navigated
+  from it to the precise function definition token.
+
+### go-parity-embedded-promoted-method-call
+
+- Source: `fixtures/go/lsp-parity/pkg/service/service.go` and
+  `cmd/app/main.go`.
+- Authored definition: `Record` on the embedded `*AuditLog` receiver.
+- Required usages: `w.Record("run")` inside `Worker.Run` and
+  `worker.Record("start")` in `main`.
+- Excluded locations: the method definition token and `AuditLog` in the
+  embedded field, which is a separate type/field identity.
+- Ground-truth decision: **correct**
+- Operation decision: **definition** from both promoted calls to the
+  `(*AuditLog).Record` body.
+- Reviewer rationale: both receivers have exact `*Worker` type, and the single
+  embedded `*AuditLog` creates an unambiguous promotion path. Go does not
+  synthesize a separate authored `Worker.Record` declaration or body.
+- Outcome revealed after review: gopls 0.23.0 returned exactly both promoted
+  calls and navigated from each to the precise `(*AuditLog).Record` definition
+  token.
+
+### go-parity-embedded-promoted-field-access
+
+- Source: `fixtures/go/lsp-parity/pkg/service/service.go` and
+  `cmd/app/main.go`.
+- Authored declaration: `Last` on `AuditLog`.
+- Required usages: the direct write and read through `*AuditLog`, plus the
+  promoted `worker.Last` read through `*Worker`.
+- Excluded locations: the field declaration token and `AuditLog` in the
+  embedded field, which is a separate type/field identity.
+- Ground-truth decision: **correct**
+- Operation decision: **declaration** from the promoted read to `Last` in the
+  `AuditLog` struct.
+- Reviewer rationale: the single embedded `*AuditLog` creates an unambiguous
+  promotion path. Go does not synthesize a separate authored `Worker.Last`
+  field, and the field has no executable body or separate definition target.
+- Outcome revealed after review: gopls 0.23.0 returned exactly all three field
+  usages. It does not advertise `textDocument/declaration`, so the reverse
+  operation is reported unsupported without falling back to definition.
+
+### go-parity-build-tag-unsupported
+
+- Source: `fixtures/go/lsp-parity/pkg/service/integration.go`.
+- Authored definition: the package-level function `IntegrationOnly`, guarded by
+  `//go:build integration`.
+- Usage site: none; the current fixture contains no caller under the integration
+  build tag.
+- Boundary decision: **retain unsupported**.
+- Reviewer rationale: an empty reference expectation would not distinguish a
+  correctly loaded build-tag configuration from a runner that silently omitted
+  the file. The benchmark contract also has no case-level setting for
+  `-tags=integration`, so the environment required to score the declaration is
+  not currently expressed.
+- Promotion requirements: add a caller guarded by the same build tag; add an
+  explicit benchmark-level `-tags=integration` setting; require the reference
+  and definition-navigation result; and verify that every scored runner loaded
+  that build configuration.
+
+The first independent human review of every case currently in
+`go-lsp-parity.yaml` is complete. Its document metadata remains
+`legacy_unattributed` until a second independent reviewer completes the
+promotion requirement; this log preserves the first review meanwhile.
+
+## Go post-classification analyzer comparison
+
+The analyzer comparison was run only after every Go case above had been
+classified. Bifrost was built from exact `origin/master` commit
+`4b1dd6456fe0d7ee6786ede958240f0deba4fd8f`.
+
+- `go-baseline.yaml`: every declaration-to-usage set matched. The three
+  definition lookups passed. The field, constant, and variable cases were
+  reported unsupported solely because Bifrost does not expose declaration
+  navigation separately from definition navigation.
+- `go-lsp-parity.yaml`: the import-alias function and embedded promoted-method
+  cases passed exactly. The promoted-field reference set matched, with only
+  declaration navigation unsupported. The build-tag case remained unsupported
+  by the authored contract.
+- `go-dot-import-concrete-receiver-call`: the full two-tier reference family
+  matched, but both concrete definition lookups failed. Bifrost incorrectly
+  diagnosed the `Record` selector as shadowed by a local Go binding, whereas
+  gopls navigated both selectors to `Worker.Record`.
+- `go-interface-receiver-method-call`: Bifrost found the required static
+  interface call but omitted both conservative concrete implementation-family
+  candidates that gopls returns. Declaration navigation was independently
+  unsupported.
+
+The two precision failures are retained as candidate Bifrost issue requests;
+they do not change the reviewed source-location contract.

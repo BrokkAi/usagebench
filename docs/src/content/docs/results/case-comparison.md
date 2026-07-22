@@ -46,7 +46,10 @@ result means contract disagreement, not an automatic defect verdict.
 
 | Case | Bifrost | gopls | Observed distinction |
 |---|---|---|---|
-| `go-interface-receiver-method-call` | Pass | Hard | Bifrost satisfies the authored interface-receiver contract; gopls broadens the interface method to two concrete-receiver calls. |
+| `go-pointer-receiver-method-call` | Exact | Exact | The reviewed contract requires the exact concrete call and records the interface-typed call as an unproven implementation-family candidate. gopls expands references across that family while preserving distinct concrete and interface navigation targets; Bifrost satisfies the same two-tier contract. |
+| `go-dot-import-concrete-receiver-call` | Gap | Exact | Both analyzers return the reviewed concrete calls plus the conservative interface-family candidate. gopls navigates each concrete selector to `Worker.Record`; Bifrost instead rejects both definition lookups with an incorrect local-binding-shadow diagnosis. |
+| `go-interface-receiver-method-call` | Gap | Exact | The required usage keeps its static `Recorder.Record` identity, while both concrete calls are conservative implementation-family candidates. gopls returns the complete two-tier family. Bifrost finds the required interface call but omits both candidates. |
+| Field, constant, and variable declaration cases | Unsupported | Unsupported | Both analyzers return the reviewed reference sets. Neither exposes Go declaration navigation as a distinct operation, and the harness deliberately does not substitute definition navigation. |
 
 ## Java
 
