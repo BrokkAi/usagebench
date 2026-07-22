@@ -30,7 +30,8 @@ cases:
         kind: constructor
         displayName: Service
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumer.php
             range:
@@ -48,7 +49,17 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Consumer::run constructs Service with a Repository instance.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Service in new
+        Service($repository) is the required constructor-call usage while also
+        naming the Service class. Definition navigation canonically targets the
+        Service class token because that is the visible cursor identity.
+        __construct is the eventual control-flow target and is a reasonable
+        secondary navigation result, but it has a distinct source name.
+        Repository and local-variable tokens are separate identities.
+        Intelephense 1.18.5 returned the exact construction usage and both the
+        class token and __construct for definition navigation; the strict
+        singleton lookup therefore reports multiple_targets.
   - id: php-method-call
     declaration:
       location:
@@ -67,7 +78,8 @@ cases:
         kind: method
         displayName: execute
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumer.php
             range:
@@ -85,7 +97,13 @@ cases:
           displayName: execute
     verification:
       method: manual_inspection
-      notes: Consumer::run calls execute on the constructed Service instance.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Consumer::run calls
+        execute on a directly constructed Service local that is not reassigned,
+        so the receiver and method target are exact. Definition navigation
+        targets the Service::execute method body. Service, save, PREFIX, and
+        receiver-variable tokens retain separate identities. Intelephense
+        1.18.5 returned the exact usage and definition target.
   - id: php-repository-method-call
     declaration:
       location:
@@ -104,7 +122,8 @@ cases:
         kind: method
         displayName: save
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Service.php
             range:
@@ -122,16 +141,23 @@ cases:
           displayName: save
     verification:
       method: manual_inspection
-      notes: Service::execute calls save on its Repository dependency.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Service::execute calls save
+        through the constructor-promoted repository property, whose declared
+        type is the final Repository class. With no interface or alternate
+        implementation, dispatch is exact and definition navigation targets
+        the Repository::save method body. Property, parameter, and type tokens
+        are separate identities. Intelephense 1.18.5 returned the exact usage
+        and definition target.
   - id: php-property-access
     declaration:
       location:
         uri: benchmark://source/src/Service.php
         range:
-          start: { line: 11, character: 19 }
+          start: { line: 11, character: 18 }
           end: { line: 11, character: 23 }
       kind: property
-      displayName: last
+      displayName: $last
     expectedUsages:
       - location:
           uri: benchmark://source/src/Service.php
@@ -155,7 +181,8 @@ cases:
         kind: property
         displayName: last
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/Consumer.php
             range:
@@ -167,13 +194,24 @@ cases:
           location:
             uri: benchmark://source/src/Service.php
             range:
-              start: { line: 11, character: 19 }
+              start: { line: 11, character: 18 }
               end: { line: 11, character: 23 }
           kind: property
-          displayName: last
+          displayName: $last
     verification:
       method: manual_inspection
-      notes: Repository::$last is assigned and read in save, then read by Consumer::run.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Repository::$last is
+        written and read in save, then read through an exact Repository local
+        in Consumer::run. The initialized property declarator is not counted
+        again as a usage. Declaration navigation targets the $last property
+        declarator because the property has no separate executable definition
+        body. Intelephense 1.18.5 returned all three usages exactly but does not
+        advertise textDocument/declaration. A non-scored definition probe
+        reached the same property declarator with the full PHP $last token.
+        Following the reviewer decision for PHP token consistency, this
+        declaration range includes the sigil while the syntactically
+        sigil-free ->last access ranges continue to select last.
   - id: php-constant-access
     declaration:
       location:
@@ -199,7 +237,8 @@ cases:
         kind: constant
         displayName: PREFIX
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/Consumer.php
             range:
@@ -217,4 +256,11 @@ cases:
           displayName: PREFIX
     verification:
       method: manual_inspection
-      notes: Defaults::PREFIX is declared in Service.php and read from Service::execute and Consumer::run.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Defaults::PREFIX is read
+        once in Service::execute and once in Consumer::run. The Defaults
+        qualifiers are separate class usages, and the constant initializer
+        does not create an executable definition body. Declaration navigation
+        targets the PREFIX constant declarator. Intelephense 1.18.5 returned
+        both usages exactly but does not advertise textDocument/declaration; a
+        non-scored definition probe reached the same PREFIX token exactly.
