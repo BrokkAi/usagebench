@@ -19,7 +19,24 @@ cases:
       - location: { uri: benchmark://source/Precision.cs, range: { start: { line: 4, character: 1 }, end: { line: 4, character: 8 } } }
         kind: class
         displayName: Tracked
-    verification: { method: manual_inspection, notes: "C# attribute suffix elision must resolve [Tracked] to TrackedAttribute." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/Precision.cs, range: { start: { line: 4, character: 1 }, end: { line: 4, character: 8 } } }
+          kind: class
+          displayName: Tracked
+        expectedDeclaration:
+          location: { uri: benchmark://source/Precision.cs, range: { start: { line: 7, character: 20 }, end: { line: 7, character: 36 } } }
+          kind: class
+          displayName: TrackedAttribute
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. C# attribute suffix
+        elision resolves the seven-character Tracked usage in [Tracked] to the
+        sixteen-character TrackedAttribute class definition. The source ranges
+        deliberately preserve those different spellings, and definition
+        navigation connects them.
   - id: csharp-generic-extension-call
     declaration:
       location: { uri: benchmark://source/Precision.cs, range: { start: { line: 10, character: 20 }, end: { line: 10, character: 24 } } }
@@ -29,7 +46,24 @@ cases:
       - location: { uri: benchmark://source/Precision.cs, range: { start: { line: 18, character: 55 }, end: { line: 18, character: 59 } } }
         kind: method
         displayName: Echo
-    verification: { method: manual_inspection, notes: "A generic extension called on a constructed receiver is a precise member usage." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/Precision.cs, range: { start: { line: 18, character: 55 }, end: { line: 18, character: 59 } } }
+          kind: method
+          displayName: Echo
+        expectedDeclaration:
+          location: { uri: benchmark://source/Precision.cs, range: { start: { line: 10, character: 20 }, end: { line: 10, character: 24 } } }
+          kind: method
+          displayName: Echo
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. The Echo extension call on
+        the constructed Registered receiver resolves to Extensions.Echo<T>
+        with T inferred as Registered. The constructed generic method has no
+        separate authored body, so definition navigation reaches the generic
+        method definition.
   - id: csharp-static-qualified-method-call
     declaration:
       location: { uri: benchmark://source/Precision.cs, range: { start: { line: 14, character: 25 }, end: { line: 14, character: 31 } } }
@@ -39,4 +73,20 @@ cases:
       - location: { uri: benchmark://source/Precision.cs, range: { start: { line: 19, character: 43 }, end: { line: 19, character: 49 } } }
         kind: method
         displayName: Create
-    verification: { method: manual_inspection, notes: "A class-qualified static call must resolve to Labels.Create without confusing the consumer method." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/Precision.cs, range: { start: { line: 19, character: 43 }, end: { line: 19, character: 49 } } }
+          kind: method
+          displayName: Create
+        expectedDeclaration:
+          location: { uri: benchmark://source/Precision.cs, range: { start: { line: 14, character: 25 }, end: { line: 14, character: 31 } } }
+          kind: method
+          displayName: Create
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-21. Labels.Create() is a
+        direct class-qualified static call with one exact method identity. It
+        is not confused with the neighboring Consumer.Label method, and
+        definition navigation reaches the expression-bodied Create definition.

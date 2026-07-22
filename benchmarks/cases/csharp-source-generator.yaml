@@ -1,0 +1,54 @@
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
+positionEncoding: utf-16
+source:
+  kind: fixture
+  path: fixtures/csharp/source-generator
+language: csharp
+cases:
+  - id: csharp-source-generator-partial-method-call
+    declaration:
+      location:
+        uri: benchmark://source/src/GeneratedConsumer.cs
+        range:
+          start: { line: 4, character: 26 }
+          end: { line: 4, character: 39 }
+      kind: method
+      displayName: GeneratedName
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/GeneratedConsumer.cs
+          range:
+            start: { line: 8, character: 15 }
+            end: { line: 8, character: 28 }
+        kind: method
+        displayName: GeneratedName
+    usageLookups: []
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The authored
+        GeneratedName call is a required file-backed usage of the authored
+        partial method declaration. The fixture builds a checked-in source
+        generator as an analyzer and consumes its generated implementation
+        from a separate project. The generated implementation is the method's
+        definition counterpart rather than another ordinary usage. Definition
+        navigation into the compiler-generated virtual document remains
+        unscored until the benchmark schema has a stable generated-source URI
+        contract. The official Roslyn language server returned exactly the
+        authored call from a reference query on the partial declaration.
+        Bifrost 0.8.5 at
+        a84d6df418e8975019007a60872e5788320ff54f returned no usage for the
+        same declaration, making the file-backed relationship a concrete
+        parity target independently of generated-document navigation.
+        Parity source:
+        dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
+        Upstream reference: Roslyn LanguageServerProtocol tests for generated
+        files and source-generated members. Adapted fixture:
+        fixtures/csharp/source-generator/.

@@ -48,6 +48,22 @@ Use `run-bifrost` when changing Bifrost execution, result normalization, or
 scoring behavior. It may fetch, build, or create temporary worktrees under
 `target/usagebench`.
 
+### Roslyn LSP execution
+
+The official Roslyn language server starts an MSBuild build-host process that
+uses local named pipes (Unix-domain sockets on macOS/Linux). Run Roslyn LSP
+benchmarks with permission to create and bind those local sockets; a restricted
+sandbox may fail with `System.Net.Sockets.SocketException (13): Permission
+denied` and `BuildHost process exited with 134`.
+
+Do not treat the resulting empty references or definitions as semantic
+failures. Roslyn can still emit `workspace/projectInitializationComplete` and
+place each file in an isolated `Miscellaneous Files` context after the project
+load fails. Before trusting a Roslyn comparison, verify that the MSBuild host
+loaded the generated project and that project-context responses are not
+miscellaneous. In Codex, this normally means running `run-lsp` outside the
+restricted sandbox after requesting the required escalation.
+
 ## Benchmark Case Authoring
 
 * Use portable `benchmark://source/...` URIs, never checkout-specific absolute

@@ -230,7 +230,7 @@ and file standalone product issues for meaningful misses.
 | PHP | class construction, direct method calls, `php-repository-method-call` expected failure, property access, class constants | Mine Intelephense or PHP language server scenarios for namespaces, imports, traits, static calls, instance properties, class constants, Composer autoload roots, fluent receiver chains, and magic method/property not-planned cases. Split Composer/autoload cases from simple source-only fixtures. |
 | Python | module imports, function re-export calls, class instantiation, `python-method-call` expected failure, dynamic `getattr` not planned, `python-attribute-access` expected failure | Mine Pyright and pylsp scenarios for imports/re-exports, class methods, attributes, protocol-like methods, package `__init__` exports, decorators, and dynamic lookup. Keep `__getattr__`, monkey-patching, dynamic imports, and string-based `getattr` not planned unless the target is deliberately promoted into the scored surface. |
 | Go | package functions, value receiver methods, pointer receiver methods, struct fields, package constants/vars | Mine gopls scenarios for pointer/value receiver equivalence, interfaces, embedding, promoted fields/methods, package aliases, cross-package references, constants/vars, and build-tag unsupported cases. Preserve package-level fixture shape with minimal `go.mod` where needed. |
-| C# | class references, constructors, methods, repository methods, properties, constants | Mine Roslyn LSP or OmniSharp scenarios for properties, fields, constructors, partial classes, interfaces, inheritance, extension methods, namespace aliases, and generated/source-generator not-planned cases. Keep source-generator cases unscored until generated-source parity becomes an intentional target. |
+| C# | class references, constructors, methods, repository methods, properties, constants | Mine Roslyn LSP or OmniSharp scenarios for properties, fields, constructors, partial classes, interfaces, inheritance, extension methods, namespace aliases, and generated/source-generator cases. Score stable file-backed declarations and usages now; keep navigation into virtual generated documents unscored until the schema has a portable URI contract. |
 | C++ | functions, class references, constructors, methods, `cpp-field-access` expected failure, constants | Mine clangd scenarios for declarations versus definitions, headers and implementations, overloads, namespaces, constructors, fields, constants, templates, using aliases, and include-boundary precision. Mark template-heavy or compile-command-sensitive cases conservatively until fixtures include enough project shape. |
 
 Each language milestone should add a small reviewed scenario set before
@@ -306,8 +306,12 @@ Current C#/C++ progress:
 
 - Added `benchmarks/cases/csharp-lsp-parity.yaml` with namespace alias,
   interface receiver method, concrete implementation method, extension method,
-  partial property, and not-planned source-generator scenarios.
+  and partial property scenarios.
 - Added `fixtures/csharp/lsp-parity/` as the first minimal C# parity fixture.
+- Added `benchmarks/cases/csharp-source-generator.yaml` and
+  `fixtures/csharp/source-generator/` as a separate, buildable source-generator
+  environment. The checked-in generator is compiled as an analyzer and emits
+  the implementation consumed by the authored partial method declaration.
 - Added `benchmarks/cases/cpp-lsp-parity.yaml` with using alias, virtual base
   method, concrete override method, overload precision, template call, and
   unsupported compile-command-sensitive scenarios.
@@ -318,8 +322,11 @@ Current C#/C++ progress:
 - Added `fixtures/cpp/lsp-parity/` as the first minimal C++ parity fixture.
 - Verified focused Bifrost runs against `origin/master` resolved to
   `96f5f3a9b099cfe72e83994dbc99dcad3db6b516`.
-- The focused C# corpus includes a not-planned source-generator case; the
-  focused C++ corpus still includes an unsupported compile-command case.
+- The focused C# corpus scores the file-backed partial declaration and call in
+  its source-generator fixture. Navigation into Roslyn's virtual generated
+  document remains outside the scored contract until the schema has a stable
+  generated-source URI. The focused C++ corpus still includes an unsupported
+  compile-command case.
 - Filed C# alias misses as `bifrost#422`, receiver method reference-scan misses
   as `bifrost#423`, partial property receiver misses as `bifrost#424`, and
   extension method reference misses as `bifrost#425`.

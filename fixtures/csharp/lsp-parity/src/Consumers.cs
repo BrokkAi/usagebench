@@ -20,8 +20,3 @@ public static class ParityConsumer
         return first + record.Name + record.Label();
     }
 }
-
-public partial class GeneratedConsumer
-{
-    public partial string GeneratedName();
-}
