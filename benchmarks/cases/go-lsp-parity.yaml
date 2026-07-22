@@ -30,7 +30,8 @@ cases:
         kind: function
         displayName: NewWorker
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/cmd/app/main.go
             range:
@@ -47,8 +48,14 @@ cases:
           kind: function
           displayName: NewWorker
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. NewWorker has one exact
+        cross-package call through the svc import alias. The selector token is
+        the function usage; svc is the package binding, and the types in the
+        function body are separate symbols. Definition navigation reaches the
+        NewWorker function body. gopls 0.23.0 returned exactly the selector
+        usage and definition target.
         Parity source: golang/tools@ce1ac030f27092a75b323f20611767330fee68f3.
         Upstream reference: gopls/internal/test/marker/testdata/definition and references scenarios for imported package selectors.
         Adapted fixture: fixtures/go/lsp-parity/.
@@ -78,7 +85,25 @@ cases:
         kind: method
         displayName: Record
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
+          location:
+            uri: benchmark://source/pkg/service/service.go
+            range:
+              start: { line: 24, character: 10 }
+              end: { line: 24, character: 16 }
+          kind: method
+          displayName: Record
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/pkg/service/service.go
+            range:
+              start: { line: 6, character: 19 }
+              end: { line: 6, character: 25 }
+          kind: method
+          displayName: Record
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/cmd/app/main.go
             range:
@@ -95,8 +120,14 @@ cases:
           kind: method
           displayName: Record
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Both calls through
+        *Worker receivers use the unambiguously promoted AuditLog.Record
+        method. Embedding creates no separate authored Worker.Record symbol,
+        so definition navigation from either call reaches the pointer-receiver
+        method body on AuditLog. gopls 0.23.0 returned exactly both promoted
+        calls and both definition targets.
         Parity source: golang/tools@ce1ac030f27092a75b323f20611767330fee68f3.
         Upstream reference: gopls/internal/test/marker/testdata/references and implementation scenarios for embedded fields and promoted methods.
         Adapted fixture: fixtures/go/lsp-parity/.
@@ -133,7 +164,8 @@ cases:
         kind: field
         displayName: Last
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/cmd/app/main.go
             range:
@@ -150,15 +182,21 @@ cases:
           kind: field
           displayName: Last
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The direct write and read
+        plus the promoted read through *Worker all use AuditLog.Last.
+        Embedding creates no separate authored Worker.Last field. Declaration
+        navigation targets Last in the AuditLog struct. gopls 0.23.0 returned
+        exactly all three usages but does not advertise
+        textDocument/declaration.
         Parity source: golang/tools@ce1ac030f27092a75b323f20611767330fee68f3.
         Upstream reference: gopls/internal/test/marker/testdata/references scenarios for embedded fields and promoted selectors.
         Adapted fixture: fixtures/go/lsp-parity/.
         Maturity: Worker embeds *AuditLog, so worker.Last should resolve to the promoted AuditLog.Last field.
   - id: go-parity-build-tag-unsupported
     unsupported:
-      reason: Go build-tag-sensitive files are retained for parity tracking but are not scored until the runner exposes deliberate build constraints.
+      reason: Go build-tag-sensitive files are retained for parity tracking but are not scored until benchmark cases and runners expose deliberate build constraints.
     declaration:
       location:
         uri: benchmark://source/pkg/service/integration.go
@@ -169,9 +207,18 @@ cases:
       displayName: IntegrationOnly
     usageLookups: []
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. IntegrationOnly is declared
+        in a file guarded by the integration build tag, but this fixture has no
+        usage site and the benchmark contract does not request -tags=integration.
+        The case therefore remains unsupported rather than asserting an empty
+        scored result. Promotion requires a caller guarded by the same tag, a
+        benchmark-level -tags=integration setting honored by every runner, and
+        required reference plus definition-navigation expectations.
         Parity source: golang/tools@ce1ac030f27092a75b323f20611767330fee68f3.
         Upstream reference: gopls marker tests for build tags and workspace/build configuration.
         Adapted fixture: fixtures/go/lsp-parity/.
-        Maturity: build-tag-sensitive files are intentionally unscored in the first Go parity fixture.
+        Maturity: build-tag-sensitive files remain intentionally unscored until
+        the benchmark can prove that each runner loaded the requested build
+        configuration.

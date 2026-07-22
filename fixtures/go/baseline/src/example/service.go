@@ -6,7 +6,7 @@ type Repository interface {
 
 const DefaultPrefix = "job"
 
-var DefaultRepository Repository = MemoryRepository{}
+var DefaultRepository Repository = &MemoryRepository{}
 
 type MemoryRepository struct {
     Last string

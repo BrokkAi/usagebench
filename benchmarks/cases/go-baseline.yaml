@@ -30,7 +30,8 @@ cases:
         kind: function
         displayName: NewService
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/example/service_test.go
             range:
@@ -48,7 +49,12 @@ cases:
           displayName: NewService
     verification:
       method: manual_inspection
-      notes: ExampleService constructs Service through the package-level NewService function.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The NewService call in
+        ExampleService is the sole usage of the package-level function;
+        Service in the returned composite literal is a separate type usage.
+        Definition navigation from the call reaches the NewService function
+        body. gopls 0.23.0 returned exactly that usage and definition target.
   - id: go-value-receiver-method-call
     declaration:
       location:
@@ -67,7 +73,8 @@ cases:
         kind: method
         displayName: Execute
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/example/service_test.go
             range:
@@ -85,7 +92,12 @@ cases:
           displayName: Execute
     verification:
       method: manual_inspection
-      notes: Execute is declared on the Service value receiver and called from ExampleService.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Execute is defined on the
+        Service value receiver and has one exact call through a Service value
+        in ExampleService. Definition navigation from the call reaches the
+        Execute method body. gopls 0.23.0 returned exactly that usage and
+        definition target.
   - id: go-pointer-receiver-method-call
     declaration:
       location:
@@ -112,7 +124,8 @@ cases:
         kind: method
         displayName: Save
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/example/service_test.go
             range:
@@ -130,7 +143,14 @@ cases:
           displayName: Save
     verification:
       method: manual_inspection
-      notes: Save is implemented on *MemoryRepository and called through both interface-backed and concrete values.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The call through the
+        *MemoryRepository local is the required concrete usage. The call
+        through the Repository-typed field retains its separate static
+        interface identity but is an unproven concrete runtime candidate.
+        Definition navigation from the direct call reaches the pointer-receiver
+        method body. gopls 0.23.0 expands references symmetrically across the
+        interface family while preserving those distinct navigation targets.
   - id: go-struct-field-access
     declaration:
       location:
@@ -156,7 +176,8 @@ cases:
         kind: field
         displayName: Last
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/example/service_test.go
             range:
@@ -174,8 +195,14 @@ cases:
           displayName: Last
     verification:
       method: manual_inspection
-      notes: Last is assigned inside Save and read from the test fixture.
-  - id: go-package-constant-and-var
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Last has one write through
+        the method receiver and one read through an exact *MemoryRepository
+        local. Declaration navigation targets the field declaration in the
+        struct; there is no separate executable definition body. gopls 0.23.0
+        returned exactly both field usages but does not advertise the separate
+        textDocument/declaration operation.
+  - id: go-package-constant-access
     declaration:
       location:
         uri: benchmark://source/src/example/service.go
@@ -200,7 +227,8 @@ cases:
         kind: constant
         displayName: DefaultPrefix
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/example/service_test.go
             range:
@@ -218,4 +246,54 @@ cases:
           displayName: DefaultPrefix
     verification:
       method: manual_inspection
-      notes: DefaultPrefix is read once in Execute and once in the test fixture; DefaultRepository is also present for package var coverage.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. DefaultPrefix is read once
+        in Execute and once in ExampleService. Declaration navigation targets
+        the initialized package constant binding; there is no separate
+        executable definition body. gopls 0.23.0 returned exactly both usages
+        but does not advertise textDocument/declaration.
+  - id: go-package-variable-access
+    declaration:
+      location:
+        uri: benchmark://source/src/example/service.go
+        range:
+          start: { line: 8, character: 4 }
+          end: { line: 8, character: 21 }
+      kind: variable
+      displayName: DefaultRepository
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/example/service_test.go
+          range:
+            start: { line: 6, character: 8 }
+            end: { line: 6, character: 25 }
+        kind: variable
+        displayName: DefaultRepository
+    usageLookups:
+      - operation: declaration
+        usage:
+          location:
+            uri: benchmark://source/src/example/service_test.go
+            range:
+              start: { line: 6, character: 8 }
+              end: { line: 6, character: 25 }
+          kind: variable
+          displayName: DefaultRepository
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.go
+            range:
+              start: { line: 8, character: 4 }
+              end: { line: 8, character: 21 }
+          kind: variable
+          displayName: DefaultRepository
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. DefaultRepository has one
+        package-variable read in ExampleService. Declaration navigation targets
+        the initialized package variable binding. MemoryRepository in the
+        initializer is a separate type/construction usage; the address-of form
+        is required because only *MemoryRepository implements Repository.
+        gopls 0.23.0 returned exactly the package-variable read but does not
+        advertise textDocument/declaration.

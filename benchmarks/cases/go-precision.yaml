@@ -26,14 +26,73 @@ cases:
       - location: { uri: benchmark://source/cmd/app/main.go, range: { start: { line: 8, character: 8 }, end: { line: 8, character: 14 } } }
         kind: method
         displayName: Record
-    verification: { method: manual_inspection, notes: "A dot-imported constructor seeds concrete receivers, including the second binding of a tuple assignment; the interface-typed call remains a valid unproven dispatch candidate for the concrete implementation." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/cmd/app/main.go, range: { start: { line: 6, character: 8 }, end: { line: 6, character: 14 } } }
+          kind: method
+          displayName: Record
+        expectedDeclaration:
+          location: { uri: benchmark://source/worker/worker.go, range: { start: { line: 4, character: 14 }, end: { line: 4, character: 20 } } }
+          kind: method
+          displayName: Record
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/cmd/app/main.go, range: { start: { line: 8, character: 8 }, end: { line: 8, character: 14 } } }
+          kind: method
+          displayName: Record
+        expectedDeclaration:
+          location: { uri: benchmark://source/worker/worker.go, range: { start: { line: 4, character: 14 }, end: { line: 4, character: 20 } } }
+          kind: method
+          displayName: Record
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The dot-imported
+        constructor seeds exact Worker receivers, including the second binding
+        of a tuple assignment, and both Record calls navigate to the concrete
+        method body. The Recorder-typed call retains its static interface
+        identity while remaining an unproven implementation-family candidate.
+        gopls 0.23.0 returned that exact two-tier usage set and both definition
+        targets. Bifrost at commit
+        4b1dd6456fe0d7ee6786ede958240f0deba4fd8f matched the usage set but
+        rejected both definition lookups as shadowed by a local Go binding.
   - id: go-interface-receiver-method-call
     declaration:
       location: { uri: benchmark://source/worker/worker.go, range: { start: { line: 7, character: 1 }, end: { line: 7, character: 7 } } }
       kind: method
       displayName: Record
+    expectedUnprovenUsages:
+      - location: { uri: benchmark://source/cmd/app/main.go, range: { start: { line: 6, character: 8 }, end: { line: 6, character: 14 } } }
+        kind: method
+        displayName: Record
+      - location: { uri: benchmark://source/cmd/app/main.go, range: { start: { line: 8, character: 8 }, end: { line: 8, character: 14 } } }
+        kind: method
+        displayName: Record
     expectedUsages:
       - location: { uri: benchmark://source/cmd/app/main.go, range: { start: { line: 10, character: 10 }, end: { line: 10, character: 16 } } }
         kind: method
         displayName: Record
-    verification: { method: manual_inspection, notes: "A call through an interface-typed local belongs to the interface method, not the concrete method." }
+    usageLookups:
+      - operation: declaration
+        usage:
+          location: { uri: benchmark://source/cmd/app/main.go, range: { start: { line: 10, character: 10 }, end: { line: 10, character: 16 } } }
+          kind: method
+          displayName: Record
+        expectedDeclaration:
+          location: { uri: benchmark://source/worker/worker.go, range: { start: { line: 7, character: 1 }, end: { line: 7, character: 7 } } }
+          kind: method
+          displayName: Record
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The Recorder-typed call is
+        the required interface usage. Both concrete Worker calls are unproven
+        implementation-family candidates. Declaration navigation targets the
+        bodyless interface member; assigning worker to the interface local does
+        not change the call's static identity or prevent later reassignment.
+        gopls 0.23.0 returned the exact two-tier usage family but does not
+        advertise textDocument/declaration. Bifrost at commit
+        4b1dd6456fe0d7ee6786ede958240f0deba4fd8f found the required interface
+        call but omitted both conservative concrete implementation-family
+        candidates; its separate declaration lookup is unsupported.
