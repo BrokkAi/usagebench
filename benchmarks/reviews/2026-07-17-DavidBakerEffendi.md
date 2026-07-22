@@ -1585,3 +1585,303 @@ classified. Bifrost was built from exact `origin/master` commit
 
 The two precision failures are retained as candidate Bifrost issue requests;
 they do not change the reviewed source-location contract.
+
+## javascript-baseline.yaml
+
+### js-commonjs-exported-member-usage
+
+- Source: `fixtures/javascript/baseline/src/commonjs-request.js` and
+  `src/commonjs-consumer.js`.
+- Authored declaration: the `accepts` property in `exports.accepts`.
+- Required usages: both `request.accepts(...)` call selectors.
+- Excluded locations: the `request` local/import binding and the inner
+  `accepts` name in `function accepts`, which is a distinct function-expression
+  self-binding.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** from the imported member selector to the
+  exported property assignment.
+- Reviewer rationale: the CommonJS consumer selects the exported property. It
+  should not be silently conflated with the function expression's private
+  lexical name, even though that function is the value currently assigned to
+  the property.
+- Syntax verification: both fixture files pass `node --check`. The duplicated
+  quote shown during the interactive review was a presentation typo and was
+  never present in the checked-in fixture.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 returned
+  exactly both `request.accepts` usages but does not advertise
+  `textDocument/declaration`. A non-scored `textDocument/definition` probe
+  navigated to the inner `function accepts` token instead. The server therefore
+  exposes the same property-versus-function distinction through its available
+  navigation behavior, while lacking the operation required by this contract.
+
+### js-named-export-import-function
+
+- Source: `fixtures/javascript/baseline/src/components.js` and `src/app.js`.
+- Authored definition: the exported function declaration `formatName`.
+- Required usages: the local call from `Greeter.greet` and the imported call in
+  `app.js`.
+- Optional binding: the `formatName` named import specifier under
+  `bindings_optional`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the imported call to the authored
+  function body.
+- Reviewer rationale: both calls select the same function identity. Exporting
+  and importing the function adds a binding edge but does not create a second
+  function definition.
+- Outcome revealed after review: both ES-module files pass `node --check`, and
+  TypeScript Language Server 5.3.0 returned exactly both calls and navigated
+  from the imported call to the precise exported function definition token.
+
+### js-class-construction
+
+- Source: `fixtures/javascript/baseline/src/components.js` and `src/app.js`.
+- Authored definition: the exported class `Greeter`.
+- Required usages: `new Greeter(...)` in `createGreeter` and in `app.js`.
+- Optional binding: the `Greeter` named import specifier.
+- Ground-truth decision: **correct**.
+- Usage-kind decision: **constructor** for both `new` expressions. JavaScript
+  has no separately named constructor token at either call site.
+- Operation decision: **definition** from the external construction to the
+  `Greeter` class definition, not the `constructor` keyword.
+- Reviewer rationale: ordinary JavaScript functions may be both callable and
+  constructable, but `new` still invokes the distinct construct semantics. A
+  `class` such as `Greeter` is constructable and cannot be invoked normally
+  without `new`, so these sites are unambiguously constructions while their
+  source token still names the class.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 returned
+  exactly both construction usages. Definition navigation returned both the
+  canonical `Greeter` class token and the explicit `constructor` member, so the
+  strict singleton lookup scored `multiple_targets`.
+- Alternate-target policy: the constructor is a reasonable secondary target
+  because control flow from `new Greeter(...)` eventually enters that body.
+  The class definition remains canonical because the cursor token names the
+  lexical `Greeter` binding. The current schema cannot express an expected
+  target plus allowed navigation alternatives, so this is retained as a
+  scoring limitation and follow-up issue source rather than declaring the
+  constructor target semantically wrong.
+
+### js-method-call
+
+- Source: `fixtures/javascript/baseline/src/components.js` and `src/app.js`.
+- Authored definition: the `Greeter.greet` method body.
+- Required usages: `greeter.greet(user)` and
+  `direct.greet({ name: label })`.
+- Excluded locations: the receiver bindings, construction tokens, and
+  properties used inside the method.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from either call to the `greet` method
+  body.
+- Reviewer rationale: `direct` is explicitly constructed as a `Greeter`, while
+  `greeter` comes from `createGreeter`, whose direct return expression is
+  `new Greeter(...)`. Neither path introduces a competing receiver type, so
+  both calls resolve conservatively and unambiguously to the same method.
+- Outcome revealed after review: both files pass `node --check`, and TypeScript
+  Language Server 5.3.0 returned exactly both calls and navigated from the
+  selected call to the precise `greet` method definition token.
+
+### js-class-property-access
+
+- Source: `fixtures/javascript/baseline/src/components.js`.
+- Authored declaration: `title` in the constructor assignment's
+  `this.title`.
+- Required usage: the `this.title` read inside `Greeter.greet`.
+- Excluded locations: the bare `title` constructor parameter and its
+  right-hand-side read, which share a separate local-binding identity.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** from the property read to the left-hand
+  property token in the constructor assignment.
+- Reviewer rationale: in this JavaScript source shape the constructor write
+  introduces the inferred `Greeter` instance property. Treating that token as
+  both the declaration and an ordinary usage would double count it; the read
+  in `greet` is the sole use of that property.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 returned
+  exactly the property read but does not advertise
+  `textDocument/declaration`. A non-scored definition probe navigated exactly
+  to the same left-hand `this.title` property token.
+
+The first independent human review of every case currently in
+`javascript-baseline.yaml` is complete. Its document metadata remains
+`legacy_unattributed` until a second independent reviewer completes the
+promotion requirement; this log preserves the first review meanwhile.
+
+## javascript-precision.yaml
+
+### js-commonjs-barrel-class-construction
+
+- Source: `fixtures/javascript/precision/src/lib.js`, `src/barrel.js`, and
+  `src/app.js`.
+- Authored definition: `class Client` in `lib.js`.
+- Required usages: `new Client()` in `create`, the `Client` runtime read in
+  `module.exports = { Client, create }`, and downstream `new Client()` reached
+  through the CommonJS barrel.
+- Optional binding: `Client` in the destructuring `require` binding in
+  `app.js`.
+- Ground-truth decision: **correct**.
+- Usage-kind decision: **class** for all three locations. The construction
+  tokens also participate in constructor-call semantics, but this query tracks
+  class identity and includes an export read that is not a construction.
+- Operation decision: **definition** from the downstream construction to
+  `class Client`.
+- Reviewer rationale: the CommonJS barrel forwards the same runtime export
+  object, so it does not create a new class identity. There is no explicit
+  constructor body in this fixture, so navigation has no secondary constructor
+  implementation target.
+- Outcome revealed after review: all three files pass `node --check`.
+  TypeScript Language Server 5.3.0 returned the factory construction and
+  runtime export read but missed downstream `new Client()` in `app.js` when
+  querying references from the class definition. Reverse definition navigation
+  from that same downstream token still reached `class Client` exactly. This is
+  retained as a directional CommonJS-barrel reference gap, not evidence against
+  the reviewed class identity.
+
+### js-commonjs-barrel-member-call
+
+- Source: `fixtures/javascript/precision/src/lib.js`, `src/barrel.js`, and
+  `src/app.js`.
+- Authored definition: the `Client.request` method body.
+- Required usages: `.request()` on the directly constructed imported `Client`
+  and on the `Client` returned by `create()` through the barrel.
+- Excluded locations: `Client`, `create`, `require`, and the receiver
+  expressions, which are separate identities.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from both calls to `Client.request`.
+- Reviewer rationale: one receiver is constructed directly from the imported
+  class, while the other follows the factory's direct `new Client()` return.
+  No mutation or competing `request` implementation makes either path
+  ambiguous. Scoring both lookups distinguishes binding propagation from
+  factory-return inference.
+- Outcome revealed after review: all three files pass `node --check`, and
+  TypeScript Language Server 5.3.0 returned exactly both calls and navigated
+  from each to the precise `Client.request` definition token.
+
+The first independent human review of every case currently in
+`javascript-precision.yaml` is complete. Its document metadata remains
+`legacy_unattributed` until a second independent reviewer completes the
+promotion requirement; this log preserves the first review meanwhile.
+
+## javascript-lsp-parity.yaml
+
+### js-parity-commonjs-destructured-function-call
+
+- Source: `fixtures/javascript/lsp-parity/src/library.js` and
+  `src/consumer.js`.
+- Authored definition: the `buildTask` function body.
+- Required usages: the right-hand runtime read in
+  `exports.buildTask = buildTask` and the downstream `buildTask("direct")`
+  call.
+- Optional bindings: the left-hand CommonJS export property and the
+  destructuring `require` token under `bindings_optional`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the downstream call to the function
+  body.
+- Reviewer rationale: assigning the local function value to the CommonJS
+  export and destructuring that exported property do not create a competing
+  function implementation. The export-value read and call therefore preserve
+  the same function identity.
+- Outcome revealed after review: all fixture files pass `node --check`.
+  TypeScript Language Server 5.3.0 found the export-value read but missed the
+  downstream destructured call when querying references from the function
+  definition. Definition navigation from that same missed call reached the
+  precise `buildTask` definition token. This is a directional CommonJS binding
+  propagation gap, not an ambiguous call target.
+
+### js-parity-object-literal-method-call
+
+- Source: `fixtures/javascript/lsp-parity/src/library.js` and
+  `src/consumer.js`.
+- Authored definition: the `formatTask` method in the `helpers` object literal.
+- Required usages: `helpers.formatTask(this)` inside `Task.finish` and
+  `helpers.formatTask(directTask)` in the consumer.
+- Optional binding: `helpers` in the destructuring `require`.
+- Excluded location: the export-side `helpers` token, which reads the
+  containing object variable rather than its `formatTask` member.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the external call to the
+  object-literal method body.
+- Reviewer rationale: both receivers identify the same exported `helpers`
+  object. No mutation, alternate object, or competing method implementation
+  makes either call polymorphic or ambiguous.
+- Outcome revealed after review: all fixture files pass `node --check`, and
+  TypeScript Language Server 5.3.0 returned exactly both calls and navigated
+  from the external call to the precise object-literal method definition.
+
+### js-parity-computed-string-literal-method-call
+
+- Source: `fixtures/javascript/lsp-parity/src/library.js` and
+  `src/consumer.js`.
+- Authored definition: the `Task.finish` method body.
+- Required usages: the direct `constructed.finish()` call and the directly
+  computed `constructed["finish"]()` call.
+- Ground-truth decision: **added as a planned, position-sound computed-member
+  control**.
+- Operation decision: **definition** from both visible `finish` tokens to the
+  method body.
+- Reviewer rationale: the string literal is directly at the member-access site
+  and names the selected method, unlike a separate value-flow initializer. The
+  exact `Task` receiver and literal property name leave no dispatch ambiguity.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 returned both
+  the dot and computed-literal calls and navigated each to `Task.finish`
+  exactly. Bifrost at commit
+  `4b1dd6456fe0d7ee6786ede958240f0deba4fd8f` found and navigated the dot call
+  but missed `constructed["finish"]()` and returned no definition from its
+  string-literal token.
+
+### js-parity-computed-method-name-not-planned
+
+- Source shape: an immutable `const methodName = "finish"` followed by
+  `constructed[methodName]()`.
+- Runtime target: unambiguously `Task.finish` in this fixture.
+- Boundary decision: **retain not planned after removing the unsound reverse
+  lookup**.
+- Reviewer rationale: the token at the access site is `methodName`, a variable
+  usage, while the `"finish"` initializer is only the value-flow source. Calling
+  the initializer an ordinary method usage or navigating it directly to the
+  method body conflates two source roles even though constant propagation can
+  determine the runtime target.
+- Promotion requirement: define a deliberate source-location representation
+  for value-derived member selection. The direct string-literal access now has
+  its own planned regression, so this boundary isolates only the indirection.
+
+The first independent human review of every case currently in
+`javascript-lsp-parity.yaml` is complete. Its document metadata remains
+`legacy_unattributed` until a second independent reviewer completes the
+promotion requirement; this log preserves the first review meanwhile.
+
+## JavaScript post-classification analyzer comparison
+
+The analyzer comparison was run only after every JavaScript case above had been
+classified. TypeScript Language Server used the pinned 5.3.0 profile with
+TypeScript 5.9.3. Bifrost was built from exact `origin/master` commit
+`4b1dd6456fe0d7ee6786ede958240f0deba4fd8f`.
+
+- `javascript-baseline.yaml`: Bifrost matched every reference set. The three
+  definition cases passed; the CommonJS export-property and inferred-property
+  cases were unsupported only because Bifrost has no distinct declaration
+  operation. TypeScript LS produced the same reference results and declaration
+  boundary. Its class-construction definition result included both the
+  canonical class token and a reasonable explicit-constructor alternate that
+  the current singleton-navigation schema cannot allow.
+- `js-commonjs-barrel-class-construction`: Bifrost passed the complete contract.
+  TypeScript LS missed downstream `new Client()` in its class reference query
+  but navigated from that same token to `class Client` exactly.
+- `js-commonjs-barrel-member-call`: both analyzers returned both method calls.
+  TypeScript LS navigated both exactly. Bifrost navigated the factory-returned
+  call but returned no definition for `.request()` immediately following
+  `new Client()` through the destructured barrel binding.
+- `js-parity-commonjs-destructured-function-call`: Bifrost passed exactly.
+  TypeScript LS found the export-value read but omitted the downstream call in
+  its reference query, while reverse navigation from that call passed.
+- `js-parity-object-literal-method-call`: both analyzers passed exactly.
+- `js-parity-computed-string-literal-method-call`: TypeScript LS passed exactly.
+  Bifrost found the direct dot call but missed the computed string-literal call
+  and could not navigate its literal token to `Task.finish`.
+- `js-parity-computed-method-name-not-planned`: remains unscored because neither
+  the string initializer nor the access-site variable token is an honest
+  ordinary method-usage position. No analyzer result is used to paper over that
+  source-model boundary.
+
+Initial Bifrost runs inside the restricted sandbox failed while publishing
+analyzer epochs with `attempt to write a readonly database`. A sequential retry
+failed identically. The semantic Bifrost results above come from fresh
+unsandboxed work directories and contain no runner errors; the contaminated
+missing-reference output from the sandboxed attempts was discarded.

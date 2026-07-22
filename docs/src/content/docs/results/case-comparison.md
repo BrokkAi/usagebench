@@ -67,7 +67,9 @@ result means contract disagreement, not an automatic defect verdict.
 | Nine ES import/re-export cases | Pass | Near | Required references agree; TypeScript LS also returns binding/export locations. |
 | `js-parity-commonjs-destructured-function-call` | Pass | Hard | TypeScript LS omits the destructured CommonJS function call. |
 | `js-commonjs-barrel-class-construction` | Pass | Hard | TypeScript LS omits the construction reached through the CommonJS barrel. |
-| `js-commonjs-barrel-member-call` | Exact | Exact | Both analyzers satisfy the barrel-member control, isolating the other TypeScript LS CommonJS disagreements to different binding shapes. |
+| `js-class-construction` | Exact | Hard | Both return the reviewed construction references. Bifrost navigates to the canonical class token exactly; TypeScript LS also returns the explicit constructor member, a reasonable control-flow alternate that the singleton-navigation schema cannot currently allow. |
+| `js-commonjs-barrel-member-call` | Gap | Exact | Both analyzers return both calls. TypeScript LS navigates both exactly; Bifrost resolves the factory-returned receiver but cannot navigate `.request()` immediately following `new Client()` through the destructured barrel binding. |
+| `js-parity-computed-string-literal-method-call` | Gap | Exact | TypeScript LS returns and navigates both the dot call and `constructed["finish"]()` exactly. Bifrost misses the computed string-literal call and cannot navigate its literal token to `Task.finish`. |
 
 ## PHP
 

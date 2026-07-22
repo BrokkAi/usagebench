@@ -25,7 +25,31 @@ cases:
       - location: { uri: benchmark://source/src/app.js, range: { start: { line: 2, character: 4 }, end: { line: 2, character: 10 } } }
         kind: class
         displayName: Client
-    verification: { method: manual_inspection, notes: "The factory construction and runtime CommonJS export both read Client; the downstream construction preserves its identity." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/app.js, range: { start: { line: 2, character: 4 }, end: { line: 2, character: 10 } } }
+          kind: class
+          displayName: Client
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/lib.js, range: { start: { line: 0, character: 6 }, end: { line: 0, character: 12 } } }
+          kind: class
+          displayName: Client
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The factory construction,
+        runtime CommonJS export read, and downstream construction through the
+        barrel all use the Client class value. The destructuring token is an
+        optional import binding. This class-identity case classifies both
+        construction tokens as class usages; a separate constructor query may
+        classify the same tokens as constructor calls. Definition navigation
+        from the downstream construction targets class Client. There is no
+        explicit constructor body and therefore no secondary constructor
+        target in this fixture. TypeScript Language Server 5.3.0 found the
+        local construction and export read but missed the downstream
+        construction across the barrel; reverse definition navigation from
+        that same downstream token nevertheless reached class Client exactly.
   - id: js-commonjs-barrel-member-call
     declaration:
       location: { uri: benchmark://source/src/lib.js, range: { start: { line: 1, character: 2 }, end: { line: 1, character: 9 } } }
@@ -38,4 +62,33 @@ cases:
       - location: { uri: benchmark://source/src/app.js, range: { start: { line: 3, character: 29 }, end: { line: 3, character: 36 } } }
         kind: method
         displayName: request
-    verification: { method: manual_inspection, notes: "The member call remains attached to Client.request through the CommonJS barrel, including a factory-returned receiver." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/app.js, range: { start: { line: 2, character: 13 }, end: { line: 2, character: 20 } } }
+          kind: method
+          displayName: request
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/lib.js, range: { start: { line: 1, character: 2 }, end: { line: 1, character: 9 } } }
+          kind: method
+          displayName: request
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/app.js, range: { start: { line: 3, character: 29 }, end: { line: 3, character: 36 } } }
+          kind: method
+          displayName: request
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/lib.js, range: { start: { line: 1, character: 2 }, end: { line: 1, character: 9 } } }
+          kind: method
+          displayName: request
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Both the directly
+        constructed imported Client and the Client returned by create through
+        the CommonJS barrel select Client.request. Neither path introduces a
+        competing receiver type. Definition navigation from each call targets
+        the request method body; Client, create, require, and receiver tokens
+        retain separate identities. All three files pass node --check, and
+        TypeScript Language Server 5.3.0 returned the exact usage set and both
+        definition targets.

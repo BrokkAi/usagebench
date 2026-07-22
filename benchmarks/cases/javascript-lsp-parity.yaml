@@ -37,7 +37,8 @@ cases:
         kind: function
         displayName: buildTask
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/consumer.js
             range:
@@ -54,8 +55,18 @@ cases:
           kind: function
           displayName: buildTask
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The right-hand buildTask
+        in exports.buildTask = buildTask is a runtime read of the local
+        function, and the destructured downstream call uses the same function
+        identity. The left-hand export property and destructuring token are
+        optional bindings under bindings_optional. Definition navigation from
+        the downstream call targets the buildTask function body. All fixture
+        files pass node --check. TypeScript Language Server 5.3.0 found the
+        export-value read but missed the downstream call in its reference
+        query; definition navigation from that same missed call reached the
+        buildTask body exactly.
         Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
         Upstream reference: TypeScript Server fourslash CommonJS/navigation scenarios such as autoImportNoPackageJson_commonjs.ts.
         Adapted fixture: fixtures/javascript/lsp-parity/.
@@ -85,7 +96,8 @@ cases:
         kind: method
         displayName: formatTask
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/consumer.js
             range:
@@ -102,15 +114,22 @@ cases:
           kind: method
           displayName: formatTask
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Both the internal and
+        downstream helpers.formatTask calls select the single object-literal
+        method. The destructuring token is an optional import binding, and the
+        export-side helpers token uses the containing variable rather than the
+        formatTask member. Definition navigation from the external call
+        targets the object-literal method body. No competing receiver object or
+        method makes the calls ambiguous. All fixture files pass node --check,
+        and TypeScript Language Server 5.3.0 returned the exact usage set and
+        definition target.
         Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
         Upstream reference: TypeScript Server fourslash object-literal reference and best-common-type object-literal scenarios.
         Adapted fixture: fixtures/javascript/lsp-parity/.
         Maturity: helpers.formatTask should resolve to the object-literal method declaration and count both internal and imported member calls.
-  - id: js-parity-computed-method-name-not-planned
-    notPlanned:
-      reason: Computed JavaScript method calls are retained for parity tracking but are not scored until string-driven member dispatch has a deliberate model.
+  - id: js-parity-computed-string-literal-method-call
     declaration:
       location:
         uri: benchmark://source/src/library.js
@@ -119,13 +138,46 @@ cases:
           end: { line: 9, character: 8 }
       kind: method
       displayName: finish
+    expectedUsages:
+      - location:
+          uri: benchmark://source/src/consumer.js
+          range:
+            start: { line: 5, character: 12 }
+            end: { line: 5, character: 18 }
+        kind: method
+        displayName: finish
+      - location:
+          uri: benchmark://source/src/consumer.js
+          range:
+            start: { line: 6, character: 13 }
+            end: { line: 6, character: 19 }
+        kind: method
+        displayName: finish
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/consumer.js
             range:
-              start: { line: 7, character: 20 }
-              end: { line: 7, character: 26 }
+              start: { line: 5, character: 12 }
+              end: { line: 5, character: 18 }
+          kind: method
+          displayName: finish
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/library.js
+            range:
+              start: { line: 9, character: 2 }
+              end: { line: 9, character: 8 }
+          kind: method
+          displayName: finish
+      - operation: definition
+        usage:
+          location:
+            uri: benchmark://source/src/consumer.js
+            range:
+              start: { line: 6, character: 13 }
+              end: { line: 6, character: 19 }
           kind: method
           displayName: finish
         expectedDeclaration:
@@ -137,9 +189,49 @@ cases:
           kind: method
           displayName: finish
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Both the direct dot call
+        and constructed["finish"]() visibly select Task.finish and are required
+        method usages. The computed string literal is located directly at the
+        member-access site, so definition navigation from either token targets
+        the finish method body. The separate methodName indirection is excluded
+        from this planned case because its access-site token names the variable,
+        not the selected method. TypeScript Language Server 5.3.0 returned both
+        usages and both definition targets exactly. Bifrost at commit
+        4b1dd6456fe0d7ee6786ede958240f0deba4fd8f found the dot call but missed
+        the computed string-literal usage and could not navigate that literal
+        to Task.finish.
         Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
         Upstream reference: TypeScript Server navigation behavior for string-literal and computed property access.
         Adapted fixture: fixtures/javascript/lsp-parity/.
-        Maturity: constructed[methodName]() is intentionally unscored; the string literal is kept as the visible future target.
+  - id: js-parity-computed-method-name-not-planned
+    notPlanned:
+      reason: Identifier-indirected JavaScript member selection is retained for parity tracking but is not scored until value-flow-derived member locations have a deliberate source-position model.
+    declaration:
+      location:
+        uri: benchmark://source/src/library.js
+        range:
+          start: { line: 9, character: 2 }
+          end: { line: 9, character: 8 }
+      kind: method
+      displayName: finish
+    usageLookups: []
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The immutable methodName
+        binding makes constructed[methodName]() resolve unambiguously to
+        Task.finish at runtime, but the access-site token is the variable name.
+        The "finish" initializer is a value-flow source rather than the member
+        access itself, so the previous reverse lookup from that string literal
+        to Task.finish was removed as a source-position conflation. Promotion
+        requires a deliberate representation for value-derived member
+        selection rather than relabeling either token as an ordinary method
+        usage. Neither analyzer outcome is treated as evidence for or against
+        this unscored relationship because the benchmark deliberately issues
+        no navigation request from a misleading source token.
+        Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
+        Upstream reference: TypeScript Server navigation behavior for string-literal and computed property access.
+        Adapted fixture: fixtures/javascript/lsp-parity/.
+        Maturity: constructed[methodName]() remains intentionally unscored; the direct string-literal member access is covered by a separate planned case.

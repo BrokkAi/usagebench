@@ -37,7 +37,8 @@ cases:
         kind: function
         displayName: accepts
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/commonjs-consumer.js
             range:
@@ -55,7 +56,16 @@ cases:
           displayName: accepts
     verification:
       method: manual_inspection
-      notes: commonjs-request assigns accepts to exports; commonjs-consumer requires that module and calls request.accepts twice.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The accepts property in
+        exports.accepts is the CommonJS export declaration, and both
+        request.accepts selectors are usages. The named function-expression
+        binding in function accepts is a distinct function-local identity and
+        is excluded. Declaration navigation from the imported member stops at
+        the exported property assignment. Both fixture files pass node --check.
+        TypeScript Language Server 5.3.0 returned exactly both usages but does
+        not advertise textDocument/declaration. A non-scored definition probe
+        instead navigated to the distinct function-expression name.
   - id: js-named-export-import-function
     declaration:
       location:
@@ -81,7 +91,8 @@ cases:
         kind: function
         displayName: formatName
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/app.js
             range:
@@ -99,7 +110,14 @@ cases:
           displayName: formatName
     verification:
       method: manual_inspection
-      notes: formatName is exported from components and called from both files; the app import binding is not counted as a usage.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. formatName is defined by
+        the exported function declaration and called once locally and once
+        through the named ES-module import. The import specifier is an optional
+        binding rather than a required usage. Definition navigation from the
+        imported call targets the authored function body. Both ES-module files
+        pass node --check, and TypeScript Language Server 5.3.0 returned the
+        exact usage set and definition target.
   - id: js-class-construction
     declaration:
       location:
@@ -125,7 +143,8 @@ cases:
         kind: constructor
         displayName: Greeter
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/app.js
             range:
@@ -143,7 +162,19 @@ cases:
           displayName: Greeter
     verification:
       method: manual_inspection
-      notes: Greeter is constructed directly in app and through createGreeter; the app import binding is not counted as a usage.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Greeter is constructed
+        directly in app and inside createGreeter, so both new-expression class
+        tokens are constructor-call usages. JavaScript has no separately named
+        constructor token at those call sites, and definition navigation
+        targets the Greeter class definition rather than the constructor
+        keyword. The app import specifier is an optional binding. TypeScript
+        Language Server 5.3.0 returned the exact construction usages but
+        returned both the class token and explicit constructor member for
+        definition navigation. The constructor is a reasonable control-flow
+        alternate, while the class binding remains canonical for the Greeter
+        cursor token; the current schema cannot express allowed navigation
+        alternates.
   - id: js-method-call
     declaration:
       location:
@@ -169,7 +200,8 @@ cases:
         kind: method
         displayName: greet
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/app.js
             range:
@@ -187,7 +219,15 @@ cases:
           displayName: greet
     verification:
       method: manual_inspection
-      notes: greet is declared on Greeter and called from both top-level app code and runApp.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. greet is defined on
+        Greeter and called once through the value returned directly by
+        createGreeter and once through a directly constructed Greeter. Both
+        receiver paths are unambiguous, and definition navigation targets the
+        greet method body. Receiver, constructor, and property tokens are
+        separate identities. Both files pass node --check, and TypeScript
+        Language Server 5.3.0 returned the exact usage set and definition
+        target.
   - id: js-class-property-access
     declaration:
       location:
@@ -206,7 +246,8 @@ cases:
         kind: property
         displayName: title
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/components.js
             range:
@@ -224,4 +265,13 @@ cases:
           displayName: title
     verification:
       method: manual_inspection
-      notes: title is initialized as a Greeter instance property in the constructor and read by greet.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. this.title on the
+        constructor assignment is the inferred Greeter instance-property
+        declaration, and the this.title read in greet is its sole usage. The
+        constructor parameter and right-hand-side title read are a separate
+        local binding. Declaration navigation from the property read targets
+        the left-hand property token. TypeScript Language Server 5.3.0 returned
+        the exact property usage but does not advertise
+        textDocument/declaration; a non-scored definition probe reached the
+        same left-hand property token exactly.
