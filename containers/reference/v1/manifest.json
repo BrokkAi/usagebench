@@ -29,9 +29,9 @@
       },
       "analyzer": {
         "name": "bifrost",
-        "requestedVersion": "3fdaa7196951688c3829fbd06de9ef265c3aba92",
+        "requestedVersion": "v0.8.8",
         "source": "https://github.com/BrokkAi/bifrost",
-        "revision": "3fdaa7196951688c3829fbd06de9ef265c3aba92"
+        "revision": "a54be9be9b08b9d9ddbab1c471e26d7f8bd932df"
       },
       "toolchains": {
         "cargo": "cargo 1.96.0",
