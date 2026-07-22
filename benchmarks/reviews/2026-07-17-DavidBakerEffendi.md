@@ -1885,3 +1885,333 @@ analyzer epochs with `attempt to write a readonly database`. A sequential retry
 failed identically. The semantic Bifrost results above come from fresh
 unsandboxed work directories and contain no runner errors; the contaminated
 missing-reference output from the sandboxed attempts was discarded.
+## php-baseline.yaml
+
+### php-class-construction
+
+- Source: `fixtures/php/baseline/src/Service.php` and `src/Consumer.php`.
+- Queried declaration: `Service` in the class definition.
+- Required usage: `Service` in `new Service($repository)`, classified as a
+  constructor call while also naming the class.
+- Excluded locations: `Repository`, `$repository`, and `$service`, which are
+  separate type and binding identities.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the construction token to the
+  canonical `Service` class token.
+- Alternate-target policy: `__construct` is the eventual control-flow target
+  and would be a reasonable secondary result, but the visible cursor token
+  names `Service`, not `__construct`. This follows the same canonical-target
+  policy used for JavaScript class construction.
+- Outcome revealed after review: Intelephense 1.18.5 returned exactly the
+  construction usage. Definition navigation returned both the canonical
+  `Service` class token and `__construct`, so the strict singleton lookup
+  reported `multiple_targets`. This is the anticipated allowed-alternate
+  schema limitation rather than a semantically wrong destination.
+- Syntax-check boundary: the machine has no `php` CLI, so `php -l` was
+  unavailable. The checked source is valid PHP by inspection and loaded
+  successfully in the pinned Intelephense session.
+
+### php-method-call
+
+- Source: `fixtures/php/baseline/src/Service.php` and `src/Consumer.php`.
+- Authored definition: the `Service::execute` method body.
+- Required usage: `$service->execute(' Ada ')`.
+- Excluded locations: `$service`, `Service`, `save`, and `PREFIX`, which are
+  separate binding, type, method, and constant identities.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the call to the `execute` method
+  body.
+- Reviewer rationale: `$service` is initialized directly from
+  `new Service(...)` and is not reassigned. There is no competing receiver type
+  or override, so this is an exact concrete dispatch case.
+- Outcome revealed after review: Intelephense 1.18.5 returned exactly the one
+  call and navigated to the precise `Service::execute` definition token.
+
+### php-repository-method-call
+
+- Source: `fixtures/php/baseline/src/Service.php`.
+- Authored definition: the `Repository::save` method body.
+- Required usage: `$this->repository->save($name)` in `Service::execute`.
+- Excluded locations: the promoted property, constructor parameter, receiver,
+  and `Repository` type tokens.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the call to the `save` method body.
+- Reviewer rationale: constructor property promotion declares
+  `$this->repository` with the exact final `Repository` type. No interface,
+  subclass, or alternate implementation makes dispatch ambiguous.
+- Outcome revealed after review: Intelephense 1.18.5 returned exactly the one
+  call and navigated to the precise `Repository::save` definition token.
+
+### php-property-access
+
+- Source: `fixtures/php/baseline/src/Service.php` and `src/Consumer.php`.
+- Authored declaration: `$last` in `public string $last = ''`.
+- Required usages: the `$this->last` write and read in `Repository::save`, plus
+  the external `$repository->last` read in `Consumer::run`.
+- Excluded location: the initialized property declarator itself.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** from the external read to the property
+  declarator.
+- Reviewer rationale: all receivers have exact `Repository` identity, and
+  reads and writes both use the same property. The initializer does not create
+  a separate executable property-definition body or an extra ordinary usage.
+- Outcome revealed after review: Intelephense 1.18.5 returned exactly all three
+  property usages but does not advertise `textDocument/declaration`. A
+  non-scored definition probe reached the same property declarator and ranged
+  over the full `$last` token, including the sigil.
+- Position-policy follow-up: PHP property declarations spell `$last`, while
+  member accesses spell `->last`. The reviewer elected to align with
+  Intelephense's complete-token range: the declaration selects `$last`, while
+  the syntactically sigil-free member accesses select `last`. Bifrost may need
+  a PHP-specific range adjustment if it currently returns only the declaration
+  identifier subtoken.
+
+### php-constant-access
+
+- Source: `fixtures/php/baseline/src/Service.php` and `src/Consumer.php`.
+- Authored declaration: `PREFIX` in `public const PREFIX = 'job'`.
+- Required usages: the `Defaults::PREFIX` reads in `Service::execute` and
+  `Consumer::run`.
+- Excluded locations: both `Defaults` qualifiers, which are separate class
+  usages.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** from the consumer read to the constant
+  declarator.
+- Reviewer rationale: both source tokens read the same class constant. Its
+  initializer supplies a value but not a separate executable definition body.
+- Outcome revealed after review: Intelephense 1.18.5 returned exactly both
+  constant reads but does not advertise `textDocument/declaration`. A
+  non-scored definition probe navigated exactly to the same `PREFIX` token.
+
+The first independent human review of every case currently in
+`php-baseline.yaml` is complete. Its document metadata remains
+`legacy_unattributed` until a second independent reviewer completes the
+promotion requirement; this log preserves the first review meanwhile.
+
+## php-precision.yaml
+
+### php-interface-typed-receiver-call
+
+- Source: `fixtures/php/precision/src/Contracts.php` and `src/Consumer.php`.
+- Authored declaration: the bodyless `Notifier::send` interface member.
+- Required usage: `$notifier->send(...)` through the `Notifier`-typed
+  parameter.
+- Removed location: `EmailNotifier::send`, which is an implementation
+  definition rather than an ordinary usage site.
+- Ground-truth decision: **correct after separating the implementation
+  definition from usages**.
+- Operation decision: **declaration** from the interface-typed call to
+  `Notifier::send`.
+- Reviewer rationale: `notify` may receive any `Notifier` implementation. The
+  call therefore has exact static interface identity but no soundly determined
+  concrete runtime body. Interface-to-implementation relationships belong in a
+  distinct operation or benchmark category rather than the usage set.
+- Outcome revealed after review: Intelephense 1.18.5 returned exactly the
+  interface-typed call and did not include `EmailNotifier::send`. It does not
+  advertise `textDocument/declaration`; a non-scored definition probe
+  navigated exactly to the bodyless `Notifier::send` token rather than guessing
+  the concrete implementation.
+
+### php-function-import-call
+
+- Source: `fixtures/php/precision/src/Support.php` and `src/Consumer.php`.
+- Authored definition: the `Precision\format` function body.
+- Required usage: the bare `format("hello")` call.
+- Optional binding: `format` in `use function Precision\format` under
+  `bindings_optional`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the call to the function body.
+- Reviewer rationale: the use-function import resolves the bare call to the
+  single namespaced function without creating a second implementation.
+  `send` and namespace components are separate identities.
+- Outcome revealed after review: Intelephense 1.18.5 returned exactly the bare
+  call and navigated to the precise `Precision\format` definition token. The
+  import binding did not affect exact scoring under `bindings_optional`.
+
+### php-static-qualified-method-call
+
+- Source: `fixtures/php/precision/src/Labels.php` and `src/Consumer.php`.
+- Authored definition: the static `Labels::create` method body.
+- Required usage: `create` in `Labels::create()`.
+- Excluded location: the `Labels` qualifier, which is a separate class usage.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the call to the `create` method body.
+- Reviewer rationale: the class is final and the static target is explicit, so
+  no receiver flow, subclass, or runtime dispatch makes the call ambiguous.
+- Outcome revealed after review: Intelephense 1.18.5 returned exactly the
+  static call and navigated to the precise `Labels::create` definition token.
+
+The first independent human review of every case currently in
+`php-precision.yaml` is complete. Its document metadata remains
+`legacy_unattributed` until a second independent reviewer completes the
+promotion requirement; this log preserves the first review meanwhile.
+
+## php-lsp-parity.yaml
+
+### php-parity-use-alias-static-method-call
+
+- Source: `fixtures/php/lsp-parity/src/Service/EmailNotifier.php` and
+  `src/Consumer.php`.
+- Authored definition: the static `EmailNotifier::create` method body.
+- Required usage: `create` in `Mailer::create()`.
+- Optional binding and excluded qualifier: `Mailer` in the namespace import and
+  call qualifier under `bindings_optional`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the alias-qualified call to
+  `EmailNotifier::create`.
+- Reviewer rationale: the namespace alias changes only the class spelling at
+  the call site. The static method target remains unique, with no receiver flow
+  or dynamic dispatch.
+- Outcome revealed after review: Intelephense 1.18.5 returned exactly the
+  alias-qualified call and navigated to the precise
+  `EmailNotifier::create` definition token.
+
+### php-parity-trait-method-call
+
+- Source: `fixtures/php/lsp-parity/src/Support/LogsEvents.php`,
+  `src/Service/EmailNotifier.php`, and `src/Consumer.php`.
+- Authored definition: the `LogsEvents::record` trait method body.
+- Required usages: `$this->record(...)` inside `EmailNotifier::notify` and the
+  external `$mailer->record(...)` call.
+- Excluded location: `use LogsEvents`, which composes the trait but does not
+  create another authored method token.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the external call to the trait
+  method body.
+- Reviewer rationale: `EmailNotifier` has one composed `record` implementation
+  and no class override or competing trait. Both receiver paths therefore
+  resolve unambiguously to the authored trait body.
+- Outcome revealed after review: Intelephense 1.18.5 returned exactly both
+  calls and navigated from the external call to the precise
+  `LogsEvents::record` definition token.
+
+### php-parity-interface-method-implementation
+
+- Source: `fixtures/php/lsp-parity/src/Contracts/Notifier.php`,
+  `src/Service/EmailNotifier.php`, and `src/Consumer.php`.
+- Authored declaration: the bodyless `Notifier::notify` interface member.
+- Removed location: `EmailNotifier::notify`, which is an implementation
+  definition rather than an ordinary usage of the interface declaration.
+- Conservative candidate: `$mailer->notify("hello")` is retained as an
+  unproven interface-family usage, not a required usage.
+- Ground-truth decision: **correct after separating interface relations from
+  ordinary usages and splitting out the concrete call**.
+- Operation decision: no ordinary definition/declaration lookup is scored for
+  the interface case. Reverse implementation navigation is a distinct
+  relationship.
+- Reviewer rationale: `Mailer::create()` resolves to
+  `EmailNotifier::create(): self`, whose body returns `new self()`. The
+  consumer binding therefore has statically exact `EmailNotifier` identity;
+  the call is concrete rather than genuinely interface-ambiguous. Keeping it
+  as an unproven candidate acknowledges the interface family without treating
+  the interface declaration as the exact dispatch target.
+- Outcome revealed after review: Intelephense 1.18.5 returned the consumer call
+  from the interface declaration but did not return the implementation
+  definition. This is accepted through `expectedUnprovenUsages`: it documents
+  Intelephense's deliberate interface-family reference expansion without
+  reclassifying a statically concrete dispatch as an exact interface usage.
+
+### php-parity-concrete-implementation-method-call
+
+- Source: `fixtures/php/lsp-parity/src/Service/EmailNotifier.php` and
+  `src/Consumer.php`.
+- Authored definition: the concrete `EmailNotifier::notify` method body.
+- Required usage: `$mailer->notify("hello")`.
+- Excluded location: the bodyless `Notifier::notify` interface member, which
+  is a related declaration rather than a usage of the concrete body.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the call to the concrete
+  `EmailNotifier::notify` body.
+- Reviewer rationale: the self-returning factory establishes exact concrete
+  receiver identity, and the local binding is not reassigned. No alternate
+  implementation or subclass can receive this call in the fixture.
+- Outcome revealed after review: Intelephense 1.18.5 returned exactly the
+  consumer call from the concrete implementation and navigated from that call
+  to the precise `EmailNotifier::notify` method body. Thus its reference query
+  exposes the call from both family members, while definition navigation still
+  preserves the concrete target.
+
+### php-parity-static-property-access
+
+- Source: `fixtures/php/lsp-parity/src/Service/EmailNotifier.php` and
+  `src/Consumer.php`.
+- Authored declaration: `$sent` in `public static int $sent = 0`.
+- Required usages: the `$sent` write in `self::$sent++` and read in
+  `Mailer::$sent`.
+- Excluded locations: `self` and `Mailer`, which are type or alias qualifiers
+  rather than property usages.
+- Ground-truth decision: **correct, with complete PHP property-token ranges**.
+- Operation decision: **declaration** from the external read to the static
+  property declarator.
+- Reviewer rationale: the initializer supplies a value but does not create an
+  executable property implementation body. All three source locations spell
+  the token as `$sent`, so exact ranges include the sigil. This follows
+  Intelephense's whole-token convention and may require a PHP-specific Bifrost
+  range adjustment.
+- Outcome revealed after review: Intelephense 1.18.5 returned both full `$sent`
+  usage ranges. It does not advertise `textDocument/declaration`; an earlier
+  definition probe reached the exact full `$sent` declarator.
+
+### php-parity-magic-get-no-ordinary-usage
+
+- Source: `fixtures/php/lsp-parity/src/Service/EmailNotifier.php` and
+  `src/Consumer.php`.
+- Authored definition: the `EmailNotifier::__get` magic method body.
+- Runtime edge: `$mailer->dynamicName` will invoke `__get` because the receiver
+  is exactly `EmailNotifier` and no declared `dynamicName` property exists.
+- Required ordinary usages: none.
+- Removed lookup: definition navigation from the `dynamicName` property token
+  to the differently named `__get` method.
+- Ground-truth decision: **correct after separating implicit runtime handling
+  from ordinary symbol identity**.
+- Operation decision: no ordinary definition/declaration lookup is scored.
+  A future runtime-handler or call-target operation could represent the sound
+  implicit edge separately.
+- Reviewer rationale: the runtime target is statically recoverable, but
+  `dynamicName` does not name `__get`. Treating it as an ordinary method usage
+  would conflate control flow with token-level references and create a
+  cross-name navigation exception.
+- Outcome revealed after review: Intelephense 1.18.5 returned no references
+  for `__get` and no definition from `dynamicName`, matching the ordinary
+  symbol-identity contract.
+
+The first independent human review of every case currently in
+`php-lsp-parity.yaml` is complete. Its document metadata remains
+`legacy_unattributed` until a second independent reviewer completes the
+promotion requirement; this log preserves the first review meanwhile.
+
+## PHP Bifrost comparison after human review
+
+Bifrost 0.8.8 was run outside the restricted sandbox from exact source commit
+`4b1dd6456fe0d7ee6786ede958240f0deba4fd8f` against all three reviewed PHP
+documents.
+
+- `php-baseline.yaml`: the class-construction and two method-call cases passed
+  exactly. `php-constant-access` returned the exact reference set but is
+  unsupported overall because Bifrost does not expose declaration navigation
+  separately. `php-property-access` stopped at `symbol_resolution_failed`
+  because the reviewed declaration cursor and display name now cover `$last`.
+- `php-precision.yaml`: both definition-navigation cases passed exactly.
+  `php-interface-typed-receiver-call` returned the exact interface reference
+  set but is unsupported overall at the distinct declaration-navigation
+  operation, matching Intelephense's advertised capability boundary.
+- `php-lsp-parity.yaml`: the alias, trait, two-tier interface, concrete
+  implementation, and magic-method negative-reference cases passed exactly.
+  `php-parity-static-property-access` stopped at `symbol_resolution_failed`
+  for the reviewed `$sent` declaration token; declaration navigation is also
+  unsupported.
+
+Direct CLI probes narrowed the two property failures. Bifrost resolves the
+fully qualified declarations and returns all expected usages when the query is
+moved from the leading `$` to the identifier subtoken. The instance-property
+usage ranges are then exact because `->last` is sigil-free. The static-property
+results find both usages but return only `sent`, omitting the syntactic `$` that
+Intelephense includes for `self::$sent` and `Mailer::$sent`.
+
+This is therefore not evidence that Bifrost lacks PHP property reference
+analysis. It is a concrete PHP location-adapter/token-range gap: by-location
+selection should accept a cursor on the full `$property` declaration token,
+and static-property results should use the complete `$property` source range.
+Distinct declaration navigation remains a separate cross-language capability
+request. These are suitable follow-up Bifrost issue requests and do not weaken
+the reviewed ground truth.

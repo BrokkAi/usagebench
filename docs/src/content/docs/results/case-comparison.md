@@ -75,9 +75,15 @@ result means contract disagreement, not an automatic defect verdict.
 
 | Case | Bifrost | Intelephense | Observed distinction |
 |---|---|---|---|
-| `php-function-import-call` | Pass | Near | Intelephense additionally returns the imported-function binding. |
-| `php-parity-interface-method-implementation` | Pass | Hard | The expected implementation reference and one reverse lookup are absent. |
-| `php-interface-typed-receiver-call` | Pass | Hard | The interface-typed receiver call is absent. |
+| `php-class-construction` | Exact | Hard | Both analyzers return the construction reference. Bifrost navigates to the canonical class token; Intelephense returns both that class token and `__construct`, two reasonable destinations that the current strict singleton lookup schema cannot express as alternatives. |
+| `php-function-import-call` | Exact | Exact | Under the reviewed `bindings_optional` policy, both analyzers return the bare imported-function call and navigate exactly to the authored function body. |
+| `php-parity-interface-method-implementation` | Exact | Exact | Human review removed the implementation definition from ordinary usages and records the concrete call as an unproven interface-family candidate. Both analyzers return that candidate without returning the implementation definition. |
+| `php-parity-concrete-implementation-method-call` | Exact | Exact | Both analyzers return the same statically concrete call and navigate precisely to `EmailNotifier::notify`, even though their interface reference query also exposes the call as a family candidate. |
+| `php-interface-typed-receiver-call` | Unsupported | Unsupported | Both analyzers return the exact interface-typed reference set. The case requires declaration navigation to the bodyless interface member, but neither adapter exposes a distinct declaration operation. |
+| `php-property-access` | Gap | Unsupported | Intelephense returns all three instance-property references exactly and its definition fallback selects the whole `$last` declaration token. Bifrost's ordinary analysis also finds all three when queried directly by the fully qualified identifier, but its location API does not accept the sigil-inclusive declaration cursor used by the reviewed contract; distinct declaration navigation is unsupported by both adapters. |
+| `php-constant-access` | Unsupported | Unsupported | Both analyzers return the exact constant-reference set, but neither adapter exposes the required declaration-navigation operation separately from definition lookup. |
+| `php-parity-static-property-access` | Gap | Unsupported | Intelephense returns the whole `$sent` token for both references and its definition fallback selects the whole declaration token. Bifrost finds both references when queried directly, but requires an identifier-subtoken cursor and returns ranges that omit `$`; its distinct declaration operation is also unsupported. |
+| `php-parity-magic-get-no-ordinary-usage` | Exact | Exact | Both analyzers correctly return no ordinary `__get` references. The sound implicit runtime edge from `dynamicName` is reserved for a future runtime-handler or call-target operation rather than cross-name definition navigation. |
 
 ## Python
 

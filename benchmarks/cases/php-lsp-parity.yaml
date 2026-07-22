@@ -30,7 +30,8 @@ cases:
         kind: method
         displayName: create
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumer.php
             range:
@@ -47,8 +48,14 @@ cases:
           kind: method
           displayName: create
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Mailer::create() selects
+        the single static EmailNotifier::create method through the namespace
+        import alias. Mailer is a separate class qualifier and optional import
+        binding, while definition navigation from create targets the authored
+        method body. No dynamic dispatch or alternate target is present.
+        Intelephense 1.18.5 returned the exact usage and definition target.
         Parity source: phpactor/phpactor@be959c4e1b9f3dcefeca0b5971cbcaddff2df3e0.
         Upstream reference: lib/Indexer/Tests/Adapter/ReferenceFinder/IndexedReferenceFinderTest.php::provideMembers namespaced static members.
         Adapted fixture: fixtures/php/lsp-parity/.
@@ -78,7 +85,8 @@ cases:
         kind: method
         displayName: record
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/Consumer.php
             range:
@@ -95,8 +103,16 @@ cases:
           kind: method
           displayName: record
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Both the internal
+        $this->record(...) call and external $mailer->record(...) call select
+        the single authored LogsEvents::record method body composed into
+        EmailNotifier. The use LogsEvents statement does not synthesize another
+        authored method token. Definition navigation from the external call
+        targets the trait body, and no competing trait or override exists.
+        Intelephense 1.18.5 returned both usages and the exact definition
+        target.
         Parity source: phpactor/phpactor@be959c4e1b9f3dcefeca0b5971cbcaddff2df3e0.
         Upstream reference: lib/Indexer/Tests/Adapter/ReferenceFinder/IndexedReferenceFinderTest.php::provideTraits single trait and implementation.
         Adapted fixture: fixtures/php/lsp-parity/.
@@ -110,14 +126,50 @@ cases:
           end: { line: 6, character: 26 }
       kind: method
       displayName: notify
-    expectedUsages:
+    expectedUnprovenUsages:
       - location:
-          uri: benchmark://source/src/Service/EmailNotifier.php
+          uri: benchmark://source/src/Consumer.php
           range:
-            start: { line: 13, character: 20 }
-            end: { line: 13, character: 26 }
+            start: { line: 7, character: 9 }
+            end: { line: 7, character: 15 }
         kind: method
         displayName: notify
+    expectedUsages: []
+    usageLookups: []
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. EmailNotifier::notify is
+        an implementation definition, not a usage of the bodyless
+        Notifier::notify declaration. The consumer receiver is initialized by
+        Mailer::create(): self, which returns new self(), so its concrete
+        EmailNotifier identity is statically recoverable. The call is retained
+        only as a conservative interface-family candidate rather than a proven
+        usage of the interface declaration. Reverse navigation from the
+        concrete implementation to the interface member is a distinct
+        implementation-relation operation and is not scored as ordinary
+        definition navigation here.
+        Intelephense 1.18.5 returned the concrete consumer call from the
+        interface declaration as an interface-family reference, while omitting
+        the implementation definition itself. The candidate therefore passed
+        under expectedUnprovenUsages without making the concrete dispatch an
+        exact interface usage.
+        Parity source: phpactor/phpactor@be959c4e1b9f3dcefeca0b5971cbcaddff2df3e0.
+        Upstream reference: lib/Indexer/Tests/Adapter/ReferenceFinder/IndexedImplementationFinderTest.php::provideClassMembers interface member.
+        Adapted fixture: fixtures/php/lsp-parity/.
+        Maturity: interface-family relationships must not turn implementation
+        definitions into ordinary usages or erase a statically exact concrete
+        receiver.
+  - id: php-parity-concrete-implementation-method-call
+    declaration:
+      location:
+        uri: benchmark://source/src/Service/EmailNotifier.php
+        range:
+          start: { line: 13, character: 20 }
+          end: { line: 13, character: 26 }
+      kind: method
+      displayName: notify
+    expectedUsages:
       - location:
           uri: benchmark://source/src/Consumer.php
           range:
@@ -126,7 +178,16 @@ cases:
         kind: method
         displayName: notify
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
+          location:
+            uri: benchmark://source/src/Consumer.php
+            range:
+              start: { line: 7, character: 9 }
+              end: { line: 7, character: 15 }
+          kind: method
+          displayName: notify
+        expectedDeclaration:
           location:
             uri: benchmark://source/src/Service/EmailNotifier.php
             range:
@@ -134,72 +195,83 @@ cases:
               end: { line: 13, character: 26 }
           kind: method
           displayName: notify
-        expectedDeclaration:
-          location:
-            uri: benchmark://source/src/Contracts/Notifier.php
-            range:
-              start: { line: 6, character: 20 }
-              end: { line: 6, character: 26 }
-          kind: method
-          displayName: notify
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. Mailer::create() resolves
+        to EmailNotifier::create(): self, whose body returns new self(). The
+        immutable consumer binding therefore has exact EmailNotifier identity,
+        making $mailer->notify(...) a proven concrete call and definition
+        navigation target. No subclass, interface-typed rebinding, or alternate
+        implementation appears in the fixture.
+        Intelephense 1.18.5 also returned exactly this call from the concrete
+        implementation and navigated from it to the precise concrete method
+        body. Its broader interface-family reference query does not change the
+        exact concrete definition result.
         Parity source: phpactor/phpactor@be959c4e1b9f3dcefeca0b5971cbcaddff2df3e0.
         Upstream reference: lib/Indexer/Tests/Adapter/ReferenceFinder/IndexedImplementationFinderTest.php::provideClassMembers interface member.
         Adapted fixture: fixtures/php/lsp-parity/.
-        Maturity: an interface method should connect to its implementing method and calls on the implementation.
+        Maturity: a concrete receiver recovered through a self-returning factory
+        should resolve to the authored implementation without broadening the
+        interface declaration's ordinary usage set.
   - id: php-parity-static-property-access
     declaration:
       location:
         uri: benchmark://source/src/Service/EmailNotifier.php
         range:
-          start: { line: 11, character: 23 }
+          start: { line: 11, character: 22 }
           end: { line: 11, character: 27 }
       kind: property
-      displayName: "sent"
+      displayName: "$sent"
     expectedUsages:
       - location:
           uri: benchmark://source/src/Service/EmailNotifier.php
           range:
-            start: { line: 15, character: 15 }
+            start: { line: 15, character: 14 }
             end: { line: 15, character: 19 }
         kind: property
-        displayName: "sent"
+        displayName: "$sent"
       - location:
           uri: benchmark://source/src/Consumer.php
           range:
-            start: { line: 9, character: 18 }
+            start: { line: 9, character: 17 }
             end: { line: 9, character: 22 }
         kind: property
-        displayName: "sent"
+        displayName: "$sent"
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/Consumer.php
             range:
-              start: { line: 9, character: 18 }
+              start: { line: 9, character: 17 }
               end: { line: 9, character: 22 }
           kind: property
-          displayName: "sent"
+          displayName: "$sent"
         expectedDeclaration:
           location:
             uri: benchmark://source/src/Service/EmailNotifier.php
             range:
-              start: { line: 11, character: 23 }
+              start: { line: 11, character: 22 }
               end: { line: 11, character: 27 }
           kind: property
-          displayName: "sent"
+          displayName: "$sent"
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The declaration, internal
+        write, and external read all spell the static property token as $sent,
+        so their exact ranges include the PHP sigil. self and Mailer are
+        separate type or alias qualifiers. The initialized property has no
+        executable implementation body, making navigation declaration-only.
+        Intelephense 1.18.5 returned both full $sent usage ranges. It does not
+        advertise textDocument/declaration; a pre-classification definition
+        probe reached the same full $sent declarator range.
         Parity source: phpactor/phpactor@be959c4e1b9f3dcefeca0b5971cbcaddff2df3e0.
         Upstream reference: lib/Indexer/Tests/Adapter/ReferenceFinder/IndexedReferenceFinderTest.php::provideMembers static properties.
         Adapted fixture: fixtures/php/lsp-parity/.
         Maturity: static property writes and reads should resolve back to the declared property.
-  - id: php-parity-magic-get-not-planned
-    notPlanned:
-      reason: PHP magic __get property fallback is retained for parity tracking but is not scored until dynamic member lookup has a deliberate model.
+  - id: php-parity-magic-get-no-ordinary-usage
     declaration:
       location:
         uri: benchmark://source/src/Service/EmailNotifier.php
@@ -208,27 +280,23 @@ cases:
           end: { line: 24, character: 25 }
       kind: method
       displayName: __get
-    usageLookups:
-      - usage:
-          location:
-            uri: benchmark://source/src/Consumer.php
-            range:
-              start: { line: 10, character: 18 }
-              end: { line: 10, character: 29 }
-          kind: property
-          displayName: dynamicName
-        expectedDeclaration:
-          location:
-            uri: benchmark://source/src/Service/EmailNotifier.php
-            range:
-              start: { line: 24, character: 20 }
-              end: { line: 24, character: 25 }
-          kind: method
-          displayName: __get
+    expectedUsages: []
+    usageLookups: []
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The exact EmailNotifier
+        receiver and absence of a declared dynamicName property make __get the
+        statically recoverable runtime handler for $mailer->dynamicName.
+        Nevertheless, the dynamicName token names a synthesized property, not
+        the __get method, so it is not an ordinary source-token usage and
+        ordinary definition navigation must not cross those symbol names. A
+        future runtime-handler or call-target operation may model this implicit
+        edge separately. Intelephense 1.18.5 returned no references for __get
+        and no definition from dynamicName, matching the ordinary symbol
+        identity contract.
         Parity source: phpactor/phpactor@be959c4e1b9f3dcefeca0b5971cbcaddff2df3e0.
         Upstream reference: dynamic member behavior adjacent to PhpActor WorseReflection member-access inference tests.
         Adapted fixture: fixtures/php/lsp-parity/.
-        Maturity: $mailer->dynamicName is intentionally unscored because the property is synthesized by __get.
+        Maturity: implicit runtime dispatch must not be conflated with ordinary
+        same-symbol references or definition navigation.

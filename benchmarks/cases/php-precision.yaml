@@ -16,13 +16,32 @@ cases:
       kind: method
       displayName: send
     expectedUsages:
-      - location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 7, character: 20 }, end: { line: 7, character: 24 } } }
-        kind: method
-        displayName: send
       - location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 11, character: 15 }, end: { line: 11, character: 19 } } }
         kind: method
         displayName: send
-    verification: { method: manual_inspection, notes: "The receiver has the Notifier interface type, so the call belongs to Notifier::send." }
+    usageLookups:
+      - operation: declaration
+        usage:
+          location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 11, character: 15 }, end: { line: 11, character: 19 } } }
+          kind: method
+          displayName: send
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/Contracts.php, range: { start: { line: 5, character: 20 }, end: { line: 5, character: 24 } } }
+          kind: method
+          displayName: send
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The Notifier-typed receiver
+        makes $notifier->send(...) the sole ordinary usage of the bodyless
+        Notifier::send member. EmailNotifier::send is an implementation
+        definition rather than a call/reference site and is excluded.
+        Declaration navigation targets the interface member; the function may
+        receive any Notifier implementation, so a concrete runtime body cannot
+        be selected soundly from this fixture. Intelephense 1.18.5 returned
+        exactly the interface-typed call but does not advertise
+        textDocument/declaration; a non-scored definition probe navigated to
+        the bodyless Notifier::send member rather than EmailNotifier::send.
   - id: php-function-import-call
     declaration:
       location: { uri: benchmark://source/src/Support.php, range: { start: { line: 4, character: 9 }, end: { line: 4, character: 15 } } }
@@ -32,7 +51,26 @@ cases:
       - location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 11, character: 20 }, end: { line: 11, character: 26 } } }
         kind: function
         displayName: format
-    verification: { method: manual_inspection, notes: "A use-function import enables the bare call without making the import binding a usage." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 11, character: 20 }, end: { line: 11, character: 26 } } }
+          kind: function
+          displayName: format
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/Support.php, range: { start: { line: 4, character: 9 }, end: { line: 4, character: 15 } } }
+          kind: function
+          displayName: format
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The use-function import
+        resolves the bare format("hello") call to the single function body in
+        Support.php. The import token is an optional binding under
+        bindings_optional rather than a required usage. Definition navigation
+        from the call targets the format function body; send and namespace
+        tokens retain separate identities. Intelephense 1.18.5 returned the
+        exact usage and definition target.
   - id: php-static-qualified-method-call
     declaration:
       location: { uri: benchmark://source/src/Labels.php, range: { start: { line: 5, character: 27 }, end: { line: 5, character: 33 } } }
@@ -42,4 +80,21 @@ cases:
       - location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 12, character: 12 }, end: { line: 12, character: 18 } } }
         kind: method
         displayName: create
-    verification: { method: manual_inspection, notes: "A static PHP call through a class qualifier must resolve to Labels::create." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 12, character: 12 }, end: { line: 12, character: 18 } } }
+          kind: method
+          displayName: create
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/Labels.php, range: { start: { line: 5, character: 27 }, end: { line: 5, character: 33 } } }
+          kind: method
+          displayName: create
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-22. The explicit
+        Labels::create() call selects the static method on the final Labels
+        class with no dispatch ambiguity. Labels is a separate class-qualifier
+        usage. Definition navigation targets the create method body.
+        Intelephense 1.18.5 returned the exact usage and definition target.
