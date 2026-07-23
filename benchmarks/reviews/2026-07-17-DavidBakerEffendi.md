@@ -2539,3 +2539,487 @@ the reviewed ground truth.
 - Outcome revealed after review: Pyright 1.1.411 returned no Definition target
   from `config.theme`. This supports preserving the case as an explicitly
   unscored future dynamic-member navigation category.
+## ruby-baseline.yaml
+
+### ruby-require-relative-class-construction
+
+- Source: `fixtures/ruby/baseline/lib/billing/invoice.rb` and
+  `app/report.rb`.
+- Authored definition: `Billing::Invoice`.
+- Required usages: the `Invoice` qualifier in `Billing::Invoice.build`, the
+  explicit `Invoice.new` self-construction, the
+  `Billing::Invoice::DEFAULT_CURRENCY` qualifier, and the
+  `Billing::Invoice.last_build` qualifier.
+- Optional result: the class declaration itself, because both checked Ruby
+  servers include it despite `includeDeclaration: false`.
+- Excluded location: the lowercase filename inside `require_relative`, which
+  is not a class token.
+- Ground-truth decision: **correct after promoting both namespace/member
+  qualifiers to required usages**.
+- Operation decision: **definition** from the build qualifier to
+  `class Invoice`.
+- Reviewer rationale: all four visible `Invoice` tokens name the same exact
+  class. `new` is a separate method token, while `Invoice.new` still contains
+  an explicit class usage.
+- Outcome revealed after review: Ruby LSP 0.26.10 and Solargraph 0.60.2 both
+  found all four semantic references without an occurrence probe. Ruby LSP
+  selected the full `Billing::Invoice` path for three qualified references but
+  returned exact self-construction and Definition ranges. Solargraph returned
+  all four reference tokens exactly but selected the enclosing class body for
+  Definition. Both also included the class declaration. After treating
+  enclosing ranges as `position_unverified` and explicitly allowing declaration
+  inclusion, neither server has a semantic failure: Ruby LSP reports only the
+  three broad qualifier ranges, while Solargraph reports only its broad
+  Definition range.
+
+### ruby-relative-nested-constant
+
+- Source: `fixtures/ruby/baseline/lib/billing/money.rb` and
+  `lib/billing/invoice.rb`.
+- Authored definition: `Billing::Money::Currency`.
+- Required usage: `Currency` in `Money::Currency.new`.
+- Optional result: the class declaration itself, because both checked Ruby
+  servers include it despite `includeDeclaration: false`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the constant reference to
+  `class Currency`.
+- Reviewer rationale: lexical nesting places `Invoice` inside `Billing`, so
+  `Money::Currency` resolves exactly to `Billing::Money::Currency`. `Money`,
+  `new`, and the lowercase require filename are separate identities.
+- Outcome revealed after review: neither Ruby LSP 0.26.10 nor Solargraph 0.60.2
+  needed an occurrence probe. Both returned the semantic reference and class
+  declaration. Ruby LSP selected the full `Money::Currency` reference and exact
+  Definition token; Solargraph selected the exact reference token and enclosing
+  class body for Definition. With declaration inclusion explicitly allowed,
+  only the respective broad ranges remain `position_unverified`.
+
+### ruby-superclass-reference
+
+- Source: `fixtures/ruby/baseline/lib/billing/record.rb` and
+  `lib/billing/invoice.rb`.
+- Authored definition: `Billing::Record`.
+- Required usage: `Record` in `class Invoice < Record`.
+- Optional result: the class declaration itself.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the superclass token to
+  `class Record`.
+- Reviewer rationale: lexical constant lookup resolves the unqualified
+  superclass exactly inside `Billing`. The require filename and inherited
+  member tokens are separate identities.
+- Outcome revealed after review: Ruby LSP 0.26.10 and Solargraph 0.60.2 both
+  returned the exact superclass reference plus the declaration, so no probe is
+  required. Ruby LSP navigated to the exact class token. Solargraph selected
+  the enclosing class body for Definition, leaving only a
+  `position_unverified` range difference after declaration inclusion was
+  explicitly allowed.
+
+### ruby-include-instance-mixin
+
+- Source: `fixtures/ruby/baseline/lib/billing/auditable.rb`,
+  `lib/billing/invoice.rb`, and `app/report.rb`.
+- Authored definition: `Billing::Auditable#audit`.
+- Required usages: the direct `invoice.audit` call and the literal
+  `invoice.public_send(:audit)` runtime-call target.
+- Optional result: the method declaration itself.
+- Ground-truth decision: **correct, deliberately exceeding ordinary Ruby LSP
+  reference scope for the sound reflective call**.
+- Operation decision: **definition** from the direct call to
+  `Auditable#audit`; no ordinary reverse navigation is required from the symbol
+  literal.
+- Reviewer rationale: `Invoice` includes `Auditable` without an override, the
+  receiver is exact, and `:audit` is a literal passed directly to
+  `public_send`. The runtime target is therefore unique without mutable-string
+  propagation. `public_send` and the `Auditable` module token remain separate
+  identities.
+- Outcome revealed after review: Ruby LSP 0.26.10 and Solargraph 0.60.2 both
+  return the direct call plus method declaration but omit `:audit`. Querying
+  from the symbol does not expose a hidden reference family: Ruby LSP
+  associates the position with `public_send`, while Solargraph returns none.
+  Ruby LSP navigates the direct call exactly; Solargraph selects the enclosing
+  method range. Declaration inclusion is explicitly allowed, leaving the
+  reflective literal as a genuine semantic false negative for both LSPs and an
+  opportunity for Bifrost to demonstrate stronger sound call analysis.
+
+### ruby-prepend-method-precedence
+
+- Source: `fixtures/ruby/baseline/lib/billing/formatting.rb`,
+  `lib/billing/invoice.rb`, and `app/report.rb`.
+- Authored definition: `Billing::Formatting#total_label`.
+- Required usage: `invoice.total_label`.
+- Optional result: the queried `Formatting#total_label` declaration itself.
+- Excluded result: the shadowed `Invoice#total_label` implementation.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the call to the prepended module
+  method.
+- Reviewer rationale: `prepend` deterministically places `Formatting` before
+  `Invoice` in Ruby method lookup order. The class implementation is therefore
+  neither an ambiguous alternate target nor a usage of the prepended method.
+- Outcome revealed after review: both Ruby LSP 0.26.10 and Solargraph 0.60.2
+  return the exact call and queried module declaration. Both navigate the call
+  to `Formatting#total_label`; Solargraph uses an enclosing method range. Ruby
+  LSP additionally returns the shadowed `Invoice#total_label` declaration,
+  while Solargraph does not. After allowing only queried-declaration inclusion,
+  the Ruby LSP result retains one genuine method-family extra and Solargraph
+  retains only its `position_unverified` Definition range.
+
+### ruby-extend-and-include-method-lookup
+
+- Source: `fixtures/ruby/baseline/lib/billing/findable.rb`,
+  `lib/billing/user.rb`, `lib/billing/legacy_user.rb`, and `app/report.rb`.
+- Authored definition: `Billing::Findable#find`.
+- Required usages: `Billing::User.find(42)` and
+  `Billing::LegacyUser.new.find(7)`.
+- Optional result: the queried `Findable#find` declaration itself.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from both calls to `Findable#find`.
+- Reviewer rationale: `extend Findable` installs the authored body as a
+  singleton-class method on `User`, while `include Findable` installs the same
+  body as an instance method on `LegacyUser`. Both receivers therefore have the
+  same unique authored definition. `Findable` and `new` are separate symbol
+  identities.
+- Outcome revealed after review: Ruby LSP 0.26.10 and Solargraph 0.60.2 both
+  return both exact calls plus the method declaration, so declaration inclusion
+  is explicitly allowed. Both navigate both calls to the shared
+  `Findable#find` body. Ruby LSP selects the exact method token; Solargraph
+  selects the enclosing method range for both, leaving only
+  `position_unverified` range differences.
+
+### ruby-class-constant-access
+
+- Source: `fixtures/ruby/baseline/lib/billing/invoice.rb` and
+  `app/report.rb`.
+- Authored declaration: `DEFAULT_CURRENCY = Money::Currency.new("USD")`.
+- Required usage: `DEFAULT_CURRENCY` in
+  `Billing::Invoice::DEFAULT_CURRENCY`.
+- Optional result: the constant assignment token itself.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** from the qualified read to the
+  left-hand constant binding.
+- Reviewer rationale: the assignment introduces a constant binding rather than
+  an executable body. `Billing`, `Invoice`, `Money`, `Currency`, and `new` are
+  separate symbol identities.
+- Outcome revealed after review: neither Ruby LSP 0.26.10 nor Solargraph 0.60.2
+  advertises `textDocument/declaration`, so the semantic Declaration operation
+  is unsupported by both adapters. Both practical Definition probes reach the
+  assignment with enclosing ranges. Solargraph finds the read plus assignment
+  from the declaration; Ruby LSP finds nothing from the assignment in a cold
+  query but finds the qualified read plus assignment through the scored
+  read-origin probe after indexing settles. This is occurrence-sensitive
+  reference discovery, not evidence against the authored usage. The assignment
+  is explicitly allowed as declaration inclusion.
+
+### ruby-top-level-implicit-self-method-call
+
+- Source: `fixtures/ruby/baseline/app/report.rb`.
+- Authored definition: top-level `def normalize_total(value)`.
+- Required usage: the bare `normalize_total(19)` call inside
+  `InvoiceReport#render`.
+- Optional result: the queried method declaration itself.
+- Ground-truth decision: **correct after reclassifying and renaming the case
+  from a function to a method**.
+- Operation decision: **definition** from the call to the authored method body.
+- Reviewer rationale: a Ruby top-level `def` installs a private instance method
+  on `Object`. The bare call has the implicit receiver `self`; while `render`
+  executes, that is the `InvoiceReport` instance, whose ancestor chain reaches
+  `Object`. The later textual position of the method body does not make the
+  target ambiguous.
+- Outcome revealed after review: Ruby LSP 0.26.10 and Solargraph 0.60.2 both
+  return the exact call plus declaration. Solargraph navigates to the enclosing
+  authored method body. Ruby LSP returns no Definition, leaving a genuine
+  navigation false negative for the implicit-self Object-ancestor edge.
+
+### ruby-singleton-method-dispatch
+
+- Source: `fixtures/ruby/baseline/lib/billing/user.rb`,
+  `lib/billing/invoice.rb`, and `app/report.rb`.
+- Authored definition: `Billing::User.build`.
+- Required usage: `build` in `Billing::User.build`.
+- Optional result: the queried `User.build` declaration itself.
+- Excluded locations: the same-spelled `Billing::Invoice.build` call and
+  `Invoice.build` declaration.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to `def self.build` on `User`.
+- Reviewer rationale: the explicit class receiver makes this dispatch
+  unambiguous. `Invoice.build` is a distinct singleton method, while `User`
+  tokens and `new` are separate class and method identities.
+- Outcome revealed after review: Ruby LSP 0.26.10 and Solargraph 0.60.2 both
+  return the exact `User.build` call plus queried declaration and both navigate
+  to `User.build`; Solargraph selects the enclosing method body. Ruby LSP also
+  returns the distinct `Invoice.build` call and declaration. Solargraph does
+  not, confirming that those two locations are method-family noise rather than
+  necessary conservatism.
+
+### ruby-dynamic-public-send
+
+- Source: `fixtures/ruby/baseline/app/report.rb` and
+  `lib/billing/auditable.rb`.
+- Reviewed operation: Definition navigation from the literal `:audit` in
+  `invoice.public_send(:audit)` to `Auditable#audit`.
+- Ground-truth decision: **retain as navigation-only and not planned**.
+- Corpus cleanup: removed the duplicate declaration-to-references contract;
+  the planned `ruby-include-instance-mixin` case already requires both the
+  direct call and reflective symbol usage.
+- Reviewer rationale: the exact receiver and literal method name make the
+  reflective reference edge sound, but clicking a symbol literal to request
+  ordinary Definition is a stronger, separate editor operation.
+- Outcome revealed after review: Ruby LSP 0.26.10 associates the symbol
+  position with `public_send`, while Solargraph 0.60.2 returns no target.
+  Navigation from the symbol literal therefore remains explicitly aspirational
+  and unscored rather than weakening the planned reference case.
+
+### ruby-script-level-constant-access
+
+- Source: `fixtures/ruby/baseline/app/report.rb`.
+- Authored declaration: top-level `SCRIPT_LIMIT = 100`.
+- Required usage: `SCRIPT_LIMIT` inside `normalize_total`.
+- Optional result: the constant assignment token itself.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** from the read to the left-hand constant
+  binding.
+- Reviewer rationale: the top-level assignment introduces the constant on
+  `Object`, and the top-level method's lexical context resolves its bare read
+  to that binding. The assignment executes before the method is invoked in the
+  intended loaded program.
+- Outcome revealed after review: neither Ruby LSP 0.26.10 nor Solargraph 0.60.2
+  advertises LSP Declaration. Solargraph returns the exact read plus assignment
+  and its practical Definition lookup reaches an enclosing assignment range.
+  With the scored read-origin probe and settled indexing, Ruby LSP also returns
+  the required read plus assignment. Declaration remains unsupported by both
+  adapters rather than becoming a semantic reference failure.
+
+### ruby-instance-field-access
+
+- Source: `fixtures/ruby/baseline/lib/billing/invoice.rb`.
+- Authored declaration: `@status = "draft"` in `Invoice#initialize`.
+- Required usage: the `@status` read in `Invoice#status`.
+- Optional result: the assignment occurrence itself.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** from the read to the assignment token.
+- Reviewer rationale: both occurrences have implicit `self` inside `Invoice`
+  instance methods and identify the same source-level member slot. Different
+  runtime instances do not create distinct static field identities.
+- Outcome revealed after review: neither Ruby LSP 0.26.10 nor Solargraph 0.60.2
+  advertises LSP Declaration. Solargraph returns both exact occurrences and
+  its practical Definition lookup selects the full assignment. A cold Ruby LSP
+  query from the assignment exposed `NonExistingNamespaceError` for
+  `Billing::Invoice`; the read origin returned both exact occurrences. With the
+  scored read-origin probe and settled indexing, both origins complete and the
+  reference family passes. The cold error remains initialization-sensitivity
+  evidence, not evidence against the authored field identity.
+
+### ruby-class-variable-access
+
+- Source: `fixtures/ruby/baseline/lib/billing/invoice.rb`.
+- Authored declaration: `@@sequence = 0` in `Invoice`.
+- Required usage: the single `@@sequence` occurrence in `@@sequence += 1`.
+- Optional result: the initializer occurrence itself.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** to the initial assignment.
+- Reviewer rationale: the compound assignment is one source occurrence that
+  reads and writes the same class-hierarchy slot. It requires a pre-existing
+  value and therefore cannot supply the declaration for its own read. There is
+  no competing declaration or subclass in the fixture.
+- Outcome revealed after review: neither Ruby LSP 0.26.10 nor Solargraph 0.60.2
+  advertises LSP Declaration. Solargraph finds both exact occurrences when
+  queried from the mutation, while practical Definition returns both the
+  initializer and mutation. Ruby LSP finds no usage from the initializer; from
+  the mutation it falls back to the enclosing `build` method family and returns
+  unrelated `build` locations. Those results remain genuine reference noise,
+  not allowed class-variable targets.
+
+### ruby-singleton-field-access
+
+- Source: `fixtures/ruby/baseline/lib/billing/invoice.rb` and
+  `app/report.rb`.
+- Authored declaration: class-body `@last_build = nil`.
+- Required usages: the write in `Invoice.build` and read in
+  `Invoice.last_build`.
+- Optional result: the class-body initializer itself.
+- Ground-truth decision: **correct under the fixture's exact receivers**.
+- Operation decision: **declaration** from the read to the initial class-body
+  assignment.
+- Reviewer rationale: the class body and both singleton methods execute with
+  `self` equal to the `Invoice` class object for the shown calls, so all three
+  occurrences identify the same singleton-state slot. `@status` belongs to
+  `Invoice` instances and is excluded. A future inherited call on a subclass
+  could use subclass state, but no such receiver exists in this closed fixture.
+- Outcome revealed after review: neither Ruby LSP 0.26.10 nor Solargraph 0.60.2
+  advertises LSP Declaration. Solargraph finds all three exact occurrences from
+  the read and practical Definition selects the full initializer assignment;
+  it finds no usages from the initializer origin. Cold Ruby LSP queries exposed
+  `NonExistingNamespaceError` for `Billing::Invoice::<Class:Invoice>`, but the
+  scored read-origin probe returns all three occurrences once indexing settles.
+  The reference family therefore passes while Declaration remains unsupported;
+  the cold failure records initialization sensitivity rather than contradicting
+  the authored singleton-field relation.
+
+### ruby-factory-return-member-call
+
+- Source: `fixtures/ruby/precision/lib/precision/base.rb`,
+  `lib/precision/factory.rb`, and `app/run.rb`.
+- Authored definition: `Precision::Base#execute`.
+- Required usages: `service.execute` after `Precision.build` and
+  `second.execute` after `Precision::Base.build`.
+- Optional result: the queried method declaration itself.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from both calls to `Base#execute`.
+- Reviewer rationale: `Precision.build` explicitly returns `Base.new`;
+  `Base.build` executes with `self == Base` and its bare `new` also returns a
+  `Base`. Both locals are assigned once with no competing writes, so the return
+  flow is exact in the closed fixture.
+- Outcome revealed after review: Ruby LSP 0.26.10 and Solargraph 0.60.2 both
+  find the two exact calls plus declaration. Solargraph navigates both calls to
+  an enclosing `Base#execute` range. With settled full-fixture indexing, Ruby
+  LSP returns the correct `Base#execute` target plus numerous unrelated RubyGems
+  `execute` methods. The expected target is present, but the extra method-family
+  targets remain genuine navigation noise.
+
+### ruby-lexical-factory-constant
+
+- Source: `fixtures/ruby/precision/lib/precision/base.rb`,
+  `lib/precision/factory.rb`, and `app/run.rb`.
+- Authored definition: `Precision::Base`.
+- Required usages: lexical `Base` in `Precision.build` and qualified `Base` in
+  `Precision::Base.build`.
+- Optional result: the queried class declaration itself.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from both usages to `class Base`.
+- Reviewer rationale: the unqualified token is lexically inside
+  `module Precision`; the qualified token names the same class explicitly.
+  `require_relative "base"`, `new`, and `build` are separate binding or method
+  identities.
+- Outcome revealed after review: Solargraph 0.60.2 returns both exact usages
+  plus declaration and navigates both to the enclosing `Precision::Base` class
+  body. In an isolated cold run, Ruby LSP 0.26.10 omitted the qualified usage,
+  sent lexical `Base` to the standard-library `Random::Base` RBS entry, and
+  returned no Definition for `Precision::Base`. In the complete Ruby run,
+  after the preceding factory-return case indexed the same fixture, it returned
+  both usages and both correct definitions, with only a broad qualified
+  reference range. The scored qualified-use probe and five-second profile
+  settle make the complete result reproducible. The cold result is recorded as
+  initialization/order sensitivity rather than a stable semantic failure.
+
+### ruby-parity-autoload-constant-definition
+
+- Source: `fixtures/ruby/lsp-parity/lib/shop/product.rb`,
+  `lib/shop/discount.rb`, and `app/catalog.rb`.
+- Authored definition: `Shop::Discount`.
+- Required concrete usage: `Discount` in `Shop::Discount.default`.
+- Optional binding: `:Discount` in Ruby's built-in `autoload`.
+- Excluded token: the `"shop/discount"` path string.
+- Ground-truth decision: **correct after making the autoload symbol an optional
+  binding rather than a required concrete usage**.
+- Operation decision: **definition** from both the qualified class token and
+  recognized autoload binding to `class Discount`.
+- Reviewer rationale: `autoload` declaratively registers a lazy constant name;
+  under `bindings_optional` it is import-like metadata. Navigation remains
+  useful and sound because the exact indexed declaration exists in this
+  fixture. The case uses no Zeitwerk configuration or application lockfile.
+- Outcome revealed after review: Ruby LSP 0.26.10 navigates both tokens exactly
+  to `class Discount`, confirming its built-in autoload handling. Its reference
+  range for `Shop::Discount` covers the full qualified path. Solargraph 0.60.2
+  navigates the qualified token to the enclosing class body but sends the
+  autoload symbol only to the start of `discount.rb`, leaving a genuine
+  file-level rather than concrete-definition target.
+
+### ruby-parity-attr-reader-method-call
+
+- Source: `fixtures/ruby/lsp-parity/lib/shop/product.rb` and
+  `app/catalog.rb`.
+- Authored declaration: generated method token `:name` in
+  `attr_reader :name`.
+- Required usages: source symbol `:name` in `alias_method :label, :name` and
+  direct call `product.name`.
+- Excluded reference result: the `attr_reader` macro method token or expression;
+  it is not the declared `:name` token.
+- Excluded identities: alias declaration `:label`, calls to `label`, and field
+  `@name`.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** from `product.name` to the `attr_reader`
+  symbol because no authored method body exists.
+- Reviewer rationale: `attr_reader` declares the generated reader;
+  `alias_method`'s second symbol names that exact source method, while its first
+  symbol declares a distinct alias scored separately.
+- Outcome revealed after review: neither Ruby LSP 0.26.10 nor Solargraph 0.60.2
+  advertises LSP Declaration. Practical Definition from `product.name` reaches
+  the exact symbol in Ruby LSP and full `attr_reader` expression in Solargraph.
+  Both omit the alias source from references queried at the scored call-site
+  probe. Querying the declaration origin instead produces the `attr_reader`
+  macro token or expression rather than the declared `:name` token, so it
+  remains unexpected. The alias source remains a genuine semantic false
+  negative for both.
+
+### ruby-parity-singleton-class-method-definition
+
+- Source: `fixtures/ruby/lsp-parity/lib/shop/product.rb` and
+  `app/catalog.rb`.
+- Authored definition: `Product.from_sku` inside `class << self`.
+- Required usage: `from_sku` in `Shop::Product.from_sku("sku-1")`.
+- Optional result: the queried method declaration itself.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the authored method body.
+- Reviewer rationale: `class << self` opens `Product`'s singleton class, making
+  the nested `def` the exact target of the qualified constant-receiver call.
+- Outcome revealed after review: Ruby LSP 0.26.10 and Solargraph 0.60.2 both
+  return the exact call plus declaration and both navigate to `from_sku`. Ruby
+  LSP selects the exact method token; Solargraph selects the enclosing method
+  body.
+
+### ruby-parity-alias-method-call
+
+- Source: `fixtures/ruby/lsp-parity/lib/shop/product.rb` and
+  `app/catalog.rb`.
+- Authored declaration: `:label` in `alias_method :label, :name`.
+- Required usages: bare `label` inside `summary` and receiver call
+  `product.label`.
+- Excluded reference result: the `alias_method` macro method token or
+  expression; it is not the declared `:label` token.
+- Excluded identity: source symbol `:name`, scored as a usage of the generated
+  reader in the attr-reader case.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** from `product.label` to `:label`.
+- Reviewer rationale: `alias_method` declares a distinct alias identity even
+  though it copies the source method implementation. A separate
+  Definition-style operation could follow the implementation chain, but the
+  source-level declaration of `label` is the first target.
+- Outcome revealed after review: neither Ruby LSP 0.26.10 nor Solargraph 0.60.2
+  advertises LSP Declaration. From `product.label`, both return both exact
+  calls and practical Definition reaches the alias declaration rather than
+  `name`; Ruby LSP selects `:label` including its colon and Solargraph the full
+  `alias_method` expression. Queries from the declaration origin return the
+  macro token or expression rather than calls, while the scored call-site probe
+  returns both expected calls. Reference discovery is occurrence-sensitive,
+  and the macro result remains unexpected.
+
+### ruby-parity-module-function-call
+
+- Source: `fixtures/ruby/lsp-parity/lib/shop/pricing.rb` and
+  `app/catalog.rb`.
+- Authored definition: `Shop::Pricing.tax_rate`.
+- Required usage: `tax_rate` in `Shop::Pricing.tax_rate("EU")`.
+- Optional result: the queried method declaration itself.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to `def tax_rate`.
+- Reviewer rationale: argument-free `module_function` applies to the following
+  definition, retaining a private instance-method form and exposing a
+  singleton-method copy on `Pricing` that shares the authored body.
+- Outcome revealed after review: Ruby LSP 0.26.10 and Solargraph 0.60.2 both
+  return the exact call plus declaration and navigate to the shared body. Ruby
+  LSP selects the exact method token; Solargraph selects the enclosing method
+  range.
+
+## Ruby LSP calibration summary
+
+- Ruby LSP required a five-second post-initialization settle for reproducible
+  fixture indexing. At 750 ms, repeated full runs intermittently returned empty
+  reference and Definition results for otherwise supported cases.
+- The settled Ruby LSP run reports 5 passes, 3 position-unverified outcomes,
+  8 semantic failures, 4 unsupported cases, and 1 deliberately not-planned
+  case across the 21 reviewed Ruby cases.
+- Solargraph reports 11 position-unverified outcomes, 3 semantic failures,
+  6 unsupported cases, and 1 deliberately not-planned case. Its broad enclosing
+  ranges account for the absence of exact-position passes.
+- Scored `referenceProbe` origins preserve occurrence-sensitive LSP behavior.
+  When one reference origin fails and another succeeds, the successful union is
+  scored while the failed origin remains visible in raw status; a case errors
+  only when every origin fails.

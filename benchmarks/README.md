@@ -94,7 +94,10 @@ Each case supports both benchmark directions:
   Pyright that expose different sides of an import-alias family depending on
   where Find References starts. The probe must have the same symbol kind and
   does not replace the canonical definition target. Runners that can address
-  the canonical semantic declaration directly may continue to do so.
+  the canonical semantic declaration directly may continue to do so. If one
+  token origin returns a provider error but another succeeds, the successful
+  result remains scoreable and the failed origin stays visible in raw status;
+  the case is a runner error when every queried origin fails.
 - `usageLookups` tests usage-to-declaration lookup.
   Each lookup has an `operation`: `declaration`, `definition`, or the temporary
   development-only `profile_default`. Evaluation cases must choose explicitly;
@@ -110,6 +113,10 @@ Each case supports both benchmark directions:
 - Proven locations outside `expectedUsages`, `expectedUnprovenUsages`, and
   `allowedExtraUsages`, and unproven locations outside
   `expectedUnprovenUsages` and `allowedUnprovenUsages`, fail the case.
+- Exact token ranges are required for an exact pass. A returned range that
+  starts on the token's line and contains the complete canonical token is
+  retained as `position_unverified`: it establishes the semantic location
+  without silently treating a qualified path or whole-symbol range as exact.
 - `referencePolicy` defines the document-wide reference surface:
   `external_usages` excludes binding-only imports/re-exports;
   `bindings_optional` accepts their presence or absence; and

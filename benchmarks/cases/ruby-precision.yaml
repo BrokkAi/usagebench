@@ -22,10 +22,54 @@ cases:
       - location: { uri: benchmark://source/app/run.rb, range: { start: { line: 6, character: 7 }, end: { line: 6, character: 14 } } }
         kind: method
         displayName: execute
-    verification: { method: manual_inspection, notes: "Precision.build and Base.build both return Base instances, so their following receiver calls are Base#execute usages." }
+    allowedExtraUsages:
+      - location: { uri: benchmark://source/lib/precision/base.rb, range: { start: { line: 2, character: 8 }, end: { line: 2, character: 15 } } }
+        kind: method
+        displayName: execute
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/app/run.rb, range: { start: { line: 3, character: 8 }, end: { line: 3, character: 15 } } }
+          kind: method
+          displayName: execute
+        expectedDeclaration:
+          location: { uri: benchmark://source/lib/precision/base.rb, range: { start: { line: 2, character: 8 }, end: { line: 2, character: 15 } } }
+          kind: method
+          displayName: execute
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/app/run.rb, range: { start: { line: 6, character: 7 }, end: { line: 6, character: 14 } } }
+          kind: method
+          displayName: execute
+        expectedDeclaration:
+          location: { uri: benchmark://source/lib/precision/base.rb, range: { start: { line: 2, character: 8 }, end: { line: 2, character: 15 } } }
+          kind: method
+          displayName: execute
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Precision.build explicitly
+        returns Base.new. Precision::Base.build executes with self equal to
+        Base, so its bare new also returns a Base. Both locals are assigned once
+        without competing writes, making both execute calls exact usages of
+        Base#execute under flow-sensitive static analysis. Definition
+        navigation from either call must target the authored Base#execute body.
+        General Ruby mutability and monkey-patching introduce no observed
+        alternate target in this closed fixture. Ruby LSP 0.26.10 and
+        Solargraph 0.60.2 both return the two exact calls plus the queried
+        method declaration, so declaration inclusion is an explicit allowed
+        extra. Solargraph navigates both calls to an enclosing Base#execute
+        range. With settled full-fixture indexing, Ruby LSP includes the correct
+        Base#execute target but also returns numerous unrelated RubyGems
+        execute methods. That remains genuine method-family navigation noise,
+        not conservative ambiguity in this closed fixture.
   - id: ruby-lexical-factory-constant
     declaration:
       location: { uri: benchmark://source/lib/precision/base.rb, range: { start: { line: 1, character: 8 }, end: { line: 1, character: 12 } } }
+      kind: class
+      displayName: Base
+    referenceProbe:
+      location: { uri: benchmark://source/app/run.rb, range: { start: { line: 5, character: 20 }, end: { line: 5, character: 24 } } }
       kind: class
       displayName: Base
     expectedUsages:
@@ -35,4 +79,48 @@ cases:
       - location: { uri: benchmark://source/app/run.rb, range: { start: { line: 5, character: 20 }, end: { line: 5, character: 24 } } }
         kind: class
         displayName: Base
-    verification: { method: manual_inspection, notes: "The lexically scoped Base constant is used as the factory constructor receiver and in a fully qualified factory call." }
+    allowedExtraUsages:
+      - location: { uri: benchmark://source/lib/precision/base.rb, range: { start: { line: 1, character: 8 }, end: { line: 1, character: 12 } } }
+        kind: class
+        displayName: Base
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/lib/precision/factory.rb, range: { start: { line: 4, character: 4 }, end: { line: 4, character: 8 } } }
+          kind: class
+          displayName: Base
+        expectedDeclaration:
+          location: { uri: benchmark://source/lib/precision/base.rb, range: { start: { line: 1, character: 8 }, end: { line: 1, character: 12 } } }
+          kind: class
+          displayName: Base
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/app/run.rb, range: { start: { line: 5, character: 20 }, end: { line: 5, character: 24 } } }
+          kind: class
+          displayName: Base
+        expectedDeclaration:
+          location: { uri: benchmark://source/lib/precision/base.rb, range: { start: { line: 1, character: 8 }, end: { line: 1, character: 12 } } }
+          kind: class
+          displayName: Base
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Base in Precision.build
+        resolves lexically to Precision::Base, while Base in
+        Precision::Base.build names the same class explicitly. Both are
+        required class usages and Definition navigation from either must target
+        class Base. The lowercase require_relative path is optional binding
+        metadata; new and build are separate method identities. Ruby LSP
+        0.26.10 and Solargraph 0.60.2 both include the queried class
+        declaration, so declaration inclusion is an explicit allowed extra.
+        Solargraph returns both exact usages and navigates both to the enclosing
+        Precision::Base class body. In an isolated cold run, Ruby LSP returned
+        only the lexical usage, sent its Definition to the unrelated
+        standard-library Random::Base RBS entry, and returned no Definition
+        from Precision::Base. In the complete Ruby run, after the preceding
+        factory-return case indexed the same fixture, Ruby LSP returned both
+        usages and both correct definitions, with only a broad qualified
+        reference range. The scored qualified-use referenceProbe and five-second
+        profile settle make that complete result reproducible. The cold result
+        is initialization/order-sensitive analysis, not a stable semantic
+        disagreement.

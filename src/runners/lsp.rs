@@ -458,6 +458,7 @@ fn run_references(
     }
 
     let mut actual = Vec::new();
+    let mut reference_results = Vec::new();
     for selector in &selectors {
         let params = match position_params_with_context(
             selector,
@@ -471,15 +472,16 @@ fn run_references(
             }
             Err(error) => return error_declaration_report(case, "invalid_declaration", error),
         };
-        let mut locations = match session
-            .query("textDocument/references", params)
-            .and_then(|result| locations_from_response(&result, context.source_root))
-        {
-            Ok(locations) => locations,
-            Err(error) => return error_declaration_report(case, "references_failed", error),
-        };
-        actual.append(&mut locations);
+        reference_results.push(
+            session
+                .query("textDocument/references", params)
+                .and_then(|result| locations_from_response(&result, context.source_root)),
+        );
     }
+    let raw_statuses = match merge_reference_query_results(reference_results, &mut actual) {
+        Ok(raw_statuses) => raw_statuses,
+        Err(error) => return error_declaration_report(case, "references_failed", error),
+    };
 
     if let Some(probe) = &case.reference_probe {
         let probe = normalized_or_invalid(probe);
@@ -511,7 +513,7 @@ fn run_references(
         actual,
         Vec::new(),
         false,
-        vec!["ok".to_string()],
+        raw_statuses,
         false,
     )
     .unwrap_or_else(|error| error_declaration_report(case, "score_failed", error));
@@ -522,6 +524,38 @@ fn run_references(
         context.reference_policy,
     );
     report
+}
+
+fn merge_reference_query_results(
+    results: Vec<Result<Vec<NormalizedLocation>>>,
+    actual: &mut Vec<NormalizedLocation>,
+) -> Result<Vec<String>> {
+    let mut raw_statuses = Vec::with_capacity(results.len());
+    let mut first_error = None;
+    let mut success_count = 0;
+
+    for result in results {
+        match result {
+            Ok(mut locations) => {
+                success_count += 1;
+                raw_statuses.push("ok".to_string());
+                actual.append(&mut locations);
+            }
+            Err(error) => {
+                raw_statuses.push(format!("references_failed: {error:#}"));
+                if first_error.is_none() {
+                    first_error = Some(error);
+                }
+            }
+        }
+    }
+
+    if success_count == 0 {
+        let error = first_error.context("no LSP reference selector produced a result")?;
+        return Err(error.context("all LSP reference selectors failed"));
+    }
+
+    Ok(raw_statuses)
 }
 
 fn reference_selectors<'a>(
@@ -1667,6 +1701,45 @@ referenceProbe:
     }
 
     #[test]
+    fn reference_probe_can_recover_a_failed_declaration_origin() {
+        let expected = test_location("src/models.rb", 7);
+        let mut actual = Vec::new();
+
+        let statuses = merge_reference_query_results(
+            vec![
+                Err(anyhow::anyhow!("declaration-origin failure")),
+                Ok(vec![expected.clone()]),
+            ],
+            &mut actual,
+        )
+        .unwrap();
+
+        assert_eq!(actual, vec![expected]);
+        assert_eq!(statuses[0], "references_failed: declaration-origin failure");
+        assert_eq!(statuses[1], "ok");
+    }
+
+    #[test]
+    fn reference_queries_fail_when_every_origin_fails() {
+        let mut actual = Vec::new();
+
+        let error = merge_reference_query_results(
+            vec![
+                Err(anyhow::anyhow!("declaration-origin failure")),
+                Err(anyhow::anyhow!("probe-origin failure")),
+            ],
+            &mut actual,
+        )
+        .unwrap_err();
+
+        assert!(actual.is_empty());
+        assert!(
+            format!("{error:#}").contains("all LSP reference selectors failed"),
+            "{error:#}"
+        );
+    }
+
+    #[test]
     fn no_movement_accepts_empty_or_exact_self_target_only() {
         let self_target = test_location("src/lib.rs", 16);
         let trait_target = test_location("src/lib.rs", 6);
@@ -1682,6 +1755,20 @@ referenceProbe:
         assert_eq!(
             navigation_response_status(&[trait_target], &self_target, true),
             CaseStatus::Failed
+        );
+    }
+
+    #[test]
+    fn navigation_reports_an_enclosing_symbol_range_as_position_unverified() {
+        let expected = test_location("src/model.rb", 7);
+        let mut containing = expected.clone();
+        containing.column = Some(0);
+        containing.end_line = Some(12);
+        containing.end_column = Some(4);
+
+        assert_eq!(
+            navigation_response_status(&[containing], &expected, false),
+            CaseStatus::PositionUnverified
         );
     }
 

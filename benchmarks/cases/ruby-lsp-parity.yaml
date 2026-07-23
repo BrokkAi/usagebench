@@ -23,6 +23,14 @@ cases:
       displayName: Discount
     expectedUsages:
       - location:
+          uri: benchmark://source/app/catalog.rb
+          range:
+            start: { line: 11, character: 6 }
+            end: { line: 11, character: 14 }
+        kind: class
+        displayName: Discount
+    allowedExtraUsages:
+      - location:
           uri: benchmark://source/lib/shop/product.rb
           range:
             start: { line: 27, character: 12 }
@@ -30,14 +38,15 @@ cases:
         kind: class
         displayName: Discount
       - location:
-          uri: benchmark://source/app/catalog.rb
+          uri: benchmark://source/lib/shop/discount.rb
           range:
-            start: { line: 11, character: 6 }
-            end: { line: 11, character: 14 }
+            start: { line: 1, character: 8 }
+            end: { line: 1, character: 16 }
         kind: class
         displayName: Discount
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/lib/shop/product.rb
             range:
@@ -53,7 +62,8 @@ cases:
               end: { line: 1, character: 16 }
           kind: class
           displayName: Discount
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/app/catalog.rb
             range:
@@ -70,12 +80,28 @@ cases:
           kind: class
           displayName: Discount
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Discount in
+        Shop::Discount.default is the sole required concrete class usage.
+        :Discount in Ruby's built-in autoload construct is optional binding
+        metadata under bindings_optional, and the path string is not a class
+        token. Definition navigation from both the qualified usage and the
+        recognized autoload binding must target the concrete class Discount in
+        this exact fixture. This uses no Zeitwerk configuration or application
+        lockfile; the language server can associate the indexed constant
+        declaration directly.
         Parity source: Shopify/ruby-lsp@3f3121bb908a847d712aba2a7ebc333eca186469.
         Upstream reference: test/requests/definition_expectations_test.rb::test_jumping_to_autoload_definition_when_declaration_exists.
         Adapted fixture: fixtures/ruby/lsp-parity/.
-        Maturity: autoload's symbol argument and a later constant path should both resolve to the concrete Discount class when the declaration exists.
+        Maturity: autoload's symbol argument and a later constant path should
+        both resolve to the concrete Discount class when the declaration
+        exists. Ruby LSP 0.26.10 satisfies both Definition checks exactly and
+        returns the concrete class reference with a broad qualified range.
+        Solargraph 0.60.2 resolves Shop::Discount to the enclosing class body
+        but sends Definition from :Discount only to the start of discount.rb,
+        not to class Discount. That file-level autoload target remains a
+        navigation failure under the concrete-definition contract.
   - id: ruby-parity-attr-reader-method-call
     declaration:
       location:
@@ -83,6 +109,14 @@ cases:
         range:
           start: { line: 4, character: 17 }
           end: { line: 4, character: 21 }
+      kind: method
+      displayName: name
+    referenceProbe:
+      location:
+        uri: benchmark://source/app/catalog.rb
+        range:
+          start: { line: 6, character: 8 }
+          end: { line: 6, character: 12 }
       kind: method
       displayName: name
     expectedUsages:
@@ -101,7 +135,8 @@ cases:
         kind: method
         displayName: name
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/app/catalog.rb
             range:
@@ -118,12 +153,30 @@ cases:
           kind: method
           displayName: name
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. attr_reader :name is the
+        declaration site of the generated name method. The source :name symbol
+        in alias_method and the direct product.name call are required usages.
+        :label declares a distinct alias identity whose calls are scored by the
+        separate alias case, while @name is a field. Declaration navigation
+        from product.name must target the attr_reader symbol because no
+        authored method body exists.
         Parity source: Shopify/ruby-lsp@3f3121bb908a847d712aba2a7ebc333eca186469.
         Upstream reference: lib/ruby_indexer/test/method_test.rb::test_keeps_track_of_attributes.
         Adapted fixture: fixtures/ruby/lsp-parity/.
-        Maturity: attr_reader :name generates a readable method, and alias_method's target symbol is a reference to that generated method.
+        Maturity: attr_reader :name generates a readable method, and
+        alias_method's target symbol is a reference to that generated method.
+        Neither Ruby LSP 0.26.10 nor Solargraph 0.60.2 advertises LSP
+        Declaration. Practical Definition from product.name reaches the exact
+        attr_reader symbol in Ruby LSP and the full attr_reader expression in
+        Solargraph. Both return the direct call but omit the alias source symbol
+        even when references originate from the scored call-site probe.
+        Querying the declaration origin produces the attr_reader macro token or
+        expression rather than the declared :name token; that result remains
+        unexpected instead of being treated as declaration inclusion. The
+        alias source remains a genuine semantic reference miss for both
+        servers.
   - id: ruby-parity-singleton-class-method-definition
     declaration:
       location:
@@ -141,8 +194,17 @@ cases:
             end: { line: 4, character: 36 }
         kind: method
         displayName: from_sku
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/shop/product.rb
+          range:
+            start: { line: 21, character: 10 }
+            end: { line: 21, character: 18 }
+        kind: method
+        displayName: from_sku
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/app/catalog.rb
             range:
@@ -159,12 +221,23 @@ cases:
           kind: method
           displayName: from_sku
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. class << self opens
+        Product's singleton class, so def from_sku defines
+        Product.from_sku. The qualified call is the sole required usage and
+        Definition navigation must target that authored method body. Shop and
+        Product are namespace and class identities; self, new, and sku are
+        separate symbols.
         Parity source: Shopify/ruby-lsp@3f3121bb908a847d712aba2a7ebc333eca186469.
         Upstream reference: test/requests/definition_expectations_test.rb::test_definition_for_singleton_methods.
         Adapted fixture: fixtures/ruby/lsp-parity/.
-        Maturity: methods declared inside class << self should resolve from constant receiver calls.
+        Maturity: methods declared inside class << self should resolve from
+        constant receiver calls. Ruby LSP 0.26.10 and Solargraph 0.60.2 both
+        return the exact call plus queried declaration, so declaration
+        inclusion is an explicit allowed extra. Both navigate to from_sku;
+        Ruby LSP selects the exact token and Solargraph the enclosing method
+        body.
   - id: ruby-parity-alias-method-call
     declaration:
       location:
@@ -172,6 +245,14 @@ cases:
         range:
           start: { line: 10, character: 18 }
           end: { line: 10, character: 23 }
+      kind: method
+      displayName: label
+    referenceProbe:
+      location:
+        uri: benchmark://source/app/catalog.rb
+        range:
+          start: { line: 7, character: 8 }
+          end: { line: 7, character: 13 }
       kind: method
       displayName: label
     expectedUsages:
@@ -190,7 +271,8 @@ cases:
         kind: method
         displayName: label
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/app/catalog.rb
             range:
@@ -207,12 +289,31 @@ cases:
           kind: method
           displayName: label
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. :label declares a distinct
+        alias method. The bare label call with implicit self inside summary and
+        the receiver call product.label are both required usages of that alias
+        identity. :name is a usage of the source method scored by the
+        attr_reader case, and label calls are not direct name usages.
+        Declaration navigation from product.label must target :label. A
+        separate Definition-style operation could reasonably follow the
+        implementation chain to attr_reader :name, but that is not this
+        declaration lookup.
         Parity source: Shopify/ruby-lsp@3f3121bb908a847d712aba2a7ebc333eca186469.
         Upstream reference: lib/ruby_indexer/test/index_test.rb::test_resolving_method_aliases.
         Adapted fixture: fixtures/ruby/lsp-parity/.
-        Maturity: alias_method :label, :name creates an alias declaration that direct and receiver method calls should resolve through.
+        Maturity: alias_method :label, :name creates an alias declaration that
+        direct and receiver method calls should resolve through. Neither Ruby
+        LSP 0.26.10 nor Solargraph 0.60.2 advertises LSP Declaration. When
+        references originate from the scored product.label probe, both return
+        the two exact label calls; querying from :label returns no calls, so
+        discovery is occurrence-sensitive. Practical Definition from
+        product.label targets the alias declaration rather than attr_reader
+        :name. Ruby LSP selects :label including its colon; Solargraph selects
+        the full alias_method expression. Reference queries from the declaration
+        origin instead produce the alias_method macro token or expression, not
+        the declared :label token, so those results remain unexpected.
   - id: ruby-parity-module-function-call
     declaration:
       location:
@@ -230,8 +331,17 @@ cases:
             end: { line: 10, character: 22 }
         kind: method
         displayName: tax_rate
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/shop/pricing.rb
+          range:
+            start: { line: 4, character: 8 }
+            end: { line: 4, character: 16 }
+        kind: method
+        displayName: tax_rate
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/app/catalog.rb
             range:
@@ -248,9 +358,21 @@ cases:
           kind: method
           displayName: tax_rate
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. module_function with no
+        arguments applies to the following tax_rate definition, retaining a
+        private instance-method form and exposing a singleton-method copy on
+        Pricing that shares the authored body. The qualified call is the sole
+        required usage of that exposed method and Definition navigation must
+        target def tax_rate. Shop and Pricing are namespace and module
+        identities; module_function and region are separate symbols.
         Parity source: Shopify/ruby-lsp@3f3121bb908a847d712aba2a7ebc333eca186469.
         Upstream reference: lib/ruby_indexer/test/method_test.rb::test_module_function_with_no_arguments.
         Adapted fixture: fixtures/ruby/lsp-parity/.
-        Maturity: module_function should expose following instance methods as callable singleton methods on the module.
+        Maturity: module_function should expose following instance methods as
+        callable singleton methods on the module. Ruby LSP 0.26.10 and
+        Solargraph 0.60.2 both return the exact call plus queried declaration,
+        so declaration inclusion is an explicit allowed extra. Both navigate
+        to the shared authored body; Ruby LSP selects the exact method token and
+        Solargraph the enclosing method range.

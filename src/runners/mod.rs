@@ -424,6 +424,7 @@ mod provenance_tests {
 pub(crate) enum LocationMatch {
     None,
     LineOnly,
+    Containing,
     Exact,
 }
 
@@ -454,6 +455,20 @@ pub(crate) fn location_match(
             && actual_end_column == expected_end_column =>
         {
             LocationMatch::Exact
+        }
+        (
+            Some(actual_column),
+            Some(actual_end_line),
+            Some(actual_end_column),
+            Some(expected_column),
+            Some(expected_end_line),
+            Some(expected_end_column),
+        ) if actual_column <= expected_column
+            && (actual_end_line > expected_end_line
+                || (actual_end_line == expected_end_line
+                    && actual_end_column >= expected_end_column)) =>
+        {
+            LocationMatch::Containing
         }
         (None, _, _, _, _, _) | (_, None, None, _, _, _) => LocationMatch::LineOnly,
         _ => LocationMatch::None,
@@ -488,7 +503,9 @@ pub(crate) fn score_navigation_response(
         }
         return match location_match(&actual[0], expected) {
             LocationMatch::Exact => (CaseStatus::Passed, "self_target"),
-            LocationMatch::LineOnly => (CaseStatus::PositionUnverified, "position_unverified"),
+            LocationMatch::LineOnly | LocationMatch::Containing => {
+                (CaseStatus::PositionUnverified, "position_unverified")
+            }
             LocationMatch::None => (CaseStatus::Failed, "wrong_target"),
         };
     }
@@ -505,7 +522,10 @@ pub(crate) fn score_navigation_response(
         return (CaseStatus::Failed, "multiple_targets");
     }
 
-    let mut position_unverified = expected_matches[0] == LocationMatch::LineOnly;
+    let mut position_unverified = matches!(
+        expected_matches[0],
+        LocationMatch::LineOnly | LocationMatch::Containing
+    );
     for location in actual {
         if location_match(location, expected) != LocationMatch::None {
             continue;
@@ -517,7 +537,7 @@ pub(crate) fn score_navigation_response(
             .unwrap_or(LocationMatch::None);
         match extra_match {
             LocationMatch::Exact => {}
-            LocationMatch::LineOnly => position_unverified = true,
+            LocationMatch::LineOnly | LocationMatch::Containing => position_unverified = true,
             LocationMatch::None => return (CaseStatus::Failed, "multiple_targets"),
         }
     }
@@ -569,7 +589,8 @@ fn best_location_match(
         .max_by_key(|quality| match quality {
             LocationMatch::None => 0,
             LocationMatch::LineOnly => 1,
-            LocationMatch::Exact => 2,
+            LocationMatch::Containing => 2,
+            LocationMatch::Exact => 3,
         })
         .unwrap_or(LocationMatch::None)
 }
@@ -625,10 +646,20 @@ pub(crate) fn score_declaration_locations(
         .collect::<Vec<_>>();
     let position_unverified = expected
         .iter()
-        .filter(|location| best_location_match(&actual, location) == LocationMatch::LineOnly)
+        .filter(|location| {
+            matches!(
+                best_location_match(&actual, location),
+                LocationMatch::LineOnly | LocationMatch::Containing
+            )
+        })
         .chain(expected_unproven.iter().filter(|location| {
-            best_location_match(&actual, location) == LocationMatch::LineOnly
-                || best_location_match(&unproven, location) == LocationMatch::LineOnly
+            matches!(
+                best_location_match(&actual, location),
+                LocationMatch::LineOnly | LocationMatch::Containing
+            ) || matches!(
+                best_location_match(&unproven, location),
+                LocationMatch::LineOnly | LocationMatch::Containing
+            )
         }))
         .cloned()
         .collect::<Vec<_>>();
