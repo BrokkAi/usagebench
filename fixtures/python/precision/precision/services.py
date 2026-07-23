@@ -8,4 +8,5 @@ class Child(Base):
 
 
 class Grandchild(Child):
-    pass
+    def save(self) -> None:
+        pass

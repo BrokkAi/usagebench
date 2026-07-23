@@ -99,6 +99,10 @@ pub struct BenchmarkCase {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub declaration: Option<SymbolLocation>,
+    /// Additional source occurrence used by token-based runners to expose
+    /// occurrence-sensitive reference families such as import aliases.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reference_probe: Option<SymbolLocation>,
     #[serde(default)]
     pub expected_usages: Vec<SymbolLocation>,
     #[serde(default)]
@@ -184,6 +188,10 @@ pub struct UsageLookup {
     pub expect_no_movement: bool,
     pub usage: SymbolLocation,
     pub expected_declaration: SymbolLocation,
+    /// Additional explicitly authored navigation targets that may accompany
+    /// `expectedDeclaration`, but never replace it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub allowed_extra_targets: Vec<SymbolLocation>,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -480,6 +488,28 @@ impl BenchmarkCase {
                 .with_context(|| format!("case {} declaration", self.id))?;
         }
 
+        if let Some(reference_probe) = &self.reference_probe {
+            let declaration = self.reference_probe_declaration()?;
+            reference_probe
+                .validate(fixture_root, encoding)
+                .with_context(|| format!("case {} referenceProbe", self.id))?;
+            if reference_probe.location.range.is_zero_width() {
+                bail!("case {} referenceProbe must select a source token", self.id);
+            }
+            if reference_probe.location == declaration.location {
+                bail!(
+                    "case {} referenceProbe must differ from declaration",
+                    self.id
+                );
+            }
+            if reference_probe.kind != declaration.kind {
+                bail!(
+                    "case {} referenceProbe kind must match declaration kind",
+                    self.id
+                );
+            }
+        }
+
         for usage in &self.expected_usages {
             usage
                 .validate(fixture_root, encoding)
@@ -513,11 +543,34 @@ impl BenchmarkCase {
                 .expected_declaration
                 .validate(fixture_root, encoding)
                 .with_context(|| format!("case {} usageLookups expectedDeclaration", self.id))?;
+            for target in &lookup.allowed_extra_targets {
+                target.validate(fixture_root, encoding).with_context(|| {
+                    format!("case {} usageLookups allowedExtraTargets", self.id)
+                })?;
+                if target.kind != lookup.expected_declaration.kind {
+                    bail!(
+                        "case {} usageLookups allowedExtraTargets kind must match expectedDeclaration kind",
+                        self.id
+                    );
+                }
+                if target.location == lookup.expected_declaration.location {
+                    bail!(
+                        "case {} usageLookups allowedExtraTargets must not repeat expectedDeclaration",
+                        self.id
+                    );
+                }
+            }
             if lookup.expect_no_movement
                 && lookup.expected_declaration.location != lookup.usage.location
             {
                 bail!(
                     "case {} no-movement lookup expectedDeclaration must equal its usage location",
+                    self.id
+                );
+            }
+            if lookup.expect_no_movement && !lookup.allowed_extra_targets.is_empty() {
+                bail!(
+                    "case {} no-movement lookup must not define allowedExtraTargets",
                     self.id
                 );
             }
@@ -535,6 +588,12 @@ impl BenchmarkCase {
         }
 
         Ok(())
+    }
+
+    fn reference_probe_declaration(&self) -> Result<&SymbolLocation> {
+        self.declaration
+            .as_ref()
+            .with_context(|| format!("case {} referenceProbe requires declaration", self.id))
     }
 }
 
@@ -886,6 +945,96 @@ cases:
         let error = document.validate_with_base(tempdir.path()).unwrap_err();
 
         assert!(format!("{error:#}").contains("must use at most one"));
+    }
+
+    #[test]
+    fn fixture_validation_accepts_reference_probe_for_implicit_declaration() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let fixture = tempdir.path().join("fixtures/fixture/src");
+        fs::create_dir_all(&fixture).unwrap();
+        fs::write(fixture.join("module.py"), "value = 1\n").unwrap();
+        fs::write(fixture.join("consumer.py"), "module\n").unwrap();
+        let document = serde_yaml::from_str::<BenchmarkDocument>(
+            r#"
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
+source:
+  kind: fixture
+  path: fixtures/fixture
+language: python
+cases:
+  - id: module-reference-probe
+    declaration:
+      location:
+        uri: benchmark://source/src/module.py
+        range:
+          start: { line: 0, character: 0 }
+          end: { line: 0, character: 0 }
+      kind: module
+      displayName: module
+      disambiguation: first_matching_symbol
+    referenceProbe:
+      location:
+        uri: benchmark://source/src/consumer.py
+        range:
+          start: { line: 0, character: 0 }
+          end: { line: 0, character: 6 }
+      kind: module
+      displayName: module
+    expectedUsages: []
+    usageLookups: []
+"#,
+        )
+        .unwrap();
+
+        document.validate_with_base(tempdir.path()).unwrap();
+    }
+
+    #[test]
+    fn fixture_validation_rejects_reference_probe_without_declaration() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let fixture = tempdir.path().join("fixtures/fixture/src");
+        fs::create_dir_all(&fixture).unwrap();
+        fs::write(fixture.join("consumer.py"), "module\n").unwrap();
+        let document = serde_yaml::from_str::<BenchmarkDocument>(
+            r#"
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
+source:
+  kind: fixture
+  path: fixtures/fixture
+language: python
+cases:
+  - id: invalid-reference-probe
+    referenceProbe:
+      location:
+        uri: benchmark://source/src/consumer.py
+        range:
+          start: { line: 0, character: 0 }
+          end: { line: 0, character: 6 }
+      kind: module
+      displayName: module
+    expectedUsages: []
+    usageLookups: []
+"#,
+        )
+        .unwrap();
+
+        let error = document.validate_with_base(tempdir.path()).unwrap_err();
+
+        assert!(format!("{error:#}").contains("referenceProbe requires declaration"));
     }
 
     #[test]

@@ -2215,3 +2215,327 @@ and static-property results should use the complete `$property` source range.
 Distinct declaration navigation remains a separate cross-language capability
 request. These are suitable follow-up Bifrost issue requests and do not weaken
 the reviewed ground truth.
+
+## python-baseline.yaml
+
+### python-module-import
+
+- Source: `fixtures/python/baseline/src/example/service.py`,
+  `src/example/__init__.py`, and `tests/test_service.py`.
+- Module definition: the zero-width file-start anchor of `service.py`, because
+  Python has no textual `module example.service` declaration.
+- Required ordinary usages: none.
+- Optional import-path references: `service` in `.service` and
+  `example.service`, recorded explicitly as allowed extras under
+  `bindings_optional`.
+- Ground-truth decision: **correct after explicitly recording both optional
+  import references**.
+- Operation decision: **definition** from the direct test import's `service`
+  token to the `service.py` file anchor.
+- Reference-query decision: use the direct test import's `service` token as a
+  `referenceProbe` for token-based analyzers while retaining the zero-width
+  file anchor as the canonical module definition.
+- Reviewer rationale: imports are semantically genuine module references, but
+  MCP consumers generally want concrete non-import usages and import results
+  can be noisy. Keeping them optional preserves the cross-language policy;
+  listing their locations still exposes which analyzers include or omit them.
+  Navigation from an import token is independently useful and does not require
+  forward reference enumeration to include imports.
+- Outcome revealed after review: Pyright 1.1.411 navigated exactly from the
+  direct `service` import-path token to the zero-width start of `service.py`.
+  Before `referenceProbe` existed, the scored references operation was
+  unsupported because the canonical module anchor had no source token. A
+  diagnostic request from the direct import token returned the other `service`
+  occurrence in `example/__init__.py` exactly, proving package discovery was
+  working. The case now invokes that ordinary LSP interaction directly instead
+  of penalizing Pyright for the synthetic anchor. In the scored rerun, Pyright
+  returned the optional package initializer import and the exact module
+  definition target, so the case passed. It did not repeat the probe occurrence
+  itself in the reference response; the report preserves that inclusion detail
+  without scoring it as a miss. Bifrost may continue using its semantic module
+  selector.
+
+### python-function-call-and-reexport
+
+- Source: `fixtures/python/baseline/src/example/service.py`,
+  `src/example/__init__.py`, and `tests/test_service.py`.
+- Authored definition: the `build_service` function body.
+- Required usages: both `build_service()` calls in the test fixture.
+- Optional binding and metadata locations: the package re-export import, the
+  `__all__` string entry, and the test import binding, all recorded as allowed
+  extras under `bindings_optional`.
+- Ground-truth decision: **correct with all optional binding/export locations
+  made explicit**.
+- Operation decision: **definition** from the first call to the authored
+  function body.
+- Reviewer rationale: both calls execute the same unambiguous function. Import
+  and export surfaces are semantically related but noisy for MCP consumers, so
+  they remain observable without becoming required concrete usages.
+- Outcome revealed after review: Pyright 1.1.411 returned both required calls,
+  the package re-export binding, the `__all__` entry, and the test import
+  binding. Definition navigation from the first call reached the exact
+  `build_service` function token, so the reviewed case passed.
+
+### python-class-instantiation
+
+- Source: `fixtures/python/baseline/src/example/service.py`,
+  `src/example/__init__.py`, and `tests/test_service.py`.
+- Authored definition: the `Service` class.
+- Required usage: `Service` in `Service(Repository())`, classified as a visible
+  class-token usage that performs construction.
+- Optional binding and metadata locations: the package re-export import,
+  `__all__` entry, and test import binding.
+- Excluded locations: `Repository` and implicit `__new__`/`__init__` control
+  flow, which are separate symbol relationships.
+- Ground-truth decision: **correct with optional binding/export locations made
+  explicit**.
+- Operation decision: **definition** from the construction token to
+  `class Service`.
+- Reviewer rationale: the source token names the class object. Runtime
+  construction may invoke additional machinery, but ordinary definition
+  navigation should preserve the visible class identity.
+- Outcome revealed after review: Pyright 1.1.411 returned the required
+  construction plus all three optional binding/export locations and navigated
+  exactly from `Service(...)` to the `class Service` token.
+
+### python-method-call
+
+- Source: `fixtures/python/baseline/src/example/service.py` and
+  `tests/test_service.py`.
+- Authored definition: the `Service.execute` method body.
+- Required usage: `execute` in `service.execute(" Ada ")`.
+- Excluded locations: the later `"execute"` string, `method_name`, and
+  `getattr`, which are separate token identities.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the direct call to
+  `Service.execute`.
+- Reviewer rationale: `build_service()` returns a concrete `Service`, and the
+  local is not reassigned. The direct dispatch target is therefore exact; the
+  string-mediated path belongs to a separate dynamic-runtime case.
+- Outcome revealed after review: Pyright 1.1.411 returned only the required
+  direct call and navigated exactly to the `Service.execute` definition. It did
+  not conflate the later string-mediated path with ordinary method references.
+
+### python-dynamic-getattr-not-planned
+
+- Source: `fixtures/python/baseline/src/example/service.py` and
+  `tests/test_service.py`.
+- Authored definition: the `Service.execute` method body.
+- Aspirational runtime-target location: the contents of the `"execute"` string
+  assigned to the immutable local `method_name`.
+- Ground-truth decision: **retain as not planned, not as an ordinary
+  reference**.
+- Aspirational operation decision: **definition** from the string provenance
+  token to `Service.execute`.
+- Reviewer rationale: ordinary Python reference semantics should not conflate
+  string data with a method-name token. This particular runtime target is
+  nevertheless statically recoverable because the receiver is an exact
+  `Service`, the local string has one assignment, and the result of
+  `getattr(service, method_name)` is called immediately. The string contents
+  are the only authored range available to represent that inferred
+  relationship, so the case remains useful as an explicitly unscored future
+  constant-propagation category.
+- Outcome revealed after review: Pyright 1.1.411 did not treat the string as a
+  `Service.execute` reference and returned no definition from it. A references
+  query for `Service.execute` returned the ordinary direct call from
+  `python-method-call` instead. This cleanly separates standard LSP reference
+  semantics from the aspirational runtime-target analysis and supports keeping
+  the case `notPlanned`.
+
+### python-attribute-access
+
+- Source: `fixtures/python/baseline/src/example/service.py` and
+  `tests/test_service.py`.
+- Canonical declaration: `self.last = ""` in `Repository.__init__`.
+- Required usages: the later `self.last = value` write in `Repository.save`
+  and the `repository.last` read in the test.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** from the test read to the first
+  assignment.
+- Allowed navigation alternate: the later `self.last = value` write may
+  accompany the initializer target, but cannot replace it.
+- Reviewer rationale: Python creates this instance attribute through
+  assignment rather than a separate field declaration. The first assignment
+  therefore provides the stable declaration anchor, while the later assignment
+  remains a write usage. The test receiver comes directly from
+  `Repository()`, so the attribute identity is unambiguous.
+- Outcome revealed after review: Pyright 1.1.411 returned both assignment sites
+  from both its Declaration and Definition endpoints. Bifrost 0.8.9 at
+  `e9cf0ed0` returned only the canonical initializer from its Declaration
+  endpoint. Both tools returned exactly the two required references. The
+  reviewed `allowedExtraTargets` contract therefore accepts Pyright's
+  conservative alternate without making it required, while preserving
+  Bifrost's more precise canonical result. No Bifrost issue was filed because
+  the current analyzer already exhibits the preferred behavior.
+
+## python-precision.yaml
+
+### python-barrel-inherited-member-call
+
+- Source: `fixtures/python/precision/precision/services.py` and
+  `consumer.py`.
+- Authored definition: `Base.save`.
+- Required usage: `client.save()` where `client` is explicitly annotated and
+  initialized as `Child`.
+- Excluded usage: `grandchild.save()`, because the fixture was strengthened so
+  `Grandchild` overrides the inherited method.
+- Ground-truth decision: **correct after adding the distinguishing override**.
+- Operation decision: **definition** from `client.save()` to `Base.save`.
+- Reviewer rationale: `Child` does not override `save`, so its exact runtime
+  target remains `Base.save`. The package-barrel import does not weaken that
+  relationship.
+- Outcome revealed after review: Pyright 1.1.411 returned only
+  `client.save()` as a `Base.save` reference and navigated it exactly to the
+  base definition.
+
+### python-barrel-overridden-member-call
+
+- Source: `fixtures/python/precision/precision/services.py` and
+  `consumer.py`.
+- Authored definition: the new `Grandchild.save` override.
+- Required usage: `grandchild.save()` where `grandchild` is explicitly
+  annotated and initialized as `Grandchild`.
+- Excluded usage: `client.save()`, which still dispatches to `Base.save`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from `grandchild.save()` to
+  `Grandchild.save`.
+- Reviewer rationale: the concrete receiver and explicit override make the
+  dispatch target exact even though the class is imported through the package
+  barrel.
+- Outcome revealed after review: Pyright 1.1.411 returned only
+  `grandchild.save()` as a `Grandchild.save` reference and navigated it exactly
+  to the override definition.
+
+### python-barrel-class-construction
+
+- Source: `fixtures/python/precision/precision/services.py`,
+  `precision/__init__.py`, and `consumer.py`.
+- Authored definition: `class Child`.
+- Required usages: `Child` as the `Grandchild` superclass, `Child` in the
+  explicit `client` annotation, and `Child()` construction.
+- Optional binding locations: the package re-export and consumer import.
+- Ground-truth decision: **correct after adding the missing annotation and
+  explicitly recording both optional bindings**.
+- Operation decision: **definition** from `Child()` to `class Child`.
+- Reviewer rationale: all three required tokens refer concretely to the same
+  class. Python construction invokes the visible class object, so ordinary
+  navigation preserves the class identity rather than inventing a separate
+  constructor declaration.
+- Outcome revealed after review: Pyright 1.1.411 returned all three required
+  class usages, both optional binding locations, and navigated `Child()`
+  exactly to the class declaration.
+
+### python-multilevel-barrel-class-construction
+
+- Source: `fixtures/python/precision/precision/services.py`,
+  `precision/__init__.py`, and `consumer.py`.
+- Authored definition: `class Grandchild`.
+- Required usages: `Grandchild` in the explicit local annotation and
+  `Grandchild()` construction.
+- Optional binding locations: the package re-export and consumer import.
+- Excluded relationships: the `Child` superclass token and
+  `grandchild.save()` override call.
+- Ground-truth decision: **correct after adding the missing annotation and
+  explicitly recording both optional bindings**.
+- Operation decision: **definition** from `Grandchild()` to
+  `class Grandchild`.
+- Reviewer rationale: the annotation and construction refer exactly to the
+  concrete multilevel subclass. Its superclass and overridden method remain
+  distinct symbol relationships.
+- Outcome revealed after review: Pyright 1.1.411 returned both required class
+  usages, both optional bindings, and navigated construction exactly to the
+  `Grandchild` class declaration.
+
+## python-lsp-parity.yaml
+
+### python-parity-reexported-class-alias-classmethod
+
+- Source: `fixtures/python/lsp-parity/src/shop/models.py`,
+  `src/shop/__init__.py`, and `tests/test_models.py`.
+- Authored definition: `class User`.
+- Required usages: the quoted `"User"` return annotation plus both runtime
+  `Account` qualifier tokens.
+- Optional binding and metadata locations: `User` and `Account` in the package
+  re-export, the `__all__` entry, and the test import binding.
+- Ground-truth decision: **correct after adding the quoted annotation,
+  explicitly recording the optional alias family, and documenting the required
+  LSP interaction**.
+- Operation decision: **definition** from runtime `Account` to `class User`.
+- Reference-query decision: query both canonical `User` and the authored
+  runtime `Account` `referenceProbe`, union the results, and count the probe
+  itself as a known occurrence.
+- Reviewer rationale: quoted forward annotations are standard Python type
+  references. The runtime alias qualifiers name the same class object, while
+  imports and export metadata remain optional under `bindings_optional`.
+- Outcome revealed after review: Pyright 1.1.411 is occurrence-sensitive across
+  this re-export alias. Find References from `User` returned the source import
+  and quoted annotation; Find References from `Account` returned the alias
+  binding, `__all__`, test import, and other runtime qualifier. Definition from
+  `Account` reached `class User` exactly. The documented additive query
+  interaction combines the two valid LSP views and passes without weakening
+  the required semantic class-reference set. Bifrost may continue querying the
+  canonical semantic declaration directly.
+
+### python-parity-classmethod-call
+
+- Source: `fixtures/python/lsp-parity/src/shop/models.py` and
+  `tests/test_models.py`.
+- Authored definition: `User.guest`.
+- Required usage: `guest` in `Account.guest()`.
+- Excluded relationships: the `Account` class qualifier, implicit `cls`
+  parameter and call, and `@classmethod` decorator.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the call to `User.guest`.
+- Reviewer rationale: the re-exported class alias does not change the
+  classmethod's identity, and no other visible `guest` token participates in
+  the method relationship.
+- Outcome revealed after review: Pyright 1.1.411 returned only the required
+  method call and navigated it exactly to `User.guest`.
+
+### python-parity-staticmethod-call
+
+- Source: `fixtures/python/lsp-parity/src/shop/models.py`,
+  `src/shop/__init__.py`, and `tests/test_models.py`.
+- Authored definition: `User.format_name`.
+- Required usage: `format_name` in `Account.format_name("ada")`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the call to `User.format_name`.
+- Reviewer rationale: `Account` is a direct import alias for `User`, not an
+  inherited subtype. The class qualifier, `@staticmethod` decorator, method
+  parameter, and `name.title()` call are separate identities.
+- Outcome revealed after review: Pyright 1.1.411 returned only the required
+  staticmethod call and navigated it exactly to `User.format_name`.
+
+### python-parity-property-getter-access
+
+- Source: `fixtures/python/lsp-parity/src/shop/models.py` and
+  `tests/test_models.py`.
+- Authored definition: the decorated `User.normalized_name` getter.
+- Required usage: `normalized_name` on the inferred `User` instance.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the property access to the decorated
+  getter.
+- Reviewer rationale: `Account.guest()` establishes the exact inferred receiver
+  type. Property access invokes the getter at runtime while preserving a
+  property token identity; the decorator, `self.name`, and `lower()` remain
+  separate relationships.
+- Outcome revealed after review: Pyright 1.1.411 returned only the required
+  property access and navigated it exactly to `User.normalized_name`.
+
+### python-parity-dunder-getattr-not-planned
+
+- Source: `fixtures/python/lsp-parity/src/shop/models.py` and
+  `tests/test_models.py`.
+- Runtime fallback definition: `DynamicConfig.__getattr__`.
+- Aspirational lookup source: the synthesized `theme` attribute token.
+- Ground-truth decision: **retain as not planned, not as an ordinary
+  reference**.
+- Aspirational operation decision: **definition** from `config.theme` to
+  `DynamicConfig.__getattr__`.
+- Reviewer rationale: `theme` does not share the fallback handler's symbol
+  identity, so ordinary reference scoring would be misleading. Runtime
+  dispatch is nevertheless exact in this fixture because `config` has concrete
+  `DynamicConfig` type and no declared `theme` member exists.
+- Outcome revealed after review: Pyright 1.1.411 returned no Definition target
+  from `config.theme`. This supports preserving the case as an explicitly
+  unscored future dynamic-member navigation category.

@@ -420,7 +420,7 @@ mod provenance_tests {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum LocationMatch {
     None,
     LineOnly,
@@ -465,12 +465,13 @@ pub(crate) fn navigation_response_status(
     expected: &NormalizedLocation,
     expect_no_movement: bool,
 ) -> CaseStatus {
-    score_navigation_response(actual, expected, expect_no_movement).0
+    score_navigation_response(actual, expected, &[], expect_no_movement).0
 }
 
 pub(crate) fn score_navigation_response(
     actual: &[NormalizedLocation],
     expected: &NormalizedLocation,
+    allowed_extra_targets: &[NormalizedLocation],
     expect_no_movement: bool,
 ) -> (CaseStatus, &'static str) {
     if actual.is_empty() {
@@ -480,14 +481,53 @@ pub(crate) fn score_navigation_response(
             (CaseStatus::Failed, "no_definition")
         };
     }
-    if actual.len() != 1 {
+
+    if expect_no_movement {
+        if actual.len() != 1 {
+            return (CaseStatus::Failed, "multiple_targets");
+        }
+        return match location_match(&actual[0], expected) {
+            LocationMatch::Exact => (CaseStatus::Passed, "self_target"),
+            LocationMatch::LineOnly => (CaseStatus::PositionUnverified, "position_unverified"),
+            LocationMatch::None => (CaseStatus::Failed, "wrong_target"),
+        };
+    }
+
+    let expected_matches = actual
+        .iter()
+        .map(|location| location_match(location, expected))
+        .filter(|result| *result != LocationMatch::None)
+        .collect::<Vec<_>>();
+    if expected_matches.is_empty() {
+        return (CaseStatus::Failed, "wrong_target");
+    }
+    if expected_matches.len() != 1 {
         return (CaseStatus::Failed, "multiple_targets");
     }
-    match location_match(&actual[0], expected) {
-        LocationMatch::Exact if expect_no_movement => (CaseStatus::Passed, "self_target"),
-        LocationMatch::Exact => (CaseStatus::Passed, "ok"),
-        LocationMatch::LineOnly => (CaseStatus::PositionUnverified, "position_unverified"),
-        LocationMatch::None => (CaseStatus::Failed, "wrong_target"),
+
+    let mut position_unverified = expected_matches[0] == LocationMatch::LineOnly;
+    for location in actual {
+        if location_match(location, expected) != LocationMatch::None {
+            continue;
+        }
+        let extra_match = allowed_extra_targets
+            .iter()
+            .map(|target| location_match(location, target))
+            .max()
+            .unwrap_or(LocationMatch::None);
+        match extra_match {
+            LocationMatch::Exact => {}
+            LocationMatch::LineOnly => position_unverified = true,
+            LocationMatch::None => return (CaseStatus::Failed, "multiple_targets"),
+        }
+    }
+
+    if position_unverified {
+        (CaseStatus::PositionUnverified, "position_unverified")
+    } else if actual.len() > 1 {
+        (CaseStatus::Passed, "ok_with_allowed_extra_targets")
+    } else {
+        (CaseStatus::Passed, "ok")
     }
 }
 

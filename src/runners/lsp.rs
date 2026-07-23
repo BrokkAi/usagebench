@@ -446,52 +446,95 @@ fn run_references(
         report.status = CaseStatus::Unsupported;
         return report;
     }
-    if declaration.location.range.start == declaration.location.range.end {
+
+    let selectors = reference_selectors(case, declaration);
+    if selectors
+        .iter()
+        .any(|selector| selector.location.range.is_zero_width())
+    {
         let mut report = failed_declaration_report(case, "lsp_selector_has_no_source_token");
         report.status = CaseStatus::Unsupported;
         return report;
     }
-    let params = match position_params_with_context(
-        declaration,
-        context.profile,
-        context.source_root,
-        session,
-    ) {
-        Ok(mut params) => {
-            params["context"] = json!({"includeDeclaration": false});
-            params
+
+    let mut actual = Vec::new();
+    for selector in &selectors {
+        let params = match position_params_with_context(
+            selector,
+            context.profile,
+            context.source_root,
+            session,
+        ) {
+            Ok(mut params) => {
+                params["context"] = json!({"includeDeclaration": false});
+                params
+            }
+            Err(error) => return error_declaration_report(case, "invalid_declaration", error),
+        };
+        let mut locations = match session
+            .query("textDocument/references", params)
+            .and_then(|result| locations_from_response(&result, context.source_root))
+        {
+            Ok(locations) => locations,
+            Err(error) => return error_declaration_report(case, "references_failed", error),
+        };
+        actual.append(&mut locations);
+    }
+
+    if let Some(probe) = &case.reference_probe {
+        let probe = normalized_or_invalid(probe);
+        if !actual
+            .iter()
+            .any(|location| location_match(location, &probe) == LocationMatch::Exact)
+        {
+            actual.push(probe);
         }
-        Err(error) => return error_declaration_report(case, "invalid_declaration", error),
-    };
-    match session
-        .query("textDocument/references", params)
-        .and_then(|result| locations_from_response(&result, context.source_root))
-    {
-        Ok(actual) => {
-            let mut report = score_declaration_locations(
-                case,
-                Some(format!(
-                    "{}:{}:{}",
-                    benchmark_path(declaration),
-                    declaration.location.range.start.line,
-                    declaration.location.range.start.character
-                )),
-                actual,
-                Vec::new(),
-                false,
-                vec!["ok".to_string()],
-                false,
+    }
+    actual.sort();
+    actual.dedup();
+
+    let selector_summary = selectors
+        .iter()
+        .map(|selector| {
+            format!(
+                "{}:{}:{}",
+                benchmark_path(selector),
+                selector.location.range.start.line,
+                selector.location.range.start.character
             )
-            .unwrap_or_else(|error| error_declaration_report(case, "score_failed", error));
-            classify_reference_policy_extras(
-                &mut report,
-                context.language,
-                context.source_root,
-                context.reference_policy,
-            );
-            report
-        }
-        Err(error) => error_declaration_report(case, "references_failed", error),
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    let mut report = score_declaration_locations(
+        case,
+        Some(selector_summary),
+        actual,
+        Vec::new(),
+        false,
+        vec!["ok".to_string()],
+        false,
+    )
+    .unwrap_or_else(|error| error_declaration_report(case, "score_failed", error));
+    classify_reference_policy_extras(
+        &mut report,
+        context.language,
+        context.source_root,
+        context.reference_policy,
+    );
+    report
+}
+
+fn reference_selectors<'a>(
+    case: &'a BenchmarkCase,
+    declaration: &'a SymbolLocation,
+) -> Vec<&'a SymbolLocation> {
+    match (
+        &case.reference_probe,
+        declaration.location.range.is_zero_width(),
+    ) {
+        (Some(probe), true) => vec![probe],
+        (Some(probe), false) => vec![declaration, probe],
+        (None, _) => vec![declaration],
     }
 }
 
@@ -511,14 +554,23 @@ fn run_definition(
         return unsupported_definition_report(lookup, reason);
     };
     let expected = normalized_or_invalid(&lookup.expected_declaration);
+    let allowed_extra_targets = lookup
+        .allowed_extra_targets
+        .iter()
+        .map(normalized_or_invalid)
+        .collect::<Vec<_>>();
     let usage = normalized_or_invalid(&lookup.usage);
     let result = position_params_with_context(&lookup.usage, profile, source_root, session)
         .and_then(|params| session.query(method, params))
         .and_then(|value| locations_from_response(&value, source_root));
     match result {
         Ok(actual) => {
-            let (status, raw_status) =
-                score_navigation_response(&actual, &expected, lookup.expect_no_movement);
+            let (status, raw_status) = score_navigation_response(
+                &actual,
+                &expected,
+                &allowed_extra_targets,
+                lookup.expect_no_movement,
+            );
             UsageDefinitionReport {
                 status,
                 operation: lookup.operation,
@@ -1464,6 +1516,64 @@ mod tests {
     }
 
     #[test]
+    fn navigation_allows_authored_extra_targets_without_making_them_required() {
+        let expected = test_location("src/model.py", 5);
+        let allowed = test_location("src/model.py", 8);
+
+        assert_eq!(
+            score_navigation_response(
+                std::slice::from_ref(&expected),
+                &expected,
+                std::slice::from_ref(&allowed),
+                false,
+            ),
+            (CaseStatus::Passed, "ok")
+        );
+        assert_eq!(
+            score_navigation_response(
+                &[expected.clone(), allowed.clone()],
+                &expected,
+                std::slice::from_ref(&allowed),
+                false,
+            ),
+            (CaseStatus::Passed, "ok_with_allowed_extra_targets")
+        );
+    }
+
+    #[test]
+    fn navigation_allowed_extra_target_cannot_replace_required_target() {
+        let expected = test_location("src/model.py", 5);
+        let allowed = test_location("src/model.py", 8);
+
+        assert_eq!(
+            score_navigation_response(
+                std::slice::from_ref(&allowed),
+                &expected,
+                std::slice::from_ref(&allowed),
+                false,
+            ),
+            (CaseStatus::Failed, "wrong_target")
+        );
+    }
+
+    #[test]
+    fn navigation_rejects_unauthored_targets_alongside_required_target() {
+        let expected = test_location("src/model.py", 5);
+        let allowed = test_location("src/model.py", 8);
+        let unexpected = test_location("src/other.py", 12);
+
+        assert_eq!(
+            score_navigation_response(
+                &[expected.clone(), unexpected],
+                &expected,
+                std::slice::from_ref(&allowed),
+                false,
+            ),
+            (CaseStatus::Failed, "multiple_targets")
+        );
+    }
+
+    #[test]
     fn definition_response_requires_the_exact_token_range() {
         let expected = test_location("src/interface.cs", 7);
         let mut wrong_token = expected.clone();
@@ -1477,6 +1587,82 @@ mod tests {
         assert_eq!(
             navigation_response_status(std::slice::from_ref(&expected), &expected, false),
             CaseStatus::Passed
+        );
+    }
+
+    #[test]
+    fn reference_probe_replaces_zero_width_declaration_selector() {
+        let case = serde_yaml::from_str::<BenchmarkCase>(
+            r#"
+id: module
+declaration:
+  location:
+    uri: benchmark://source/src/example/service.py
+    range:
+      start: { line: 0, character: 0 }
+      end: { line: 0, character: 0 }
+  kind: module
+  displayName: example.service
+  disambiguation: first_matching_symbol
+referenceProbe:
+  location:
+    uri: benchmark://source/tests/test_service.py
+    range:
+      start: { line: 1, character: 13 }
+      end: { line: 1, character: 20 }
+  kind: module
+  displayName: service
+"#,
+        )
+        .unwrap();
+        let declaration = case.declaration.as_ref().unwrap();
+
+        let selectors = reference_selectors(&case, declaration);
+
+        assert_eq!(selectors.len(), 1);
+        assert_eq!(
+            selectors[0].location.uri.as_str(),
+            "benchmark://source/tests/test_service.py"
+        );
+        assert_eq!(selectors[0].display_name, "service");
+    }
+
+    #[test]
+    fn reference_probe_is_additive_for_token_declaration() {
+        let case = serde_yaml::from_str::<BenchmarkCase>(
+            r#"
+id: aliased-class
+declaration:
+  location:
+    uri: benchmark://source/src/models.py
+    range:
+      start: { line: 0, character: 6 }
+      end: { line: 0, character: 10 }
+  kind: class
+  displayName: User
+referenceProbe:
+  location:
+    uri: benchmark://source/tests/test_models.py
+    range:
+      start: { line: 3, character: 7 }
+      end: { line: 3, character: 14 }
+  kind: class
+  displayName: Account
+"#,
+        )
+        .unwrap();
+        let declaration = case.declaration.as_ref().unwrap();
+
+        let selectors = reference_selectors(&case, declaration);
+
+        assert_eq!(selectors.len(), 2);
+        assert_eq!(
+            selectors[0].location.uri.as_str(),
+            "benchmark://source/src/models.py"
+        );
+        assert_eq!(
+            selectors[1].location.uri.as_str(),
+            "benchmark://source/tests/test_models.py"
         );
     }
 

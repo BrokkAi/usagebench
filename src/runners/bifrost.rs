@@ -624,6 +624,11 @@ fn run_usage_to_declaration(
             display_name: Some(lookup.expected_declaration.display_name.clone()),
             kind: Some(symbol_kind_name(&lookup.expected_declaration.kind).to_string()),
         });
+    let allowed_extra_targets = lookup
+        .allowed_extra_targets
+        .iter()
+        .filter_map(|target| normalize_symbol_location(target).ok())
+        .collect::<Vec<_>>();
     let query = match reference_query(&lookup.usage.location, &lookup.usage.display_name, encoding)
     {
         Ok(query) => query,
@@ -688,6 +693,7 @@ fn run_usage_to_declaration(
         let (status, outcome) = score_navigation_response(
             &parsed.actual_declarations,
             &expected_declaration,
+            &allowed_extra_targets,
             lookup.expect_no_movement,
         );
         (status, outcome.to_string())
@@ -3386,6 +3392,7 @@ mod tests {
                 "build_service",
                 SymbolKind::Function,
             )),
+            reference_probe: None,
             expected_usages: vec![symbol_location(
                 "src/lib.rs",
                 7,
@@ -3407,6 +3414,7 @@ mod tests {
                     "build_service",
                     SymbolKind::Function,
                 ),
+                allowed_extra_targets: Vec::new(),
             }],
             type_lookups: Vec::new(),
             expected_failure: None,

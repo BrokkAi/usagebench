@@ -21,7 +21,22 @@ cases:
           end: { line: 4, character: 10 }
       kind: class
       displayName: User
+    referenceProbe:
+      location:
+        uri: benchmark://source/tests/test_models.py
+        range:
+          start: { line: 3, character: 7 }
+          end: { line: 3, character: 14 }
+      kind: class
+      displayName: Account
     expectedUsages:
+      - location:
+          uri: benchmark://source/src/shop/models.py
+          range:
+            start: { line: 12, character: 23 }
+            end: { line: 12, character: 27 }
+        kind: class
+        displayName: User
       - location:
           uri: benchmark://source/tests/test_models.py
           range:
@@ -36,8 +51,38 @@ cases:
             end: { line: 4, character: 7 }
         kind: class
         displayName: Account
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/src/shop/__init__.py
+          range:
+            start: { line: 0, character: 20 }
+            end: { line: 0, character: 24 }
+        kind: class
+        displayName: User
+      - location:
+          uri: benchmark://source/src/shop/__init__.py
+          range:
+            start: { line: 0, character: 28 }
+            end: { line: 0, character: 35 }
+        kind: class
+        displayName: Account
+      - location:
+          uri: benchmark://source/src/shop/__init__.py
+          range:
+            start: { line: 2, character: 12 }
+            end: { line: 2, character: 19 }
+        kind: class
+        displayName: Account
+      - location:
+          uri: benchmark://source/tests/test_models.py
+          range:
+            start: { line: 0, character: 17 }
+            end: { line: 0, character: 24 }
+        kind: class
+        displayName: Account
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/tests/test_models.py
             range:
@@ -54,12 +99,24 @@ cases:
           kind: class
           displayName: User
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. The quoted "User" return
+        annotation is a required class reference, as are both runtime Account
+        qualifier tokens. The source import token, alias binding, __all__
+        entry, and test import binding are explicit allowed extras under
+        bindings_optional. Definition navigation through Account targets class
+        User.
         Parity source: microsoft/pyright@433e84d82d7944d129dbc239499d13eaae5f81ac.
         Upstream reference: packages/pyright-internal/src/tests/importResolver.test.ts import alias and private import usage scenarios.
         Adapted fixture: fixtures/python/lsp-parity/.
         Maturity: from .models import User as Account re-exports the class, and classmethod/staticmethod calls through Account should keep the class alias tied back to User.
+        Pyright 1.1.411 requires occurrence-sensitive reference interaction:
+        Find References from User exposes the source-side import and quoted
+        annotation, while a second query from Account exposes the alias-side
+        export, import, and runtime qualifiers. The LSP runner unions those
+        responses and records the probe itself; the combined result and
+        Account-to-User definition lookup pass exactly.
   - id: python-parity-classmethod-call
     declaration:
       location:
@@ -78,7 +135,8 @@ cases:
         kind: method
         displayName: guest
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/tests/test_models.py
             range:
@@ -95,12 +153,18 @@ cases:
           kind: method
           displayName: guest
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Account.guest() is the
+        sole guest method usage and definition navigation targets User.guest.
+        Account is a separate class reference; cls and @classmethod are not
+        guest usages.
         Parity source: microsoft/pyright@433e84d82d7944d129dbc239499d13eaae5f81ac.
         Upstream reference: packages/pyright-internal/src/tests/samples/decorator6.py and classmethod evaluator scenarios.
         Adapted fixture: fixtures/python/lsp-parity/.
         Maturity: @classmethod calls through an imported class alias should resolve to the decorated method declaration.
+        Pyright 1.1.411 returned only Account.guest() and navigated exactly to
+        User.guest.
   - id: python-parity-staticmethod-call
     declaration:
       location:
@@ -119,7 +183,8 @@ cases:
         kind: method
         displayName: format_name
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/tests/test_models.py
             range:
@@ -136,12 +201,19 @@ cases:
           kind: method
           displayName: format_name
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Account is a direct import
+        alias for User, not a subclass. Account.format_name() is therefore the
+        sole format_name usage and definition navigation targets
+        User.format_name. The class qualifier, decorator, parameter, and
+        name.title() call are separate identities.
         Parity source: microsoft/pyright@433e84d82d7944d129dbc239499d13eaae5f81ac.
         Upstream reference: packages/pyright-internal/src/tests/samples/decorator6.py and staticmethod evaluator scenarios.
         Adapted fixture: fixtures/python/lsp-parity/.
         Maturity: @staticmethod calls through an imported class alias should resolve to the decorated method declaration.
+        Pyright 1.1.411 returned only Account.format_name() and navigated
+        exactly to User.format_name.
   - id: python-parity-property-getter-access
     declaration:
       location:
@@ -160,7 +232,8 @@ cases:
         kind: property
         displayName: normalized_name
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/tests/test_models.py
             range:
@@ -177,12 +250,19 @@ cases:
           kind: property
           displayName: normalized_name
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Account.guest() gives user
+        the exact inferred User type, so user.normalized_name is the sole
+        property usage and definition navigation targets the decorated
+        User.normalized_name getter. The decorator, self.name, and lower() are
+        separate identities.
         Parity source: microsoft/pyright@433e84d82d7944d129dbc239499d13eaae5f81ac.
         Upstream reference: packages/pyright-internal/src/tests/samples/property1.py and property evaluator scenarios.
         Adapted fixture: fixtures/python/lsp-parity/.
         Maturity: @property getter access through an inferred instance should resolve to the property method declaration.
+        Pyright 1.1.411 returned only user.normalized_name and navigated
+        exactly to the decorated getter definition.
   - id: python-parity-dunder-getattr-not-planned
     notPlanned:
       reason: Python __getattr__ dynamic attribute fallback is retained for parity tracking but is not scored until dynamic member lookup has a deliberate model.
@@ -195,7 +275,8 @@ cases:
       kind: method
       displayName: __getattr__
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/tests/test_models.py
             range:
@@ -212,9 +293,17 @@ cases:
           kind: method
           displayName: __getattr__
     verification:
-      method: analyzer_comparison
+      method: manual_inspection
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. theme is not an ordinary
+        same-name property or __getattr__ reference. It remains notPlanned as
+        an aspirational runtime-fallback definition lookup because config has
+        exact DynamicConfig type, theme is not otherwise declared, and Python
+        therefore invokes DynamicConfig.__getattr__. DynamicConfig construction
+        and the key parameter are separate identities.
         Parity source: microsoft/pyright@433e84d82d7944d129dbc239499d13eaae5f81ac.
         Upstream reference: packages/pyright-internal/src/tests/samples/memberAccess19.py.
         Adapted fixture: fixtures/python/lsp-parity/.
         Maturity: config.theme is intentionally unscored because the attribute is synthesized by __getattr__.
+        Pyright 1.1.411 returned no definition from config.theme, confirming
+        that notPlanned remains the appropriate current baseline.

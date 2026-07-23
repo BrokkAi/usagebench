@@ -22,11 +22,72 @@ cases:
       kind: module
       displayName: example.service
       disambiguation: first_matching_symbol
+    referenceProbe:
+      location:
+        uri: benchmark://source/tests/test_service.py
+        range:
+          start: { line: 1, character: 13 }
+          end: { line: 1, character: 20 }
+      kind: module
+      displayName: service
     expectedUsages: []
-    usageLookups: []
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/src/example/__init__.py
+          range:
+            start: { line: 0, character: 6 }
+            end: { line: 0, character: 13 }
+        kind: module
+        displayName: service
+      - location:
+          uri: benchmark://source/tests/test_service.py
+          range:
+            start: { line: 1, character: 13 }
+            end: { line: 1, character: 20 }
+        kind: module
+        displayName: service
+    usageLookups:
+      - operation: declaration
+        usage:
+          location:
+            uri: benchmark://source/tests/test_service.py
+            range:
+              start: { line: 1, character: 13 }
+              end: { line: 1, character: 20 }
+          kind: module
+          displayName: service
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/example/service.py
+            range:
+              start: { line: 0, character: 0 }
+              end: { line: 0, character: 0 }
+          kind: module
+          displayName: example.service
+          disambiguation: first_matching_symbol
     verification:
       method: manual_inspection
-      notes: service.py is imported from the package initializer and directly from the test fixture; import bindings are not counted as usages.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Python has no textual
+        module declaration, so the start of service.py is the canonical
+        definition anchor for example.service. The service components in the
+        package-relative re-export and direct test import are real import-path
+        references, but remain optional under bindings_optional because MCP
+        consumers typically want concrete non-import usages and imports can be
+        noisy. They are listed explicitly as allowed extras so analyzer reports
+        still reveal which tools return them. Definition navigation from the
+        direct import path should reach the service.py file anchor regardless
+        of whether forward reference enumeration includes imports.
+        referenceProbe invokes token-based reference providers from the direct
+        service import without replacing the canonical file definition.
+        Pyright 1.1.411 navigated exactly from that token to the zero-width
+        start of service.py. A pre-schema diagnostic references query from the
+        same token returned the other service occurrence in
+        example/__init__.py exactly, confirming that the existing package
+        initializer is sufficient and Pyright links the import paths. With the
+        scored referenceProbe in place, Pyright returns that optional package
+        import and the exact module definition target, so the case passes
+        instead of being reported unsupported.
   - id: python-function-call-and-reexport
     declaration:
       location:
@@ -51,8 +112,31 @@ cases:
             end: { line: 14, character: 27 }
         kind: function
         displayName: build_service
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/src/example/__init__.py
+          range:
+            start: { line: 0, character: 58 }
+            end: { line: 0, character: 71 }
+        kind: function
+        displayName: build_service
+      - location:
+          uri: benchmark://source/src/example/__init__.py
+          range:
+            start: { line: 2, character: 55 }
+            end: { line: 2, character: 68 }
+        kind: function
+        displayName: build_service
+      - location:
+          uri: benchmark://source/tests/test_service.py
+          range:
+            start: { line: 0, character: 45 }
+            end: { line: 0, character: 58 }
+        kind: function
+        displayName: build_service
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/tests/test_service.py
             range:
@@ -70,7 +154,16 @@ cases:
           displayName: build_service
     verification:
       method: manual_inspection
-      notes: build_service is called by two test functions; the package re-export binding is not counted as a usage.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Both build_service() call
+        tokens are required concrete usages and navigate by definition to the
+        authored function body. The package re-export binding, __all__ export
+        metadata, and test import binding are explicit allowed extras under
+        bindings_optional so analyzer inclusion remains observable without
+        making noisy import surfaces mandatory.
+        Pyright 1.1.411 returned both required calls and all three optional
+        binding/export locations, then navigated exactly from the first call to
+        the build_service definition.
   - id: python-class-instantiation
     declaration:
       location:
@@ -88,8 +181,31 @@ cases:
             end: { line: 19, character: 18 }
         kind: class
         displayName: Service
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/src/example/__init__.py
+          range:
+            start: { line: 0, character: 49 }
+            end: { line: 0, character: 56 }
+        kind: class
+        displayName: Service
+      - location:
+          uri: benchmark://source/src/example/__init__.py
+          range:
+            start: { line: 2, character: 44 }
+            end: { line: 2, character: 51 }
+        kind: class
+        displayName: Service
+      - location:
+          uri: benchmark://source/tests/test_service.py
+          range:
+            start: { line: 0, character: 36 }
+            end: { line: 0, character: 43 }
+        kind: class
+        displayName: Service
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/example/service.py
             range:
@@ -107,7 +223,17 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is instantiated by build_service; the package re-export and test import bindings are not counted as usages.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Service in
+        Service(Repository()) is a required class-token usage that performs
+        construction. Definition navigation follows the visible token to class
+        Service rather than modeling implicit __new__ or __init__ control flow.
+        The package re-export binding, __all__ metadata, and test import binding
+        are explicit allowed extras under bindings_optional. Repository is a
+        separate class identity.
+        Pyright 1.1.411 returned the required construction and all three
+        optional binding/export locations, then navigated exactly to the
+        Service class token.
   - id: python-method-call
     declaration:
       location:
@@ -126,7 +252,8 @@ cases:
         kind: method
         displayName: execute
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/tests/test_service.py
             range:
@@ -144,7 +271,15 @@ cases:
           displayName: execute
     verification:
       method: manual_inspection
-      notes: Direct execute call is visible in test_service_execution.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. build_service() returns a
+        concrete Service, so service.execute(" Ada ") is an exact method usage
+        and definition navigation targets the authored Service.execute body.
+        The later "execute" string, method_name variable, and getattr function
+        are separate source identities and are excluded from this ordinary
+        direct-call case.
+        Pyright 1.1.411 returned only the required direct call and navigated
+        exactly to the Service.execute definition.
   - id: python-dynamic-getattr-not-planned
     declaration:
       location:
@@ -163,7 +298,8 @@ cases:
         kind: method
         displayName: execute
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/tests/test_service.py
             range:
@@ -183,7 +319,18 @@ cases:
       reason: Dynamic getattr stores the method name as a string, so this is retained but excluded from scoring.
     verification:
       method: manual_inspection
-      notes: test_dynamic_lookup calls getattr(service, method_name) after assigning method_name to the string execute.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. This is not an ordinary
+        Python reference: the source token is string data, not a method-name
+        token. It remains notPlanned as a future runtime-target case because
+        the exact Service receiver and immutable local string make
+        getattr(service, method_name)("Linus") statically recoverable through
+        local constant propagation. The string contents are the only authored
+        source range that can represent that inferred relationship.
+        Pyright 1.1.411 did not link the string to Service.execute: references
+        returned the ordinary direct execute call from the neighboring case,
+        and definition navigation from the string returned no target. This
+        confirms that notPlanned is the appropriate baseline status.
   - id: python-attribute-access
     declaration:
       location:
@@ -209,7 +356,8 @@ cases:
         kind: property
         displayName: last
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/tests/test_service.py
             range:
@@ -217,6 +365,14 @@ cases:
               end: { line: 11, character: 26 }
           kind: property
           displayName: last
+        allowedExtraTargets:
+          - location:
+              uri: benchmark://source/src/example/service.py
+              range:
+                start: { line: 7, character: 13 }
+                end: { line: 7, character: 17 }
+            kind: property
+            displayName: last
         expectedDeclaration:
           location:
             uri: benchmark://source/src/example/service.py
@@ -227,4 +383,16 @@ cases:
           displayName: last
     verification:
       method: manual_inspection
-      notes: last is initialized and assigned in Repository, then asserted from the test fixture.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. The first self.last
+        assignment in Repository.__init__ is the canonical declaration of the
+        Python instance attribute. The later assignment in save is a required
+        write usage, and repository.last in the test is a required read usage.
+        The concrete Repository construction makes the test receiver
+        unambiguous; navigation from the read should return the first
+        assignment as a declaration. The later write is an explicitly allowed
+        conservative alternate target, but cannot replace the initializer.
+        Pyright 1.1.411 returned both assignment sites for declaration
+        navigation and both required references. Bifrost 0.8.9 returned only
+        the canonical initializer and both required references. Both results
+        therefore pass without weakening the required target.
