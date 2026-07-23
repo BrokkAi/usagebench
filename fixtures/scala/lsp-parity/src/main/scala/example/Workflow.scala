@@ -28,3 +28,10 @@ object App:
   val output = workflow.run("Hello World")
   val direct = renderer.render("  ok ")
   val slugged = "Hello World".slug
+
+case class RenderRequest(value: String)
+
+object SyntheticApp:
+  val request = RenderRequest("Hello World")
+  val copied = request.copy(value = "Goodbye")
+  val observed = copied.value

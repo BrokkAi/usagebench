@@ -10,16 +10,40 @@ positionEncoding: utf-16
 source: { kind: fixture, path: fixtures/scala/precision }
 language: scala
 cases:
-  - id: scala-renamed-import-companion-call
+  - id: scala-renamed-import-object-method-call
     declaration:
       location: { uri: benchmark://source/src/main/scala/precision/Precision.scala, range: { start: { line: 3, character: 6 }, end: { line: 3, character: 12 } } }
-      kind: function
+      kind: method
       displayName: choose
     expectedUsages:
       - location: { uri: benchmark://source/src/main/scala/precision/Consumer.scala, range: { start: { line: 6, character: 17 }, end: { line: 6, character: 23 } } }
-        kind: function
+        kind: method
         displayName: select
-    verification: { method: manual_inspection, notes: "A renamed import must resolve the selected call to Tools.choose." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/main/scala/precision/Consumer.scala, range: { start: { line: 6, character: 17 }, end: { line: 6, character: 23 } } }
+          kind: method
+          displayName: select
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/main/scala/precision/Precision.scala, range: { start: { line: 3, character: 6 }, end: { line: 3, character: 12 } } }
+          kind: method
+          displayName: choose
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Tools is a singleton object,
+        not a companion, and def choose declares a method on it rather than a
+        FunctionN value. The alias import removes the visible receiver but does
+        not change the underlying symbol kind: select("value") is the required
+        concrete call to Tools.choose. The choose and select tokens in the
+        import clause are optional binding occurrences under bindings_optional.
+        Definition navigation from the aliased call must target def choose.
+        Bifrost 0.8.9 returns the exact concrete call and definition target.
+        Metals 1.6.7 compiles the fixture successfully but returns neither the
+        aliased call from Find References nor a Definition target from select;
+        these are renamed-import semantic misses rather than evidence that the
+        valid alias is disconnected from Tools.choose.
   - id: scala-imported-extension-method-call
     declaration:
       location: { uri: benchmark://source/src/main/scala/precision/Precision.scala, range: { start: { line: 10, character: 8 }, end: { line: 10, character: 16 } } }
@@ -29,14 +53,49 @@ cases:
       - location: { uri: benchmark://source/src/main/scala/precision/Consumer.scala, range: { start: { line: 7, character: 26 }, end: { line: 7, character: 34 } } }
         kind: method
         displayName: decorate
-    verification: { method: manual_inspection, notes: "The wildcard-imported extension applies to the matching String receiver." }
-  - id: scala-companion-apply-call
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/main/scala/precision/Consumer.scala, range: { start: { line: 7, character: 26 }, end: { line: 7, character: 34 } } }
+          kind: method
+          displayName: decorate
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/main/scala/precision/Precision.scala, range: { start: { line: 10, character: 8 }, end: { line: 10, character: 16 } } }
+          kind: method
+          displayName: decorate
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. The wildcard import makes
+        Extensions.decorate available without adding a separate decorate
+        binding token. The String literal receiver exactly matches the
+        extension's String receiver type, and the fixture has no competing
+        extension or ordinary decorate member. The concrete decorate token is
+        the sole required usage, and Definition navigation must target the
+        authored extension def decorate. Bifrost 0.8.9 returns the exact call
+        and definition target. Metals 1.6.7 passes an isolated run but misses
+        both the reference and Definition in the complete Scala run after the
+        renamed-import query. This is retained as query-order-sensitive LSP
+        behavior rather than weakening the exact extension contract.
+  - id: scala-object-apply-call
     declaration:
       location: { uri: benchmark://source/src/main/scala/precision/Precision.scala, range: { start: { line: 6, character: 6 }, end: { line: 6, character: 11 } } }
-      kind: function
+      kind: method
       displayName: apply
     expectedUsages:
       - location: { uri: benchmark://source/src/main/scala/precision/Consumer.scala, range: { start: { line: 8, character: 13 }, end: { line: 8, character: 18 } } }
-        kind: function
+        kind: method
         displayName: Maker
-    verification: { method: manual_inspection, notes: "Scala companion apply syntax resolves the Maker call to Maker.apply." }
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Maker is a singleton object,
+        not a companion, and def apply declares a method rather than a FunctionN
+        value. Maker("value") is an exact implicit invocation of Maker.apply,
+        so the visible Maker token is a required method usage. The case remains
+        reference-only: that same visible token also directly names object
+        Maker, making navigation to the object more intuitive than manufacturing
+        a reverse Definition expectation to the implicit apply method. Bifrost
+        0.8.9 returns the implicit apply reference exactly. Metals 1.6.7 does
+        not connect def apply to the visible Maker call token, a synthetic-call
+        reference miss rather than a reason to remove the exact compiler edge.

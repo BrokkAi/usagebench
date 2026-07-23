@@ -118,9 +118,15 @@ result means contract disagreement, not an automatic defect verdict.
 
 | Case | Bifrost | Metals | Observed distinction |
 |---|---|---|---|
-| Two renamed/import-alias companion cases | Pass | Near | Metals additionally returns import-alias bindings. |
-| `scala-parity-trait-method-implementation` | Pass | Hard | Metals omits the two expected implementation references. |
-| `scala-companion-apply-call` | Pass | Hard | Metals omits the expected synthetic companion `apply` call reference. |
+| `scala-class-construction` | Exact | Hard | Bifrost keeps class and companion-object identities distinct. Metals returns the required class references plus the `Service` qualifier in `Service.build`, which denotes the companion object. |
+| `scala-renamed-import-object-method-call` | Exact | Hard | Bifrost resolves the renamed concrete call and Definition. Metals compiles the fixture but returns neither edge. |
+| `scala-parity-import-alias-companion-method` | Exact | Exact | Both analyzers resolve both parameterless alias expressions and Definition to `ConsoleRenderer.default`; import bindings remain optional. |
+| `scala-parity-trait-method-implementation` | Gap | Hard | Bifrost includes the explicit override but over-expands to the statically concrete call. Metals omits the override and, in the full run, also returns that concrete call. |
+| `scala-parity-concrete-override-method-call` | Exact | Hard | Bifrost keeps the immutable concrete receiver on `ConsoleRenderer#render`. Metals passes in isolation but the full run also returns the interface-typed call. |
+| `scala-object-apply-call` | Exact | Hard | Bifrost connects the visible `Maker(...)` token to its implicit `apply` method; Metals omits that generated call reference. |
+| `scala-parity-case-class-generated-construction-and-copy` | Gap | Exact | Metals resolves generated construction and `copy` Definition to the authored case-class declaration. Bifrost handles construction but cannot resolve the generated `copy` receiver. |
+| `scala-parity-case-class-generated-component-access` | Gap | Unsupported | Metals returns the named `copy` argument and generated accessor exactly, but does not advertise Declaration. Bifrost misses both usages and accessor navigation. |
+| `scala-imported-extension-method-call` | Exact | Hard | Bifrost passes consistently. Metals passes in isolation but misses both edges in the complete Scala run, exposing query-order-sensitive analysis. |
 
 ## What to isolate next
 

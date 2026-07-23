@@ -3023,3 +3023,307 @@ the reviewed ground truth.
   When one reference origin fails and another succeeds, the successful union is
   scored while the failed origin remains visible in raw status; a case errors
   only when every origin fails.
+
+## scala-baseline.yaml
+
+### scala-class-construction
+
+- Source: `fixtures/scala/baseline/src/main/scala/example/Service.scala` and
+  `Consumer.scala`.
+- Authored definition: `class Service(repository: Repository)`.
+- Required usages: the `Service` return type of the companion `build` method
+  and the constructor token in `new Service(repository)`.
+- Excluded identity: `Service` in `Service.build(repository)`, which resolves
+  to the companion object in Scala's term namespace rather than the class.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the constructor occurrence to
+  `class Service`, which defines the primary constructor.
+- Reviewer rationale: both tokens in the `build` body/signature name the class;
+  the constructor occurrence is additionally classified as `constructor`.
+  The same-spelled companion object is a related but distinct declaration.
+- Outcome revealed after review: Metals 1.6.7 returns both required class
+  occurrences and navigates the constructor exactly, but also includes the
+  companion-object qualifier in `Service.build`. That extra remains genuine
+  class-reference noise. Bifrost 0.8.9 returns the exact authored usage family
+  and definition target.
+
+### scala-companion-method-call
+
+- Source: `fixtures/scala/baseline/src/main/scala/example/Service.scala` and
+  `Consumer.scala`.
+- Authored definition: `def build` on the `Service` companion object.
+- Required usage: `build` in `Service.build(repository)`.
+- Excluded identity: the `Service` qualifier, which is a usage of the companion
+  object rather than the method.
+- Ground-truth decision: **correct after renaming and reclassifying the case
+  from function to method**.
+- Operation decision: **definition** to the authored `def build`.
+- Reviewer rationale: Scala `def` introduces a method. A function is a value
+  implementing `FunctionN`, such as a lambda assigned to a `val`; no such value
+  exists here.
+- Outcome revealed after review: Metals 1.6.7 and Bifrost 0.8.9 both return the
+  exact `build` call and definition target.
+
+### scala-method-call
+
+- Source: `fixtures/scala/baseline/src/main/scala/example/Service.scala` and
+  `Consumer.scala`.
+- Authored definition: `Service#execute`.
+- Required usage: `execute` in `service.execute(" Ada ")`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the authored `def execute`.
+- Reviewer rationale: the immutable local is initialized by `Service.build`,
+  whose return type is `Service` and whose implementation constructs exactly
+  `new Service`. The fixture contains no subclass, override, reassignment, or
+  competing `execute` declaration.
+- Outcome revealed after review: Bifrost 0.8.9 returns the exact reference and
+  definition target. Metals 1.6.7 returns the exact reference family but no
+  Definition target in an isolated run; the complete Scala run passes the same
+  case after earlier baseline queries. This is query-order-sensitive analysis,
+  not ground-truth ambiguity.
+
+### scala-var-field-access
+
+- Source: `fixtures/scala/baseline/src/main/scala/example/Service.scala` and
+  `Consumer.scala`.
+- Authored declaration: `var last: String = ""` on `Repository`.
+- Required usages: the write and read inside `save`, plus the external
+  `repository.last` read.
+- Ground-truth decision: **correct after renaming the misleading
+  `scala-field-and-val-access` case**.
+- Operation decision: **declaration** from the external read to the `last`
+  token in `var last`.
+- Reviewer rationale: Scala generates getter and setter members for a `var`,
+  but these source occurrences are accessor operations on one mutable property
+  family. The fixture contains no `val` access, so the former case name was
+  inaccurate.
+- Compilation verification: the pinned Metals profile successfully runs
+  `sbt 1.11.7 compile` with Scala 3.7.3 before semantic queries.
+- Outcome revealed after review: Bifrost 0.8.9 returns the exact property
+  family and declaration target. Metals 1.6.7 returns the exact reference
+  family but does not advertise LSP Declaration, so the semantic navigation
+  operation is unsupported rather than replaced with Definition.
+
+### scala-object-val-access
+
+- Source: `fixtures/scala/baseline/src/main/scala/example/Service.scala` and
+  `Consumer.scala`.
+- Authored declaration: `val Prefix = "job"` on `object Defaults`.
+- Required usages: `Defaults.Prefix` in `Service#execute` and in
+  `Consumer.run`.
+- Excluded identities: the `Defaults` qualifiers, which reference the singleton
+  object rather than the `Prefix` member.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** to the `Prefix` token in `val Prefix`.
+- Reviewer rationale: `Prefix` is an immutable stable object member. Scala may
+  implement access through a generated accessor, but the source-level binding
+  is the `val` declaration rather than a callable definition body.
+- Outcome revealed after review: Bifrost 0.8.9 returns the exact reads and
+  declaration target. Metals 1.6.7 returns the exact reference family but does
+  not advertise LSP Declaration, so navigation remains unsupported rather than
+  being weakened to Definition.
+
+## scala-precision.yaml
+
+### scala-renamed-import-object-method-call
+
+- Source: `fixtures/scala/precision/src/main/scala/precision/Precision.scala`
+  and `Consumer.scala`.
+- Authored definition: `Tools.choose`.
+- Required usage: the aliased concrete call `select("value")`.
+- Optional bindings: both names in `import Tools.{choose => select}` under the
+  document's `bindings_optional` policy.
+- Ground-truth decision: **correct after renaming the case from companion to
+  object and reclassifying the symbol from function to method**.
+- Operation decision: **definition** from the aliased call to `def choose`.
+- Reviewer rationale: importing a method without its receiver makes the call
+  syntactically function-like, but the referenced declaration remains the
+  method member of singleton `object Tools`. There is no companion class or
+  `FunctionN` value in the fixture.
+- Compilation verification: the pinned Metals profile successfully runs
+  `sbt 1.11.7 compile` with Scala 3.7.3 before semantic queries.
+- Outcome revealed after review: Bifrost 0.8.9 returns the exact aliased call
+  and definition target. Metals 1.6.7 returns neither the call from Find
+  References nor a Definition target from `select`, despite compiling the
+  fixture. These are renamed-import semantic misses, not evidence that the
+  valid alias is disconnected from `Tools.choose`.
+
+### scala-imported-extension-method-call
+
+- Source: `fixtures/scala/precision/src/main/scala/precision/Precision.scala`
+  and `Consumer.scala`.
+- Authored definition: the `decorate` extension method on `String`.
+- Required usage: `decorate` in `"value".decorate`.
+- Optional binding: the wildcard `import Extensions.*`; it contains no separate
+  `decorate` token.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the authored extension
+  `def decorate`.
+- Reviewer rationale: the statically known `String` receiver exactly matches
+  the extension receiver type, and the fixture contains no competing extension
+  or ordinary `decorate` member.
+- Outcome revealed after review: Bifrost 0.8.9 returns the exact extension call
+  and definition target. Metals 1.6.7 passes in isolation but misses both the
+  reference and Definition in the complete Scala run after the renamed-import
+  query, exposing query-order-sensitive LSP behavior.
+
+### scala-object-apply-call
+
+- Source: `fixtures/scala/precision/src/main/scala/precision/Precision.scala`
+  and `Consumer.scala`.
+- Authored definition: `Maker.apply`.
+- Required usage: the visible `Maker` token in `Maker("value")`, which
+  implicitly invokes `apply`.
+- Ground-truth decision: **correct after renaming the case from companion to
+  object and reclassifying the symbol from function to method**.
+- Operation decision: **reference-only**.
+- Reviewer rationale: the implicit `apply` edge is exact, but the only visible
+  token simultaneously names `object Maker`. Ordinary navigation from that
+  token naturally targets the object, so the benchmark should not manufacture
+  a reverse Definition expectation to an unspelled `apply` token.
+- Outcome revealed after review: Bifrost 0.8.9 returns the implicit apply
+  reference exactly. Metals 1.6.7 does not connect `def apply` to the visible
+  `Maker` call token. This is a synthetic-call reference miss rather than a
+  reason to remove the exact compiler edge.
+
+## scala-lsp-parity.yaml
+
+### scala-parity-trait-method-implementation
+
+- Source: `fixtures/scala/lsp-parity/src/main/scala/example/Workflow.scala`.
+- Authored definition: abstract `Renderer#render`.
+- Required usages: the overriding `ConsoleRenderer#render` declaration and the
+  call through `Workflow`'s `Renderer`-typed constructor parameter.
+- Excluded identity: the final direct call through the immutable,
+  concrete-typed `renderer` value.
+- Ground-truth decision: **correct after removing the statically concrete call
+  from the trait usage family**.
+- Operation decision: **definition** from the interface-typed call to the
+  abstract trait method.
+- Reviewer rationale: the override declaration explicitly relates itself to
+  the trait member, and the `Renderer`-typed call dispatches through that
+  contract. The separately scored concrete receiver has no genuine static
+  ambiguity and should not be absorbed into the trait family.
+- Outcome revealed after review: Metals 1.6.7 returns the exact interface-typed
+  call and navigation target but omits the overriding declaration from
+  ordinary References; the complete parity run also returns the separately
+  scored concrete call as an extra. Bifrost 0.8.9 includes the override and
+  navigates exactly, but likewise returns the concrete call as trait-family
+  noise.
+
+### scala-parity-concrete-override-method-call
+
+- Source: `fixtures/scala/lsp-parity/src/main/scala/example/Workflow.scala`.
+- Authored definition: overriding `ConsoleRenderer#render`.
+- Required usage: `render` in the final direct call through the imported
+  `renderer` value.
+- Ground-truth decision: **added as a separate exact concrete-dispatch case**.
+- Operation decision: **definition** to the overriding `def render`.
+- Reviewer rationale: the immutable value is initialized by
+  `ConsoleRenderer.default`, whose declared return type and implementation are
+  exactly `ConsoleRenderer`. No competing assignment or implementation exists
+  in the fixture.
+- Outcome revealed after review: Bifrost 0.8.9 returns the exact concrete call
+  and overriding definition target. Metals 1.6.7 passes in isolation, while
+  the complete parity run also returns the interface-typed trait call as an
+  extra, exposing query-order-sensitive family expansion.
+
+### scala-parity-import-alias-companion-method
+
+- Source: `fixtures/scala/lsp-parity/src/main/scala/example/Workflow.scala`.
+- Authored definition: parameterless `ConsoleRenderer.default` on the
+  companion object.
+- Required usages: both concrete `renderer` expressions after the renamed
+  import.
+- Optional bindings: `default` and `renderer` inside
+  `import ConsoleRenderer.{default => renderer}`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** from the alias expression to
+  `def default`.
+- Reviewer rationale: each bare alias expression evaluates the imported
+  parameterless method. `render` is a separate method usage, while the import
+  clause is binding metadata under `bindings_optional`.
+- Outcome revealed after review: Metals 1.6.7 and Bifrost 0.8.9 both return the
+  two exact alias expressions and definition target.
+
+### scala-parity-extension-method-call
+
+- Source: `fixtures/scala/lsp-parity/src/main/scala/example/Workflow.scala`.
+- Authored definition: the `slug` extension method on `String`.
+- Required usage: `slug` in `"Hello World".slug`.
+- Optional binding: `import Syntax.*`; it contains no separate `slug` token.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the authored extension `def slug`.
+- Reviewer rationale: the statically known `String` receiver exactly matches
+  the extension receiver type, and no competing extension or ordinary `slug`
+  member exists.
+- Outcome revealed after review: Metals 1.6.7 and Bifrost 0.8.9 both return the
+  exact extension call and definition target.
+
+### scala-parity-workflow-method-call
+
+- Source: `fixtures/scala/lsp-parity/src/main/scala/example/Workflow.scala`.
+- Authored definition: `Workflow#run`.
+- Required usage: `run` in `workflow.run("Hello World")`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the authored `def run`.
+- Reviewer rationale: the immutable object `val` is initialized directly with
+  `new Workflow`; the fixture contains no subclass, reassignment, override, or
+  competing `run` method.
+- Outcome revealed after review: Metals 1.6.7 and Bifrost 0.8.9 both return the
+  exact call and definition target.
+
+### scala-parity-case-class-generated-construction-and-copy
+
+- Source: `fixtures/scala/lsp-parity/src/main/scala/example/Workflow.scala`.
+- Authored provenance: `case class RenderRequest(value: String)`.
+- Required usage: the generated-`apply` construction
+  `RenderRequest("Hello World")`.
+- Ground-truth decision: **replaced the empty not-planned synthetic placeholder
+  with planned concrete coverage**.
+- Operation decisions: **definition** from the construction token and from
+  `copy` to the originating case-class declaration.
+- Reviewer rationale: generated `apply` and `copy` lack authored method tokens,
+  but their source provenance is unambiguously the case-class declaration.
+  This follows the same source-origin policy used for generated JavaScript and
+  TypeScript behavior rather than making Scala uniquely unscoreable.
+- Outcome revealed after review: Metals 1.6.7 returns the exact construction
+  reference and navigates both construction and `copy` to the case-class
+  declaration. Bifrost 0.8.9 returns the construction edge and navigation
+  exactly but cannot resolve the generated `copy` receiver.
+
+### scala-parity-case-class-generated-component-access
+
+- Source: `fixtures/scala/lsp-parity/src/main/scala/example/Workflow.scala`.
+- Authored declaration: the case-class component parameter `value`.
+- Required usages: the named `value` argument to generated `copy` and the
+  generated accessor in `copied.value`.
+- Ground-truth decision: **added as planned generated-component coverage**.
+- Operation decision: **declaration** from the accessor to the authored
+  case-class parameter.
+- Reviewer rationale: the constructor parameter is the authored source origin
+  for both the immutable accessor and generated `copy` parameter name.
+- Outcome revealed after review: Metals 1.6.7 returns both exact component
+  usages; Declaration remains unsupported because it is not advertised.
+  Bifrost 0.8.9 returns neither generated usage and cannot resolve the accessor
+  receiver for Declaration. Together with `copy`, this points to a general
+  synthesized-member model rather than a Scala-specific exception.
+
+## Scala analyzer calibration summary
+
+- All three Scala fixture roots compile successfully with sbt 1.11.7 and Scala
+  3.7.3 before Metals starts semantic queries.
+- The complete Metals 1.6.7 run reports 6 passes, 6 semantic failures, and 3
+  unsupported Declaration cases across 15 reviewed cases.
+- The complete Bifrost 0.8.9 comparison reports 12 passes and 3 semantic
+  failures. Its failures are trait-family over-expansion plus generated
+  `copy`/component receiver and usage recovery.
+- Metals confirms the planned case-class provenance contract exactly:
+  generated construction and `copy` Definition target the case-class
+  declaration, while the authored component parameter finds both the generated
+  `copy` argument and accessor.
+- Several Metals results depend on query order despite the configured
+  60-second settle: `Service#execute` improves in the aggregate, while the
+  precision extension and override-family boundaries regress. These outcomes
+  are recorded as analyzer/request-order behavior rather than used to redefine
+  the human-reviewed contract.
