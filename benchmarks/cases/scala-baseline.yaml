@@ -37,7 +37,8 @@ cases:
         kind: constructor
         displayName: Service
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/main/scala/example/Service.scala
             range:
@@ -55,15 +56,26 @@ cases:
           displayName: Service
     verification:
       method: manual_inspection
-      notes: Service is declared in Service.scala and constructed by the companion build method.
-  - id: scala-companion-function-call
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. The Service return type
+        and Service in new Service(repository) are both required usages of the
+        class. object Service is the companion-object declaration rather than
+        a class usage. The new expression is additionally classified as a
+        constructor occurrence. Definition navigation from that constructor
+        token must target class Service, which defines Scala's primary
+        constructor. Metals 1.6.7 returns both required class occurrences and
+        navigates the constructor exactly, but also includes Service in
+        Service.build: that qualifier resolves to the companion object and
+        remains genuine class-reference noise. Bifrost 0.8.9 returns the exact
+        authored class family and navigation target.
+  - id: scala-companion-method-call
     declaration:
       location:
         uri: benchmark://source/src/main/scala/example/Service.scala
         range:
           start: { line: 23, character: 6 }
           end: { line: 23, character: 11 }
-      kind: function
+      kind: method
       displayName: build
     expectedUsages:
       - location:
@@ -71,16 +83,17 @@ cases:
           range:
             start: { line: 5, character: 26 }
             end: { line: 5, character: 31 }
-        kind: function
+        kind: method
         displayName: build
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/main/scala/example/Consumer.scala
             range:
               start: { line: 5, character: 26 }
               end: { line: 5, character: 31 }
-          kind: function
+          kind: method
           displayName: build
         expectedDeclaration:
           location:
@@ -88,11 +101,17 @@ cases:
             range:
               start: { line: 23, character: 6 }
               end: { line: 23, character: 11 }
-          kind: function
+          kind: method
           displayName: build
     verification:
       method: manual_inspection
-      notes: Consumer.run calls Service.build.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. def build declares a
+        method on the Service companion object, not a FunctionN value. The
+        build token in Service.build(repository) is its sole required usage;
+        Service is a separate usage of the companion object. Definition
+        navigation must target the authored def build body. Metals 1.6.7 and
+        Bifrost 0.8.9 both return the exact call and definition target.
   - id: scala-method-call
     declaration:
       location:
@@ -111,7 +130,8 @@ cases:
         kind: method
         displayName: execute
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/main/scala/example/Consumer.scala
             range:
@@ -129,8 +149,19 @@ cases:
           displayName: execute
     verification:
       method: manual_inspection
-      notes: Consumer.run calls execute on the Service returned by Service.build.
-  - id: scala-field-and-val-access
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. service is an immutable
+        local initialized by Service.build, whose declared return type is
+        Service and whose body constructs new Service. With no subclasses,
+        overrides, reassignment, or competing execute methods in the fixture,
+        service.execute is the sole required usage of Service#execute.
+        Definition navigation must target the authored def execute body.
+        Bifrost 0.8.9 returns the exact reference and definition target. Metals
+        1.6.7 returns the exact reference family but no Definition target in an
+        isolated run; the complete Scala run passes the same case exactly after
+        earlier baseline queries. This is query-order-sensitive analysis rather
+        than evidence of ambiguity in the closed fixture.
+  - id: scala-var-field-access
     declaration:
       location:
         uri: benchmark://source/src/main/scala/example/Service.scala
@@ -162,7 +193,8 @@ cases:
         kind: field
         displayName: last
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/main/scala/example/Consumer.scala
             range:
@@ -180,7 +212,19 @@ cases:
           displayName: last
     verification:
       method: manual_inspection
-      notes: last is declared on Repository, assigned/read in save, and read from Consumer.run.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. var last declares one
+        source-level mutable property on Repository. The assignment and read in
+        save plus the external repository.last read are all required usages.
+        Although Scala generates getter and setter members for a var, source
+        usage analysis keeps those accessor operations in the same last
+        property family. Declaration navigation from repository.last must land
+        on the last token in var last. The case was renamed from
+        scala-field-and-val-access because it contains no val access. Bifrost
+        0.8.9 returns the exact property family and declaration target. Metals
+        1.6.7 returns the exact references but does not advertise the LSP
+        Declaration operation, so navigation is correctly reported as
+        unsupported rather than silently substituted with Definition.
   - id: scala-object-val-access
     declaration:
       location:
@@ -206,7 +250,8 @@ cases:
         kind: constant
         displayName: Prefix
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/main/scala/example/Consumer.scala
             range:
@@ -224,4 +269,13 @@ cases:
           displayName: Prefix
     verification:
       method: manual_inspection
-      notes: Prefix is declared in Defaults and read from Service.execute and Consumer.run.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. val Prefix introduces an
+        immutable stable member on object Defaults. The reads in
+        Service#execute and Consumer.run are both required usages; each
+        Defaults qualifier is a separate usage of the singleton object.
+        Although Scala compiles the val through an accessor, source navigation
+        must use Declaration and target the Prefix token in val Prefix.
+        Bifrost 0.8.9 returns the exact reads and declaration target. Metals
+        1.6.7 returns the exact reads but does not advertise LSP Declaration,
+        so navigation is reported as unsupported.
