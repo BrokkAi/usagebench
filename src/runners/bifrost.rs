@@ -791,7 +791,7 @@ fn run_type_lookup(
             LocationMatch::Exact if type_name_matches(&parsed.actual_types[0], &expected_type) => {
                 CaseStatus::Passed
             }
-            LocationMatch::LineOnly
+            LocationMatch::LineOnly | LocationMatch::Containing
                 if type_name_matches(&parsed.actual_types[0], &expected_type) =>
             {
                 CaseStatus::PositionUnverified

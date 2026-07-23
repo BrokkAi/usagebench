@@ -38,7 +38,6 @@ cases:
             end: { line: 28, character: 27 }
         kind: class
         displayName: Invoice
-    allowedExtraUsages:
       - location:
           uri: benchmark://source/app/report.rb
           range:
@@ -53,8 +52,17 @@ cases:
             end: { line: 15, character: 22 }
         kind: class
         displayName: Invoice
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 6, character: 8 }
+            end: { line: 6, character: 15 }
+        kind: class
+        displayName: Invoice
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/app/report.rb
             range:
@@ -72,7 +80,20 @@ cases:
           displayName: Invoice
     verification:
       method: manual_inspection
-      notes: report.rb calls Billing::Invoice.build, and Invoice.build constructs Invoice while recording the last build; the require_relative binding itself is not a usage.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. All four visible Invoice
+        tokens are required class usages: the build qualifier, explicit
+        Invoice.new self-construction, DEFAULT_CURRENCY namespace qualifier,
+        and last_build qualifier. Definition navigation from the build
+        qualifier targets class Invoice. new is a separate method token, while
+        the lowercase filename inside require_relative is not a class usage.
+        Ruby LSP 0.26.10 and Solargraph 0.60.2 both returned all four semantic
+        usages and also included the class declaration despite
+        includeDeclaration=false, so declaration inclusion is an explicit
+        allowed extra. Ruby LSP selected full Billing::Invoice paths for the
+        three qualified references; Solargraph selected the full class body for
+        definition navigation. These enclosing ranges are recorded as
+        position_unverified rather than semantic failures.
   - id: ruby-relative-nested-constant
     declaration:
       location:
@@ -90,8 +111,17 @@ cases:
             end: { line: 10, character: 38 }
         kind: class
         displayName: Currency
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/billing/money.rb
+          range:
+            start: { line: 2, character: 10 }
+            end: { line: 2, character: 18 }
+        kind: class
+        displayName: Currency
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/lib/billing/invoice.rb
             range:
@@ -109,7 +139,19 @@ cases:
           displayName: Currency
     verification:
       method: manual_inspection
-      notes: Invoice is lexically nested in Billing, so Money::Currency refers to Billing::Money::Currency from the required money.rb file.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Invoice is lexically
+        nested in Billing, so the sole Currency token in
+        Money::Currency.new resolves exactly to Billing::Money::Currency.
+        Money is a separate module reference, new is a separate method token,
+        and the lowercase require_relative filename is not a class usage.
+        Definition navigation targets class Currency.
+        Ruby LSP 0.26.10 and Solargraph 0.60.2 both returned the semantic usage
+        plus the class declaration despite includeDeclaration=false, so the
+        declaration is an explicit allowed extra. Ruby LSP selected the full
+        Money::Currency reference and exact definition token; Solargraph
+        selected the exact reference token and enclosing class definition.
+        Their broad ranges are position_unverified rather than semantic misses.
   - id: ruby-superclass-reference
     declaration:
       location:
@@ -127,8 +169,17 @@ cases:
             end: { line: 6, character: 24 }
         kind: class
         displayName: Record
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/billing/record.rb
+          range:
+            start: { line: 1, character: 8 }
+            end: { line: 1, character: 14 }
+        kind: class
+        displayName: Record
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/lib/billing/invoice.rb
             range:
@@ -146,7 +197,17 @@ cases:
           displayName: Record
     verification:
       method: manual_inspection
-      notes: Invoice inherits from Record after requiring record.rb; this should be a superclass reference, not a generic text match.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Record in the Invoice
+        superclass clause is the sole required class usage and resolves
+        lexically to Billing::Record. The lowercase require_relative filename
+        is not a class reference, and inherited member tokens do not become
+        Record class usages. Definition navigation targets class Record.
+        Ruby LSP 0.26.10 and Solargraph 0.60.2 both returned the exact
+        superclass token plus the class declaration despite
+        includeDeclaration=false, so declaration inclusion is an explicit
+        allowed extra. Ruby LSP navigated to the exact class token; Solargraph
+        selected the enclosing class body, which is position_unverified.
   - id: ruby-include-instance-mixin
     declaration:
       location:
@@ -171,8 +232,17 @@ cases:
             end: { line: 14, character: 32 }
         kind: method
         displayName: audit
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/billing/auditable.rb
+          range:
+            start: { line: 2, character: 8 }
+            end: { line: 2, character: 13 }
+        kind: method
+        displayName: audit
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/app/report.rb
             range:
@@ -190,7 +260,21 @@ cases:
           displayName: audit
     verification:
       method: manual_inspection
-      notes: Invoice includes Auditable, and report.rb calls audit directly and through public_send on an Invoice instance constructed through Billing::Invoice.build.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Invoice includes Auditable
+        without overriding audit. Both invoice.audit and the literal
+        public_send(:audit) target are required usages because the receiver and
+        method name are exact. public_send is a separate method identity and
+        Auditable is a module reference. Definition navigation is required only
+        from the direct call to Auditable#audit; the symbol literal would need
+        a deliberate runtime-call-target operation for reverse navigation.
+        Ruby LSP 0.26.10 and Solargraph 0.60.2 both return the direct call and
+        method declaration but omit the literal public_send target. Probing
+        from :audit does not expose an alternate audit reference family: Ruby
+        LSP associates the position with public_send, while Solargraph returns
+        none. The declaration is therefore an explicit allowed extra; the
+        reflective call remains a deliberate semantic requirement rather than
+        an LSP-derived one.
   - id: ruby-prepend-method-precedence
     declaration:
       location:
@@ -208,8 +292,17 @@ cases:
             end: { line: 8, character: 25 }
         kind: method
         displayName: total_label
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/billing/formatting.rb
+          range:
+            start: { line: 2, character: 8 }
+            end: { line: 2, character: 19 }
+        kind: method
+        displayName: total_label
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/app/report.rb
             range:
@@ -227,7 +320,20 @@ cases:
           displayName: total_label
     verification:
       method: manual_inspection
-      notes: Invoice prepends Formatting and also defines total_label; Ruby lookup should resolve invoice.total_label to the prepended module method.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. prepend places Formatting
+        before Invoice in Ruby method lookup order, so invoice.total_label has
+        the unique runtime target Formatting#total_label. The shadowed
+        Invoice#total_label body is a distinct implementation and Formatting
+        in the prepend statement is a module usage. Definition navigation must
+        target the prepended module method.
+        Ruby LSP 0.26.10 and Solargraph 0.60.2 both return the exact call and
+        queried Formatting declaration, so declaration inclusion is an
+        explicit allowed extra. Both navigate to Formatting#total_label, with
+        Solargraph selecting an enclosing method range. Ruby LSP additionally
+        returns the shadowed Invoice#total_label declaration; Solargraph does
+        not, so that remains unexpected method-family noise rather than a valid
+        call target.
   - id: ruby-extend-and-include-method-lookup
     declaration:
       location:
@@ -252,8 +358,17 @@ cases:
             end: { line: 11, character: 34 }
         kind: method
         displayName: find
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/billing/findable.rb
+          range:
+            start: { line: 2, character: 8 }
+            end: { line: 2, character: 12 }
+        kind: method
+        displayName: find
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/app/report.rb
             range:
@@ -269,7 +384,8 @@ cases:
               end: { line: 2, character: 12 }
           kind: method
           displayName: find
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/app/report.rb
             range:
@@ -287,7 +403,17 @@ cases:
           displayName: find
     verification:
       method: manual_inspection
-      notes: User extends Findable, so User.find is a class/singleton method; LegacyUser includes Findable, so LegacyUser.new.find is an instance method.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. User extends Findable, so
+        User.find binds the authored find body as a singleton-class method.
+        LegacyUser includes Findable, so LegacyUser.new.find binds the same
+        body as an instance method. Both call sites have the unique definition
+        target Findable#find. Findable is a separate module reference and new
+        is a separate method token. Ruby LSP 0.26.10 and Solargraph 0.60.2 both
+        return the two exact calls plus the queried method declaration, so
+        declaration inclusion is an explicit allowed extra. Both navigate both
+        calls to Findable#find. Ruby LSP returns the exact definition token;
+        Solargraph selects the enclosing method range for both lookups.
   - id: ruby-class-constant-access
     declaration:
       location:
@@ -295,6 +421,14 @@ cases:
         range:
           start: { line: 10, character: 4 }
           end: { line: 10, character: 20 }
+      kind: constant
+      displayName: DEFAULT_CURRENCY
+    referenceProbe:
+      location:
+        uri: benchmark://source/app/report.rb
+        range:
+          start: { line: 9, character: 24 }
+          end: { line: 9, character: 40 }
       kind: constant
       displayName: DEFAULT_CURRENCY
     expectedUsages:
@@ -305,8 +439,17 @@ cases:
             end: { line: 9, character: 40 }
         kind: constant
         displayName: DEFAULT_CURRENCY
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 10, character: 4 }
+            end: { line: 10, character: 20 }
+        kind: constant
+        displayName: DEFAULT_CURRENCY
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/app/report.rb
             range:
@@ -324,15 +467,30 @@ cases:
           displayName: DEFAULT_CURRENCY
     verification:
       method: manual_inspection
-      notes: report.rb reads Billing::Invoice::DEFAULT_CURRENCY after requiring billing/invoice.
-  - id: ruby-basic-function-call
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. The DEFAULT_CURRENCY token
+        in Billing::Invoice::DEFAULT_CURRENCY is the sole usage of the constant.
+        Billing and Invoice are separate namespace and class identities, while
+        Money, Currency, and new on the assignment right-hand side are separate
+        symbols. Declaration navigation must target the left-hand
+        DEFAULT_CURRENCY binding; the assignment introduces a constant rather
+        than an executable definition body. Neither Ruby LSP 0.26.10 nor
+        Solargraph 0.60.2 advertises the LSP Declaration operation, although
+        both Definition probes reach the assignment (with enclosing ranges).
+        Solargraph returns the read plus the assignment from the declaration.
+        Ruby LSP returns no references from the assignment in a cold query, but
+        the scored referenceProbe from the read returns the qualified read plus
+        the assignment after indexing settles. This demonstrates
+        occurrence-sensitive reference discovery rather than a semantic miss.
+        Assignment inclusion is therefore an explicit allowed extra.
+  - id: ruby-top-level-implicit-self-method-call
     declaration:
       location:
         uri: benchmark://source/app/report.rb
         range:
           start: { line: 20, character: 4 }
           end: { line: 20, character: 19 }
-      kind: function
+      kind: method
       displayName: normalize_total
     expectedUsages:
       - location:
@@ -340,16 +498,25 @@ cases:
           range:
             start: { line: 12, character: 6 }
             end: { line: 12, character: 21 }
-        kind: function
+        kind: method
+        displayName: normalize_total
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 20, character: 4 }
+            end: { line: 20, character: 19 }
+        kind: method
         displayName: normalize_total
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/app/report.rb
             range:
               start: { line: 12, character: 6 }
               end: { line: 12, character: 21 }
-          kind: function
+          kind: method
           displayName: normalize_total
         expectedDeclaration:
           location:
@@ -357,11 +524,22 @@ cases:
             range:
               start: { line: 20, character: 4 }
               end: { line: 20, character: 19 }
-          kind: function
+          kind: method
           displayName: normalize_total
     verification:
       method: manual_inspection
-      notes: render calls normalize_total as a bare function-style Ruby method in the same file.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. A top-level def in Ruby
+        installs a private instance method on Object rather than a standalone
+        function. The bare normalize_total call has the implicit receiver self;
+        while render executes, self is the InvoiceReport instance, whose
+        ancestor chain reaches Object. The call is therefore the sole method
+        usage and Definition navigation must target the authored method body.
+        Ruby LSP 0.26.10 and Solargraph 0.60.2 both return the exact call plus
+        the queried method declaration, so declaration inclusion is an
+        explicit allowed extra. Solargraph navigates to the enclosing authored
+        method body. Ruby LSP returns no Definition, which is retained as a
+        genuine miss on this implicit-self Object-ancestor edge.
   - id: ruby-singleton-method-dispatch
     declaration:
       location:
@@ -379,8 +557,17 @@ cases:
             end: { line: 13, character: 25 }
         kind: method
         displayName: build
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/billing/user.rb
+          range:
+            start: { line: 6, character: 13 }
+            end: { line: 6, character: 18 }
+        kind: method
+        displayName: build
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/app/report.rb
             range:
@@ -398,35 +585,25 @@ cases:
           displayName: build
     verification:
       method: manual_inspection
-      notes: Billing::User.build calls the singleton method declared with def self.build on User.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Only build in
+        Billing::User.build uses User's singleton method. The same-spelled
+        Billing::Invoice.build call is a distinct singleton method and must not
+        be included. User in the qualified call and User.new in the method body
+        are separate class usages; new is a separate method. Definition
+        navigation must target def self.build on User. Ruby LSP 0.26.10 and
+        Solargraph 0.60.2 both include the queried User.build declaration, so
+        declaration inclusion is an explicit allowed extra. Both navigate to
+        User.build, with Solargraph selecting the enclosing method body. Ruby
+        LSP additionally returns the distinct Invoice.build call and
+        declaration; Solargraph does not, so both remain unexpected
+        same-spelled singleton-method noise.
   - id: ruby-dynamic-public-send
     notPlanned:
-      reason: Bifrost does not yet resolve Ruby public_send symbol arguments as dynamic method usages.
-    declaration:
-      location:
-        uri: benchmark://source/lib/billing/auditable.rb
-        range:
-          start: { line: 2, character: 8 }
-          end: { line: 2, character: 13 }
-      kind: method
-      displayName: audit
-    expectedUsages:
-      - location:
-          uri: benchmark://source/app/report.rb
-          range:
-            start: { line: 7, character: 14 }
-            end: { line: 7, character: 19 }
-        kind: method
-        displayName: audit
-      - location:
-          uri: benchmark://source/app/report.rb
-          range:
-            start: { line: 14, character: 27 }
-            end: { line: 14, character: 32 }
-        kind: method
-        displayName: audit
+      reason: Navigation from a public_send symbol literal is not yet a planned benchmark operation.
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/app/report.rb
             range:
@@ -444,7 +621,15 @@ cases:
           displayName: audit
     verification:
       method: manual_inspection
-      notes: invoice.public_send(:audit) names audit through a symbol at the call site; declaration scans should still include the direct invoice.audit usage for the same method.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Required reference
+        analysis for both invoice.audit and the exact public_send(:audit)
+        target is scored by ruby-include-instance-mixin. This non-planned case
+        isolates only the stronger navigation question: whether Definition
+        from the :audit symbol literal reaches Auditable#audit. Ruby LSP 0.26.10
+        associates that position with public_send and Solargraph 0.60.2 returns
+        no target, so symbol-literal navigation remains aspirational rather
+        than part of the ordinary LSP Definition baseline.
   - id: ruby-script-level-constant-access
     declaration:
       location:
@@ -452,6 +637,14 @@ cases:
         range:
           start: { line: 24, character: 0 }
           end: { line: 24, character: 12 }
+      kind: constant
+      displayName: SCRIPT_LIMIT
+    referenceProbe:
+      location:
+        uri: benchmark://source/app/report.rb
+        range:
+          start: { line: 21, character: 16 }
+          end: { line: 21, character: 28 }
       kind: constant
       displayName: SCRIPT_LIMIT
     expectedUsages:
@@ -462,8 +655,17 @@ cases:
             end: { line: 21, character: 28 }
         kind: constant
         displayName: SCRIPT_LIMIT
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/app/report.rb
+          range:
+            start: { line: 24, character: 0 }
+            end: { line: 24, character: 12 }
+        kind: constant
+        displayName: SCRIPT_LIMIT
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/app/report.rb
             range:
@@ -481,7 +683,21 @@ cases:
           displayName: SCRIPT_LIMIT
     verification:
       method: manual_inspection
-      notes: normalize_total reads the script-level SCRIPT_LIMIT constant declared later in the same file.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. SCRIPT_LIMIT in
+        normalize_total is the sole usage of the script-level constant. The
+        top-level assignment introduces the constant on Object, and the
+        method's lexical context resolves the bare read to that binding.
+        Declaration navigation must target the assignment's left-hand token.
+        Its later textual position does not introduce another candidate, and
+        the intended loaded program assigns it before invoking the method.
+        Neither Ruby LSP 0.26.10 nor Solargraph 0.60.2 advertises the LSP
+        Declaration operation. Solargraph returns the exact read plus the
+        assignment and its practical Definition lookup reaches an enclosing
+        assignment range. With the scored referenceProbe and settled indexing,
+        Ruby LSP likewise returns the required read plus assignment. Declaration
+        inclusion is therefore an explicit allowed extra; the requested
+        Declaration operation remains unsupported by both adapters.
   - id: ruby-instance-field-access
     declaration:
       location:
@@ -489,6 +705,14 @@ cases:
         range:
           start: { line: 15, character: 6 }
           end: { line: 15, character: 13 }
+      kind: field
+      displayName: "@status"
+    referenceProbe:
+      location:
+        uri: benchmark://source/lib/billing/invoice.rb
+        range:
+          start: { line: 19, character: 6 }
+          end: { line: 19, character: 13 }
       kind: field
       displayName: "@status"
     expectedUsages:
@@ -499,8 +723,17 @@ cases:
             end: { line: 19, character: 13 }
         kind: field
         displayName: "@status"
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 15, character: 6 }
+            end: { line: 15, character: 13 }
+        kind: field
+        displayName: "@status"
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/lib/billing/invoice.rb
             range:
@@ -518,7 +751,23 @@ cases:
           displayName: "@status"
     verification:
       method: manual_inspection
-      notes: initialize writes @status and the instance status reader returns the same instance variable.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. The @status assignment in
+        initialize introduces the instance-variable binding, and the read in
+        status is its sole usage. Both occurrences have implicit self inside
+        Invoice instance methods and therefore identify the same source-level
+        member slot; different runtime Invoice objects do not create different
+        static field identities. Declaration navigation must target the
+        assignment token. Neither Ruby LSP 0.26.10 nor Solargraph 0.60.2
+        advertises LSP Declaration. Solargraph returns the exact read plus
+        assignment; its practical Definition lookup selects the full
+        assignment. A cold Ruby LSP reference query from the assignment exposed
+        NonExistingNamespaceError for Billing::Invoice, while the read origin
+        returned both exact occurrences. With the scored referenceProbe and
+        settled indexing, both origins complete and the reference family
+        passes. Assignment inclusion is therefore an explicit allowed extra;
+        the cold origin failure remains useful raw evidence of server
+        initialization sensitivity, not a semantic disagreement.
   - id: ruby-class-variable-access
     declaration:
       location:
@@ -526,6 +775,14 @@ cases:
         range:
           start: { line: 11, character: 4 }
           end: { line: 11, character: 14 }
+      kind: field
+      displayName: "@@sequence"
+    referenceProbe:
+      location:
+        uri: benchmark://source/lib/billing/invoice.rb
+        range:
+          start: { line: 27, character: 6 }
+          end: { line: 27, character: 16 }
       kind: field
       displayName: "@@sequence"
     expectedUsages:
@@ -536,8 +793,17 @@ cases:
             end: { line: 27, character: 16 }
         kind: field
         displayName: "@@sequence"
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 11, character: 4 }
+            end: { line: 11, character: 14 }
+        kind: field
+        displayName: "@@sequence"
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/lib/billing/invoice.rb
             range:
@@ -555,7 +821,22 @@ cases:
           displayName: "@@sequence"
     verification:
       method: manual_inspection
-      notes: "@@sequence is initialized on Invoice and incremented by the singleton build method."
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. @@sequence = 0 introduces
+        the class-variable binding. The compound assignment @@sequence += 1 is
+        one required source occurrence that both reads and writes the same
+        Invoice class-hierarchy slot from the singleton build method. Although
+        Ruby class variables participate in inheritance, this fixture has no
+        competing declaration or subclass. Declaration navigation must target
+        the initial assignment. Neither Ruby LSP 0.26.10 nor Solargraph 0.60.2
+        advertises LSP Declaration. Solargraph finds both exact occurrences
+        when queried from the compound assignment, so initializer inclusion is
+        an explicit allowed extra; its practical Definition response returns
+        both the initializer and mutation. Ruby LSP returns no class-variable
+        usage from the initializer, and querying the compound assignment
+        instead falls back to the enclosing build method family and returns
+        unrelated build locations. The latter is retained as a genuine
+        reference failure rather than allowed conservative noise.
   - id: ruby-singleton-field-access
     declaration:
       location:
@@ -563,6 +844,14 @@ cases:
         range:
           start: { line: 12, character: 4 }
           end: { line: 12, character: 15 }
+      kind: field
+      displayName: "@last_build"
+    referenceProbe:
+      location:
+        uri: benchmark://source/lib/billing/invoice.rb
+        range:
+          start: { line: 32, character: 6 }
+          end: { line: 32, character: 17 }
       kind: field
       displayName: "@last_build"
     expectedUsages:
@@ -580,8 +869,17 @@ cases:
             end: { line: 32, character: 17 }
         kind: field
         displayName: "@last_build"
+    allowedExtraUsages:
+      - location:
+          uri: benchmark://source/lib/billing/invoice.rb
+          range:
+            start: { line: 12, character: 4 }
+            end: { line: 12, character: 15 }
+        kind: field
+        displayName: "@last_build"
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/lib/billing/invoice.rb
             range:
@@ -599,4 +897,25 @@ cases:
           displayName: "@last_build"
     verification:
       method: manual_inspection
-      notes: "@last_build is initialized in the Invoice class body, assigned from self.build, and read from self.last_build on the class object's singleton state."
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. The class-body assignment
+        runs with self equal to Invoice and introduces @last_build on the
+        Invoice class object. The write in self.build and read in
+        self.last_build are both required usages of that singleton-state slot.
+        The fixture invokes both methods on the exact Billing::Invoice receiver
+        and has no subclass. @status is excluded because its self is an Invoice
+        instance. Declaration navigation from the read must target the initial
+        class-body assignment; the later write is a usage, not a competing
+        declaration. An inherited class method invoked on a future subclass
+        could access that subclass object's state, but that open-world target
+        is absent from this fixture. Neither Ruby LSP 0.26.10 nor Solargraph
+        0.60.2 advertises LSP Declaration. Solargraph returns all three exact
+        occurrences when queried from the read, so initializer inclusion is an
+        explicit allowed extra; practical Definition selects the full initial
+        assignment. Its query from the initializer returns no usages. Cold Ruby
+        LSP queries exposed NonExistingNamespaceError for the Invoice singleton
+        class, but the scored read-origin referenceProbe returns all three
+        occurrences after indexing settles. The required reference family
+        therefore passes while Declaration remains unsupported; the cold
+        failure is retained as initialization-sensitivity evidence rather than
+        a semantic disagreement.
