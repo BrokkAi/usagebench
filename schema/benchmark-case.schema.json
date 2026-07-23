@@ -125,6 +125,10 @@
         "declaration": {
           "$ref": "#/$defs/symbolLocation"
         },
+        "referenceProbe": {
+          "description": "Additional source occurrence used by token-based runners to expose occurrence-sensitive reference families such as import aliases.",
+          "$ref": "#/$defs/symbolLocation"
+        },
         "expectedUsages": {
           "type": "array",
           "items": {
@@ -281,6 +285,13 @@
         },
         "expectedDeclaration": {
           "$ref": "#/$defs/symbolLocation"
+        },
+        "allowedExtraTargets": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/symbolLocation"
+          }
         }
       }
     },

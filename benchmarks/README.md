@@ -85,10 +85,22 @@ Each case supports both benchmark directions:
 - `expectedUnprovenUsages` lists required conservative candidates. Each may be
   returned as either proven or unproven, so increasing analyzer confidence does
   not break the case.
+- `referenceProbe` supplies an additional real source occurrence for
+  occurrence-sensitive reference queries. When the canonical `declaration` has
+  a token, token-based runners query both it and the probe, union the results,
+  and count the probe itself as a known occurrence. When the declaration is an
+  implicit zero-width anchor, such as a Python module represented by its file,
+  the probe is the only token-based query. This is useful for LSPs such as
+  Pyright that expose different sides of an import-alias family depending on
+  where Find References starts. The probe must have the same symbol kind and
+  does not replace the canonical definition target. Runners that can address
+  the canonical semantic declaration directly may continue to do so.
 - `usageLookups` tests usage-to-declaration lookup.
   Each lookup has an `operation`: `declaration`, `definition`, or the temporary
   development-only `profile_default`. Evaluation cases must choose explicitly;
   declaration lookups never fall back to definition, or vice versa.
+  `allowedExtraTargets` may list conservative alternate targets that can
+  accompany the required `expectedDeclaration` but cannot replace it.
   A reviewed negative lookup may set `expectNoMovement: true` and repeat the
   usage location as `expectedDeclaration`; no result and an exact self-target
   pass, while navigation to any other token fails.

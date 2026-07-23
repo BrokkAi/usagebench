@@ -19,10 +19,52 @@ cases:
       - location: { uri: benchmark://source/consumer.py, range: { start: { line: 6, character: 11 }, end: { line: 6, character: 15 } } }
         kind: method
         displayName: save
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/consumer.py, range: { start: { line: 6, character: 11 }, end: { line: 6, character: 15 } } }
+          kind: method
+          displayName: save
+        expectedDeclaration:
+          location: { uri: benchmark://source/precision/services.py, range: { start: { line: 1, character: 8 }, end: { line: 1, character: 12 } } }
+          kind: method
+          displayName: save
+    verification:
+      method: manual_inspection
+      notes: >
+        Child is re-exported from the package barrel and inherits Base.save
+        without overriding it. The separately re-exported Grandchild does
+        override save, so its call is intentionally excluded from Base.save
+        and covered by python-barrel-overridden-member-call.
+        Pyright 1.1.411 returned only client.save() as a Base.save reference
+        and navigated that call exactly to the Base.save definition.
+  - id: python-barrel-overridden-member-call
+    declaration:
+      location: { uri: benchmark://source/precision/services.py, range: { start: { line: 10, character: 8 }, end: { line: 10, character: 12 } } }
+      kind: method
+      displayName: save
+    expectedUsages:
       - location: { uri: benchmark://source/consumer.py, range: { start: { line: 8, character: 15 }, end: { line: 8, character: 19 } } }
         kind: method
         displayName: save
-    verification: { method: manual_inspection, notes: "Child and Grandchild are re-exported from the package barrel and inherit Base.save across files." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/consumer.py, range: { start: { line: 8, character: 15 }, end: { line: 8, character: 19 } } }
+          kind: method
+          displayName: save
+        expectedDeclaration:
+          location: { uri: benchmark://source/precision/services.py, range: { start: { line: 10, character: 8 }, end: { line: 10, character: 12 } } }
+          kind: method
+          displayName: save
+    verification:
+      method: manual_inspection
+      notes: >
+        Grandchild is re-exported through the package barrel but overrides the
+        inherited save method. Its concretely typed call must resolve to the
+        Grandchild.save definition rather than Base.save.
+        Pyright 1.1.411 returned only grandchild.save() as a Grandchild.save
+        reference and navigated that call exactly to the override definition.
   - id: python-barrel-class-construction
     declaration:
       location: { uri: benchmark://source/precision/services.py, range: { start: { line: 5, character: 6 }, end: { line: 5, character: 11 } } }
@@ -32,17 +74,76 @@ cases:
       - location: { uri: benchmark://source/precision/services.py, range: { start: { line: 9, character: 17 }, end: { line: 9, character: 22 } } }
         kind: class
         displayName: Child
+      - location: { uri: benchmark://source/consumer.py, range: { start: { line: 5, character: 12 }, end: { line: 5, character: 17 } } }
+        kind: class
+        displayName: Child
       - location: { uri: benchmark://source/consumer.py, range: { start: { line: 5, character: 20 }, end: { line: 5, character: 25 } } }
         kind: class
         displayName: Child
-    verification: { method: manual_inspection, notes: "Construction through a package-barrel import resolves to the concrete class declaration." }
+    allowedExtraUsages:
+      - location: { uri: benchmark://source/precision/__init__.py, range: { start: { line: 0, character: 22 }, end: { line: 0, character: 27 } } }
+        kind: class
+        displayName: Child
+      - location: { uri: benchmark://source/consumer.py, range: { start: { line: 0, character: 22 }, end: { line: 0, character: 27 } } }
+        kind: class
+        displayName: Child
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/consumer.py, range: { start: { line: 5, character: 20 }, end: { line: 5, character: 25 } } }
+          kind: class
+          displayName: Child
+        expectedDeclaration:
+          location: { uri: benchmark://source/precision/services.py, range: { start: { line: 5, character: 6 }, end: { line: 5, character: 11 } } }
+          kind: class
+          displayName: Child
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Required class usages are
+        the Grandchild superclass, the explicit client annotation, and the
+        Child() construction. Definition navigation from construction targets
+        class Child. The package re-export and consumer import binding remain
+        explicit allowed extras under bindings_optional.
+        Pyright 1.1.411 returned all three required class usages, both optional
+        binding locations, and the exact Child class definition target.
   - id: python-multilevel-barrel-class-construction
     declaration:
       location: { uri: benchmark://source/precision/services.py, range: { start: { line: 9, character: 6 }, end: { line: 9, character: 16 } } }
       kind: class
       displayName: Grandchild
     expectedUsages:
+      - location: { uri: benchmark://source/consumer.py, range: { start: { line: 7, character: 16 }, end: { line: 7, character: 26 } } }
+        kind: class
+        displayName: Grandchild
       - location: { uri: benchmark://source/consumer.py, range: { start: { line: 7, character: 29 }, end: { line: 7, character: 39 } } }
         kind: class
         displayName: Grandchild
-    verification: { method: manual_inspection, notes: "A multilevel subclass re-exported by the package barrel resolves at construction." }
+    allowedExtraUsages:
+      - location: { uri: benchmark://source/precision/__init__.py, range: { start: { line: 1, character: 22 }, end: { line: 1, character: 32 } } }
+        kind: class
+        displayName: Grandchild
+      - location: { uri: benchmark://source/consumer.py, range: { start: { line: 1, character: 22 }, end: { line: 1, character: 32 } } }
+        kind: class
+        displayName: Grandchild
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/consumer.py, range: { start: { line: 7, character: 29 }, end: { line: 7, character: 39 } } }
+          kind: class
+          displayName: Grandchild
+        expectedDeclaration:
+          location: { uri: benchmark://source/precision/services.py, range: { start: { line: 9, character: 6 }, end: { line: 9, character: 16 } } }
+          kind: class
+          displayName: Grandchild
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Required class usages are
+        the explicit grandchild annotation and Grandchild() construction.
+        Definition navigation from construction targets class Grandchild. The
+        package re-export and consumer import binding remain explicit allowed
+        extras under bindings_optional. The Child superclass and
+        grandchild.save() are separate class and method relationships.
+        Pyright 1.1.411 returned both required class usages, both optional
+        binding locations, and the exact Grandchild class definition target.
