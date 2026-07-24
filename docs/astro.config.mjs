@@ -11,7 +11,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'UsageBench',
-      description: 'Analyzer-neutral evidence for source usage and navigation behavior.',
+      description: 'LSP-parity and recurring regression evidence for Bifrost usage analysis.',
       customCss: ['./src/styles/usagebench.css'],
       favicon: '/favicon.svg',
       editLink: {

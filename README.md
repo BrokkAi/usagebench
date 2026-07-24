@@ -1,11 +1,17 @@
 # usagebench
 
-Repository for curated benchmarks around the static analysis task of
-discovering usages of source symbols.
+UsageBench is Bifrost's curated LSP-parity and recurring regression suite for
+the static-analysis task of discovering usages of source symbols.
 
 The Starlight site under [`docs/`](docs/README.md) explains the comparison
 methodology, current Bifrost-versus-LSP results, and case-level language
 differences.
+
+Mature language servers provide the baseline and calibration evidence. Bifrost
+is expected to match them where their behavior agrees with reviewed language
+semantics, and may preserve justified precision improvements or additional
+static coverage. The benchmark format remains analyzer-neutral so future
+competitors can be evaluated against the same source contracts.
 
 The benchmark corpus is authored by source location instead of by an
 analyzer-specific symbol ID. Each case points at a declaration, expected usage
@@ -145,10 +151,12 @@ UsageBench is licensed under the permissive [MIT License](LICENSE.md), covering
 the corpus fixtures, assertions, adapter profiles, and harness code in this
 repository.
 
-## Daily Bifrost Benchmark
+## Recurring Bifrost Regression Run
 
 The daily GitHub Actions workflow in `.github/workflows/benchmark.yml` runs the
-curated corpus against Bifrost on `ubuntu-latest`.
+curated corpus against Bifrost `master` on `ubuntu-latest`. This makes every
+reviewed parity decision, precision edge, and known gap part of a recurring
+regression signal rather than a one-time comparison.
 
 The workflow:
 

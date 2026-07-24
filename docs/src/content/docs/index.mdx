@@ -1,25 +1,39 @@
 ---
-title: UsageBench results
-description: Current cross-analyzer results for source usage and navigation behavior.
+title: Bifrost LSP parity and regression
+description: Reviewed LSP-parity contracts and recurring regression evidence for Bifrost usage analysis.
 tableOfContents: false
 ---
 
-<p class="snapshot-kicker">LEGACY DIAGNOSTIC SNAPSHOT · 16 JULY 2026</p>
+<p class="snapshot-kicker">BIFROST CONFORMANCE · REVIEWED LSP-PARITY CORPUS</p>
 
-<h2 class="landing-headline">Usage lookup, compared at the source-location level</h2>
+<h2 class="landing-headline">Hold usage analysis to the standard developers already trust</h2>
 
-UsageBench measures whether code-navigation analyzers return the same reviewed
-declarations, usages, and navigation targets. The figures below are the legacy
-development-corpus snapshot. They predate exact-range scoring, strict singleton
-navigation, and independent evaluation review, so they are not a publishable
-accuracy aggregate. They remain visible to show what must be reproduced.
+UsageBench is Bifrost's recurring conformance and regression suite for source
+usages and navigation. Its cases are derived from mature language-server tests,
+existing analyzer suites, and difficult real-world edges. Popular LSPs provide
+the baseline and post-review calibration: Bifrost should reach parity wherever
+the LSP behavior matches the reviewed language semantics, and may deliberately
+be more precise or cover additional static edges when the evidence supports it.
 
 All 158 current cases have since completed a
-[first human ground-truth audit](ground-truth-review/). That milestone supports
-case-level regression and diagnosis, while the headline figures remain
-historical until every analyzer is rerun against the reviewed contracts.
+[first human ground-truth audit](ground-truth-review/). The corpus now preserves
+those decisions as executable regression contracts, and the daily workflow runs
+them against Bifrost `master` so a previously satisfied semantic edge cannot
+quietly disappear.
 
-<div class="result-summary" aria-label="Current result summary">
+The report shape remains analyzer-neutral. Language servers are the first
+comparison set, not a permanent limit: future analyzers can be added through the
+same source-location contract without changing the authored ground truth.
+
+## Historical score snapshot
+
+The figures below are the legacy 16 July development-corpus snapshot. They
+predate the completed audit, exact-range scoring, and strict singleton
+navigation, so they have **not** been updated and are not a publishable accuracy
+aggregate. They remain visible as reproduction evidence until every analyzer is
+rerun against the reviewed contracts.
+
+<div class="result-summary" aria-label="Historical result summary">
   <div class="result-metric">
     <span>Bifrost exact</span>
     <strong>136 <small>/ 141</small></strong>
@@ -85,10 +99,9 @@ All 136 exact Bifrost outcomes are expected passes in the current baseline. The
 five expected gaps are the cases that remain non-exact in the current run.
 
 <div class="evidence-note">
-  The strongest pattern is not one score: import and re-export policy explains
-  19 near misses, while the hard results split across identity, recall,
-  implementation-family grouping, dynamic-language coverage, and navigation
-  semantics.
+  The goal is not to maximize one legacy score. It is to turn each reviewed
+  agreement, justified precision improvement, and confirmed gap into a stable
+  contract that Bifrost must continue to satisfy.
 </div>
 
 ## Read beyond the aggregate

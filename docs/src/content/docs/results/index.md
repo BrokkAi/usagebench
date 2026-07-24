@@ -13,6 +13,13 @@ reviewed all 158 current cases, but the table below has not been regenerated
 from those corrected contracts. Review completion increases trust in individual
 assertions; it does not retroactively validate this aggregate.
 
+UsageBench's current operational role is therefore the recurring Bifrost
+regression suite: language servers calibrate the parity target, reviewed
+language semantics settle disagreements, and accepted outcomes become contracts
+that Bifrost `master` is expected to keep satisfying. A future synchronized
+report can extend the same analyzer-neutral comparison to additional
+competitors.
+
 This snapshot was captured on macOS arm64 on 2026-07-16. Every measured server
 completed with zero runner errors. “Allowed-policy” means that all required
 locations and navigation checks passed and the only extras were import bindings,
