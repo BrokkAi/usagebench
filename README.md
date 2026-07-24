@@ -1,11 +1,31 @@
 # usagebench
 
-Repository for curated benchmarks around the static analysis task of
-discovering usages of source symbols.
+UsageBench is Bifrost's curated LSP-parity and recurring regression suite for
+the static-analysis task of discovering usages of source symbols.
 
 The Starlight site under [`docs/`](docs/README.md) explains the comparison
 methodology, current Bifrost-versus-LSP results, and case-level language
 differences.
+
+Mature language servers provide the baseline and calibration evidence. Bifrost
+is expected to match them where their behavior agrees with reviewed language
+semantics, and may preserve justified precision improvements or additional
+static coverage. The benchmark format remains analyzer-neutral so future
+competitors can be evaluated against the same source contracts.
+
+LSPs primarily serve developers through interactive editor features. Bifrost
+serves repository code analysis and navigation for machine consumers, especially
+coding agents and static-analysis tools. UsageBench measures their overlapping
+usage and navigation contract: parity preserves the quality developers expect,
+while reviewed Bifrost-specific edges exercise the analysis substrate agents
+depend on. It does not compare either product's complete feature surface.
+
+The synchronized 24 July 2026 development run compares the 131 cases scoreable
+by both sides: Bifrost is exact on 116 and the reference language servers on 95.
+Both are exact on 84 cases; 32 are exact only for Bifrost, 11 only for the LSP,
+and 4 for neither. See the
+[current result](docs/src/content/docs/results/index.md) for the full
+denominators, capability boundaries, versions, and evidence limitations.
 
 The benchmark corpus is authored by source location instead of by an
 analyzer-specific symbol ID. Each case points at a declaration, expected usage
@@ -46,10 +66,12 @@ of truth for issue #8; the older broad
 Java/Go/Python generator stack has been removed from the active benchmark path.
 
 Each document is schema v2 and explicitly labeled `development`,
-`analyzer_informed`, and `legacy_unattributed`. It is a regression and diagnosis
-corpus, not yet an independently reviewed evaluation partition. Each fixture
-case records `verification.method: manual_inspection` with a short note
-explaining how its locations were checked.
+`analyzer_informed`, and `legacy_unattributed`. All 158 current cases across 35
+documents have completed a first human review, preserved in
+[`benchmarks/reviews/2026-07-17-DavidBakerEffendi.md`](benchmarks/reviews/2026-07-17-DavidBakerEffendi.md).
+This remains a regression and diagnosis corpus, not an independently reviewed
+evaluation partition: promotion still requires a second reviewer,
+preregistered selection, and a freeze ID.
 
 ## Analyzer Runners
 
@@ -143,10 +165,12 @@ UsageBench is licensed under the permissive [MIT License](LICENSE.md), covering
 the corpus fixtures, assertions, adapter profiles, and harness code in this
 repository.
 
-## Daily Bifrost Benchmark
+## Recurring Bifrost Regression Run
 
 The daily GitHub Actions workflow in `.github/workflows/benchmark.yml` runs the
-curated corpus against Bifrost on `ubuntu-latest`.
+curated corpus against Bifrost `master` on `ubuntu-latest`. This makes every
+reviewed parity decision, precision edge, and known gap part of a recurring
+regression signal rather than a one-time comparison.
 
 The workflow:
 

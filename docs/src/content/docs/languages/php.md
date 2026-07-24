@@ -3,25 +3,22 @@ title: PHP — Bifrost and Intelephense
 description: Compare namespaces, imports, traits, interfaces, receivers, properties, and static members.
 ---
 
-| Runner | Exact | Policy near | Hard | Not planned |
+| Runner | Exact | Position unverified | Hard | Unsupported |
 |---|---:|---:|---:|---:|
-| Bifrost | 12 | 0 | 0 unexpected | 1 |
-| Intelephense | 9 | 1 | 2 | 1 |
+| Bifrost | 12 | 0 | 2 | 0 |
+| Intelephense | 9 | 0 | 1 | 4 |
 
 ## Shared strengths
 
-Both analyzers satisfy class construction, constants, ordinary methods and
-properties, repository calls, static qualifiers, static properties, trait
-method calls, and `use`-alias static calls.
-
-Intelephense's imported-function case contains every required call plus the
-`use function` binding, so it is a policy-only near miss.
+Both analyzers can score ten common cases and are exact together on nine.
+Bifrost alone is exact on class construction because Intelephense returns both
+the class and explicit constructor as navigation targets.
 
 ## Bifrost recall edge
 
-Bifrost returns the interface implementation reference and the call through an
-interface-typed receiver expected by the two remaining cases. Intelephense omits
-those edges, with one associated reverse-navigation miss.
+Bifrost also scores four Declaration-oriented cases that Intelephense does not
+advertise. Its two current hard results are exact-range mismatches on ordinary
+and static property tokens, both outside the shared denominator.
 
 The Bifrost result is supported by its language-specific namespace, hierarchy,
 receiver, and member-resolution facts. The fixture establishes the returned

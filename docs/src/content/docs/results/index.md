@@ -1,37 +1,95 @@
 ---
-title: Legacy result snapshot
-description: Historical 2026-07-16 diagnostic results produced before exact-range and evaluation-corpus hardening.
+title: Current synchronized result
+description: Exact-range Bifrost and language-server results from the reviewed development corpus on 24 July 2026.
 ---
 
-> **Historical, not an evaluation result.** This snapshot used line-level
-> matching, accepted expected navigation targets among alternates, and predates
-> the schema-v2 corpus partition and independent-review requirements. It must be
-> re-run under the hardened scorer before its aggregate is cited.
+> **Development evidence, not an evaluation leaderboard.** All 158 cases have
+> completed a first human review, but the corpus remains analyzer-informed and
+> `legacy_unattributed`. A second independent review, preregistration, and an
+> immutable freeze are still required for evaluation promotion.
 
-This snapshot was captured on macOS arm64 on 2026-07-16. Every measured server
-completed with zero runner errors. “Allowed-policy” means that all required
-locations and navigation checks passed and the only extras were import bindings,
-re-export bindings, or export metadata.
+This synchronized native run replaces the legacy 16 July figures. Every runner
+used the same UsageBench revision and hardened scorer. All eleven processes—one
+Bifrost run and ten primary LSP profiles—completed without runner errors.
 
-| Language | Server | Exact | Allowed-policy | Hard disagreement | Planned |
-|---|---|---:|---:|---:|---:|
-| C++ | clangd | 6 | 0 | 9 | 15 |
-| Go | gopls | 9 | 0 | 1 | 10 |
-| Rust | rust-analyzer | 9 | 2 | 3 | 14 |
-| JavaScript, TypeScript | TypeScript language server | 10 | 9 | 2 | 21 |
-| Python | Pyright | 6 | 4 | 1 | 11 |
-| PHP | Intelephense | 9 | 1 | 2 | 12 |
-| Ruby | Ruby LSP | 1 | 0 | 19 | 20 |
-| Java | Eclipse JDT LS | 9 | 1 | 1 | 11 |
-| C# | Roslyn | 11 | 0 | 3 | 14 |
-| Scala | Metals | 8 | 2 | 2 | 12 |
-| **Total** | **10 servers** | **78** | **19** | **43** | **140** |
+| Run fact | Value |
+|---|---|
+| Date | 24 July 2026 |
+| UsageBench revision | `78e66e5dd3589d4543f1b19a8b3566fa9afd644a` |
+| Bifrost revision | `782522b245fc86e3d39b1cdc0488553a1d262212` (`origin/master`) |
+| Host | macOS arm64, native and host-specific |
+| Scoring | Exact complete ranges, strict singleton navigation, optional classified bindings |
 
-There are also 7 not-planned and 3 unsupported LSP cases outside the planned
-denominator. The same corpus run against Bifrost commit
-`bdafcb7f` produced 136 passes, 5 known expected failures, 7 not-planned cases,
-2 unsupported cases, and no improvements, unexpected hard failures, or runner
-errors.
+## Shared-case parity matrix
+
+The primary comparison uses the 131 cases whose authored operation is scoreable
+by both Bifrost and the corresponding language server.
+
+| Outcome | Cases |
+|---|---:|
+| Exact for both | 84 |
+| Exact only for Bifrost | 32 |
+| Exact only for the language server | 11 |
+| Exact for neither | 4 |
+| **Shared scoreable total** | **131** |
+
+Bifrost is therefore exact on **116/131** shared cases; the reference LSPs are
+exact on **95/131**. Nine of the 32 Bifrost-only exact cases are LSP
+`position_unverified` results: the LSP reached the expected line but did not
+return the one complete target range required by the contract. The other 23 are
+hard LSP disagreements.
+
+This supports the project's parity-or-better direction on the current corpus.
+It does not establish general superiority: the corpus is small, analyzer-
+informed, and still underrepresents compiler-generated and external-dependency
+semantics.
+
+## Bifrost full-corpus result
+
+Bifrost can score 152 of the 158 authored cases.
+
+| Language | Exact | Expected gap | Other non-exact | Scoreable | Unsupported | Not planned |
+|---|---:|---:|---:|---:|---:|---:|
+| C++ | 12 | 1 | 2 | 15 | 1 | 0 |
+| C# | 14 | 0 | 2 | 16 | 0 | 0 |
+| Go | 9 | 0 | 2 | 11 | 1 | 0 |
+| Java | 11 | 0 | 0 | 11 | 0 | 0 |
+| JavaScript, TypeScript | 20 | 0 | 2 | 22 | 0 | 1 |
+| PHP | 12 | 0 | 2 | 14 | 0 | 0 |
+| Python | 10 | 0 | 3 | 13 | 0 | 2 |
+| Ruby | 19 | 1 | 0 | 20 | 0 | 1 |
+| Rust | 14 | 1 | 0 | 15 | 0 | 0 |
+| Scala | 12 | 0 | 3 | 15 | 0 | 0 |
+| **Total** | **133** | **3** | **16** | **152** | **2** | **4** |
+
+The three expected gaps are the C++ function-like macro expansion, Ruby
+self-construction through `require_relative`, and Rust declarative-macro-
+generated function reference. The 16 other non-exact results remain visible as
+current analyzer gaps or newly reviewed contract differences.
+
+## Language-server result
+
+The ten primary profiles can score 131 cases. Another 23 require an operation
+the server does not advertise, and 4 runtime-driven cases are not planned.
+
+| Language | Server | Exact | Position unverified | Hard | Scoreable | Unsupported | Not planned |
+|---|---|---:|---:|---:|---:|---:|---:|
+| C++ | clangd | 12 | 0 | 3 | 15 | 1 | 0 |
+| C# | Roslyn | 13 | 0 | 3 | 16 | 0 | 0 |
+| Go | gopls | 6 | 0 | 0 | 6 | 6 | 0 |
+| Java | Eclipse JDT LS | 3 | 5 | 3 | 11 | 0 | 0 |
+| JavaScript, TypeScript | TypeScript LS | 13 | 2 | 2 | 17 | 5 | 1 |
+| PHP | Intelephense | 9 | 0 | 1 | 10 | 4 | 0 |
+| Python | Pyright | 13 | 0 | 0 | 13 | 0 | 2 |
+| Ruby | Ruby LSP | 5 | 3 | 8 | 16 | 4 | 1 |
+| Rust | rust-analyzer | 12 | 0 | 3 | 15 | 0 | 0 |
+| Scala | Metals | 9 | 0 | 3 | 12 | 3 | 0 |
+| **Total** | **10 servers** | **95** | **10** | **26** | **131** | **23** | **4** |
+
+The previous `policy near` category is now zero by construction. Import,
+re-export, and export-metadata locations are classified as optional bindings:
+they remain recorded in raw results but do not make an otherwise exact case
+non-exact.
 
 ## Version envelope
 
@@ -39,7 +97,7 @@ errors.
 |---|---|---|
 | clangd | 22.1.6 | Apple clangd 21.0.0 |
 | gopls | 0.23.0 | v0.23.0 |
-| rust-analyzer | 2026-07-13 | 0.3.2971-standalone |
+| rust-analyzer | 2026-07-13 | 0.3.2971-standalone, 2026-07-13 |
 | TypeScript language server | 5.3.0 with TypeScript 5.9.3 | Not reported |
 | Pyright | 1.1.411 | Not reported |
 | Intelephense | 1.18.5 | Not reported |
@@ -48,41 +106,19 @@ errors.
 | Roslyn | vscode-csharp 2.140.9 | Not reported |
 | Metals | 1.6.7 | 1.6.7 |
 
-The clangd row is explicitly a result for the resolved Apple clangd build, not
-for upstream clangd 22.1.6. Missing server-reported versions are retained as
-missing rather than replaced with the requested release.
+The clangd row is explicitly for the resolved Apple clangd build, not upstream
+clangd 22.1.6. Package-launched servers retain their exact requested versions
+even when the protocol does not report a version.
 
 ## What the aggregate hides
 
-The hard-disagreement column combines several different phenomena:
+The [case comparison](case-comparison/) separates Bifrost-only exact, LSP-only
+exact, neither-exact, unsupported, and not-planned cases. The language pages
+explain the reviewed semantics behind important deltas.
 
-- missing reviewed usage locations;
-- extra declarations despite `includeDeclaration: false`;
-- intentional implementation-family or constructor grouping;
-- alias or module navigation to a related surface;
-- a selector that cannot be represented as an LSP cursor token; and
-- dynamic-language or generated-symbol boundaries.
-
-Consequently, `78/140` is not a global LSP accuracy score, and `136/141` is not
-a global Bifrost accuracy score. Read the [case comparison](case-comparison/)
-and the language pages before interpreting a row.
-
-## Cross-analyzer pattern summary
-
-| Pattern | Evidence in this snapshot | Interpretation |
-|---|---|---|
-| Binding-surface policy | 19 LSP near misses | The server includes imports/re-exports that UsageBench excludes from true usages. Not a correctness verdict. |
-| Implementation-family expansion | Go, Java, C#, Rust | Related interface, trait, anonymous, or concrete members are grouped. This is not by itself object-insensitivity. |
-| Alias/re-export identity | C++, C#, Python, Rust | Navigation or reference identity stops at a binding, original symbol, or module surface. |
-| CommonJS resolution | JavaScript | Bifrost satisfies all three authored cases; TypeScript LS agrees on the barrel-member case but omits the destructured-function and barrel-class usages. |
-| Dynamic Ruby semantics | Ruby | Bifrost's language-specific graph covers many corpus constructs that Ruby LSP omits or broadens; the factory-return case passes, while self-construction remains a Bifrost gap. |
-| Build and readiness | Roslyn, Metals, TypeScript LS, rust-analyzer | Correct project hydration and settle behavior materially changed results; runner readiness must be removed before correctness interpretation. |
-
-## Missing evidence
-
-The current comparison does not measure time or memory. It now has one
-source-anchored Rust declarative-macro pair and one C++ function-like macro
-pair, but still underrepresents broader macro expansion, generated declarations,
-synthetic members, conditional compilation, and external dependency symbols.
-Those gaps matter because they are plausible strengths of compiler-backed
-language servers.
+No current result measures indexing time, warm-query latency, peak memory,
+external dependencies, or broad real-world accuracy. Compiler-backed language
+servers are also likely to be stronger on macro expansion, generated
+declarations, synthetic members, conditional compilation, and SDK symbols.
+Those areas should grow as reviewed parity cases rather than being inferred from
+this score.

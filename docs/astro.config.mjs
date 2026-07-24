@@ -11,7 +11,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'UsageBench',
-      description: 'Analyzer-neutral evidence for source usage and navigation behavior.',
+      description: 'LSP-parity and recurring regression evidence for Bifrost usage analysis.',
       customCss: ['./src/styles/usagebench.css'],
       favicon: '/favicon.svg',
       editLink: {
@@ -30,13 +30,14 @@ export default defineConfig({
           items: [
             { label: 'Overview', slug: 'overview' },
             { label: 'Comparison methodology', slug: 'methodology' },
+            { label: 'Human ground-truth audit', slug: 'ground-truth-review' },
             { label: 'Reproduce the comparison', slug: 'reproduce' },
           ],
         },
         {
           label: 'Results and findings',
           items: [
-            { label: 'Full result snapshot', slug: 'results' },
+            { label: 'Current synchronized result', slug: 'results' },
             { label: 'Case-by-case comparison', slug: 'results/case-comparison' },
           ],
         },

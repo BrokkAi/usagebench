@@ -1,147 +1,94 @@
 ---
 title: Case comparison
-description: Case-level disagreements between Bifrost and each measured language server.
+description: Cases that separate Bifrost from the reference language servers in the synchronized 24 July 2026 run.
 ---
 
-This page lists every non-exact case plus exact controls needed to interpret the
-macro and CommonJS comparisons. “Bifrost pass” means the pinned Bifrost run
-satisfied the authored contract; “Bifrost gap” means a documented expected
-failure. LSP near misses are policy-only binding/export extras. An LSP hard
-result means contract disagreement, not an automatic defect verdict.
+This page expands the **131 cases scoreable by both sides** in the synchronized
+24 July development run. Exact means complete token ranges, no unallowed extras,
+and the one reviewed navigation target. A language-server disagreement is a
+contract result, not an automatic defect verdict.
 
-> This is the case-level audit for the legacy 2026-07-16 development run. Its
-> labels preserve that run's former line-level and policy-near-miss semantics;
-> they are not schema-v2 evaluation outcomes.
+Import, re-export, and export-metadata bindings are optional. They remain
+visible in reports but do not make an otherwise exact case non-exact.
 
-## C++
+## Shared-case overview
 
-| Case | Bifrost | clangd | Observed distinction |
-|---|---|---|---|
-| `cpp-function-call` | Gap | Exact | Human review separated the out-of-line definition from ordinary usages. Clangd returns only the call and navigates exactly to the body; Bifrost returns the definition as an extra usage and returns both header and body for definition navigation. |
-| `cpp-method-call` | Gap | Exact | Human review separated the out-of-line method definition from the concrete call. Clangd is exact; Bifrost returns the definition as an extra usage and returns both header and body for definition navigation. |
-| `cpp-out-of-line-member-call` | Gap | Exact | Human review excluded the out-of-line body and retained only the concrete call, comment/string exclusions, and exact body navigation. Clangd is exact; Bifrost returns the body as an extra usage and returns header/body `multiple_targets`. |
-| `cpp-overload-string-call-is-narrow` | Gap | Exact | Human review requires only the string call and exact `select(const char*)` body. Clangd is exact. Bifrost preserves the forward overload usage but returns its body as an extra and broadens reverse navigation across both overload declarations and bodies. |
-| `cpp-field-access` | Unsupported | Exact | Human review requires declaration navigation from the field read. Clangd is exact; Bifrost does not expose declaration navigation separately from definition lookup, so the case is a capability boundary rather than a semantic failure. |
-| `cpp-constant-access` | Unsupported | Exact | Human review requires declaration navigation to the inline constant binding. Clangd is exact; Bifrost exposes the same declaration-navigation capability boundary as the field case. |
-| `cpp-parity-overload-string-function-call` | Gap | Exact | Human review retained only the string call and requires exact definition navigation to `format(const std::string&)`. Clangd is exact. Bifrost preserves overload precision but returns the body as an extra usage and returns the string declaration/body as `multiple_targets`. |
-| `cpp-class-reference` | Legacy | Hard | Human review added the construction expression as a required class usage. Clangd finds it but also expands the class query to constructor declaration/definition tokens; the C++ language and Clang AST classify those as constructor declarations rather than ordinary class usages. Bifrost requires a rerun against the corrected expectation. |
-| `cpp-constructor-call` | Legacy | Exact | Human review confirmed that the functional-construction token names the class type while causing a constructor call. Clangd returns the reviewed class definition exactly; Bifrost requires a rerun because its retained pass used the rejected constructor-declaration target. |
-| `cpp-parity-using-alias-constructor` | Gap | Hard | Human review split source-level alias identity from underlying type identity: declaration navigation reaches `HandlerAlias`, while type-definition navigation reaches `ConsoleHandler`. Clangd passes both operations but omits three required transitive/class-qualifier references and adds the constructor declaration. Bifrost finds all four usages at line precision, but declaration navigation is unsupported and C++ type lookup is not implemented. |
-| `cpp-parity-virtual-base-method-call` | Unsupported | Exact | Human review made declaration navigation explicit for the pure-virtual base member. Clangd returns only the base-reference call and navigates exactly to `BaseHandler::handle`. Bifrost finds the required usage at line precision but has no distinct declaration-navigation operation. |
-| `cpp-parity-concrete-override-method-call` | Error | Hard | Human review retained only the concrete-receiver call and requires definition navigation to the unique out-of-line override body. Clangd finds the call but adds the base declaration and base-typed call, then navigates only to the override header declaration. Bifrost hit a repeatable read-only analyzer-store error; one partial reverse result returned header/body `multiple_targets`, so no complete semantic result is claimed. |
-| `cpp-parity-template-function-call` | Position-unverified | Exact | Human review made definition navigation to the authored template body explicit. Clangd is exact. Bifrost finds the specialization call and resolves it to the template body, but its C++ results are line-level rather than token-level. |
-| `cpp-parity-direct-function-call-control` | Position-unverified | Exact | Human review made definition navigation explicit. Clangd is exact. Bifrost finds the direct call and inline definition without missing or extra lines, but returns line-level rather than token-level C++ locations. |
-| `cpp-parity-function-like-macro-expanded-call` | Gap | Exact | Human review confirmed the visible macro argument as the stable usage/navigation token, corroborated exactly by clangd. Bifrost finds that argument in the forward direction at line precision but cannot navigate it back to the inline function definition. |
-| `cpp-parity-compile-commands-unsupported` | Unsupported | Exact (opt-in) | The case now contains a guarded call and declaration lookup. `clangd-configured.json` defines `ENABLE_PARITY_FEATURE` and passes exactly with `--include-unsupported`; ordinary clangd fails the same expectations while the branch is inactive. Default Bifrost and cross-tool reports retain the unsupported boundary. |
+| Language | Shared | Both exact | Bifrost only | LSP only | Neither |
+|---|---:|---:|---:|---:|---:|
+| C++ | 15 | 11 | 1 | 1 | 2 |
+| C# | 16 | 11 | 3 | 2 | 0 |
+| Go | 6 | 5 | 0 | 1 | 0 |
+| Java | 11 | 3 | 8 | 0 | 0 |
+| JavaScript | 8 | 3 | 3 | 2 | 0 |
+| TypeScript | 9 | 8 | 1 | 0 | 0 |
+| PHP | 10 | 9 | 1 | 0 | 0 |
+| Python | 13 | 10 | 0 | 3 | 0 |
+| Ruby | 16 | 5 | 10 | 0 | 1 |
+| Rust | 15 | 11 | 3 | 1 | 0 |
+| Scala | 12 | 8 | 2 | 1 | 1 |
+| **Total** | **131** | **84** | **32** | **11** | **4** |
 
-## C#
+## Exact only for Bifrost
 
-| Case | Bifrost | Roslyn | Observed distinction |
-|---|---|---|---|
-| `csharp-parity-interface-receiver-method-call` | Pass | Hard | Roslyn includes a related implementation-family call. |
-| `csharp-parity-concrete-implementation-method-call` | Pass | Hard | Roslyn includes a related interface/implementation-family call. |
-| `csharp-parity-namespace-alias-constructor` | Pass | Hard | Reverse navigation resolves to the namespace alias binding rather than the underlying class declaration. |
+These 32 cases satisfy the reviewed contract in Bifrost but not in the
+reference LSP. Nine LSP results are `position_unverified`; the remaining 23 are
+hard disagreements.
 
-## Go
+| Language | Separating cases | Current distinction |
+|---|---|---|
+| C++ | `cpp-parity-concrete-override-method-call` | clangd expands the implementation family beyond the concrete receiver. |
+| C# | `csharp-parity-interface-receiver-method-call`, `csharp-parity-concrete-implementation-method-call`, `csharp-parity-buffer-implementation-method-call` | Roslyn returns related interface/implementation-family calls beyond the reviewed static identity. |
+| Java | `java-service-method-call`, `java-static-field-access`, `java-nested-class-constructor`, `java-parity-static-import-method-call`, `java-parity-interface-receiver-method-call`, `java-parity-concrete-implementation-method-call`, `java-lambda-body-member-call`, `java-static-qualified-method-call` | JDT LS has five imprecise target ranges and three hard declaration/family differences; Bifrost is exact on all eleven Java cases. |
+| JavaScript | `js-class-construction`, `js-parity-commonjs-destructured-function-call`, `js-commonjs-barrel-class-construction` | TypeScript LS broadens constructor navigation in one case and omits two CommonJS edges. |
+| TypeScript | `ts-default-class-import-and-construction` | TypeScript LS reaches the expected class plus an enclosing constructor-body range, so strict singleton navigation is position-unverified. |
+| PHP | `php-class-construction` | Intelephense returns both the class and explicit constructor; Bifrost returns the reviewed class target alone. |
+| Ruby | `ruby-relative-nested-constant`, `ruby-include-instance-mixin`, `ruby-prepend-method-precedence`, `ruby-top-level-implicit-self-method-call`, `ruby-singleton-method-dispatch`, `ruby-class-variable-access`, `ruby-parity-autoload-constant-definition`, `ruby-parity-attr-reader-method-call`, `ruby-parity-alias-method-call`, `ruby-factory-return-member-call` | Ruby LSP spans range, declaration-inclusion, mixin, alias, generated-reader, singleton, and factory-return boundaries. No single approximation label explains the group. |
+| Rust | `rust-parity-associated-type-definition-no-movement`, `rust-parity-associated-type-use-definition`, `rust-ufcs-trait-method-through-barrel` | Bifrost keeps associated-type owner identity and the UFCS trait member narrower than rust-analyzer. |
+| Scala | `scala-class-construction`, `scala-object-apply-call` | Bifrost separates class/companion identity and connects the visible application to the authored `apply` member. |
 
-| Case | Bifrost | gopls | Observed distinction |
-|---|---|---|---|
-| `go-pointer-receiver-method-call` | Exact | Exact | The reviewed contract requires the exact concrete call and records the interface-typed call as an unproven implementation-family candidate. gopls expands references across that family while preserving distinct concrete and interface navigation targets; Bifrost satisfies the same two-tier contract. |
-| `go-dot-import-concrete-receiver-call` | Gap | Exact | Both analyzers return the reviewed concrete calls plus the conservative interface-family candidate. gopls navigates each concrete selector to `Worker.Record`; Bifrost instead rejects both definition lookups with an incorrect local-binding-shadow diagnosis. |
-| `go-interface-receiver-method-call` | Gap | Exact | The required usage keeps its static `Recorder.Record` identity, while both concrete calls are conservative implementation-family candidates. gopls returns the complete two-tier family. Bifrost finds the required interface call but omits both candidates. |
-| Field, constant, and variable declaration cases | Unsupported | Unsupported | Both analyzers return the reviewed reference sets. Neither exposes Go declaration navigation as a distinct operation, and the harness deliberately does not substitute definition navigation. |
+## Exact only for the language server
 
-## Java
+These 11 cases are the clearest current Bifrost parity backlog.
 
-| Case | Bifrost | JDT LS | Observed distinction |
-|---|---|---|---|
-| `java-service-class-construction` | Gap | Exact | Bifrost misses two `Service` qualifiers in `Service.Repository`. |
-| `java-nested-class-constructor` | Gap | Exact | Bifrost misses the nested `Repository` field and constructor-parameter type usages. |
-| `java-parity-static-import-method-call` | Pass | Near | JDT LS additionally returns the static-import binding. |
-| `java-parity-concrete-implementation-method-call` | Pass | Hard | Policy difference: JDT LS expands the concrete-method query across the implementation family and includes an anonymous `Handler` call. The reviewed ground truth keeps concrete method identity narrow, so this is documented rather than accepted as an allowed extra. |
+| Language | Separating cases | Current Bifrost gap |
+|---|---|---|
+| C++ | `cpp-parity-function-like-macro-expanded-call` | Does not navigate the visible macro argument to the expanded function definition. |
+| C# | `csharp-parity-namespace-alias-constructor`, `csharp-parity-extension-method-call` | Navigates the alias to the namespace surface and does not resolve the extension receiver. |
+| Go | `go-dot-import-concrete-receiver-call` | Misclassifies both imported concrete member selectors as shadowed local bindings. |
+| JavaScript | `js-parity-computed-string-literal-method-call`, `js-commonjs-barrel-member-call` | Misses the computed string-literal call and the member immediately following `new Client()` through a destructured barrel. |
+| Python | `python-module-import`, `python-parity-reexported-class-alias-classmethod`, `python-barrel-inherited-member-call` | Misses module declaration navigation, one alias-site usage, and a narrow inherited-member contract. |
+| Rust | `rust-parity-macro-generated-function-reference` | Does not expand the declarative macro to recover the generated declaration and call. |
+| Scala | `scala-parity-case-class-generated-construction-and-copy` | Handles construction but cannot resolve the generated `copy` receiver. |
 
-## JavaScript and TypeScript
+## Exact for neither
 
-| Case group | Bifrost | TypeScript LS | Observed distinction |
-|---|---|---|---|
-| Nine ES import/re-export cases | Pass | Near | Required references agree; TypeScript LS also returns binding/export locations. |
-| `js-parity-commonjs-destructured-function-call` | Pass | Hard | TypeScript LS omits the destructured CommonJS function call. |
-| `js-commonjs-barrel-class-construction` | Pass | Hard | TypeScript LS omits the construction reached through the CommonJS barrel. |
-| `js-class-construction` | Exact | Position-unverified | Both return the reviewed construction references. Bifrost navigates to the canonical class token exactly; TypeScript LS also returns the allowed explicit constructor target, but its range spans the enclosing constructor body rather than the authored token. |
-| `js-commonjs-barrel-member-call` | Gap | Exact | Both analyzers return both calls. TypeScript LS navigates both exactly; Bifrost resolves the factory-returned receiver but cannot navigate `.request()` immediately following `new Client()` through the destructured barrel binding. |
-| `js-parity-computed-string-literal-method-call` | Gap | Exact | TypeScript LS returns and navigates both the dot call and `constructed["finish"]()` exactly. Bifrost misses the computed string-literal call and cannot navigate its literal token to `Task.finish`. |
-| Eight reviewed TypeScript function, method, class, JSX, and type-lookup cases | Exact | Exact | Both analyzers return the reviewed concrete references and navigation/type targets; import and re-export bindings remain optional metadata. |
-| `ts-default-class-import-and-construction` | Exact | Position-unverified | Both return the two constructions and canonical class target. TypeScript LS additionally returns the allowed explicit constructor target, but spans its enclosing body instead of the authored token. |
-| `ts-object-property-access`, `ts-type-annotation-through-barrel`, `ts-parity-interface-property-access` | Exact | Unsupported | Bifrost passes the reviewed Declaration operations exactly. TypeScript LS does not advertise Declaration; separate ordinary Definition probes reach the exact authored property or interface declarations. |
+| Language | Case | Current distinction |
+|---|---|---|
+| C++ | `cpp-class-reference` | Bifrost misses a required class usage; clangd adds constructor-family tokens. |
+| C++ | `cpp-parity-using-alias-constructor` | Bifrost navigates declaration identity to the underlying class and lacks C++ type lookup; clangd misses the alias usage and adds constructor-family locations. |
+| Ruby | `ruby-require-relative-class-construction` | Bifrost misses the class self-construction; Ruby LSP reaches the expected lines but not exact token ranges. |
+| Scala | `scala-parity-trait-method-implementation` | Bifrost over-expands to a concrete call while Metals omits the reviewed implementation edge. |
 
-## PHP
+## Capability boundary
 
-| Case | Bifrost | Intelephense | Observed distinction |
-|---|---|---|---|
-| `php-class-construction` | Exact | Hard | Both analyzers return the construction reference. Bifrost navigates to the canonical class token; Intelephense returns both that class token and `__construct`, two reasonable destinations that the current strict singleton lookup schema cannot express as alternatives. |
-| `php-function-import-call` | Exact | Exact | Under the reviewed `bindings_optional` policy, both analyzers return the bare imported-function call and navigate exactly to the authored function body. |
-| `php-parity-interface-method-implementation` | Exact | Exact | Human review removed the implementation definition from ordinary usages and records the concrete call as an unproven interface-family candidate. Both analyzers return that candidate without returning the implementation definition. |
-| `php-parity-concrete-implementation-method-call` | Exact | Exact | Both analyzers return the same statically concrete call and navigate precisely to `EmailNotifier::notify`, even though their interface reference query also exposes the call as a family candidate. |
-| `php-interface-typed-receiver-call` | Unsupported | Unsupported | Both analyzers return the exact interface-typed reference set. The case requires declaration navigation to the bodyless interface member, but neither adapter exposes a distinct declaration operation. |
-| `php-property-access` | Gap | Unsupported | Intelephense returns all three instance-property references exactly and its definition fallback selects the whole `$last` declaration token. Bifrost's ordinary analysis also finds all three when queried directly by the fully qualified identifier, but its location API does not accept the sigil-inclusive declaration cursor used by the reviewed contract; distinct declaration navigation is unsupported by both adapters. |
-| `php-constant-access` | Unsupported | Unsupported | Both analyzers return the exact constant-reference set, but neither adapter exposes the required declaration-navigation operation separately from definition lookup. |
-| `php-parity-static-property-access` | Gap | Unsupported | Intelephense returns the whole `$sent` token for both references and its definition fallback selects the whole declaration token. Bifrost finds both references when queried directly, but requires an identifier-subtoken cursor and returns ranges that omit `$`; its distinct declaration operation is also unsupported. |
-| `php-parity-magic-get-no-ordinary-usage` | Exact | Exact | Both analyzers correctly return no ordinary `__get` references. The sound implicit runtime edge from `dynamicName` is reserved for a future runtime-handler or call-target operation rather than cross-name definition navigation. |
+Twenty-three cases are unsupported by the corresponding LSP profile because
+the authored operation is not advertised: 6 Go, 5 JavaScript/TypeScript, 4 PHP,
+4 Ruby, 3 Scala, and 1 C++. Bifrost exactly satisfies 17 of them, is non-exact
+on 4, and shares the unsupported boundary on 2 configured-build cases.
 
-## Python
-
-| Case group | Bifrost | Pyright | Observed distinction |
-|---|---|---|---|
-| Four import/barrel cases | Pass | Near | Required uses agree; Pyright additionally returns imports, re-exports, or `__all__` metadata. |
-| `python-parity-reexported-class-alias-classmethod` | Pass | Hard | Pyright omits two alias-site references and returns one original-symbol location outside the binding policy. |
-| `python-module-import` | Pass | Unsupported | The authored zero-width module selector has no LSP cursor token; Bifrost resolves it through symbol selection. |
-
-## Ruby
-
-| Case group | Bifrost | Ruby LSP | Observed distinction |
-|---|---|---|---|
-| Constants, mixins, singleton methods, aliases, autoload, `attr_reader`, class variables, factory/lexical constants | Mostly pass | Hard | Ruby LSP either omits expected dynamic-language edges or returns declaration/same-name locations outside the contract. The individual result does not isolate one approximation mechanism. |
-| `ruby-factory-return-member-call` | Pass | Hard | Bifrost satisfies the factory-result call contract; Ruby LSP misses the expected call and returns an extra declaration-like location. |
-| `ruby-require-relative-class-construction` | Gap | Hard | Bifrost misses the class's self-construction; Ruby LSP finds it but also returns the class declaration, so neither is exact. |
-| `ruby-singleton-field-access` | Exact | Exact | The only planned exact agreement among the Ruby cases. |
-
-## Rust
-
-| Case | Bifrost | rust-analyzer | Observed distinction |
-|---|---|---|---|
-| `rust-function-call-and-reexport` | Pass | Near | rust-analyzer additionally returns the re-export binding. |
-| `rust-barrel-trait-static-qualifier` | Pass | Near | Bifrost finds the required qualifiers; rust-analyzer finds them plus re-export bindings. |
-| `rust-ufcs-trait-method-through-barrel` | Pass | Hard | Bifrost satisfies the authored calls; rust-analyzer finds both calls but also returns the trait declaration. |
-| `rust-struct-construction` | Legacy | Legacy | Human review now requires capital-`Self` type references and excludes lowercase `self`; rerun both analyzers against the corrected ground truth. |
-| `rust-parity-module-declaration-definition` | Pass | Hard | rust-analyzer navigates to the module file start rather than the authored `mod workflow` declaration. |
-| `rust-parity-direct-function-reference` | Exact | Exact | The direct declaration and call establish the non-macro control for the paired generated-function case. |
-| `rust-parity-macro-generated-function-reference` | Gap | Exact | rust-analyzer resolves the generated declaration anchor and call exactly; Bifrost does not expand the declarative macro and misses both the usage and reverse definition. |
-
-## Scala
-
-| Case | Bifrost | Metals | Observed distinction |
-|---|---|---|---|
-| `scala-class-construction` | Exact | Hard | Bifrost keeps class and companion-object identities distinct. Metals returns the required class references plus the `Service` qualifier in `Service.build`, which denotes the companion object. |
-| `scala-renamed-import-object-method-call` | Exact | Hard | Bifrost resolves the renamed concrete call and Definition. Metals compiles the fixture but returns neither edge. |
-| `scala-parity-import-alias-companion-method` | Exact | Exact | Both analyzers resolve both parameterless alias expressions and Definition to `ConsoleRenderer.default`; import bindings remain optional. |
-| `scala-parity-trait-method-implementation` | Gap | Hard | Bifrost includes the explicit override but over-expands to the statically concrete call. Metals omits the override and, in the full run, also returns that concrete call. |
-| `scala-parity-concrete-override-method-call` | Exact | Hard | Bifrost keeps the immutable concrete receiver on `ConsoleRenderer#render`. Metals passes in isolation but the full run also returns the interface-typed call. |
-| `scala-object-apply-call` | Exact | Hard | Bifrost connects the visible `Maker(...)` token to its implicit `apply` method; Metals omits that generated call reference. |
-| `scala-parity-case-class-generated-construction-and-copy` | Gap | Exact | Metals resolves generated construction and `copy` Definition to the authored case-class declaration. Bifrost handles construction but cannot resolve the generated `copy` receiver. |
-| `scala-parity-case-class-generated-component-access` | Gap | Unsupported | Metals returns the named `copy` argument and generated accessor exactly, but does not advertise Declaration. Bifrost misses both usages and accessor navigation. |
-| `scala-imported-extension-method-call` | Exact | Hard | Bifrost passes consistently. Metals passes in isolation but misses both edges in the complete Scala run, exposing query-order-sensitive analysis. |
+Four runtime-driven cases are not planned for either side: one JavaScript, two
+Python, and one Ruby case.
 
 ## What to isolate next
 
-The highest-value minimal pairs are:
+The highest-value additions are:
 
-1. Interface-family grouping with two unrelated implementations and receiver
-   contexts, to distinguish intentional symbol-family semantics from receiver
-   or object insensitivity.
-2. Ordered and branched factory assignments, to test whether CommonJS/Ruby
-   misses are flow-sensitive, name-resolution, or return-summary boundaries.
-3. Alias chains with and without re-export hops, to isolate binding identity
-   from canonical declaration identity.
-4. Proc-macro, derive-generated, synthetic-member, and configured-project
-   equivalents using the same direct-versus-generated pairing now present for
-   Rust declarative macros and C++ function-like macros.
+1. More compiler-generated and configured-project controls where LSPs should
+   lead: macros, source generators, SDK symbols, conditional compilation, and
+   synthetic members.
+2. Interface-family minimal pairs with multiple implementations and receiver
+   contexts, separating intentional symbol-family grouping from receiver
+   sensitivity.
+3. Alias and barrel chains with direct, one-hop, and two-hop controls.
+4. Future competitor runners evaluated against these same frozen source
+   contracts, without tool-specific scoring exceptions.

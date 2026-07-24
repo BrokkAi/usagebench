@@ -3,10 +3,10 @@ title: Ruby — Bifrost and Ruby LSP
 description: Compare constants, mixins, singleton members, aliases, generated readers, and dynamic calls.
 ---
 
-| Runner | Exact | Hard or expected gap | Not planned |
-|---|---:|---:|---:|
-| Bifrost | 19 | 1 expected gap | 1 |
-| Ruby LSP | 1 | 19 | 1 |
+| Runner | Exact | Position unverified | Hard or expected gap | Unsupported | Not planned |
+|---|---:|---:|---:|---:|---:|
+| Bifrost | 19 | 0 | 1 expected | 0 | 1 |
+| Ruby LSP | 5 | 3 | 8 hard | 4 | 1 |
 
 ## Bifrost corpus strengths
 
@@ -17,10 +17,10 @@ generated attribute readers, method aliases, module functions, and lexical
 factory constants, including the factory-return member call now promoted to an
 expected baseline pass.
 
-Ruby LSP often omits the expected edge or returns a declaration/same-name
-location despite `includeDeclaration: false`. Those observations explain its
-contract disagreement; they do not prove that one common approximation causes
-all nineteen cases.
+On the 16 shared scoreable cases, both are exact on 5, Bifrost alone is exact on
+10, and neither is exact on the remaining self-construction case. Ruby LSP is
+position-unverified on three and hard non-exact on eight; four Declaration-
+oriented cases are unsupported.
 
 ## Bifrost weaknesses
 
@@ -28,7 +28,7 @@ all nineteen cases.
   self-construction that Bifrost misses.
 - Dynamic `public_send` remains not planned.
 
-Bifrost therefore has much stronger coverage on this fixture, but the remaining
+Bifrost therefore has stronger coverage on this fixture, but the remaining
 self-construction gap and not-planned dynamic dispatch prevent a claim of
 complete Ruby runtime modeling.
 

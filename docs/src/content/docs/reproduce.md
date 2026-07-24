@@ -95,10 +95,15 @@ cross-machine reproducibility claim.
 
 ## Evidence scope
 
-The current checked-in cases are a development and diagnosis corpus. Their
-ground-truth metadata remains `legacy_unattributed` unless a document says
-otherwise. Container reproducibility makes execution repeatable; it does not
-upgrade the independent-review status of the expected locations.
+The current checked-in cases are a development and diagnosis corpus. All 158
+cases have completed a first human review, but every document intentionally
+retains `legacy_unattributed` ground-truth metadata pending a second independent
+review and preregistered freeze. Container reproducibility makes execution
+repeatable; it does not upgrade the review status of the expected locations.
+
+See the [human ground-truth audit](../ground-truth-review/) for the review
+procedure and the distinction between reviewed development assertions and a
+publishable evaluation partition.
 
 Use `CITATION.cff` for citation metadata and retain the complete JSON reports.
 Benchmark release tags, reference-environment versions, the Rust CLI version,

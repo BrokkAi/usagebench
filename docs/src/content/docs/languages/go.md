@@ -3,24 +3,24 @@ title: Go — Bifrost and gopls
 description: Compare package, embedding, receiver, and interface-method reference behavior.
 ---
 
-| Runner | Exact | Hard or expected gap | Unsupported |
-|---|---:|---:|---:|
-| Bifrost | 10 | 0 | 1 |
-| gopls | 9 | 1 | 1 |
+| Runner | Exact | Position unverified | Hard | Unsupported |
+|---|---:|---:|---:|---:|
+| Bifrost | 9 | 0 | 2 | 1 |
+| gopls | 6 | 0 | 0 | 6 |
 
 ## Strong agreement
 
-Both analyzers satisfy package functions and values, struct fields, value and
-pointer receiver methods, dot imports, cross-package aliases, and embedded
-promoted fields and methods. This is one of the closest comparisons in the
-snapshot.
+Both analyzers can score six common cases and are exact together on five.
+gopls alone is exact on the dot-import concrete-receiver call; Bifrost currently
+misclassifies the imported `Record` selectors as shadowed local bindings.
 
 ## The interface-family split
 
-For `go-interface-receiver-method-call`, current Bifrost satisfies UsageBench's
-narrow interface-declaration identity and the case is now an expected baseline
-pass. gopls broadens the interface method to two calls made on concrete
-receivers and therefore remains a hard contract disagreement.
+Six Go cases require the distinct Declaration operation, which gopls does not
+advertise. They are reported as unsupported rather than retried through
+Definition. Bifrost can score five of those six, but its interface receiver case
+still misses the two conservative concrete candidates and the declaration
+lookup.
 
 This consistent behavior may reflect an intentional method-family policy. It is
 not enough to claim object insensitivity: the case does not vary allocation or
@@ -28,9 +28,9 @@ receiver contexts while keeping every other factor fixed.
 
 ## Relative strengths
 
-Bifrost's narrower current result is useful when a consumer wants definite
-interface-declaration edges. gopls's broader reference set may intentionally
-favor discovering related implementations.
+Bifrost exposes a broader operation surface on this corpus; gopls is exact on
+every case it can score. The result is therefore a capability distinction plus
+one concrete Bifrost navigation gap, not a broad accuracy verdict.
 
 ## Architecture tradeoff
 
