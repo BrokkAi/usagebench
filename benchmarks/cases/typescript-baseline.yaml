@@ -37,7 +37,8 @@ cases:
         kind: function
         displayName: formatName
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/app.tsx
             range:
@@ -55,7 +56,15 @@ cases:
           displayName: formatName
     verification:
       method: manual_inspection
-      notes: formatName is exported from components and called from both fixtures; the app import binding is not counted as a usage.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. formatName is an authored
+        function with required concrete calls inside Greeter#greet and in
+        app.tsx. The app import-clause token is optional binding metadata under
+        bindings_optional, while inline export modifies the declaration rather
+        than creating a separate re-export usage. Definition navigation from
+        either call must target the authored function body. TypeScript Language
+        Server 5.3.0 and Bifrost 0.8.9 both return the exact two calls and
+        definition target.
   - id: ts-default-class-import-and-construction
     declaration:
       location:
@@ -81,7 +90,8 @@ cases:
         kind: constructor
         displayName: Greeter
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/app.tsx
             range:
@@ -89,6 +99,14 @@ cases:
               end: { line: 4, character: 27 }
           kind: constructor
           displayName: Greeter
+        allowedExtraTargets:
+          - location:
+              uri: benchmark://source/src/components.tsx
+              range:
+                start: { line: 13, character: 2 }
+                end: { line: 13, character: 13 }
+            kind: constructor
+            displayName: constructor
         expectedDeclaration:
           location:
             uri: benchmark://source/src/components.tsx
@@ -99,7 +117,19 @@ cases:
           displayName: Greeter
     verification:
       method: manual_inspection
-      notes: Greeter is the default export and is constructed in both components and app fixtures; the app import binding is not counted as a usage.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Greeter is constructed
+        locally and through its default import, so both new-expression class
+        tokens are required constructor-call usages. The import-clause token is
+        optional binding metadata. Definition navigation from the visible
+        Greeter token canonically targets the class declaration; the explicit
+        constructor member is an allowed additional control-flow target but
+        cannot replace the class target. Bifrost 0.8.9 returns the exact
+        construction family and canonical class target. TypeScript Language
+        Server 5.3.0 returns the exact constructions plus optional import
+        binding, then returns both navigation targets; its constructor result
+        covers the whole constructor body rather than the authored token, so
+        the semantic result is position-unverified rather than exact.
   - id: ts-class-method-call
     declaration:
       location:
@@ -125,7 +155,8 @@ cases:
         kind: method
         displayName: greet
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/app.tsx
             range:
@@ -143,7 +174,13 @@ cases:
           displayName: greet
     verification:
       method: manual_inspection
-      notes: greet is declared on Greeter and called from both the TSX component and app fixture.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Both greet calls use
+        immutable locals initialized directly with new Greeter. The fixture has
+        no subclass, override, reassignment, or competing greet member, so both
+        calls are exact required usages. Definition navigation must target the
+        authored Greeter#greet method body. TypeScript Language Server 5.3.0
+        and Bifrost 0.8.9 both return the exact two calls and definition target.
   - id: ts-object-property-access
     declaration:
       location:
@@ -169,7 +206,8 @@ cases:
         kind: property
         displayName: name
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/components.tsx
             range:
@@ -187,7 +225,17 @@ cases:
           displayName: name
     verification:
       method: manual_inspection
-      notes: User.name is declared in the type literal, initialized in app, and read by formatName.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. Both the user.name read
+        and the object-literal name key are exact required property usages. The
+        explicit User annotation contextually types the object literal, so its
+        name key is not an unrelated property that merely shares the spelling.
+        Declaration navigation must target the name property signature in the
+        User type literal; there is no executable property definition. Bifrost
+        0.8.9 passes the declaration lookup exactly. TypeScript Language Server
+        5.3.0 does not advertise textDocument/declaration, so that request is
+        unsupported; its ordinary definition request nevertheless targets the
+        exact same property signature.
   - id: ts-tsx-component-reference
     declaration:
       location:
@@ -206,7 +254,8 @@ cases:
         kind: function
         displayName: WelcomeCard
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/app.tsx
             range:
@@ -224,7 +273,14 @@ cases:
           displayName: WelcomeCard
     verification:
       method: manual_inspection
-      notes: WelcomeCard is a named exported function used as a JSX element; the app import binding is not counted as a usage.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. The self-closing
+        WelcomeCard JSX tag is one exact required use of the authored function
+        component. The app import-clause token is optional binding metadata.
+        Definition navigation from the tag must target the WelcomeCard function
+        body; there is no separate closing-tag occurrence. TypeScript Language
+        Server 5.3.0 and Bifrost 0.8.9 both return the exact JSX usage and
+        definition target.
   - id: ts-ky-style-implementation-static-create
     declaration:
       location:
@@ -257,7 +313,8 @@ cases:
         kind: class
         displayName: Ky
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/app.tsx
             range:
@@ -275,4 +332,12 @@ cases:
           displayName: Ky
     verification:
       method: manual_inspection
-      notes: Ky mirrors the Ky library implementation class imported by the default callable wrapper; static create calls in the factory and app are counted, but import bindings are not.
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. This case is anchored on
+        the Ky class symbol, so all three Ky qualifiers of static create calls
+        are exact required class usages. The named import token is optional
+        binding metadata, while the create member tokens belong to a separate
+        static-method symbol family. Definition navigation from the app
+        qualifier must target the authored Ky class body. TypeScript Language
+        Server 5.3.0 and Bifrost 0.8.9 both return the exact three class usages
+        and definition target.

@@ -30,7 +30,8 @@ cases:
         kind: function
         displayName: createClient
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/app.ts
             range:
@@ -49,10 +50,18 @@ cases:
     verification:
       method: analyzer_comparison
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. The app call is the sole
+        required executable use of the default-exported createClient function.
+        The default-import token is optional binding metadata, while inline
+        export default modifies the authored declaration rather than creating a
+        separate usage. Definition navigation from the call must target the
+        authored function body.
         Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
         Upstream reference: TypeScript Server fourslash go-to-definition scenarios for default exports and imported call sites.
         Adapted fixture: fixtures/typescript/lsp-parity/.
-        Maturity: a default function import call should resolve back to the exported function declaration; the import binding itself is not counted as a usage.
+        Maturity: a default function import call should resolve back to the exported function declaration.
+        TypeScript Language Server 5.3.0 and Bifrost 0.8.9 both return the exact
+        call and definition target.
   - id: ts-parity-static-method-call
     declaration:
       location:
@@ -78,7 +87,8 @@ cases:
         kind: method
         displayName: create
     usageLookups:
-      - usage:
+      - operation: definition
+        usage:
           location:
             uri: benchmark://source/src/app.ts
             range:
@@ -97,10 +107,18 @@ cases:
     verification:
       method: analyzer_comparison
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-24. Both create member tokens
+        are exact required uses of the authored static method. The ApiClient
+        qualifiers belong to the class-symbol family, and new ApiClient invokes
+        the constructor rather than create. Static dispatch is unambiguous.
+        Definition navigation from the app call must target the authored static
+        method body.
         Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
         Upstream reference: TypeScript Server fourslash references for static class members and imported class call sites.
         Adapted fixture: fixtures/typescript/lsp-parity/.
         Maturity: ApiClient.create calls from the defining module and imported module should resolve to the static method declaration.
+        TypeScript Language Server 5.3.0 and Bifrost 0.8.9 both return the exact
+        two static-method usages and definition target.
   - id: ts-parity-type-only-interface-import
     typeLookups:
       - expression:
@@ -122,10 +140,17 @@ cases:
     verification:
       method: analyzer_comparison
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-24. A type lookup on the local
+        user variable must recover the authored User interface in api.ts. The
+        result is exact because the variable has an explicit User annotation
+        and does not depend on inferring fetchUser's return type. The type-only
+        import binding is routing metadata rather than the final type target.
         Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
         Upstream reference: TypeScript Server fourslash type-only import scenarios such as autoImportTypeOnlyPreferred*.ts and codeFixConvertToTypeOnlyImport*.ts.
         Adapted fixture: fixtures/typescript/lsp-parity/.
         Maturity: the local user variable is annotated through a type-only import and should recover the User interface type.
+        TypeScript Language Server 5.3.0 and Bifrost 0.8.9 both recover the
+        exact authored interface target.
   - id: ts-parity-interface-property-access
     declaration:
       location:
@@ -158,7 +183,8 @@ cases:
         kind: property
         displayName: name
     usageLookups:
-      - usage:
+      - operation: declaration
+        usage:
           location:
             uri: benchmark://source/src/app.ts
             range:
@@ -177,7 +203,18 @@ cases:
     verification:
       method: analyzer_comparison
       notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-24. The contextually typed
+        object-literal name key and both user.name reads are exact required
+        usages of the User.name property. The local variable declaration in
+        const name is a distinct same-spelled symbol and must be excluded. The
+        explicit User return type makes the object-literal property identity
+        exact. Declaration navigation from the app member access must target
+        the name property signature in User.
         Parity source: microsoft/TypeScript@637d5746b70257028fb95aad32ddec6b26ab0a14.
         Upstream reference: TypeScript Server fourslash find-all-references and object/type literal property scenarios.
         Adapted fixture: fixtures/typescript/lsp-parity/.
         Maturity: User.name should connect object-literal initialization and property reads back to the interface property declaration.
+        Bifrost 0.8.9 passes the declaration lookup exactly. TypeScript Language
+        Server 5.3.0 does not advertise textDocument/declaration, so that
+        request is unsupported; its ordinary definition request reaches the
+        exact property signature.

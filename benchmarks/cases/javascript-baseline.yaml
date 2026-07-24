@@ -160,6 +160,14 @@ cases:
               end: { line: 2, character: 20 }
           kind: class
           displayName: Greeter
+        allowedExtraTargets:
+          - location:
+              uri: benchmark://source/src/components.js
+              range:
+                start: { line: 3, character: 2 }
+                end: { line: 3, character: 13 }
+            kind: constructor
+            displayName: constructor
     verification:
       method: manual_inspection
       notes: >
@@ -173,8 +181,11 @@ cases:
         returned both the class token and explicit constructor member for
         definition navigation. The constructor is a reasonable control-flow
         alternate, while the class binding remains canonical for the Greeter
-        cursor token; the current schema cannot express allowed navigation
-        alternates.
+        cursor token. The reviewed constructor member is therefore recorded as
+        an allowed cross-kind navigation target. TypeScript Language Server
+        still scores position-unverified because its constructor result spans
+        the enclosing body rather than the authored token; Bifrost 0.8.9
+        returns the exact canonical target.
   - id: js-method-call
     declaration:
       location:

@@ -19,7 +19,28 @@ cases:
       - location: { uri: benchmark://source/src/app.ts, range: { start: { line: 2, character: 23 }, end: { line: 2, character: 35 } } }
         kind: function
         displayName: createWidget
-    verification: { method: manual_inspection, notes: "A function imported through a local barrel must preserve its declaration identity." }
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/app.ts, range: { start: { line: 2, character: 23 }, end: { line: 2, character: 35 } } }
+          kind: function
+          displayName: createWidget
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/api.ts, range: { start: { line: 4, character: 16 }, end: { line: 4, character: 28 } } }
+          kind: function
+          displayName: createWidget
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. The executable call in
+        app.ts is the sole required use of the exported createWidget function.
+        The barrel re-export and import-clause tokens are optional binding
+        metadata. The same-spelled parameter declaration and call in shadow.ts
+        resolve to that local parameter and must be excluded. Definition
+        navigation from the app call must traverse the barrel to the authored
+        function body in api.ts. TypeScript Language Server 5.3.0 and Bifrost
+        0.8.9 both preserve the function identity through the barrel, exclude
+        the shadowed call, and return the exact definition target.
   - id: ts-type-annotation-through-barrel
     declaration:
       location: { uri: benchmark://source/src/api.ts, range: { start: { line: 0, character: 17 }, end: { line: 0, character: 23 } } }
@@ -32,4 +53,27 @@ cases:
       - location: { uri: benchmark://source/src/app.ts, range: { start: { line: 2, character: 14 }, end: { line: 2, character: 20 } } }
         kind: interface
         displayName: Widget
-    verification: { method: manual_inspection, notes: "A type-only annotation reached through a barrel is a true type usage; import bindings are not." }
+    usageLookups:
+      - operation: declaration
+        usage:
+          location: { uri: benchmark://source/src/app.ts, range: { start: { line: 2, character: 14 }, end: { line: 2, character: 20 } } }
+          kind: interface
+          displayName: Widget
+        expectedDeclaration:
+          location: { uri: benchmark://source/src/api.ts, range: { start: { line: 0, character: 17 }, end: { line: 0, character: 23 } } }
+          kind: interface
+          displayName: Widget
+    verification:
+      method: manual_inspection
+      notes: >
+        Reviewed by DavidBakerEffendi on 2026-07-23. The return annotation in
+        api.ts and the variable annotation in app.ts are exact required uses of
+        the Widget interface. The barrel re-export and app import tokens are
+        optional binding metadata. The structurally compatible returned object
+        literal contains no Widget token and is not a usage. Declaration
+        navigation from the app annotation must traverse the barrel to the
+        authored interface declaration. Bifrost 0.8.9 passes the declaration
+        lookup exactly. TypeScript Language Server 5.3.0 does not advertise
+        textDocument/declaration, so that request is unsupported; its ordinary
+        definition request nevertheless traverses the barrel to the exact
+        interface declaration.

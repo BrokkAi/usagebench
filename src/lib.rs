@@ -547,12 +547,6 @@ impl BenchmarkCase {
                 target.validate(fixture_root, encoding).with_context(|| {
                     format!("case {} usageLookups allowedExtraTargets", self.id)
                 })?;
-                if target.kind != lookup.expected_declaration.kind {
-                    bail!(
-                        "case {} usageLookups allowedExtraTargets kind must match expectedDeclaration kind",
-                        self.id
-                    );
-                }
                 if target.location == lookup.expected_declaration.location {
                     bail!(
                         "case {} usageLookups allowedExtraTargets must not repeat expectedDeclaration",
@@ -1115,6 +1109,74 @@ cases:
         let error = document.validate_with_base(tempdir.path()).unwrap_err();
 
         assert!(format!("{error:#}").contains("does not select displayName"));
+    }
+
+    #[test]
+    fn fixture_validation_accepts_cross_kind_navigation_alternate() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let fixture = tempdir.path().join("fixtures/fixture/src");
+        fs::create_dir_all(&fixture).unwrap();
+        fs::write(
+            fixture.join("sample.ts"),
+            "class Greeter {\n  constructor() {}\n}\nnew Greeter();\n",
+        )
+        .unwrap();
+        let document = serde_yaml::from_str::<BenchmarkDocument>(
+            r#"
+schemaVersion: 2
+corpus:
+  partition: development
+  selection: analyzer_informed
+groundTruth:
+  status: legacy_unattributed
+  reviewers: []
+referencePolicy: bindings_optional
+source:
+  kind: fixture
+  path: fixtures/fixture
+language: typescript
+cases:
+  - id: class-constructor-alternate
+    declaration:
+      location:
+        uri: benchmark://source/src/sample.ts
+        range:
+          start: { line: 0, character: 6 }
+          end: { line: 0, character: 13 }
+      kind: class
+      displayName: Greeter
+    expectedUsages: []
+    usageLookups:
+      - operation: definition
+        usage:
+          location:
+            uri: benchmark://source/src/sample.ts
+            range:
+              start: { line: 3, character: 4 }
+              end: { line: 3, character: 11 }
+          kind: constructor
+          displayName: Greeter
+        expectedDeclaration:
+          location:
+            uri: benchmark://source/src/sample.ts
+            range:
+              start: { line: 0, character: 6 }
+              end: { line: 0, character: 13 }
+          kind: class
+          displayName: Greeter
+        allowedExtraTargets:
+          - location:
+              uri: benchmark://source/src/sample.ts
+              range:
+                start: { line: 1, character: 2 }
+                end: { line: 1, character: 13 }
+            kind: constructor
+            displayName: constructor
+"#,
+        )
+        .unwrap();
+
+        document.validate_with_base(tempdir.path()).unwrap();
     }
 
     #[test]
