@@ -108,7 +108,7 @@ body {
 .result-summary {
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17.5rem), 1fr));
   margin-block: 2rem;
 }
 
@@ -191,12 +191,6 @@ body {
   margin: 0.35rem 0 0;
 }
 
-@media (max-width: 64rem) {
-  .result-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (min-width: 72rem) {
   .right-sidebar-container {
     width: max(
@@ -220,10 +214,6 @@ body {
 }
 
 @media (max-width: 30rem) {
-  .result-summary {
-    grid-template-columns: 1fr;
-  }
-
   .result-metric > span {
     min-height: auto;
   }
