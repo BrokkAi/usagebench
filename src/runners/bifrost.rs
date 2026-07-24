@@ -511,6 +511,7 @@ fn run_declaration_to_usages(
         json!({
             "targets": [target],
             "include_tests": true,
+            "include_same_owner": true,
             "include_bindings": reference_policy != ReferencePolicy::ExternalUsages,
         }),
     ) {
@@ -1057,6 +1058,12 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
             );
             collect_scan_usage_locations(
                 result,
+                "same_owner_files",
+                &mut locations,
+                &mut override_declarations,
+            );
+            collect_scan_usage_locations(
+                result,
                 "unproven_files",
                 &mut unproven_locations,
                 &mut unproven_override_declarations,
@@ -1083,6 +1090,12 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
             collect_scan_usage_locations(
                 usage,
                 "files",
+                &mut locations,
+                &mut override_declarations,
+            );
+            collect_scan_usage_locations(
+                usage,
+                "same_owner_files",
                 &mut locations,
                 &mut override_declarations,
             );
@@ -2030,11 +2043,12 @@ mod tests {
             client.calls[1].1["targets"][0]["symbol"],
             "example.build_service"
         );
+        assert_eq!(client.calls[1].1["include_same_owner"], true);
         assert_eq!(client.calls[1].1["include_bindings"], true);
     }
 
     #[test]
-    fn external_usage_policy_does_not_request_bindings() {
+    fn external_usage_policy_excludes_bindings_but_keeps_same_owner_references() {
         let case = benchmark_case();
         let mut client = MockClient::new(vec![
             tool(
@@ -2058,6 +2072,7 @@ mod tests {
         );
 
         assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(client.calls[1].1["include_same_owner"], true);
         assert_eq!(client.calls[1].1["include_bindings"], false);
     }
 
@@ -2998,6 +3013,43 @@ mod tests {
         );
         assert_eq!(parsed.raw_statuses, vec!["found".to_string()]);
         assert!(!parsed.partial);
+    }
+
+    #[test]
+    fn parse_scan_usages_includes_same_owner_result_locations() {
+        let parsed = parse_scan_usages(&json!({
+            "summary": {"partial": false},
+            "results": [{
+                "status": "no_external_usages",
+                "same_owner_sites": 1,
+                "same_owner_files": [{
+                    "path": "src/service.py",
+                    "hits": [{
+                        "line": 8,
+                        "column": 14,
+                        "end_line": 8,
+                        "end_column": 18,
+                        "kind": "self_receiver"
+                    }]
+                }]
+            }]
+        }));
+
+        assert_eq!(
+            parsed.locations,
+            vec![NormalizedLocation {
+                path: "src/service.py".to_string(),
+                line: 8,
+                column: Some(14),
+                end_line: Some(8),
+                end_column: Some(18),
+                display_name: None,
+                kind: None,
+            }]
+        );
+        assert_eq!(parsed.raw_statuses, vec!["no_external_usages".to_string()]);
+        assert!(!parsed.partial);
+        assert!(!parsed.has_failure_status());
     }
 
     #[test]
