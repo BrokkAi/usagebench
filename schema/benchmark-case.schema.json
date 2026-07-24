@@ -276,6 +276,16 @@
           "enum": ["profile_default", "declaration", "definition"],
           "default": "profile_default"
         },
+        "compatibleOperations": {
+          "description": "Explicitly reviewed alternate operations that reach the same authored target. These are reported separately for compatibility/user-felt navigation and never replace the canonical `operation` score.",
+          "type": "array",
+          "default": [],
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["declaration", "definition"]
+          }
+        },
         "expectNoMovement": {
           "type": "boolean",
           "default": false

@@ -21,6 +21,7 @@ cases:
         displayName: send
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location: { uri: benchmark://source/src/Consumer.php, range: { start: { line: 11, character: 15 }, end: { line: 11, character: 19 } } }
           kind: method

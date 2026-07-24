@@ -432,6 +432,10 @@ mod tests {
                     unsupported_reason: None,
                     declaration_to_usages: None,
                     usage_to_declaration: Vec::new(),
+                    compatible_usage_to_declaration: Vec::new(),
+                    required_destination_status: Some(
+                        super::super::RequiredDestinationStatus::Found,
+                    ),
                     type_lookups: Vec::new(),
                     diagnostics: Vec::new(),
                 }],

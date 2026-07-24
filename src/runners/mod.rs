@@ -214,6 +214,27 @@ pub struct RunTotals {
     pub unsupported: usize,
     pub skipped: usize,
     pub errors: usize,
+    /// Recall-forward result derived from the raw locations in each case.
+    /// Unlike the strict counters above, this tolerates line-only or containing
+    /// ranges and extra results, and may use an explicitly reviewed compatible
+    /// operation.
+    #[serde(default)]
+    pub required_destinations: RequiredDestinationTotals,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct RequiredDestinationTotals {
+    /// Cases for which every required lookup was available and executed.
+    pub scoreable_cases: usize,
+    pub found: usize,
+    pub missing: usize,
+    pub not_planned: usize,
+    pub unsupported: usize,
+    pub skipped: usize,
+    pub errors: usize,
+    /// Reports produced before this metric was added.
+    pub unreported: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -244,11 +265,28 @@ pub enum CaseStatus {
     Error,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum RequiredDestinationStatus {
+    Found,
+    Missing,
+    NotPlanned,
+    Unsupported,
+    Skipped,
+    Error,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CaseRunReport {
     pub id: String,
     pub status: CaseStatus,
+    /// Recall-forward destination result. This is computed from raw locations,
+    /// tolerates line-only or containing ranges and extra results, and may use
+    /// an explicitly reviewed compatible operation. `status` remains the strict
+    /// canonical endpoint score.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub required_destination_status: Option<RequiredDestinationStatus>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expected_failure_reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -259,6 +297,11 @@ pub struct CaseRunReport {
     pub declaration_to_usages: Option<DeclarationUsageReport>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub usage_to_declaration: Vec<UsageDefinitionReport>,
+    /// Alternate endpoint results. Each entry identifies its canonical
+    /// `usageToDeclaration` lookup and is compatibility evidence, not a
+    /// silent retry of the canonical score.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub compatible_usage_to_declaration: Vec<CompatibleUsageDefinitionReport>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub type_lookups: Vec<TypeLookupReport>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -331,6 +374,14 @@ pub struct UsageDefinitionReport {
     pub raw_status: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub diagnostics: Vec<RunDiagnostic>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CompatibleUsageDefinitionReport {
+    pub usage_lookup_index: usize,
+    pub canonical_operation: NavigationOperation,
+    pub reports: Vec<UsageDefinitionReport>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -556,11 +607,124 @@ pub(crate) fn combine_case_status(
     definitions: &[UsageDefinitionReport],
     types: &[TypeLookupReport],
 ) -> CaseStatus {
-    let statuses = declaration
+    combine_case_status_from_statuses(
+        declaration
+            .into_iter()
+            .map(|report| report.status)
+            .chain(definitions.iter().map(|report| report.status)),
+        types.iter().map(|report| report.status),
+    )
+}
+
+pub(crate) fn required_destination_status(
+    declaration: Option<&DeclarationUsageReport>,
+    canonical_definitions: &[UsageDefinitionReport],
+    compatible_definitions: &[CompatibleUsageDefinitionReport],
+    types: &[TypeLookupReport],
+) -> RequiredDestinationStatus {
+    let mut components = Vec::new();
+    if let Some(report) = declaration {
+        components.push(declaration_destination_status(report));
+    }
+    for (index, canonical) in canonical_definitions.iter().enumerate() {
+        let alternatives = compatible_definitions
+            .iter()
+            .filter(|compatible| compatible.usage_lookup_index == index)
+            .flat_map(|compatible| compatible.reports.iter());
+        components.push(best_navigation_destination_status(
+            std::iter::once(canonical).chain(alternatives),
+        ));
+    }
+    components.extend(types.iter().map(type_destination_status));
+    combine_required_destination_statuses(components)
+}
+
+fn declaration_destination_status(report: &DeclarationUsageReport) -> RequiredDestinationStatus {
+    match report.status {
+        CaseStatus::Error => RequiredDestinationStatus::Error,
+        CaseStatus::Unsupported => RequiredDestinationStatus::Unsupported,
+        CaseStatus::Skipped => RequiredDestinationStatus::Skipped,
+        _ if !report.missing.is_empty() || !report.missing_unproven.is_empty() => {
+            RequiredDestinationStatus::Missing
+        }
+        _ => RequiredDestinationStatus::Found,
+    }
+}
+
+fn best_navigation_destination_status<'a>(
+    reports: impl IntoIterator<Item = &'a UsageDefinitionReport>,
+) -> RequiredDestinationStatus {
+    let statuses = reports
         .into_iter()
-        .map(|report| report.status)
-        .chain(definitions.iter().map(|report| report.status))
-        .chain(types.iter().map(|report| report.status))
+        .map(navigation_destination_status)
+        .collect::<Vec<_>>();
+    if statuses.contains(&RequiredDestinationStatus::Found) {
+        RequiredDestinationStatus::Found
+    } else if statuses.contains(&RequiredDestinationStatus::Missing) {
+        RequiredDestinationStatus::Missing
+    } else if statuses.contains(&RequiredDestinationStatus::Error) {
+        RequiredDestinationStatus::Error
+    } else if statuses.contains(&RequiredDestinationStatus::Skipped) {
+        RequiredDestinationStatus::Skipped
+    } else {
+        RequiredDestinationStatus::Unsupported
+    }
+}
+
+fn navigation_destination_status(report: &UsageDefinitionReport) -> RequiredDestinationStatus {
+    match report.status {
+        CaseStatus::Error => RequiredDestinationStatus::Error,
+        CaseStatus::Unsupported => RequiredDestinationStatus::Unsupported,
+        CaseStatus::Skipped => RequiredDestinationStatus::Skipped,
+        CaseStatus::Passed | CaseStatus::PositionUnverified => RequiredDestinationStatus::Found,
+        _ if best_location_match(&report.actual_declarations, &report.expected_declaration)
+            != LocationMatch::None =>
+        {
+            RequiredDestinationStatus::Found
+        }
+        _ => RequiredDestinationStatus::Missing,
+    }
+}
+
+fn type_destination_status(report: &TypeLookupReport) -> RequiredDestinationStatus {
+    match report.status {
+        CaseStatus::Error => RequiredDestinationStatus::Error,
+        CaseStatus::Unsupported => RequiredDestinationStatus::Unsupported,
+        CaseStatus::Skipped => RequiredDestinationStatus::Skipped,
+        CaseStatus::Passed | CaseStatus::PositionUnverified => RequiredDestinationStatus::Found,
+        _ if best_location_match(&report.actual_types, &report.expected_type)
+            != LocationMatch::None =>
+        {
+            RequiredDestinationStatus::Found
+        }
+        _ => RequiredDestinationStatus::Missing,
+    }
+}
+
+fn combine_required_destination_statuses(
+    statuses: impl IntoIterator<Item = RequiredDestinationStatus>,
+) -> RequiredDestinationStatus {
+    let statuses = statuses.into_iter().collect::<Vec<_>>();
+    if statuses.contains(&RequiredDestinationStatus::Error) {
+        RequiredDestinationStatus::Error
+    } else if statuses.contains(&RequiredDestinationStatus::Skipped) {
+        RequiredDestinationStatus::Skipped
+    } else if statuses.contains(&RequiredDestinationStatus::Unsupported) {
+        RequiredDestinationStatus::Unsupported
+    } else if statuses.contains(&RequiredDestinationStatus::Missing) {
+        RequiredDestinationStatus::Missing
+    } else {
+        RequiredDestinationStatus::Found
+    }
+}
+
+fn combine_case_status_from_statuses(
+    navigation_statuses: impl IntoIterator<Item = CaseStatus>,
+    type_statuses: impl IntoIterator<Item = CaseStatus>,
+) -> CaseStatus {
+    let statuses = navigation_statuses
+        .into_iter()
+        .chain(type_statuses)
         .collect::<Vec<_>>();
     if statuses.contains(&CaseStatus::Error) {
         CaseStatus::Error
@@ -782,6 +946,27 @@ pub(crate) fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
                 CaseStatus::Unsupported => totals.unsupported += 1,
                 CaseStatus::Skipped => totals.skipped += 1,
                 CaseStatus::Error => totals.errors += 1,
+            }
+            match case.required_destination_status {
+                Some(RequiredDestinationStatus::Found) => {
+                    totals.required_destinations.scoreable_cases += 1;
+                    totals.required_destinations.found += 1;
+                }
+                Some(RequiredDestinationStatus::Missing) => {
+                    totals.required_destinations.scoreable_cases += 1;
+                    totals.required_destinations.missing += 1;
+                }
+                Some(RequiredDestinationStatus::NotPlanned) => {
+                    totals.required_destinations.not_planned += 1
+                }
+                Some(RequiredDestinationStatus::Unsupported) => {
+                    totals.required_destinations.unsupported += 1
+                }
+                Some(RequiredDestinationStatus::Skipped) => {
+                    totals.required_destinations.skipped += 1
+                }
+                Some(RequiredDestinationStatus::Error) => totals.required_destinations.errors += 1,
+                None => totals.required_destinations.unreported += 1,
             }
         }
     }

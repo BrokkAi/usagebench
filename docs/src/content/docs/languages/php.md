@@ -3,16 +3,21 @@ title: PHP — Bifrost and Intelephense
 description: Compare namespaces, imports, traits, interfaces, receivers, properties, and static members.
 ---
 
-| Runner | Exact | Position unverified | Hard | Unsupported |
-|---|---:|---:|---:|---:|
-| Bifrost | 12 | 0 | 2 | 0 |
-| Intelephense | 9 | 0 | 1 | 4 |
+| Runner | Required destinations found | Strict exact | Position unverified | Hard | Strict unsupported |
+|---|---:|---:|---:|---:|---:|
+| Bifrost | 12/14 | 12 | 0 | 2 | 0 |
+| Intelephense | 14/14 | 9 | 0 | 1 | 4 |
 
 ## Shared strengths
 
 Both analyzers can score ten common cases and are exact together on nine.
 Bifrost alone is exact on class construction because Intelephense returns both
 the class and explicit constructor as navigation targets.
+
+Four canonical Declaration contracts—properties, a constant, and a bodyless
+interface member—also record Definition as reviewed compatibility evidence.
+They raise the shared destination-scoreable denominator from ten to fourteen;
+strict operation precision and capability counts remain unchanged.
 
 ## Bifrost recall edge
 

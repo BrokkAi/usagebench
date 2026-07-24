@@ -55,6 +55,7 @@ cases:
         displayName: Widget
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location: { uri: benchmark://source/src/app.ts, range: { start: { line: 2, character: 14 }, end: { line: 2, character: 20 } } }
           kind: interface

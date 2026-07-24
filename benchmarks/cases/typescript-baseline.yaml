@@ -207,6 +207,7 @@ cases:
         displayName: name
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location:
             uri: benchmark://source/src/components.tsx

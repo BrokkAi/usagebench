@@ -2,10 +2,11 @@ use super::bifrost::{command_output_with_timeout, prepare_source_root};
 use super::lsp_protocol::{InitializeResult, LspSession};
 use super::{
     combine_case_status, compute_totals, location_match, navigation_response_status,
-    normalize_symbol_location, path_to_slash, score_declaration_locations,
-    score_navigation_response, symbol_kind_name, CapabilitySupport, CaseRunReport, CaseStatus,
-    ClassifiedExtraUsage, DeclarationUsageReport, DocumentRunReport, ExtraUsageClassification,
-    ExtraUsageDisposition, LocationMatch, NormalizedLocation, RunDiagnostic, RunInvocation,
+    normalize_symbol_location, path_to_slash, required_destination_status,
+    score_declaration_locations, score_navigation_response, symbol_kind_name, CapabilitySupport,
+    CaseRunReport, CaseStatus, ClassifiedExtraUsage, CompatibleUsageDefinitionReport,
+    DeclarationUsageReport, DocumentRunReport, ExtraUsageClassification, ExtraUsageDisposition,
+    LocationMatch, NormalizedLocation, RequiredDestinationStatus, RunDiagnostic, RunInvocation,
     RunReport, RunTotals, RunnerCapability, RunnerMetadata, RunnerOperation, TypeLookupReport,
     UsageDefinitionReport,
 };
@@ -371,6 +372,8 @@ fn run_case(
                 unsupported_reason: Some(unsupported.reason.clone()),
                 declaration_to_usages: None,
                 usage_to_declaration: Vec::new(),
+                compatible_usage_to_declaration: Vec::new(),
+                required_destination_status: Some(RequiredDestinationStatus::Unsupported),
                 type_lookups: Vec::new(),
                 diagnostics: Vec::new(),
             };
@@ -397,6 +400,33 @@ fn run_case(
             )
         })
         .collect::<Vec<_>>();
+    let compatible_usage_to_declaration = case
+        .usage_lookups
+        .iter()
+        .enumerate()
+        .filter(|(_, lookup)| !lookup.compatible_operations.is_empty())
+        .map(
+            |(usage_lookup_index, lookup)| CompatibleUsageDefinitionReport {
+                usage_lookup_index,
+                canonical_operation: lookup.operation,
+                reports: lookup
+                    .compatible_operations
+                    .iter()
+                    .map(|operation| {
+                        let mut compatible_lookup = lookup.clone();
+                        compatible_lookup.operation = *operation;
+                        run_definition(
+                            &compatible_lookup,
+                            context.profile,
+                            context.source_root,
+                            context.capabilities,
+                            session,
+                        )
+                    })
+                    .collect(),
+            },
+        )
+        .collect::<Vec<_>>();
     let type_lookups = case
         .type_lookups
         .iter()
@@ -422,6 +452,16 @@ fn run_case(
     if status != CaseStatus::Error && case.not_planned.is_some() {
         status = CaseStatus::NotPlanned;
     }
+    let mut required_destination_status = required_destination_status(
+        declaration_to_usages.as_ref(),
+        &usage_to_declaration,
+        &compatible_usage_to_declaration,
+        &type_lookups,
+    );
+    if required_destination_status != RequiredDestinationStatus::Error && case.not_planned.is_some()
+    {
+        required_destination_status = RequiredDestinationStatus::NotPlanned;
+    }
     CaseRunReport {
         id: case.id.clone(),
         status,
@@ -430,6 +470,8 @@ fn run_case(
         unsupported_reason: case.unsupported.as_ref().map(|item| item.reason.clone()),
         declaration_to_usages,
         usage_to_declaration,
+        compatible_usage_to_declaration,
+        required_destination_status: Some(required_destination_status),
         type_lookups,
         diagnostics,
     }
@@ -1353,6 +1395,8 @@ fn error_case(case: &BenchmarkCase, kind: &str, message: &str) -> CaseRunReport 
         unsupported_reason: case.unsupported.as_ref().map(|item| item.reason.clone()),
         declaration_to_usages: None,
         usage_to_declaration: Vec::new(),
+        compatible_usage_to_declaration: Vec::new(),
+        required_destination_status: Some(RequiredDestinationStatus::Error),
         type_lookups: Vec::new(),
         diagnostics: vec![RunDiagnostic {
             kind: kind.to_string(),
@@ -1506,6 +1550,112 @@ mod tests {
     }
 
     #[test]
+    fn compatible_definition_is_destination_evidence_not_a_strict_declaration_fallback() {
+        let usage = test_location("src/main.go", 8);
+        let expected = test_location("src/service.go", 3);
+        let canonical = UsageDefinitionReport {
+            status: CaseStatus::Unsupported,
+            operation: NavigationOperation::Declaration,
+            usage: usage.clone(),
+            expected_declaration: expected.clone(),
+            actual_declarations: Vec::new(),
+            raw_status: "declaration_not_advertised".to_string(),
+            diagnostics: Vec::new(),
+        };
+        let compatible = UsageDefinitionReport {
+            status: CaseStatus::Passed,
+            operation: NavigationOperation::Definition,
+            usage,
+            expected_declaration: expected.clone(),
+            actual_declarations: vec![expected],
+            raw_status: "ok".to_string(),
+            diagnostics: Vec::new(),
+        };
+        let compatible_reports = vec![CompatibleUsageDefinitionReport {
+            usage_lookup_index: 0,
+            canonical_operation: NavigationOperation::Declaration,
+            reports: vec![compatible],
+        }];
+
+        let strict_status = combine_case_status(None, std::slice::from_ref(&canonical), &[]);
+        let destination_status = required_destination_status(
+            None,
+            std::slice::from_ref(&canonical),
+            &compatible_reports,
+            &[],
+        );
+        assert_eq!(strict_status, CaseStatus::Unsupported);
+        assert_eq!(destination_status, RequiredDestinationStatus::Found);
+
+        let documents = vec![DocumentRunReport {
+            case_file: "benchmarks/cases/go-baseline.yaml".to_string(),
+            language: "go".to_string(),
+            source_root: "/tmp/source".to_string(),
+            corpus_partition: crate::CorpusPartition::Development,
+            corpus_selection: crate::CorpusSelection::AnalyzerInformed,
+            ground_truth_status: crate::GroundTruthReviewStatus::LegacyUnattributed,
+            reference_policy: ReferencePolicy::BindingsOptional,
+            cases: vec![CaseRunReport {
+                id: "go-compatible-navigation".to_string(),
+                status: strict_status,
+                required_destination_status: Some(destination_status),
+                expected_failure_reason: None,
+                not_planned_reason: None,
+                unsupported_reason: None,
+                declaration_to_usages: None,
+                usage_to_declaration: vec![canonical],
+                compatible_usage_to_declaration: compatible_reports,
+                type_lookups: Vec::new(),
+                diagnostics: Vec::new(),
+            }],
+        }];
+
+        let totals = compute_totals(&documents);
+        assert_eq!(totals.cases, 0);
+        assert_eq!(totals.unsupported, 1);
+        assert_eq!(totals.required_destinations.scoreable_cases, 1);
+        assert_eq!(totals.required_destinations.found, 1);
+    }
+
+    #[test]
+    fn unavailable_compatible_route_does_not_hide_a_scoreable_canonical_miss() {
+        let usage = test_location("src/main.go", 8);
+        let expected = test_location("src/service.go", 3);
+        let canonical = UsageDefinitionReport {
+            status: CaseStatus::Failed,
+            operation: NavigationOperation::Declaration,
+            usage: usage.clone(),
+            expected_declaration: expected.clone(),
+            actual_declarations: Vec::new(),
+            raw_status: "no_declaration".to_string(),
+            diagnostics: Vec::new(),
+        };
+        let unavailable_alternate = UsageDefinitionReport {
+            status: CaseStatus::Unsupported,
+            operation: NavigationOperation::Definition,
+            usage,
+            expected_declaration: expected,
+            actual_declarations: Vec::new(),
+            raw_status: "definition_not_advertised".to_string(),
+            diagnostics: Vec::new(),
+        };
+
+        assert_eq!(
+            required_destination_status(
+                None,
+                std::slice::from_ref(&canonical),
+                &[CompatibleUsageDefinitionReport {
+                    usage_lookup_index: 0,
+                    canonical_operation: NavigationOperation::Declaration,
+                    reports: vec![unavailable_alternate],
+                }],
+                &[],
+            ),
+            RequiredDestinationStatus::Missing
+        );
+    }
+
+    #[test]
     fn parses_locations_and_location_links() {
         let root = Path::new("/tmp/workspace");
         let locations = locations_from_response(
@@ -1598,12 +1748,26 @@ mod tests {
 
         assert_eq!(
             score_navigation_response(
-                &[expected.clone(), unexpected],
+                &[expected.clone(), unexpected.clone()],
                 &expected,
                 std::slice::from_ref(&allowed),
                 false,
             ),
             (CaseStatus::Failed, "multiple_targets")
+        );
+
+        let report = UsageDefinitionReport {
+            status: CaseStatus::Failed,
+            operation: NavigationOperation::Definition,
+            usage: test_location("src/main.py", 3),
+            expected_declaration: expected.clone(),
+            actual_declarations: vec![expected, unexpected],
+            raw_status: "multiple_targets".to_string(),
+            diagnostics: Vec::new(),
+        };
+        assert_eq!(
+            required_destination_status(None, std::slice::from_ref(&report), &[], &[]),
+            RequiredDestinationStatus::Found
         );
     }
 

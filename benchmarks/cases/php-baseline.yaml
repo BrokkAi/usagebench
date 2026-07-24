@@ -182,6 +182,7 @@ cases:
         displayName: last
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location:
             uri: benchmark://source/src/Consumer.php
@@ -238,6 +239,7 @@ cases:
         displayName: PREFIX
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location:
             uri: benchmark://source/src/Consumer.php

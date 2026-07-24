@@ -177,6 +177,7 @@ cases:
         displayName: Last
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location:
             uri: benchmark://source/src/example/service_test.go
@@ -228,6 +229,7 @@ cases:
         displayName: DefaultPrefix
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location:
             uri: benchmark://source/src/example/service_test.go
@@ -271,6 +273,7 @@ cases:
         displayName: DefaultRepository
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location:
             uri: benchmark://source/src/example/service_test.go

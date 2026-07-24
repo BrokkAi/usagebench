@@ -19,11 +19,14 @@ The user-facing metric counts a case when:
 2. every navigation lookup includes its expected destination; and
 3. every type lookup includes its expected type destination.
 
-A broader containing range and additional returned results are tolerated. This
-models the basic editor question—“did the operation take me to, or list, the
-code I needed?”—without pretending that range precision and result clutter are
-invisible to users. Unsupported operations remain outside the shared
-denominator.
+A line-only location, a broader containing range, and additional returned
+results are tolerated. This models the basic editor question—“did the operation
+take me to, or list, the code I needed?”—without pretending that range
+precision and result clutter are invisible to users. A case remains in this
+shared denominator when both analyzers can execute every required lookup
+through either the canonical operation or an explicitly reviewed compatible
+operation. Operations unavailable through both paths remain outside it; the
+strict metric continues to use only the authored canonical operation.
 
 This is best read as **required-destination recall**, not an all-purpose quality
 score. A response containing the expected target among many unrelated targets
@@ -71,6 +74,17 @@ Definition for an ordinary, undifferentiated source target avoids that
 capability-advertisement bias. It does **not** make the scorer lenient: once a
 case selects Declaration or Definition, that exact request must satisfy the
 strict singleton target contract, with no fallback to the other endpoint.
+
+Cases may additionally declare reviewed `compatibleOperations` when another
+endpoint reaches the exact same authored target. The runner records these as
+separate alternate results: `status` remains the canonical protocol-specific
+score, while `requiredDestinationStatus` is computed from the raw canonical
+and reviewed-compatible locations. It records `found` when all expected
+destinations are present even if ranges contain the expected token or the
+response includes extras. An alternate is never queried silently, never merged
+into the canonical response, and cannot improve the strict endpoint result.
+Per-report `totals.requiredDestinations` makes this metric machine-readable
+without changing the canonical counters.
 
 The strict result is not labeled generic LSP compliance. The current
 [`Location`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#location)

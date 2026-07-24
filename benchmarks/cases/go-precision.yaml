@@ -75,6 +75,7 @@ cases:
         displayName: Record
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location: { uri: benchmark://source/cmd/app/main.go, range: { start: { line: 10, character: 10 }, end: { line: 10, character: 16 } } }
           kind: method

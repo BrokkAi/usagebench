@@ -173,6 +173,7 @@ fn main() -> Result<()> {
                 report.totals.skipped,
                 report.totals.errors
             );
+            print_required_destination_totals(&report);
             print_run_details(&report);
             if report.totals.failed > 0
                 || report.totals.position_unverified > 0
@@ -220,6 +221,7 @@ fn main() -> Result<()> {
                 report.totals.skipped,
                 report.totals.errors
             );
+            print_required_destination_totals(&report);
             print_run_details(&report);
             if report.totals.failed > 0
                 || report.totals.position_unverified > 0
@@ -236,6 +238,21 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn print_required_destination_totals(report: &BifrostRunReport) {
+    let totals = &report.totals.required_destinations;
+    println!(
+        "required destinations: {}/{} found ({} missing), {} not planned, {} unsupported, {} skipped, {} error(s), {} unreported",
+        totals.found,
+        totals.scoreable_cases,
+        totals.missing,
+        totals.not_planned,
+        totals.unsupported,
+        totals.skipped,
+        totals.errors,
+        totals.unreported,
+    );
 }
 
 fn print_run_details(report: &BifrostRunReport) {

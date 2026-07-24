@@ -3,16 +3,18 @@ title: Go — Bifrost and gopls
 description: Compare package, embedding, receiver, and interface-method reference behavior.
 ---
 
-| Runner | Exact | Position unverified | Hard | Unsupported |
-|---|---:|---:|---:|---:|
-| Bifrost | 9 | 0 | 2 | 1 |
-| gopls | 6 | 0 | 0 | 6 |
+| Runner | Required destinations found | Strict exact | Position unverified | Hard | Strict unsupported |
+|---|---:|---:|---:|---:|---:|
+| Bifrost | 9/11 | 9 | 0 | 2 | 1 |
+| gopls | 11/11 | 6 | 0 | 0 | 6 |
 
 ## Strong agreement
 
-Both analyzers can score six common cases and are exact together on five.
-gopls alone is exact on the dot-import concrete-receiver call; Bifrost currently
-misclassifies the imported `Record` selectors as shadowed local bindings.
+In the compatibility-aware editor view, eleven cases are destination-scoreable
+by both analyzers. gopls reaches all eleven destinations; Bifrost misses the
+dot-import concrete-receiver call and the interface-family reference set. The
+strict canonical comparison still has only six shared cases, where gopls is
+exact on all six and Bifrost is exact on five.
 
 ## The interface-family split
 
@@ -21,6 +23,11 @@ advertise. They are reported as unsupported rather than retried through
 Definition. Bifrost can score five of those six, but its interface receiver case
 still misses the two conservative concrete candidates and the declaration
 lookup.
+
+Five of those canonical Declaration contracts also record reviewed Definition
+compatibility. They raise the shared destination-scoreable denominator from six
+to eleven, but do not change the strict gopls Declaration denominator or
+capability result.
 
 This consistent behavior may reflect an intentional method-family policy. It is
 not enough to claim object insensitivity: the case does not vary allocation or

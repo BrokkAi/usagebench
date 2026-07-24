@@ -1,13 +1,14 @@
 use super::mcp::{McpSession, ToolClient as SearchToolsClient};
 use super::{
     combine_case_status, compute_totals, location_match, normalize_symbol_location, path_to_slash,
-    resolve_usagebench_provenance, score_declaration_locations, score_navigation_response,
-    symbol_kind_name, CapabilitySupport, LocationMatch, RunInvocation, RunReport, RunnerCapability,
-    RunnerMetadata, RunnerOperation,
+    required_destination_status, resolve_usagebench_provenance, score_declaration_locations,
+    score_navigation_response, symbol_kind_name, CapabilitySupport, LocationMatch, RunInvocation,
+    RunReport, RunnerCapability, RunnerMetadata, RunnerOperation,
 };
 pub use super::{
-    CaseRunReport, CaseStatus, DeclarationUsageReport, DocumentRunReport, NormalizedLocation,
-    RunDiagnostic, RunTotals, TypeLookupReport, UsageDefinitionReport,
+    CaseRunReport, CaseStatus, CompatibleUsageDefinitionReport, DeclarationUsageReport,
+    DocumentRunReport, NormalizedLocation, RequiredDestinationStatus, RunDiagnostic, RunTotals,
+    TypeLookupReport, UsageDefinitionReport,
 };
 use crate::{
     benchmark_source_path, find_repo_root_for_path, BenchmarkCase, BenchmarkDocument, Location,
@@ -302,6 +303,8 @@ fn run_case(
                 unsupported_reason: Some(unsupported.reason.clone()),
                 declaration_to_usages: None,
                 usage_to_declaration: Vec::new(),
+                compatible_usage_to_declaration: Vec::new(),
+                required_destination_status: Some(RequiredDestinationStatus::Unsupported),
                 type_lookups: Vec::new(),
                 diagnostics: Vec::new(),
             };
@@ -331,6 +334,31 @@ fn run_case(
             .map(skipped_definition_lookup)
             .collect::<Vec<_>>()
     };
+    let compatible_usage_to_declaration = case
+        .usage_lookups
+        .iter()
+        .enumerate()
+        .filter(|(_, lookup)| !lookup.compatible_operations.is_empty())
+        .map(
+            |(usage_lookup_index, lookup)| CompatibleUsageDefinitionReport {
+                usage_lookup_index,
+                canonical_operation: lookup.operation,
+                reports: lookup
+                    .compatible_operations
+                    .iter()
+                    .map(|operation| {
+                        let mut compatible_lookup = lookup.clone();
+                        compatible_lookup.operation = *operation;
+                        if include_definition_lookups {
+                            run_usage_to_declaration(&compatible_lookup, encoding, session)
+                        } else {
+                            skipped_definition_lookup(&compatible_lookup)
+                        }
+                    })
+                    .collect(),
+            },
+        )
+        .collect::<Vec<_>>();
     let type_lookups = if include_definition_lookups {
         case.type_lookups
             .iter()
@@ -362,6 +390,17 @@ fn run_case(
         not_planned_reason.as_deref(),
         &mut diagnostics,
     );
+    let mut required_destination_status = required_destination_status(
+        declaration_to_usages.as_ref(),
+        &usage_to_declaration,
+        &compatible_usage_to_declaration,
+        &type_lookups,
+    );
+    if required_destination_status != RequiredDestinationStatus::Error
+        && not_planned_reason.is_some()
+    {
+        required_destination_status = RequiredDestinationStatus::NotPlanned;
+    }
     CaseRunReport {
         id: case.id.clone(),
         status,
@@ -373,6 +412,8 @@ fn run_case(
             .map(|unsupported| unsupported.reason.clone()),
         declaration_to_usages,
         usage_to_declaration,
+        compatible_usage_to_declaration,
+        required_destination_status: Some(required_destination_status),
         type_lookups,
         diagnostics,
     }
@@ -1944,6 +1985,11 @@ mod tests {
                 unsupported: 0,
                 skipped: 0,
                 errors: 0,
+                required_destinations: crate::runners::RequiredDestinationTotals {
+                    scoreable_cases: 1,
+                    found: 1,
+                    ..Default::default()
+                },
             },
             documents: vec![DocumentRunReport {
                 case_file: "benchmarks/cases/rust.yaml".to_string(),
@@ -1981,6 +2027,8 @@ mod tests {
                         raw_statuses: vec!["ok".to_string()],
                     }),
                     usage_to_declaration: Vec::new(),
+                    compatible_usage_to_declaration: Vec::new(),
+                    required_destination_status: Some(RequiredDestinationStatus::Found),
                     type_lookups: Vec::new(),
                     diagnostics: Vec::new(),
                 }],
@@ -2004,6 +2052,11 @@ mod tests {
             "c".repeat(64)
         );
         assert_eq!(json["totals"]["passed"], 1);
+        assert_eq!(json["totals"]["requiredDestinations"]["found"], 1);
+        assert_eq!(
+            json["documents"][0]["cases"][0]["requiredDestinationStatus"],
+            "found"
+        );
         assert_eq!(
             json["documents"][0]["cases"][0]["declarationToUsages"]["unexpected"][0]["path"],
             "src/extra.rs"
@@ -2045,6 +2098,59 @@ mod tests {
         );
         assert_eq!(client.calls[1].1["include_same_owner"], true);
         assert_eq!(client.calls[1].1["include_bindings"], true);
+    }
+
+    #[test]
+    fn compatible_navigation_is_reported_without_replacing_canonical_status() {
+        let mut case = benchmark_case();
+        case.usage_lookups[0].operation = crate::NavigationOperation::Declaration;
+        case.usage_lookups[0].compatible_operations = vec![crate::NavigationOperation::Definition];
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages_by_location",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+            tool(
+                GET_DECLARATIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("no_declaration", Vec::new()),
+            ),
+            tool(
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
+            ),
+        ]);
+
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+        );
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(
+            report.required_destination_status,
+            Some(RequiredDestinationStatus::Found)
+        );
+        assert_eq!(
+            report.usage_to_declaration[0].operation,
+            NavigationOperation::Declaration
+        );
+        assert_eq!(
+            report.compatible_usage_to_declaration[0].reports[0].operation,
+            NavigationOperation::Definition
+        );
+        assert_eq!(
+            report.compatible_usage_to_declaration[0].usage_lookup_index,
+            0
+        );
     }
 
     #[test]
@@ -2351,6 +2457,10 @@ mod tests {
         );
 
         assert_eq!(report.status, CaseStatus::PositionUnverified);
+        assert_eq!(
+            report.required_destination_status,
+            Some(RequiredDestinationStatus::Found)
+        );
         let declaration = report.declaration_to_usages.unwrap();
         assert!(declaration.actual.is_empty());
         assert_eq!(declaration.unproven.len(), 2);
@@ -2434,6 +2544,10 @@ mod tests {
         );
 
         assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(
+            report.required_destination_status,
+            Some(RequiredDestinationStatus::Found)
+        );
         let declaration = report.declaration_to_usages.unwrap();
         assert_eq!(declaration.status, CaseStatus::Failed);
         assert_eq!(declaration.unexpected.len(), 1);
@@ -2468,6 +2582,10 @@ mod tests {
         );
 
         assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(
+            report.required_destination_status,
+            Some(RequiredDestinationStatus::Missing)
+        );
         let declaration = report.declaration_to_usages.unwrap();
         assert_eq!(declaration.status, CaseStatus::Failed);
         assert_eq!(declaration.missing.len(), 1);
@@ -2912,6 +3030,10 @@ mod tests {
                 "scan_usages_by_location",
                 scan_usages_json(vec![("src/lib.rs", 8)], true),
             ),
+            tool(
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
+            ),
         ]);
 
         let report = run_case(
@@ -2921,10 +3043,14 @@ mod tests {
             None,
             &mut client,
             false,
-            false,
+            true,
         );
 
         assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(
+            report.required_destination_status,
+            Some(RequiredDestinationStatus::Found)
+        );
         let declaration = report.declaration_to_usages.unwrap();
         assert!(declaration.partial);
         assert!(declaration.raw_statuses.contains(&"partial".to_string()));
@@ -3457,6 +3583,7 @@ mod tests {
             allowed_unproven_usages: Vec::new(),
             usage_lookups: vec![UsageLookup {
                 operation: crate::NavigationOperation::ProfileDefault,
+                compatible_operations: Vec::new(),
                 expect_no_movement: false,
                 usage: symbol_location("src/lib.rs", 7, 18, "build_service", SymbolKind::Function),
                 expected_declaration: symbol_location(

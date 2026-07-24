@@ -3,10 +3,10 @@ title: JavaScript and TypeScript — Bifrost and TypeScript LS
 description: Compare ES modules, CommonJS, barrels, types, JSX, and conservative receiver evidence.
 ---
 
-| Runner | Exact | Position unverified | Hard | Unsupported | Not planned |
-|---|---:|---:|---:|---:|---:|
-| Bifrost | 20 | 0 | 2 | 0 | 1 |
-| TypeScript LS | 13 | 2 | 2 | 5 | 1 |
+| Runner | Required destinations found | Strict exact | Position unverified | Hard | Strict unsupported | Not planned |
+|---|---:|---:|---:|---:|---:|---:|
+| Bifrost | 19/21 | 20 | 0 | 2 | 0 | 1 |
+| TypeScript LS | 19/21 | 13 | 2 | 2 | 5 | 1 |
 
 ## TypeScript agreement after import policy
 
@@ -14,6 +14,14 @@ Import and re-export bindings are now optional in the scorer, so the former nine
 policy near misses no longer obscure semantic agreement. On the 17 cases both
 sides can score, 11 are exact for both, 4 only for Bifrost, and 2 only for the
 TypeScript language server.
+
+The class-property contract, the two TypeScript-property contracts, and the
+type-annotation contract retain their reviewed Declaration operation while
+recording Definition as explicit compatibility evidence. Those four cases raise
+the shared destination-scoreable denominator from 17 to 21 without rewriting
+the strict endpoint comparison. The CommonJS exported-member contract is
+intentionally excluded: its Definition target is a distinct
+function-expression token.
 
 ## CommonJS split
 
