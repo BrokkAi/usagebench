@@ -35,11 +35,14 @@ lookups are reported as unsupported rather than falling back to definition. A
 git revision is resolved before execution and recorded in the report. When the
 document permits bindings, the adapter requests
 `include_bindings: true`; compatible Bifrost releases may include imports and
-re-exports. Releases that return only path/line locations are reported as
-`position_unverified` until they expose exact token ranges. Hits explicitly
-labeled `override_declaration` count only when the authored case expects or
-allows that declaration; other override declarations are excluded from
-ordinary usage scoring and recorded as `override_declarations_excluded` in
+re-exports. The adapter also requests `include_same_owner: true` and normalizes
+`same_owner_files` with ordinary proven references because UsageBench measures
+the LSP-shaped reference surface rather than Bifrost's narrower default
+external-usage surface. Releases that return only path/line locations are
+reported as `position_unverified` until they expose exact token ranges. Hits
+explicitly labeled `override_declaration` count only when the authored case
+expects or allows that declaration; other override declarations are excluded
+from ordinary usage scoring and recorded as `override_declarations_excluded` in
 `rawStatuses`. Unlabeled supersets remain failures.
 
 The original `usagebench::bifrost_runner` module remains as a compatibility
