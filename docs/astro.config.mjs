@@ -30,6 +30,7 @@ export default defineConfig({
           items: [
             { label: 'Overview', slug: 'overview' },
             { label: 'Comparison methodology', slug: 'methodology' },
+            { label: 'Human ground-truth audit', slug: 'ground-truth-review' },
             { label: 'Reproduce the comparison', slug: 'reproduce' },
           ],
         },

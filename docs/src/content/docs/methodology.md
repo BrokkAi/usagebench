@@ -4,8 +4,10 @@ description: Classify observed differences without overclaiming analyzer defects
 ---
 
 UsageBench reports contract agreement first and causal interpretation second.
-The expected locations are reviewed source facts, but an analyzer may expose a
-different public grouping policy without containing an implementation bug.
+Every current expected location has completed one human source review, but the
+corpus remains a development set rather than independently reviewed evaluation
+ground truth. An analyzer may also expose a different public grouping policy
+without containing an implementation bug.
 
 ## Result categories
 
@@ -31,6 +33,13 @@ for the case rather than silently queried through the other endpoint.
 Development cases may be analyzer-informed and may retain legacy review notes.
 They are appropriate for regression work and diagnosis, but their aggregate is
 not an evaluation claim. Each current case document declares this status.
+
+The first human audit is complete for all 158 current cases in 35 documents.
+That review corrected and explained individual source contracts, but it does
+not change their `development`, `analyzer_informed`, or
+`legacy_unattributed` metadata. See the
+[human ground-truth audit](../ground-truth-review/) for coverage, procedure, and
+the precise trust boundary.
 
 An evaluation document is accepted only when all of these are true:
 

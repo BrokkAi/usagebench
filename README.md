@@ -46,10 +46,12 @@ of truth for issue #8; the older broad
 Java/Go/Python generator stack has been removed from the active benchmark path.
 
 Each document is schema v2 and explicitly labeled `development`,
-`analyzer_informed`, and `legacy_unattributed`. It is a regression and diagnosis
-corpus, not yet an independently reviewed evaluation partition. Each fixture
-case records `verification.method: manual_inspection` with a short note
-explaining how its locations were checked.
+`analyzer_informed`, and `legacy_unattributed`. All 158 current cases across 35
+documents have completed a first human review, preserved in
+[`benchmarks/reviews/2026-07-17-DavidBakerEffendi.md`](benchmarks/reviews/2026-07-17-DavidBakerEffendi.md).
+This remains a regression and diagnosis corpus, not an independently reviewed
+evaluation partition: promotion still requires a second reviewer,
+preregistered selection, and a freeze ID.
 
 ## Analyzer Runners
 

@@ -8,6 +8,11 @@ description: Historical 2026-07-16 diagnostic results produced before exact-rang
 > the schema-v2 corpus partition and independent-review requirements. It must be
 > re-run under the hardened scorer before its aggregate is cited.
 
+The subsequent [human ground-truth audit](../ground-truth-review/) has now
+reviewed all 158 current cases, but the table below has not been regenerated
+from those corrected contracts. Review completion increases trust in individual
+assertions; it does not retroactively validate this aggregate.
+
 This snapshot was captured on macOS arm64 on 2026-07-16. Every measured server
 completed with zero runner errors. “Allowed-policy” means that all required
 locations and navigation checks passed and the only extras were import bindings,

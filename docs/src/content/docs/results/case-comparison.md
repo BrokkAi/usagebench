@@ -3,15 +3,16 @@ title: Case comparison
 description: Case-level disagreements between Bifrost and each measured language server.
 ---
 
-This page lists every non-exact case plus exact controls needed to interpret the
-macro and CommonJS comparisons. “Bifrost pass” means the pinned Bifrost run
-satisfied the authored contract; “Bifrost gap” means a documented expected
-failure. LSP near misses are policy-only binding/export extras. An LSP hard
-result means contract disagreement, not an automatic defect verdict.
+This page records notable analyzer disagreements and exact controls discovered
+during the human audit. “Bifrost pass” means the pinned case-level calibration
+satisfied the authored contract; “Bifrost gap” means a documented non-exact
+result. An LSP hard result means contract disagreement, not an automatic defect
+verdict.
 
-> This is the case-level audit for the legacy 2026-07-16 development run. Its
-> labels preserve that run's former line-level and policy-near-miss semantics;
-> they are not schema-v2 evaluation outcomes.
+> These rows combine the historical 16 July snapshot with later isolated
+> post-review calibrations. They are not one synchronized report and must not be
+> summed into a score. See the [human ground-truth audit](../../ground-truth-review/)
+> and rerun the corpus before citing an aggregate.
 
 ## C++
 

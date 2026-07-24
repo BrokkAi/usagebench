@@ -8,6 +8,11 @@ fixtures. A case starts from a declaration location, lists expected usage
 locations, and may probe whether those usages navigate back to the intended
 declaration or type.
 
+All 158 current cases have completed a first human review. They remain a
+development corpus—not an independently reviewed evaluation set—and the
+published aggregate predates the corrected contracts. The
+[human ground-truth audit](../ground-truth-review/) explains that boundary.
+
 The benchmark is analyzer-neutral. Cases do not contain Bifrost symbol IDs or
 LSP-specific response shapes. Runners translate each tool's public interface
 into a shared report containing exact locations, missing locations, unexpected

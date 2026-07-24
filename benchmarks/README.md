@@ -22,6 +22,13 @@ groundTruth:
 referencePolicy: bindings_optional
 ```
 
+As of 24 July 2026, all 158 cases in the 35 current documents have completed a
+first human review. The decisions are preserved in
+[`reviews/2026-07-17-DavidBakerEffendi.md`](reviews/2026-07-17-DavidBakerEffendi.md).
+The metadata intentionally remains `legacy_unattributed`: a first review does
+not satisfy the second-reviewer, preregistration, and freeze requirements for
+evaluation promotion.
+
 Expected locations should still be verified by reading the checked-in fixture
 source and recorded with `verification.method: manual_inspection`. Promotion to
 `evaluation` additionally requires `selection: pre_registered`, a non-empty

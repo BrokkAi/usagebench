@@ -2,7 +2,9 @@
 
 - Reviewer: `DavidBakerEffendi` (GitHub username)
 - Started: 2026-07-17
+- Completed: 2026-07-24
 - Review stream: first independent human review
+- Coverage: all 158 cases in the 35 current benchmark documents
 - Corpus provenance: cases and expected locations were generated agentically
   from upstream LSP tests, existing analyzer tests, and observed edge cases.
 - Procedure: inspect fixture source and the authored contract before revealing
@@ -13,9 +15,10 @@
   definition, and usage semantics and seek a minimal reproduction or
   corroborating evidence before preserving the disagreement.
 
-Document-level `groundTruth` metadata remains `legacy_unattributed` until every
-case in that document has completed this review. A second independent human
-review is still required before promotion to the evaluation partition.
+Every current document has completed this first review. Document-level
+`groundTruth` metadata remains `legacy_unattributed` by design: a second
+independent human review, preregistered selection, and an immutable freeze ID
+are still required before promotion to the evaluation partition.
 
 ## Decisions
 
