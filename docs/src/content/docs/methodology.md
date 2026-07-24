@@ -114,6 +114,14 @@ Bifrost is evaluated as a fully static analyzer. It reads and indexes the
 checked-in source, but it does not execute fixture code or invoke the fixture's
 project build.
 
+The products also have different primary consumers. An LSP normally supports a
+developer's live editor session, where low-latency cursor operations sit beside
+completion, diagnostics, and refactoring. Bifrost exposes repository analysis
+and navigation to machine consumers, including coding agents and static-analysis
+tools. UsageBench compares only their overlapping source-usage and navigation
+contract; it is not a benchmark of the LSP's full editor experience or
+Bifrost's broader analysis surface.
+
 Language servers receive a different, deliberately favorable setup. Their
 profiles may add minimal project files, configure toolchains, restore
 dependencies, generate compilation metadata, accept build-import prompts, and
@@ -125,8 +133,8 @@ hydrating its normal workspace would turn missing results into a harness
 configuration test. UsageBench compares each analyzer's returned locations
 after its intended environment is ready, while preserving Bifrost's notable
 property that its analysis does not depend on running or building the target
-project. The current snapshot does not compare the time, resource, dependency,
-or security costs of those execution models.
+project. The current synchronized run does not compare the time, resource,
+dependency, or security costs of those execution models.
 
 ## Explaining a Bifrost advantage
 

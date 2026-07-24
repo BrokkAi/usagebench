@@ -15,6 +15,20 @@ the baseline and post-review calibration: Bifrost should reach parity wherever
 the LSP behavior matches the reviewed language semantics, and may deliberately
 be more precise or cover additional static edges when the evidence supports it.
 
+Language servers are primarily designed for interactive development: completion,
+diagnostics, refactoring, and cursor-local navigation inside an editor
+workspace. Bifrost is designed as a code-analysis and navigation substrate for
+repository-scale consumers, especially coding agents and static-analysis tool
+developers. For those consumers, reliable symbol identity, source locations,
+and relationships are not supporting editor features; they are the interface
+through which the codebase is understood.
+
+UsageBench tests the important overlap between those products. Parity means an
+agent should not lose the navigation quality developers already expect from
+their language tooling. A Bifrost-only exact result matters only when the
+reviewed source contract supports it; it is not evidence that every part of an
+LSP or compiler model has been surpassed.
+
 All 158 current cases have completed a
 [first human ground-truth audit](ground-truth-review/). The corpus now preserves
 those decisions as executable regression contracts, and the daily workflow runs
@@ -103,8 +117,8 @@ the LSP does not advertise.
 
 ## Read beyond the aggregate
 
-The [full result snapshot](results/) records the version envelope, each runner's
-own denominator, and the shared-case matrix. The
+The [current synchronized result](results/) records the version envelope, each
+runner's own denominator, and the shared-case matrix. The
 [case comparison](results/case-comparison/) lists the cases that separate the
 two sides. Language pages discuss the evidence and fairness gaps without turning
 contract differences into unsupported defect claims.

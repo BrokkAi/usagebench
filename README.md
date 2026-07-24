@@ -13,6 +13,13 @@ semantics, and may preserve justified precision improvements or additional
 static coverage. The benchmark format remains analyzer-neutral so future
 competitors can be evaluated against the same source contracts.
 
+LSPs primarily serve developers through interactive editor features. Bifrost
+serves repository code analysis and navigation for machine consumers, especially
+coding agents and static-analysis tools. UsageBench measures their overlapping
+usage and navigation contract: parity preserves the quality developers expect,
+while reviewed Bifrost-specific edges exercise the analysis substrate agents
+depend on. It does not compare either product's complete feature surface.
+
 The synchronized 24 July 2026 development run compares the 131 cases scoreable
 by both sides: Bifrost is exact on 116 and the reference language servers on 95.
 Both are exact on 84 cases; 32 are exact only for Bifrost, 11 only for the LSP,

@@ -8,7 +8,7 @@ description: Compare declaration identity, out-of-line definitions, constructors
 | Bifrost | 12 | 0 | 2 hard, 1 expected | 1 |
 | clangd | 12 | 0 | 3 hard | 1 |
 
-## Where Bifrost satisfies more cases
+## Same score, different exact cases
 
 Bifrost and clangd are both exact on 12 of 15 scoreable cases, with 11 cases
 exact for both. Bifrost alone is exact on the concrete-override case; clangd

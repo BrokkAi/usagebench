@@ -15,6 +15,24 @@ tie-breaker: Bifrost should match the LSP where that behavior is semantically
 sound, while retaining justified precision improvements or additional static
 coverage. Each accepted decision becomes a recurring regression test.
 
+## Different consumers, shared expectations
+
+Language servers primarily serve a developer working through an editor. Their
+broader contract includes completion, diagnostics, refactoring, and responsive
+navigation in a configured workspace.
+
+Bifrost serves repository code analysis and navigation as a machine-readable
+substrate. Coding agents and static-analysis tool developers depend on stable
+symbol identities, exact source locations, and queryable relationships to
+understand and transform code safely. For these consumers, navigation is a
+central analysis interface rather than one editor feature among many.
+
+UsageBench deliberately measures the overlapping usage and navigation surface.
+LSP parity protects the quality baseline developers already trust when that
+capability is consumed by an agent. Bifrost-specific wins are reported only
+where they satisfy the reviewed contract; the benchmark does not claim that
+Bifrost replaces an LSP's complete development-tooling surface.
+
 All 158 current cases have completed a first human review. They remain a
 development corpus—not an independently reviewed evaluation set. The current
 24 July synchronized run applies the hardened exact-range scorer to those
