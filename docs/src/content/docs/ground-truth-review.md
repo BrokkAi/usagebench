@@ -32,7 +32,7 @@ through preregistration.
 |---|---|
 | Is an individual expected token or navigation target suitable for regression testing and diagnosis? | **Yes, with the development-corpus qualification.** A human inspected the fixture and classified the source contract before seeing the measured analyzer outcomes. |
 | Can a case-level Bifrost/LSP disagreement be discussed? | **Yes.** The review log records the semantic decision, post-review analyzer checks, and notable policy differences. |
-| Do the headline scores reflect the reviewed contracts and hardened scorer? | **Yes, as development evidence.** The synchronized 24 July native run uses exact ranges and strict singleton navigation, but it is not an independently reviewed evaluation result. |
+| Do the headline scores reflect the reviewed contracts and hardened scorer? | **Yes, as development evidence.** The corrected 24 July native result headlines required-destination recall and reports exact ranges and strict singleton navigation separately, but it is not an independently reviewed evaluation result. |
 | Is this a general analyzer accuracy ranking? | **No.** The corpus is analyzer-informed, small, and still has known coverage gaps. |
 | Is this an independently reviewed evaluation set? | **No.** It still needs a second independent reviewer, preregistered selection, and an immutable freeze. |
 
@@ -98,7 +98,7 @@ Recurring corrections included:
   failures.
 
 The [case comparison](results/case-comparison/) relates the qualitative
-adjudication notes to the synchronized 24 July run.
+adjudication notes to the corrected 24 July result.
 
 ## Path to an evaluation release
 

@@ -8,11 +8,12 @@ fixtures. A case starts from a declaration location, lists expected usage
 locations, and may probe whether those usages navigate back to the intended
 declaration or type.
 
-The immediate product goal is Bifrost conformance. Mature language servers are
-used as a strong baseline because their behavior is familiar to developers and
-grounded in language tooling. The human-reviewed source contract remains the
-tie-breaker: Bifrost should match the LSP where that behavior is semantically
-sound, while retaining justified precision improvements or additional static
+The immediate product goal is Bifrost conformance. Established language servers
+provide strong comparison evidence because their behavior is familiar to
+developers and grounded in language tooling. They are not automatic ground
+truth. The human-reviewed source contract remains the tie-breaker: Bifrost
+should match the reference server where that behavior is semantically sound,
+while retaining justified precision improvements or additional static
 coverage. Each accepted decision becomes a recurring regression test.
 
 ## Different consumers, shared expectations
@@ -28,16 +29,20 @@ understand and transform code safely. For these consumers, navigation is a
 central analysis interface rather than one editor feature among many.
 
 UsageBench deliberately measures the overlapping usage and navigation surface.
-LSP parity protects the quality baseline developers already trust when that
-capability is consumed by an agent. Bifrost-specific wins are reported only
-where they satisfy the reviewed contract; the benchmark does not claim that
-Bifrost replaces an LSP's complete development-tooling surface.
+Reference-server comparison tests whether an agent loses navigation behavior
+already available through established language tooling. Bifrost-specific wins
+are reported only where they satisfy the reviewed contract; the benchmark does
+not claim that Bifrost replaces an LSP's complete development-tooling surface.
 
 All 158 current cases have completed a first human review. They remain a
-development corpus—not an independently reviewed evaluation set. The current
-24 July synchronized run applies the hardened exact-range scorer to those
-reviewed contracts. The [human ground-truth audit](../ground-truth-review/)
-explains the remaining evaluation boundary.
+development corpus—not an independently reviewed evaluation set. The corrected
+24 July result reports required-destination recall as the user-facing metric
+and retains the hardened exact-range scorer as a stricter machine-consumer
+contract. It includes a rerun of Java after its workspace and navigation
+operations were corrected, plus a Scala rerun on Metals 1.6.8 whose case
+outcomes were unchanged. The
+[human ground-truth audit](../ground-truth-review/) explains the remaining
+evaluation boundary.
 
 The benchmark is analyzer-neutral. Cases do not contain Bifrost symbol IDs or
 LSP-specific response shapes. Runners translate each tool's public interface

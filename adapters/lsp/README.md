@@ -46,7 +46,7 @@ from incorrect results.
 | `pyright.json` | Python | 1.1.411 | exact package through `npx` |
 | `ruby-lsp.json` | Ruby | 0.26.10 | installed `ruby-lsp` |
 | `solargraph.json` | Ruby | 0.60.2 | installed `solargraph` |
-| `metals.json` | Scala | 1.6.7 | exact artifact through Coursier `cs` |
+| `metals.json` | Scala | 1.6.8 | exact artifact through Coursier `cs` |
 | `intelephense.json` | PHP | 1.18.5 | exact package through `npx` |
 | `phpactor.json` | PHP | 2026.06.25.0 | installed `phpactor` |
 | `rust-analyzer.json` | Rust | 2026-07-13 | installed `rust-analyzer` |
@@ -132,7 +132,9 @@ Profiles are JSON objects with these core fields:
 - `queryDeclaration` explicitly selects `textDocument/declaration` instead of
   `textDocument/definition` when the server advertises it; the two response sets
   are never unioned;
-- `environment` supports `{workspace}` and `{runDir}` substitutions;
+- command arguments and `environment` support `{workspace}` and `{runDir}`
+  substitutions; a server data directory that must be unique per source
+  workspace can use a sibling path such as `{workspace}-server-data`;
 - `workspaceFiles` supplies missing project bootstrap files without replacing
   fixture-owned files;
 - `prepareCommand` and `prepareTimeoutMilliseconds` hydrate or restore a

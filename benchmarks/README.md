@@ -109,6 +109,18 @@ Each case supports both benchmark directions:
   Each lookup has an `operation`: `declaration`, `definition`, or the temporary
   development-only `profile_default`. Evaluation cases must choose explicitly;
   declaration lookups never fall back to definition, or vice versa.
+  Use `definition` for ordinary source navigation when declaration and
+  definition are not materially distinct in the fixture. Use `declaration`
+  only when the declaration/definition distinction is part of the reviewed
+  contract, such as navigating from an implementation to a separate interface,
+  prototype, or forward declaration. The LSP added Declaration as a separate
+  optional request in version 3.14, and servers may give it language-specific
+  semantics. This is a deliberate fairness rule at authoring time: a server
+  that does not advertise Declaration is excluded as unsupported, so using that
+  operation for an ordinary source target would otherwise penalize a server for
+  advertising a narrower, language-specific implementation. It is not a
+  scoring fallback; after the operation is authored, its response is still
+  judged strictly and never substituted with the other operation.
   `allowedExtraTargets` may list conservative alternate targets that can
   accompany the required `expectedDeclaration` but cannot replace it. An
   alternate may have a different symbol kind when navigation legitimately

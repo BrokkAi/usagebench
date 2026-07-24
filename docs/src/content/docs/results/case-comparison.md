@@ -1,9 +1,9 @@
 ---
 title: Case comparison
-description: Cases that separate Bifrost from the reference language servers in the synchronized 24 July 2026 run.
+description: Cases that separate Bifrost from the reference language servers in the corrected 24 July 2026 result.
 ---
 
-This page expands the **131 cases scoreable by both sides** in the synchronized
+This page expands the **131 cases scoreable by both sides** in the corrected
 24 July development run. Exact means complete token ranges, no unallowed extras,
 and the one reviewed navigation target. A language-server disagreement is a
 contract result, not an automatic defect verdict.
@@ -18,7 +18,7 @@ visible in reports but do not make an otherwise exact case non-exact.
 | C++ | 15 | 11 | 1 | 1 | 2 |
 | C# | 16 | 11 | 3 | 2 | 0 |
 | Go | 6 | 5 | 0 | 1 | 0 |
-| Java | 11 | 3 | 8 | 0 | 0 |
+| Java | 11 | 4 | 7 | 0 | 0 |
 | JavaScript | 8 | 3 | 3 | 2 | 0 |
 | TypeScript | 9 | 8 | 1 | 0 | 0 |
 | PHP | 10 | 9 | 1 | 0 | 0 |
@@ -26,19 +26,19 @@ visible in reports but do not make an otherwise exact case non-exact.
 | Ruby | 16 | 5 | 10 | 0 | 1 |
 | Rust | 15 | 11 | 3 | 1 | 0 |
 | Scala | 12 | 8 | 2 | 1 | 1 |
-| **Total** | **131** | **84** | **32** | **11** | **4** |
+| **Total** | **131** | **85** | **31** | **11** | **4** |
 
 ## Exact only for Bifrost
 
-These 32 cases satisfy the reviewed contract in Bifrost but not in the
-reference LSP. Nine LSP results are `position_unverified`; the remaining 23 are
+These 31 cases satisfy the reviewed contract in Bifrost but not in the
+reference LSP. Nine LSP results are `position_unverified`; the remaining 22 are
 hard disagreements.
 
 | Language | Separating cases | Current distinction |
 |---|---|---|
 | C++ | `cpp-parity-concrete-override-method-call` | clangd expands the implementation family beyond the concrete receiver. |
 | C# | `csharp-parity-interface-receiver-method-call`, `csharp-parity-concrete-implementation-method-call`, `csharp-parity-buffer-implementation-method-call` | Roslyn returns related interface/implementation-family calls beyond the reviewed static identity. |
-| Java | `java-service-method-call`, `java-static-field-access`, `java-nested-class-constructor`, `java-parity-static-import-method-call`, `java-parity-interface-receiver-method-call`, `java-parity-concrete-implementation-method-call`, `java-lambda-body-member-call`, `java-static-qualified-method-call` | JDT LS has five imprecise target ranges and three hard declaration/family differences; Bifrost is exact on all eleven Java cases. |
+| Java | `java-service-method-call`, `java-nested-class-constructor`, `java-parity-static-import-method-call`, `java-parity-interface-receiver-method-call`, `java-parity-concrete-implementation-method-call`, `java-lambda-body-member-call`, `java-static-qualified-method-call` | JDT LS returns every expected usage site. Five cases use broader containing ranges and two group interface and override-family calls. |
 | JavaScript | `js-class-construction`, `js-parity-commonjs-destructured-function-call`, `js-commonjs-barrel-class-construction` | TypeScript LS broadens constructor navigation in one case and omits two CommonJS edges. |
 | TypeScript | `ts-default-class-import-and-construction` | TypeScript LS reaches the expected class plus an enclosing constructor-body range, so strict singleton navigation is position-unverified. |
 | PHP | `php-class-construction` | Intelephense returns both the class and explicit constructor; Bifrost returns the reviewed class target alone. |

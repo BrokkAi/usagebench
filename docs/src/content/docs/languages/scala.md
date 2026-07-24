@@ -3,10 +3,19 @@ title: Scala — Bifrost and Metals
 description: Compare imports, companion objects, synthetic apply calls, traits, and build hydration.
 ---
 
-| Runner | Exact | Position unverified | Hard | Unsupported |
+This profile compares Bifrost with Metals across twelve shared Scala usage and
+navigation cases. The fixtures cover imports, companions, extension methods,
+traits, overrides, case-class members, and synthetic `apply` calls.
+
+| Runner | Required destinations found | Strict exact | Hard | Outside shared: unsupported |
 |---|---:|---:|---:|---:|
-| Bifrost | 12 | 0 | 3 | 0 |
-| Metals | 9 | 0 | 3 | 3 |
+| Bifrost | 11/12 | 10 | 2 | 0 |
+| Metals 1.6.8 | 10/12 | 9 | 3 | 3 |
+
+The [Metals 1.6.8 release](https://scalameta.org/metals/blog/) was rerun against
+the complete Scala corpus after its release. It produced the same case-level
+outcomes as 1.6.7: 9 exact, 3 hard non-exact, 3 unsupported, and no runner
+errors.
 
 ## Readiness first
 
@@ -17,10 +26,16 @@ state was a harness failure, not an analyzer verdict.
 
 ## Current split
 
-On 12 shared scoreable cases, both are exact on 8. Bifrost alone is exact on
-class construction and companion `apply`; Metals alone is exact on generated
-case-class construction and `copy`. Neither is exact on the trait-method
-implementation case.
+On the user-facing metric, Bifrost finds every required destination in 11 of
+the 12 shared cases and Metals in 10. Both are strictly exact on 8. Bifrost
+alone is exact on class construction and companion `apply`; Metals alone is
+exact on generated case-class construction and `copy`. Neither is exact on the
+trait-method implementation case.
+
+Metals' class-construction case still counts as a destination success because
+both required targets are present alongside one additional result. Its two
+destination misses are the trait implementation edge and the synthetic
+companion `apply` call.
 
 ## Bifrost recall edges
 

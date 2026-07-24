@@ -92,7 +92,7 @@ cases:
         kind: method
         displayName: handle
     usageLookups:
-      - operation: declaration
+      - operation: definition
         usage:
           location:
             uri: benchmark://source/src/main/java/example/parity/Runner.java
@@ -109,7 +109,7 @@ cases:
               end: { line: 3, character: 17 }
           kind: method
           displayName: handle
-      - operation: declaration
+      - operation: definition
         usage:
           location:
             uri: benchmark://source/src/main/java/example/parity/Runner.java
@@ -131,14 +131,14 @@ cases:
       notes: >
         Reviewed by DavidBakerEffendi on 2026-07-18. Both handler.handle and
         makeAnonymous().handle have the statically declared Handler contract,
-        so declaration navigation conservatively reaches Handler.handle without
-        claiming a runtime implementation. Concrete overrides are not ordinary
-        usages of the interface declaration.
+        so definition navigation reaches Handler.handle without claiming a
+        runtime implementation. Concrete overrides are not ordinary usages of
+        the interface declaration.
         Parity source: eclipse-jdtls/eclipse.jdt.ls@4c4f2230f81bf8371661de77bca0c3375f5ce399.
         Upstream test: org.eclipse.jdt.ls.tests/.../ImplementationsHandlerTest.java::testMethodInvocationImplementation.
         Adapted fixture: fixtures/java/lsp-parity/.
         Maturity: both interface-typed calls resolve to Handler.handle without
-        treating an implementation override as the declaration.
+        treating an implementation override as the navigation target.
   - id: java-parity-concrete-implementation-method-call
     declaration:
       location:

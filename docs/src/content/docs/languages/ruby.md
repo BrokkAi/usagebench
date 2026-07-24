@@ -22,6 +22,13 @@ On the 16 shared scoreable cases, both are exact on 5, Bifrost alone is exact on
 position-unverified on three and hard non-exact on eight; four Declaration-
 oriented cases are unsupported.
 
+Ruby contributes 10 of Bifrost's net 20-case advantage in the secondary strict
+result, but only four cases to the required-destination comparison. That makes
+Ruby a material sensitivity of exact conformance, not a proxy for average
+language-server quality. The aggregate page reports the user-facing metric
+first and keeps equal-profile and median views so authored case counts do not
+provide the only weighting.
+
 ## Bifrost weaknesses
 
 - `ruby-require-relative-class-construction` includes a real `Invoice`

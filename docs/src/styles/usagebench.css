@@ -15,6 +15,8 @@
   --sl-content-width: 74rem;
   --sl-sidebar-width: 16rem;
   --usagebench-toc-width: 11rem;
+  --usagebench-bifrost: #ff866b;
+  --usagebench-reference: #61c7dc;
 }
 
 body {
@@ -141,6 +143,46 @@ body {
   color: var(--sl-color-gray-3);
   font-size: 0.5em;
   letter-spacing: -0.03em;
+}
+
+.metric-comparison {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.55rem;
+}
+
+.metric-side {
+  border-top: 2px solid currentcolor;
+  margin-top: 0 !important;
+  min-width: 0;
+  padding-top: 0.45rem;
+}
+
+.metric-side--bifrost {
+  color: var(--usagebench-bifrost);
+}
+
+.metric-side--reference {
+  color: var(--usagebench-reference);
+}
+
+.metric-side > span {
+  color: currentcolor;
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  line-height: 1.2;
+  min-height: 2.4em;
+  text-transform: uppercase;
+}
+
+.result-metric .metric-side strong {
+  color: currentcolor;
+  font-size: clamp(1.45rem, 3.2vw, 2.2rem);
+  letter-spacing: -0.055em;
+  margin-top: 0.1rem;
 }
 
 .result-metric p {

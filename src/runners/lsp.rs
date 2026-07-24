@@ -1908,6 +1908,22 @@ referenceProbe:
     }
 
     #[test]
+    fn jdtls_data_directory_is_unique_and_outside_the_source_root() {
+        let repo_root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let profile = load_profile(&repo_root.join("adapters/lsp/eclipse-jdtls.json")).unwrap();
+        let run_dir = repo_root.join("target/lsp-profile-test");
+        let source_root = run_dir.join("source-10");
+        let data_argument = profile.command.get(2).unwrap();
+        let data_directory = PathBuf::from(substitute(data_argument, &source_root, &run_dir));
+
+        assert_eq!(
+            data_directory,
+            PathBuf::from(format!("{}-jdtls-data", source_root.to_string_lossy()))
+        );
+        assert!(!data_directory.starts_with(source_root));
+    }
+
+    #[test]
     fn bundled_profiles_are_valid_and_cover_the_corpus_languages() {
         let profiles = Path::new(env!("CARGO_MANIFEST_DIR")).join("adapters/lsp");
         let mut languages = std::collections::BTreeSet::new();

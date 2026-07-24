@@ -2,12 +2,12 @@
   "id": "metals",
   "name": "Metals",
   "languages": ["scala"],
-  "requestedVersion": "1.6.7",
-  "source": "https://github.com/scalameta/metals/releases/tag/v1.6.7",
+  "requestedVersion": "1.6.8",
+  "source": "https://github.com/scalameta/metals/releases/tag/v1.6.8",
   "command": [
     "cs",
     "launch",
-    "org.scalameta:metals_2.13:1.6.7",
+    "org.scalameta:metals_2.13:1.6.8",
     "-M",
     "scala.meta.metals.Main"
   ],

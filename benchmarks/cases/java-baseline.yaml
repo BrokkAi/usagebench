@@ -149,7 +149,7 @@ cases:
         kind: field
         displayName: DEFAULT_PREFIX
     usageLookups:
-      - operation: declaration
+      - operation: definition
         usage:
           location:
             uri: benchmark://source/src/test/java/example/ServiceTest.java
@@ -171,8 +171,8 @@ cases:
       notes: >
         Reviewed as correct by DavidBakerEffendi on 2026-07-17. DEFAULT_PREFIX
         is read once inside Service and once through Service.DEFAULT_PREFIX in
-        the test. Navigation reaches the field declarator; the Service qualifier
-        is a separate class usage.
+        the test. Definition navigation reaches the field declarator; the
+        Service qualifier is a separate class usage.
   - id: java-nested-class-constructor
     declaration:
       location:

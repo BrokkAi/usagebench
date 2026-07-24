@@ -3,18 +3,41 @@ title: Comparison methodology
 description: Classify observed differences without overclaiming analyzer defects or approximation mechanisms.
 ---
 
-UsageBench reports contract agreement first and causal interpretation second.
-Every current expected location has completed one human source review, but the
-corpus remains a development set rather than independently reviewed evaluation
-ground truth. An analyzer may also expose a different public grouping policy
-without containing an implementation bug.
+UsageBench reports required-destination recall first, strict contract agreement
+second, and causal interpretation third. Every current expected location has
+completed one human source review, but the corpus remains a development set
+rather than independently reviewed evaluation ground truth. An analyzer may
+also expose a different public grouping policy without containing an
+implementation bug.
 
-## Result categories
+## Headline metric: required destinations found
+
+The user-facing metric counts a case when:
+
+1. every required reference or usage is present, including reviewed
+   conservative candidates;
+2. every navigation lookup includes its expected destination; and
+3. every type lookup includes its expected type destination.
+
+A broader containing range and additional returned results are tolerated. This
+models the basic editor question—“did the operation take me to, or list, the
+code I needed?”—without pretending that range precision and result clutter are
+invisible to users. Unsupported operations remain outside the shared
+denominator.
+
+This is best read as **required-destination recall**, not an all-purpose quality
+score. A response containing the expected target among many unrelated targets
+can pass this headline metric while still being frustrating. The strict metric
+and case pages preserve that precision evidence.
+
+## Secondary metric: strict UsageBench contract
+
+### Result categories
 
 | Category | Meaning |
 |---|---|
 | Exact | Required complete token ranges and navigation targets match, with no unallowed extras. Under `bindings_optional`, classified binding/export extras may be present and remain recorded. |
-| Position unverified | Path and line agree, but the analyzer did not return enough range information to prove the token. |
+| Position unverified | Path and line agree, but the analyzer returned either a line-only location or a broader range containing the expected token rather than the exact token range. |
 | Recall difference | At least one reviewed expected location or target is absent. |
 | Precision or identity difference | The analyzer returns another declaration, same-name symbol, constructor, implementation-family member, or other unallowed location. |
 | Navigation-target difference | The analyzer navigates to a related but different surface, such as an alias binding or module file. |
@@ -27,6 +50,58 @@ not pass. The selected operation must return exactly one target with the
 authored complete range. Every evaluation lookup explicitly selects declaration
 or definition; a server that does not advertise that operation is unsupported
 for the case rather than silently queried through the other endpoint.
+
+Definition is the default authoring choice for ordinary source navigation.
+Declaration is selected only when the distinction is material to the reviewed
+case—for example, navigation from an implementation to a separate interface,
+prototype, or forward declaration. The optional
+[`textDocument/declaration`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#goto-declaration-request-leftwards_arrow_with_hook)
+request was added in LSP 3.14, while Definition was already the conventional
+navigation request. The protocol defines their result shapes but leaves the
+language-specific meaning of “declaration” and “definition” to servers.
+UsageBench therefore does not treat the newer endpoint as a generally stricter
+or more canonical form of Definition.
+
+This is intentional lenience at the case-authoring boundary, justified by the
+protocol's history and capability model. A server that does not advertise
+Declaration is classified as unsupported and excluded from that shared
+denominator. Penalizing another server for advertising Declaration with a
+narrower, language-specific meaning would reward non-advertisement. Choosing
+Definition for an ordinary, undifferentiated source target avoids that
+capability-advertisement bias. It does **not** make the scorer lenient: once a
+case selects Declaration or Definition, that exact request must satisfy the
+strict singleton target contract, with no fallback to the other endpoint.
+
+The strict result is not labeled generic LSP compliance. The current
+[`Location`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#location)
+shape requires a URI and range, and the protocol defines how ranges are
+encoded, but it does not require a references or navigation result to select
+exactly one terminal identifier. Identifier-tight ranges, singleton navigation,
+and UsageBench's identity-family exclusions are additional benchmark
+requirements for machine consumers.
+
+## Aggregation and sensitivity
+
+UsageBench keeps raw counts and denominators visible. It reports both
+required-destination recall and strict conformance using three complementary
+summaries:
+
+- **Pooled, case-weighted rate** divides successful shared cases by all shared
+  scoreable cases. Languages with more authored cases have more influence.
+- **Equal-profile mean** computes a rate for each reference profile and gives
+  each profile equal weight, regardless of its current case count.
+- **Median profile rate and paired gap** describe the middle profile and reduce
+  the influence of unusually large language-specific differences.
+
+The profile table remains primary evidence because the products, case counts,
+and language semantics are heterogeneous. A leave-one-profile-out sensitivity
+check shows whether the pooled direction depends on any single profile; it is
+not an invitation to remove an inconvenient language.
+
+The current corpus is not sampled from a defined population of repositories or
+developers. UsageBench therefore does not apply language-popularity weights or
+attach sampling confidence intervals to the development result. Either would
+require a preregistered target population and defensible sampling design.
 
 ## Corpus partitions and ground truth
 
@@ -133,7 +208,7 @@ hydrating its normal workspace would turn missing results into a harness
 configuration test. UsageBench compares each analyzer's returned locations
 after its intended environment is ready, while preserving Bifrost's notable
 property that its analysis does not depend on running or building the target
-project. The current synchronized run does not compare the time, resource,
+project. The current corrected result does not compare the time, resource,
 dependency, or security costs of those execution models.
 
 ## Explaining a Bifrost advantage
