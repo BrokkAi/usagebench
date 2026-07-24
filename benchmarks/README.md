@@ -103,7 +103,10 @@ Each case supports both benchmark directions:
   development-only `profile_default`. Evaluation cases must choose explicitly;
   declaration lookups never fall back to definition, or vice versa.
   `allowedExtraTargets` may list conservative alternate targets that can
-  accompany the required `expectedDeclaration` but cannot replace it.
+  accompany the required `expectedDeclaration` but cannot replace it. An
+  alternate may have a different symbol kind when navigation legitimately
+  exposes a related source target, such as an explicit constructor alongside
+  the canonical class declaration.
   A reviewed negative lookup may set `expectNoMovement: true` and repeat the
   usage location as `expectedDeclaration`; no result and an exact self-target
   pass, while navigation to any other token fails.

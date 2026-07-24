@@ -67,9 +67,12 @@ result means contract disagreement, not an automatic defect verdict.
 | Nine ES import/re-export cases | Pass | Near | Required references agree; TypeScript LS also returns binding/export locations. |
 | `js-parity-commonjs-destructured-function-call` | Pass | Hard | TypeScript LS omits the destructured CommonJS function call. |
 | `js-commonjs-barrel-class-construction` | Pass | Hard | TypeScript LS omits the construction reached through the CommonJS barrel. |
-| `js-class-construction` | Exact | Hard | Both return the reviewed construction references. Bifrost navigates to the canonical class token exactly; TypeScript LS also returns the explicit constructor member, a reasonable control-flow alternate that the singleton-navigation schema cannot currently allow. |
+| `js-class-construction` | Exact | Position-unverified | Both return the reviewed construction references. Bifrost navigates to the canonical class token exactly; TypeScript LS also returns the allowed explicit constructor target, but its range spans the enclosing constructor body rather than the authored token. |
 | `js-commonjs-barrel-member-call` | Gap | Exact | Both analyzers return both calls. TypeScript LS navigates both exactly; Bifrost resolves the factory-returned receiver but cannot navigate `.request()` immediately following `new Client()` through the destructured barrel binding. |
 | `js-parity-computed-string-literal-method-call` | Gap | Exact | TypeScript LS returns and navigates both the dot call and `constructed["finish"]()` exactly. Bifrost misses the computed string-literal call and cannot navigate its literal token to `Task.finish`. |
+| Eight reviewed TypeScript function, method, class, JSX, and type-lookup cases | Exact | Exact | Both analyzers return the reviewed concrete references and navigation/type targets; import and re-export bindings remain optional metadata. |
+| `ts-default-class-import-and-construction` | Exact | Position-unverified | Both return the two constructions and canonical class target. TypeScript LS additionally returns the allowed explicit constructor target, but spans its enclosing body instead of the authored token. |
+| `ts-object-property-access`, `ts-type-annotation-through-barrel`, `ts-parity-interface-property-access` | Exact | Unsupported | Bifrost passes the reviewed Declaration operations exactly. TypeScript LS does not advertise Declaration; separate ordinary Definition probes reach the exact authored property or interface declarations. |
 
 ## PHP
 

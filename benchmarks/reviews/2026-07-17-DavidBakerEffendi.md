@@ -1651,14 +1651,16 @@ they do not change the reviewed source-location contract.
 - Outcome revealed after review: TypeScript Language Server 5.3.0 returned
   exactly both construction usages. Definition navigation returned both the
   canonical `Greeter` class token and the explicit `constructor` member, so the
-  strict singleton lookup scored `multiple_targets`.
+  original strict singleton lookup scored `multiple_targets`. After migration
+  to cross-kind allowed targets, the result is position-unverified because the
+  constructor destination spans its enclosing body rather than the authored
+  token. Bifrost 0.8.9 returns the exact canonical target.
 - Alternate-target policy: the constructor is a reasonable secondary target
   because control flow from `new Greeter(...)` eventually enters that body.
   The class definition remains canonical because the cursor token names the
-  lexical `Greeter` binding. The current schema cannot express an expected
-  target plus allowed navigation alternatives, so this is retained as a
-  scoring limitation and follow-up issue source rather than declaring the
-  constructor target semantically wrong.
+  lexical `Greeter` binding. The later TypeScript audit added cross-kind
+  `allowedExtraTargets`, so this reviewed constructor alternate is now encoded
+  without weakening the canonical class requirement.
 
 ### js-method-call
 
@@ -1859,8 +1861,9 @@ TypeScript 5.9.3. Bifrost was built from exact `origin/master` commit
   cases were unsupported only because Bifrost has no distinct declaration
   operation. TypeScript LS produced the same reference results and declaration
   boundary. Its class-construction definition result included both the
-  canonical class token and a reasonable explicit-constructor alternate that
-  the current singleton-navigation schema cannot allow.
+  canonical class token and a reasonable explicit-constructor alternate. The
+  later TypeScript audit made that reviewed cross-kind alternate expressible
+  and migrated the JavaScript case.
 - `js-commonjs-barrel-class-construction`: Bifrost passed the complete contract.
   TypeScript LS missed downstream `new Client()` in its class reference query
   but navigated from that same token to `class Client` exactly.
@@ -3327,3 +3330,221 @@ the reviewed ground truth.
   precision extension and override-family boundaries regress. These outcomes
   are recorded as analyzer/request-order behavior rather than used to redefine
   the human-reviewed contract.
+
+## typescript-baseline.yaml
+
+### ts-named-export-import-function
+
+- Source: `fixtures/typescript/baseline/src/components.tsx` and `app.tsx`.
+- Authored definition: exported function `formatName`.
+- Required usages: the call inside `Greeter#greet` and the imported call in
+  `app.tsx`.
+- Optional binding: `formatName` in the app import clause.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the authored function body.
+- Reviewer rationale: inline `export` modifies the declaration rather than
+  creating a separate re-export usage. Both executable calls resolve exactly
+  to the same function.
+- Compilation verification: pinned TypeScript 5.9.3 accepts the complete
+  baseline fixture with `tsc --noEmit`.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 and Bifrost
+  0.8.9 both return the exact two calls and definition target.
+
+### ts-default-class-import-and-construction
+
+- Source: `fixtures/typescript/baseline/src/components.tsx` and `app.tsx`.
+- Authored definition: default-exported class `Greeter` with an explicit
+  constructor.
+- Required usages: both `Greeter` tokens in `new` expressions.
+- Optional binding: the default-import token in `app.tsx`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the class declaration, with the
+  explicit `constructor` member allowed as an additional target.
+- Reviewer rationale: the visible token names the class binding, making the
+  class declaration canonical. The constructor body is also a useful
+  control-flow destination but cannot replace the canonical source target.
+- Methodology adjustment: `allowedExtraTargets` now permits an explicitly
+  reviewed related target with a different symbol kind, allowing class and
+  constructor destinations to coexist without misclassifying either token.
+- Outcome revealed after review: Bifrost 0.8.9 returns the exact constructions
+  and canonical class target. TypeScript Language Server 5.3.0 returns those
+  constructions plus the optional import binding and both navigation targets.
+  Its constructor target spans the enclosing body rather than the authored
+  token, making the otherwise correct semantic result position-unverified.
+
+### ts-class-method-call
+
+- Source: `fixtures/typescript/baseline/src/components.tsx` and `app.tsx`.
+- Authored definition: `Greeter#greet`.
+- Required usages: the calls through directly constructed immutable locals in
+  `WelcomeCard` and `app.tsx`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the authored method body.
+- Reviewer rationale: the fixture contains no subclass, override, reassignment,
+  or competing `greet` member, so both receivers have exact `Greeter` identity.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 and Bifrost
+  0.8.9 both return the exact two calls and definition target.
+
+### ts-object-property-access
+
+- Source: `fixtures/typescript/baseline/src/components.tsx` and `app.tsx`.
+- Authored declaration: the `name` property signature in the `User` type
+  literal.
+- Required usages: the `user.name` read in `formatName` and the `name` key in
+  the contextually typed object literal.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** to the property signature.
+- Reviewer rationale: the explicit `User` annotation gives the object literal
+  an exact contextual type, so its key and the later read refer to the same
+  structural property. The type-only property has no executable definition.
+- Outcome revealed after review: Bifrost 0.8.9 passes the declaration lookup
+  exactly. TypeScript Language Server 5.3.0 does not advertise
+  `textDocument/declaration`, so the canonical operation is unsupported; a
+  separate ordinary definition probe targets the exact property signature.
+
+### ts-tsx-component-reference
+
+- Source: `fixtures/typescript/baseline/src/components.tsx` and `app.tsx`.
+- Authored definition: function component `WelcomeCard`.
+- Required usage: the `WelcomeCard` token in the self-closing JSX element.
+- Optional binding: `WelcomeCard` in the app import clause.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the authored function body.
+- Reviewer rationale: the JSX tag is an executable component reference, and
+  the self-closing syntax has no separate closing-tag occurrence.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 and Bifrost
+  0.8.9 both return the exact JSX usage and definition target.
+
+### ts-ky-style-implementation-static-create
+
+- Source: `fixtures/typescript/baseline/src/http.ts` and `app.tsx`.
+- Authored definition: implementation class `Ky`.
+- Required usages: the three `Ky` qualifiers on static `create` calls in the
+  callable factory, assigned `get` implementation, and direct app call.
+- Optional binding: `Ky` in the app import clause.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the authored class body.
+- Reviewer rationale: this case measures the class-symbol family. The `create`
+  member tokens are distinct static-method usages and do not belong in this
+  class-anchored case.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 and Bifrost
+  0.8.9 both return the exact three class usages and definition target.
+
+## typescript-precision.yaml
+
+### ts-chained-barrel-function-call
+
+- Source: `fixtures/typescript/precision/src/api.ts`, `barrel.ts`, `app.ts`, and
+  `shadow.ts`.
+- Authored definition: exported function `createWidget` in `api.ts`.
+- Required usage: the executable call imported through the barrel in `app.ts`.
+- Optional bindings: the barrel re-export plus import-clause tokens.
+- Required exclusion: the same-spelled parameter and its call in `shadow.ts`,
+  which belong to the local parameter symbol.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** through the barrel to the authored
+  function body.
+- Compilation verification: pinned TypeScript 5.9.3 accepts the complete
+  precision fixture with `tsc --noEmit`.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 and Bifrost
+  0.8.9 both preserve the function identity through the barrel, exclude the
+  shadowed call, and return the exact definition target.
+
+### ts-type-annotation-through-barrel
+
+- Source: `fixtures/typescript/precision/src/api.ts`, `barrel.ts`, and `app.ts`.
+- Authored declaration: interface `Widget` in `api.ts`.
+- Required usages: the `Widget` return annotation in `api.ts` and variable
+  annotation imported through the barrel in `app.ts`.
+- Optional bindings: the barrel re-export and app import-clause tokens.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** through the barrel to the authored
+  interface declaration.
+- Reviewer rationale: both explicit type tokens share exact interface identity.
+  The structurally compatible object literal has no `Widget` token and is not a
+  usage.
+- Outcome revealed after review: Bifrost 0.8.9 passes the declaration lookup
+  exactly. TypeScript Language Server 5.3.0 does not advertise
+  `textDocument/declaration`, so that operation is unsupported; a separate
+  ordinary definition probe traverses the barrel to the exact interface
+  declaration.
+
+## typescript-lsp-parity.yaml
+
+### ts-parity-default-function-import-call
+
+- Source: `fixtures/typescript/lsp-parity/src/api.ts` and `app.ts`.
+- Authored definition: default-exported function `createClient`.
+- Required usage: the executable app call.
+- Optional binding: the default-import token.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the authored function body.
+- Reviewer rationale: inline `export default` modifies the declaration rather
+  than adding a separate usage.
+- Compilation verification: pinned TypeScript 5.9.3 accepts the complete
+  LSP-parity fixture with `tsc --noEmit`.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 and Bifrost
+  0.8.9 both return the exact call and definition target.
+
+### ts-parity-static-method-call
+
+- Source: `fixtures/typescript/lsp-parity/src/api.ts` and `app.ts`.
+- Authored definition: static method `ApiClient.create`.
+- Required usages: the `create` member calls in `createClient` and `app.ts`.
+- Ground-truth decision: **correct**.
+- Operation decision: **definition** to the authored static method body.
+- Reviewer rationale: static dispatch gives both member tokens exact identity.
+  The `ApiClient` qualifiers belong to the class-symbol family, while
+  `new ApiClient` invokes the constructor rather than `create`.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 and Bifrost
+  0.8.9 both return the exact two static-method usages and definition target.
+
+### ts-parity-type-only-interface-import
+
+- Source: `fixtures/typescript/lsp-parity/src/api.ts` and `app.ts`.
+- Query expression: the local variable identifier `user` in its declaration.
+- Expected type: the authored `User` interface in `api.ts`.
+- Ground-truth decision: **correct**.
+- Reviewer rationale: the explicit `User` annotation makes the recovered type
+  exact without depending on inference from `fetchUser`. The type-only import
+  binding is routing metadata rather than the final type target.
+- Outcome revealed after review: TypeScript Language Server 5.3.0 and Bifrost
+  0.8.9 both recover the exact authored interface target.
+
+### ts-parity-interface-property-access
+
+- Source: `fixtures/typescript/lsp-parity/src/api.ts` and `app.ts`.
+- Authored declaration: the `name` property signature in interface `User`.
+- Required usages: the contextually typed object-literal key in `fetchUser`,
+  the read in `formatUser`, and the app member access.
+- Required exclusion: the same-spelled local variable declaration in
+  `const name`.
+- Ground-truth decision: **correct**.
+- Operation decision: **declaration** to the property signature.
+- Reviewer rationale: the explicit `User` return type makes the object-literal
+  key exact, while the local variable and member token have distinct symbol
+  identities.
+- Outcome revealed after review: Bifrost 0.8.9 passes the declaration lookup
+  exactly. TypeScript Language Server 5.3.0 does not advertise
+  `textDocument/declaration`, so that operation is unsupported; a separate
+  ordinary definition probe reaches the exact property signature.
+
+## TypeScript analyzer calibration summary
+
+The first independent human review of every case currently in
+`typescript-baseline.yaml`, `typescript-precision.yaml`, and
+`typescript-lsp-parity.yaml` is complete.
+
+- All three fixture roots compile successfully with pinned TypeScript 5.9.3
+  before semantic comparisons.
+- Bifrost 0.8.9 passes all 12 reviewed cases exactly.
+- TypeScript Language Server 5.3.0 passes eight cases exactly. The default-class
+  construction case is position-unverified because its useful constructor
+  alternate spans the enclosing body rather than the authored token.
+- The three bodyless type/property cases deliberately require Declaration.
+  TypeScript Language Server does not advertise that operation, so they are
+  unsupported rather than semantic failures; separate ordinary Definition
+  probes reach the exact authored declarations.
+- Import and re-export bindings remain optional metadata throughout. The
+  reviewed contracts require concrete calls, constructions, type references,
+  and property accesses while retaining analyzer-returned bindings for audit.
