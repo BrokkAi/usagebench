@@ -3,10 +3,10 @@ title: Scala — Bifrost and Metals
 description: Compare imports, companion objects, synthetic apply calls, traits, and build hydration.
 ---
 
-| Runner | Exact | Policy near | Hard | Not planned |
+| Runner | Exact | Position unverified | Hard | Unsupported |
 |---|---:|---:|---:|---:|
-| Bifrost | 12 | 0 | 0 unexpected | 1 |
-| Metals | 8 | 2 | 2 | 1 |
+| Bifrost | 12 | 0 | 3 | 0 |
+| Metals | 9 | 0 | 3 | 3 |
 
 ## Readiness first
 
@@ -15,24 +15,24 @@ import prompt, continues serving bidirectional requests, and waits for the SBT
 workspace. Its measured results begin only after that hydration; the earlier
 state was a harness failure, not an analyzer verdict.
 
-## Policy-only differences
+## Current split
 
-The two renamed/import-alias companion cases contain every required result.
-Metals additionally returns the alias binding, so they are near misses rather
-than hard failures.
+On 12 shared scoreable cases, both are exact on 8. Bifrost alone is exact on
+class construction and companion `apply`; Metals alone is exact on generated
+case-class construction and `copy`. Neither is exact on the trait-method
+implementation case.
 
 ## Bifrost recall edges
 
-Bifrost satisfies the trait-method implementation and companion `apply` cases.
-Metals omits the expected implementation references and the synthetic companion
-call. These are distinct mechanisms: type-family linking and synthetic member
-modeling should not be collapsed into a single approximation label.
+Bifrost's other generated component-access gap falls outside the shared
+denominator because Metals does not advertise Declaration. These are distinct
+mechanisms: type-family linking and synthetic member modeling should not be
+collapsed into a single approximation label.
 
 ## Fairness gap
 
-A generated/synthetic parity case remains not planned. The corpus needs direct
-versus compiler-generated minimal pairs before claiming general superiority on
-Scala synthetic semantics.
+The current case-class controls provide a direct generated-member comparison,
+but broader compiler-generated and SDK semantics remain underrepresented.
 
 ## Architecture tradeoff
 

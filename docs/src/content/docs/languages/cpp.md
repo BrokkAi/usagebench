@@ -3,18 +3,17 @@ title: C++ — Bifrost and clangd
 description: Compare declaration identity, out-of-line definitions, constructors, aliases, and overrides.
 ---
 
-| Runner | Exact | Policy near | Hard or expected gap | Unsupported |
+| Runner | Exact | Position unverified | Hard or expected gap | Unsupported |
 |---|---:|---:|---:|---:|
-| Bifrost | 14 | 0 | 1 expected gap | 1 |
-| clangd | 6 | 0 | 9 | 1 |
+| Bifrost | 12 | 0 | 2 hard, 1 expected | 1 |
+| clangd | 12 | 0 | 3 hard | 1 |
 
 ## Where Bifrost satisfies more cases
 
-Bifrost's C++ usage graph treats an out-of-line definition as a usage of the
-header declaration and keeps class, constructor, overload, alias, and receiver
-identities narrow enough for the authored cases. That accounts for the function,
-method, overload, class, constructor, alias, and override cases that clangd does
-not satisfy exactly.
+Bifrost and clangd are both exact on 12 of 15 scoreable cases, with 11 cases
+exact for both. Bifrost alone is exact on the concrete-override case; clangd
+alone is exact on the function-like macro-expanded call. Both remain non-exact
+on the class-reference and using-alias-constructor contracts.
 
 The clangd pattern is not evidence that it cannot resolve the program. With
 `includeDeclaration: false`, its references result omits several out-of-line
@@ -31,7 +30,7 @@ direct function call, while clangd alone resolves the same function name when
 it is supplied as a function-like macro argument. One compile-command-dependent
 case remains unsupported.
 
-It would therefore be unjustified to generalize the current 6/15 exact result
+It would therefore be unjustified to generalize the current 12/15 exact result
 into a claim that Bifrost has stronger C++ analysis overall.
 
 ## Approximation assessment

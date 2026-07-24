@@ -13,6 +13,13 @@ semantics, and may preserve justified precision improvements or additional
 static coverage. The benchmark format remains analyzer-neutral so future
 competitors can be evaluated against the same source contracts.
 
+The synchronized 24 July 2026 development run compares the 131 cases scoreable
+by both sides: Bifrost is exact on 116 and the reference language servers on 95.
+Both are exact on 84 cases; 32 are exact only for Bifrost, 11 only for the LSP,
+and 4 for neither. See the
+[current result](docs/src/content/docs/results/index.md) for the full
+denominators, capability boundaries, versions, and evidence limitations.
+
 The benchmark corpus is authored by source location instead of by an
 analyzer-specific symbol ID. Each case points at a declaration, expected usage
 sites, and reverse usage-to-declaration probes using LSP-shaped ranges.

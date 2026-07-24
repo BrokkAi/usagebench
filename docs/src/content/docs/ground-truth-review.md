@@ -32,14 +32,14 @@ through preregistration.
 |---|---|
 | Is an individual expected token or navigation target suitable for regression testing and diagnosis? | **Yes, with the development-corpus qualification.** A human inspected the fixture and classified the source contract before seeing the measured analyzer outcomes. |
 | Can a case-level Bifrost/LSP disagreement be discussed? | **Yes.** The review log records the semantic decision, post-review analyzer checks, and notable policy differences. |
-| Do the headline scores reflect the reviewed contracts and hardened scorer? | **No.** The published aggregate is the historical 16 July run and must be rerun before citation. |
+| Do the headline scores reflect the reviewed contracts and hardened scorer? | **Yes, as development evidence.** The synchronized 24 July native run uses exact ranges and strict singleton navigation, but it is not an independently reviewed evaluation result. |
 | Is this a general analyzer accuracy ranking? | **No.** The corpus is analyzer-informed, small, and still has known coverage gaps. |
 | Is this an independently reviewed evaluation set? | **No.** It still needs a second independent reviewer, preregistered selection, and an immutable freeze. |
 
 The practical result is a reviewed development benchmark, not a publishable
 leaderboard. Use it to reproduce a specific edge, guard a regression, or
-investigate a contract disagreement. Do not use the historical aggregate to
-claim general superiority.
+investigate a contract disagreement. The current synchronized score supports
+corpus-bounded parity claims, not general analyzer superiority.
 
 ## Review coverage
 
@@ -97,9 +97,8 @@ Recurring corrections included:
   and imprecise ranges as harness or capability evidence rather than semantic
   failures.
 
-The [case comparison](results/case-comparison/) records the notable analyzer
-differences discovered during adjudication. Those rows are case-level
-calibrations, not one synchronized aggregate run.
+The [case comparison](results/case-comparison/) relates the qualitative
+adjudication notes to the synchronized 24 July run.
 
 ## Path to an evaluation release
 
@@ -113,4 +112,4 @@ Promotion requires a new evidence phase:
    reference environments.
 
 Until then, the correct public description is: **fully first-reviewed
-development corpus, historical aggregate pending rerun**.
+development corpus with a synchronized exact-range regression run**.

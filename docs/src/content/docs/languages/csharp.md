@@ -3,10 +3,10 @@ title: C# — Bifrost and Roslyn
 description: Compare project-loaded Roslyn references with Bifrost's narrower usage identities.
 ---
 
-| Runner | Exact | Policy near | Hard | Not planned |
+| Runner | Exact | Position unverified | Hard | Unsupported |
 |---|---:|---:|---:|---:|
-| Bifrost | 14 | 0 | 0 | 1 |
-| Roslyn | 11 | 0 | 3 | 1 |
+| Bifrost | 14 | 0 | 2 | 0 |
+| Roslyn | 13 | 0 | 3 | 0 |
 
 ## Shared strengths
 
@@ -20,20 +20,20 @@ workspace-loading problem, not evidence about C# semantic quality.
 
 ## Bifrost precision edge
 
-Bifrost satisfies the two interface/concrete-method cases with the narrower
-authored identity, while Roslyn returns one related implementation-family call
-in each. Bifrost also navigates through the namespace alias to the underlying
-class declaration expected by the benchmark; Roslyn returns the alias binding.
+Bifrost is exact on all three interface/concrete implementation-family cases
+where Roslyn returns broader related calls. Roslyn is exact on the namespace-
+alias constructor and generic extension cases that currently fail Bifrost
+navigation. Eleven cases are exact for both.
 
 Those are contract differences, not proven Roslyn defects. An editor can
 reasonably expose related implementations or make the alias declaration the
 navigation target.
 
-## Resolved extension gap
+## Current Bifrost gaps
 
-Roslyn and current Bifrost both exactly resolve
-`csharp-generic-extension-call`; it is now an expected pass in the Bifrost
-baseline.
+The namespace-alias constructor currently navigates to the aliased namespace
+rather than the class, and the extension-method call does not resolve its
+receiver. Both are exact in Roslyn and remain concrete Bifrost follow-up work.
 
 ## Approximation assessment
 

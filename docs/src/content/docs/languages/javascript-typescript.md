@@ -3,33 +3,26 @@ title: JavaScript and TypeScript — Bifrost and TypeScript LS
 description: Compare ES modules, CommonJS, barrels, types, JSX, and conservative receiver evidence.
 ---
 
-| Runner | Exact | Policy near | Hard or expected gap | Not planned |
-|---|---:|---:|---:|---:|
-| Bifrost | 21 | 0 | 0 | 1 |
-| TypeScript LS | 10 | 9 | 2 | 1 |
+| Runner | Exact | Position unverified | Hard | Unsupported | Not planned |
+|---|---:|---:|---:|---:|---:|
+| Bifrost | 20 | 0 | 2 | 0 | 1 |
+| TypeScript LS | 13 | 2 | 2 | 5 | 1 |
 
 ## TypeScript agreement after import policy
 
-Most TypeScript differences are not semantic misses. TypeScript LS returns
-import or re-export bindings in nine otherwise complete cases involving named
-exports, default imports, JSX, static methods, chained barrels, and type
-annotations. Bifrost deliberately filters those binding-only locations from its
-usage surface.
-
-Once that policy is separated, the TypeScript corpus has strong agreement.
+Import and re-export bindings are now optional in the scorer, so the former nine
+policy near misses no longer obscure semantic agreement. On the 17 cases both
+sides can score, 11 are exact for both, 4 only for Bifrost, and 2 only for the
+TypeScript language server.
 
 ## CommonJS split
 
-Bifrost satisfies all three authored CommonJS cases. Its JavaScript usage graph
-contains explicit CommonJS binding/export handling, which supports the
-destructured-function and barrel-class edges that TypeScript LS omits.
-
-Both analyzers exactly resolve `js-commonjs-barrel-member-call`, which is now an
-expected Bifrost baseline pass.
+Bifrost satisfies the destructured-function and barrel-class CommonJS cases
+that TypeScript LS omits. TypeScript LS is exact on the barrel-member call that
+current Bifrost cannot navigate immediately after `new Client()`.
 
 This remains more informative than a single “CommonJS support” label: the
-barrel-member shape agrees, while destructuring and barrel-class construction
-separate the analyzers.
+three shapes separate the analyzers in both directions.
 
 ## Approximation assessment
 

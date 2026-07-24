@@ -4,7 +4,7 @@ description: Reviewed LSP-parity contracts and recurring regression evidence for
 tableOfContents: false
 ---
 
-<p class="snapshot-kicker">BIFROST CONFORMANCE · REVIEWED LSP-PARITY CORPUS</p>
+<p class="snapshot-kicker">SYNCHRONIZED DEVELOPMENT RUN · 24 JULY 2026</p>
 
 <h2 class="landing-headline">Hold usage analysis to the standard developers already trust</h2>
 
@@ -15,39 +15,40 @@ the baseline and post-review calibration: Bifrost should reach parity wherever
 the LSP behavior matches the reviewed language semantics, and may deliberately
 be more precise or cover additional static edges when the evidence supports it.
 
-All 158 current cases have since completed a
+All 158 current cases have completed a
 [first human ground-truth audit](ground-truth-review/). The corpus now preserves
 those decisions as executable regression contracts, and the daily workflow runs
 them against Bifrost `master` so a previously satisfied semantic edge cannot
 quietly disappear.
 
-The report shape remains analyzer-neutral. Language servers are the first
-comparison set, not a permanent limit: future analyzers can be added through the
-same source-location contract without changing the authored ground truth.
+The current synchronized run used UsageBench `78e66e5` and Bifrost
+`782522b2`, with all ten primary language-server profiles completing without a
+runner error. The report shape remains analyzer-neutral: language servers are
+the first comparison set, not a permanent limit, and future analyzers can be
+added without changing the authored ground truth.
 
-## Historical score snapshot
+## Current shared-case score
 
-The figures below are the legacy 16 July development-corpus snapshot. They
-predate the completed audit, exact-range scoring, and strict singleton
-navigation, so they have **not** been updated and are not a publishable accuracy
-aggregate. They remain visible as reproduction evidence until every analyzer is
-rerun against the reviewed contracts.
+The fairest parity denominator is the **131 cases scoreable by both Bifrost and
+the reference LSP**. These figures use exact complete token ranges and strict
+singleton navigation. They are current development-corpus evidence, not an
+independently reviewed evaluation leaderboard.
 
-<div class="result-summary" aria-label="Historical result summary">
+<div class="result-summary" aria-label="Current synchronized result summary">
   <div class="result-metric">
     <span>Bifrost exact</span>
-    <strong>136 <small>/ 141</small></strong>
-    <p>planned cases</p>
+    <strong>116 <small>/ 131</small></strong>
+    <p>shared scoreable cases</p>
   </div>
   <div class="result-metric">
     <span>Language-server exact</span>
-    <strong>78 <small>/ 140</small></strong>
-    <p>planned, expressible cases</p>
+    <strong>95 <small>/ 131</small></strong>
+    <p>shared scoreable cases</p>
   </div>
   <div class="result-metric">
-    <span>Policy-only near misses</span>
-    <strong>19</strong>
-    <p>required results plus bindings</p>
+    <span>Exact on one side</span>
+    <strong>32 <small>vs 11</small></strong>
+    <p>Bifrost-only vs LSP-only</p>
   </div>
   <div class="result-metric">
     <span>Runner errors</span>
@@ -56,11 +57,10 @@ rerun against the reviewed contracts.
   </div>
 </div>
 
-These are contract results, not a general analyzer leaderboard. A policy-only
-near miss contains every required location but also includes an import,
-re-export, or export-metadata location that UsageBench excludes. A hard
-disagreement can combine missing usages, broader symbol families, or a different
-navigation target.
+Both sides are exact on 84 shared cases. Bifrost alone is exact on 32; the LSP
+alone is exact on 11; and neither is exact on 4. Import and re-export bindings
+are classified as optional and remain visible without turning an otherwise
+exact result into a near miss.
 
 <div class="execution-contrast">
   <span>EXECUTION MODEL</span>
@@ -74,43 +74,40 @@ navigation target.
   </p>
 </div>
 
-## Results by language
+## Shared results by language
 
-| Language | Bifrost exact | Bifrost expected gap | Language server | Exact | Policy-only | Hard disagreement |
-|---|---:|---:|---|---:|---:|---:|
-| [C++](languages/cpp/) | 14 | 1 | clangd | 6 | 0 | 9 |
-| [C#](languages/csharp/) | 14 | 0 | Roslyn | 11 | 0 | 3 |
-| [Go](languages/go/) | 10 | 0 | gopls | 9 | 0 | 1 |
-| [Java](languages/java/) | 9 | 2 | Eclipse JDT LS | 9 | 1 | 1 |
-| [JavaScript, TypeScript](languages/javascript-typescript/) | 21 | 0 | TypeScript LS | 10 | 9 | 2 |
-| [PHP](languages/php/) | 12 | 0 | Intelephense | 9 | 1 | 2 |
-| [Python](languages/python/) | 12 | 0 | Pyright | 6 | 4 | 1 |
-| [Ruby](languages/ruby/) | 19 | 1 | Ruby LSP | 1 | 0 | 19 |
-| [Rust](languages/rust/) | 13 | 1 | rust-analyzer | 9 | 2 | 3 |
-| [Scala](languages/scala/) | 12 | 0 | Metals | 8 | 2 | 2 |
-| **Total** | **136** | **5** | **10 servers** | **78** | **19** | **43** |
+| Language | Shared | Both exact | Bifrost only | LSP only | Neither | LSP unsupported |
+|---|---:|---:|---:|---:|---:|---:|
+| [C++](languages/cpp/) | 15 | 11 | 1 | 1 | 2 | 1 |
+| [C#](languages/csharp/) | 16 | 11 | 3 | 2 | 0 | 0 |
+| [Go](languages/go/) | 6 | 5 | 0 | 1 | 0 | 6 |
+| [Java](languages/java/) | 11 | 3 | 8 | 0 | 0 | 0 |
+| [JavaScript, TypeScript](languages/javascript-typescript/) | 17 | 11 | 4 | 2 | 0 | 5 |
+| [PHP](languages/php/) | 10 | 9 | 1 | 0 | 0 | 4 |
+| [Python](languages/python/) | 13 | 10 | 0 | 3 | 0 | 0 |
+| [Ruby](languages/ruby/) | 16 | 5 | 10 | 0 | 1 | 4 |
+| [Rust](languages/rust/) | 15 | 11 | 3 | 1 | 0 | 0 |
+| [Scala](languages/scala/) | 12 | 8 | 2 | 1 | 1 | 3 |
+| **Total** | **131** | **84** | **32** | **11** | **4** | **23** |
 
-The denominators differ because Bifrost can address one zero-width Python module
-selector that the generic LSP runner cannot express as a cursor request. Seven
-not-planned cases are outside both denominators; three LSP-unsupported cases and
-two Bifrost-unsupported cases are also outside them.
-
-All 136 exact Bifrost outcomes are expected passes in the current baseline. The
-five expected gaps are the cases that remain non-exact in the current run.
+Four runtime-driven cases are not planned for either side. Bifrost has two
+unsupported cases, both also unsupported by the corresponding LSP. Outside the
+shared denominator, Bifrost exactly satisfies 17 cases whose authored operation
+the LSP does not advertise.
 
 <div class="evidence-note">
-  The goal is not to maximize one legacy score. It is to turn each reviewed
-  agreement, justified precision improvement, and confirmed gap into a stable
-  contract that Bifrost must continue to satisfy.
+  The result supports the intended parity-or-better direction on this corpus,
+  while keeping 11 LSP-only exact cases and 4 neither-exact cases visible as
+  concrete work rather than hiding them behind one percentage.
 </div>
 
 ## Read beyond the aggregate
 
-The [full result snapshot](results/) records the version envelope and
-cross-analyzer patterns. The [case comparison](results/case-comparison/) lists
-every non-exact case, the new exact macro controls, and the observed
-distinctions. Language pages discuss the evidence and fairness gaps without
-turning contract differences into unsupported defect claims.
+The [full result snapshot](results/) records the version envelope, each runner's
+own denominator, and the shared-case matrix. The
+[case comparison](results/case-comparison/) lists the cases that separate the
+two sides. Language pages discuss the evidence and fairness gaps without turning
+contract differences into unsupported defect claims.
 
 For how cases are scored, see the [comparison methodology](methodology/). To run
 the same corpus, use the [reproduction guide](reproduce/).

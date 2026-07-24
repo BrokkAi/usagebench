@@ -37,7 +37,7 @@ export default defineConfig({
         {
           label: 'Results and findings',
           items: [
-            { label: 'Full result snapshot', slug: 'results' },
+            { label: 'Current synchronized result', slug: 'results' },
             { label: 'Case-by-case comparison', slug: 'results/case-comparison' },
           ],
         },

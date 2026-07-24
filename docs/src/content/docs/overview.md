@@ -16,9 +16,10 @@ sound, while retaining justified precision improvements or additional static
 coverage. Each accepted decision becomes a recurring regression test.
 
 All 158 current cases have completed a first human review. They remain a
-development corpus—not an independently reviewed evaluation set—and the
-published aggregate predates the corrected contracts. The
-[human ground-truth audit](../ground-truth-review/) explains that boundary.
+development corpus—not an independently reviewed evaluation set. The current
+24 July synchronized run applies the hardened exact-range scorer to those
+reviewed contracts. The [human ground-truth audit](../ground-truth-review/)
+explains the remaining evaluation boundary.
 
 The benchmark is analyzer-neutral. Cases do not contain Bifrost symbol IDs or
 LSP-specific response shapes. Runners translate each tool's public interface
@@ -48,6 +49,6 @@ expectations or a tool-specific scoring exception.
 - That every real-world program construct is represented by the current corpus.
 
 The [comparison methodology](../methodology/) defines the evidence threshold for
-stronger claims. The [result snapshot](../results/) preserves the historical
-Bifrost-versus-LSP run pending a synchronized rerun, and each language page
-explains the reviewed case-level deltas.
+stronger claims. The [current result](../results/) reports the synchronized
+Bifrost-versus-LSP run, and each language page explains the reviewed case-level
+deltas.
