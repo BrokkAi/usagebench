@@ -8,50 +8,59 @@ description: Required-destination and strict-contract results from the reviewed 
 > `legacy_unattributed`. A second independent review, preregistration, and an
 > immutable freeze are still required for evaluation promotion.
 
-This corrected native result replaces the legacy 16 July figures. Eight
-unchanged reference profiles retain their synchronized 24 July reports. Java
-was rerun with the same pinned JDT LS after correcting its workspace path and
-changing three ordinary source-navigation lookups from Declaration to
-Definition. Metals was rerun at 1.6.8 with unchanged Scala case outcomes.
-Bifrost was rerun across the full corpus at the same pinned revision; its
-totals were unchanged. All runner processes completed without errors.
+This corrected native result replaces the legacy 16 July figures. Bifrost was
+rerun across the full corpus at the pinned revision. gopls, TypeScript LS, and
+Intelephense were rerun after adding reviewed compatible-operation evidence and
+the machine-readable destination scorer. Java had already been rerun with the
+same pinned JDT LS after correcting its workspace path and ordinary
+source-navigation operations; Metals had been refreshed at 1.6.8. The other
+five reference profiles retain their synchronized 24 July reports because
+their cases and operations did not change. All fresh reports record zero runner
+errors.
 
 | Run fact | Value |
 |---|---|
 | Date | 24 July 2026 |
-| Base synchronized UsageBench revision | `78e66e5dd3589d4543f1b19a8b3566fa9afd644a` |
-| Corrections | Java workspace isolation and Definition authoring; Metals 1.6.8 refresh |
+| UsageBench parent revision | `d01a4aa60b4516529a63009ef312c6f34d21b80a` |
+| Corrections | Java workspace isolation and Definition authoring; Metals 1.6.8 refresh; 13 reviewed compatible-operation annotations and report-derived destination scoring |
 | Bifrost revision | `782522b245fc86e3d39b1cdc0488553a1d262212` (pinned synchronized revision) |
 | Host | macOS arm64, native and host-specific |
 | Scoring | Headline required-destination recall; secondary strict range and identity conformance |
 
 ## Required destinations found
 
-The primary comparison uses the 131 cases whose authored operation is scoreable
-by both Bifrost and the corresponding reference server. It asks whether every
-reviewed reference was returned and every navigation or type lookup included
-its expected destination. Broader containing ranges and additional results are
+The primary comparison uses the 144 cases scoreable by both Bifrost and the
+corresponding reference server through the canonical operation or an explicitly
+reviewed compatible operation. It asks whether every reviewed reference was
+returned and every navigation or type lookup included its expected
+destination. Line-only or broader containing ranges and additional results are
 tolerated in this view because an editor user can still reach the required
-code.
+code. Compatible operations are reported separately; they do not alter the
+strict canonical results below.
 
-| Language | Shared | Bifrost destinations | Reference destinations |
+| Language | Shared destination-scoreable | Bifrost destinations | Reference destinations |
 |---|---:|---:|---:|
 | C++ | 15 | 12/15 (80.0%) | 14/15 (93.3%) |
 | C# | 16 | 14/16 (87.5%) | 15/16 (93.8%) |
-| Go | 6 | 5/6 (83.3%) | 6/6 (100.0%) |
+| Go | 11 | 9/11 (81.8%) | 11/11 (100.0%) |
 | Java | 11 | 11/11 (100.0%) | 11/11 (100.0%) |
-| JavaScript, TypeScript | 17 | 15/17 (88.2%) | 15/17 (88.2%) |
-| PHP | 10 | 10/10 (100.0%) | 10/10 (100.0%) |
+| JavaScript, TypeScript | 21 | 19/21 (90.5%) | 19/21 (90.5%) |
+| PHP | 14 | 12/14 (85.7%) | 14/14 (100.0%) |
 | Python | 13 | 11/13 (84.6%) | 13/13 (100.0%) |
 | Ruby | 16 | 15/16 (93.8%) | 11/16 (68.8%) |
 | Rust | 15 | 14/15 (93.3%) | 13/15 (86.7%) |
 | Scala | 12 | 11/12 (91.7%) | 10/12 (83.3%) |
-| **Pooled** | **131** | **118/131 (90.1%)** | **118/131 (90.1%)** |
+| **Pooled** | **144** | **128/144 (88.9%)** | **131/144 (91.0%)** |
 
-The pooled destination result is a tie. With each profile weighted equally,
-Bifrost averages **90.2%** and the reference servers **91.4%**; the median
-paired profile difference is **0.0 percentage points**. Bifrost leads three
-profiles, ties three, and trails four.
+The fresh report fields reproduce the affected rows directly: Go pairs to
+9/11 versus 11/11, JavaScript/TypeScript to 19/21 versus 19/21, and PHP to
+12/14 versus 14/14. Bifrost's full report finds 135 of its 152 individually
+scoreable cases; intersecting scoreable case IDs with each reference profile
+produces the 128/144 paired total above.
+
+With each profile weighted equally, Bifrost averages **88.9%** and the
+reference servers **91.6%**; the median paired profile difference is **−3.1
+percentage points**. Bifrost leads three profiles, ties two, and trails five.
 
 This is a recall-forward measure, not a declaration that all returned results
 are equally good. A case can surface every required destination while also

@@ -258,6 +258,7 @@ cases:
         displayName: title
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location:
             uri: benchmark://source/src/components.js

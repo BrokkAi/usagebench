@@ -240,6 +240,7 @@ cases:
         displayName: "$sent"
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location:
             uri: benchmark://source/src/Consumer.php

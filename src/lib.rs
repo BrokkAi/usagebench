@@ -182,6 +182,11 @@ pub enum Disambiguation {
 pub struct UsageLookup {
     #[serde(default)]
     pub operation: NavigationOperation,
+    /// Explicitly reviewed alternate operations that reach the same authored
+    /// target. These are reported separately for compatibility/user-felt
+    /// navigation and never replace the canonical `operation` score.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub compatible_operations: Vec<NavigationOperation>,
     /// Accept either no result or an exact self-target, but reject navigation
     /// to any other token. `expectedDeclaration` must equal `usage`.
     #[serde(default)]
@@ -194,7 +199,9 @@ pub struct UsageLookup {
     pub allowed_extra_targets: Vec<SymbolLocation>,
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum NavigationOperation {
     /// Preserve the legacy profile-selected endpoint while development cases
@@ -568,6 +575,39 @@ impl BenchmarkCase {
                     self.id
                 );
             }
+            if lookup
+                .compatible_operations
+                .iter()
+                .any(|operation| *operation == NavigationOperation::ProfileDefault)
+            {
+                bail!(
+                    "case {} usageLookups compatibleOperations must select an explicit operation",
+                    self.id
+                );
+            }
+            if lookup
+                .compatible_operations
+                .iter()
+                .any(|operation| *operation == lookup.operation)
+            {
+                bail!(
+                    "case {} usageLookups compatibleOperations must differ from operation",
+                    self.id
+                );
+            }
+            let compatible_operation_count = lookup.compatible_operations.len();
+            let distinct_compatible_operation_count = lookup
+                .compatible_operations
+                .iter()
+                .copied()
+                .collect::<std::collections::BTreeSet<_>>()
+                .len();
+            if compatible_operation_count != distinct_compatible_operation_count {
+                bail!(
+                    "case {} usageLookups compatibleOperations must not contain duplicates",
+                    self.id
+                );
+            }
         }
 
         for lookup in &self.type_lookups {
@@ -880,6 +920,37 @@ cases: []
             schema["properties"]["referencePolicy"]["enum"],
             serde_json::json!(["external_usages", "bindings_optional", "bindings_required"])
         );
+        assert_eq!(
+            schema["$defs"]["usageLookup"]["properties"]["compatibleOperations"]["items"]["enum"],
+            serde_json::json!(["declaration", "definition"])
+        );
+        assert_eq!(
+            schema["$defs"]["usageLookup"]["properties"]["compatibleOperations"]["uniqueItems"],
+            true
+        );
+    }
+
+    #[test]
+    fn validation_rejects_profile_default_compatible_operation() {
+        let mut case = compatible_operation_case();
+        case.usage_lookups[0].compatible_operations = vec![NavigationOperation::ProfileDefault];
+
+        let error = case.validate(None, PositionEncoding::Utf16).unwrap_err();
+
+        assert!(format!("{error:#}").contains("must select an explicit operation"));
+    }
+
+    #[test]
+    fn validation_rejects_duplicate_compatible_operations() {
+        let mut case = compatible_operation_case();
+        case.usage_lookups[0].compatible_operations = vec![
+            NavigationOperation::Definition,
+            NavigationOperation::Definition,
+        ];
+
+        let error = case.validate(None, PositionEncoding::Utf16).unwrap_err();
+
+        assert!(format!("{error:#}").contains("must not contain duplicates"));
     }
 
     #[test]
@@ -1417,6 +1488,34 @@ language: text
 cases: []
 "#
         ))
+        .unwrap()
+    }
+
+    fn compatible_operation_case() -> BenchmarkCase {
+        serde_yaml::from_str(
+            r#"
+id: compatible-operation
+usageLookups:
+  - operation: declaration
+    compatibleOperations: [definition]
+    usage:
+      location:
+        uri: benchmark://source/src/lib.rs
+        range:
+          start: { line: 1, character: 4 }
+          end: { line: 1, character: 8 }
+      kind: function
+      displayName: item
+    expectedDeclaration:
+      location:
+        uri: benchmark://source/src/lib.rs
+        range:
+          start: { line: 0, character: 4 }
+          end: { line: 0, character: 8 }
+      kind: function
+      displayName: item
+"#,
+        )
         .unwrap()
     }
 }

@@ -121,6 +121,14 @@ Each case supports both benchmark directions:
   advertising a narrower, language-specific implementation. It is not a
   scoring fallback; after the operation is authored, its response is still
   judged strictly and never substituted with the other operation.
+  `compatibleOperations` may explicitly list a separately reviewed alternate
+  endpoint that reaches the same complete authored target. Runners execute it
+  as a second result: the canonical operation remains the case `status`, while
+  `requiredDestinationStatus` reports whether the raw canonical or reviewed
+  compatible results include the destination. That recall-forward field also
+  tolerates line-only or containing ranges and additional results. It is never
+  a silent retry and cannot change strict endpoint precision or capability
+  results.
   `allowedExtraTargets` may list conservative alternate targets that can
   accompany the required `expectedDeclaration` but cannot replace it. An
   alternate may have a different symbol kind when navigation legitimately

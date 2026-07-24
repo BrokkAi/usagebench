@@ -165,6 +165,7 @@ cases:
         displayName: Last
     usageLookups:
       - operation: declaration
+        compatibleOperations: [definition]
         usage:
           location:
             uri: benchmark://source/cmd/app/main.go
