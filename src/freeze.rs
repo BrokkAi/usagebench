@@ -82,7 +82,7 @@ pub struct FreezeManifestOptions {
     pub report_paths: Vec<PathBuf>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FreezeManifest {
     pub schema_version: u32,
@@ -95,7 +95,7 @@ pub struct FreezeManifest {
     pub corpus: Vec<ManifestDocument>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ScoringContract {
     pub benchmark_case_schema_version: u32,
@@ -104,7 +104,7 @@ pub struct ScoringContract {
     pub include_definition_lookups: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestCandidate {
     pub id: String,
@@ -120,7 +120,7 @@ pub struct ManifestCandidate {
     pub profile: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestReport {
     pub candidate_id: String,
@@ -132,7 +132,7 @@ pub struct ManifestReport {
     pub totals: crate::runners::RunTotals,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestDocument {
     pub case_file: String,

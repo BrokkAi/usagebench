@@ -145,6 +145,14 @@ jobs:
             "$RUNNER_TEMP/freeze-evidence" \
             "$REVISION"
 
+      - name: Generate public result fragments from frozen reports
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --locked -- generate-results \
+            --manifest "$RUNNER_TEMP/freeze-evidence/freeze-manifest.json" \
+            --output-directory "$RUNNER_TEMP/freeze-results"
+
       - name: Stage release evidence bundle
         shell: bash
         env:
@@ -153,7 +161,9 @@ jobs:
         run: |
           set -euo pipefail
           stage="usagebench-${RELEASE_TAG}"
-          scripts/stage-release-bundle.sh . "dist/$stage" "$RELEASE_TAG" "$RELEASE_COMMIT" "$RUNNER_TEMP/freeze-evidence"
+          scripts/stage-release-bundle.sh \
+            . "dist/$stage" "$RELEASE_TAG" "$RELEASE_COMMIT" \
+            "$RUNNER_TEMP/freeze-evidence" "$RUNNER_TEMP/freeze-results"
           tar -C dist -czf "dist/$stage.tar.gz" "$stage"
           (
             cd dist
