@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  echo "usage: $0 SOURCE_ROOT DESTINATION RELEASE_TAG REVISION [FREEZE_EVIDENCE_DIRECTORY]" >&2
+  echo "usage: $0 SOURCE_ROOT DESTINATION RELEASE_TAG REVISION [FREEZE_EVIDENCE_DIRECTORY] [GENERATED_RESULTS_DIRECTORY]" >&2
   exit 2
 }
 
@@ -11,6 +11,7 @@ destination="${2:-}"
 release_tag="${3:-}"
 revision="${4:-}"
 freeze_evidence_directory="${5:-}"
+generated_results_directory="${6:-}"
 [[ -d "$source_root" && -n "$destination" ]] || usage
 [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || usage
 [[ "$revision" =~ ^[0-9a-f]{40}$ ]] || usage
@@ -58,4 +59,15 @@ if [[ -n "$freeze_evidence_directory" ]]; then
     cd "$destination/evidence"
     sha256sum *.json > SHA256SUMS
   )
+fi
+
+if [[ -n "$generated_results_directory" ]]; then
+  [[ -d "$generated_results_directory" \
+    && -f "$generated_results_directory/results.md" \
+    && -f "$generated_results_directory/case-comparison.md" ]] || {
+    echo "generated results must contain results.md and case-comparison.md: $generated_results_directory" >&2
+    exit 1
+  }
+  mkdir -p "$destination/results"
+  cp "$generated_results_directory/results.md" "$generated_results_directory/case-comparison.md" "$destination/results/"
 fi

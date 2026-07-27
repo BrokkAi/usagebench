@@ -61,6 +61,18 @@ enum Command {
         #[arg(long)]
         output: PathBuf,
     },
+    /// Generate public result fragments from a verified immutable snapshot.
+    GenerateResults {
+        /// Freeze manifest beside the raw report JSON files.
+        #[arg(long)]
+        manifest: PathBuf,
+        /// Directory containing the generated Markdown fragments.
+        #[arg(long)]
+        output_directory: PathBuf,
+        /// Fail instead of writing when generated fragments differ from disk.
+        #[arg(long)]
+        check: bool,
+    },
     /// Run benchmark case YAML files against Bifrost.
     RunBifrost {
         /// Case file or directory to run.
@@ -181,6 +193,21 @@ fn main() -> Result<()> {
                 manifest.candidates.len(),
                 output.display()
             );
+        }
+        Command::GenerateResults {
+            manifest,
+            output_directory,
+            check,
+        } => {
+            usagebench::results::write_result_pages(&manifest, &output_directory, check)?;
+            if check {
+                println!("generated result pages are current");
+            } else {
+                println!(
+                    "wrote generated result pages to {}",
+                    output_directory.display()
+                );
+            }
         }
         Command::RunBifrost {
             path,

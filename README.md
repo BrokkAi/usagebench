@@ -31,6 +31,28 @@ The benchmark corpus is authored by source location instead of by an
 analyzer-specific symbol ID. Each case points at a declaration, expected usage
 sites, and reverse usage-to-declaration probes using LSP-shaped ranges.
 
+## Immutable result pages
+
+Benchmark releases package each raw report, a manifest with its SHA-256 digest,
+and generated result fragments. Generate (or check) those fragments from an
+extracted release evidence directory with:
+
+```bash
+cargo run -- generate-results \
+  --manifest evidence/freeze-manifest.json \
+  --output-directory generated-results
+
+cargo run -- generate-results \
+  --manifest evidence/freeze-manifest.json \
+  --output-directory generated-results \
+  --check
+```
+
+The generator rejects missing, altered, mismatched, or non-snapshot reports
+before it writes a page. The first public result-page refresh will use a frozen
+all-profile development snapshot; the current hand-authored 24 July summary
+predates the release evidence pipeline.
+
 ## Directory Structure
 
 * `benchmarks`: Authored benchmark case files and corpus documentation.
