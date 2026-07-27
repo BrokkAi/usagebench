@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "candidates": [
+    {
+      "id": "bifrost",
+      "runner": "bifrost",
+      "name": "Bifrost",
+      "requestedVersion": "v0.8.8",
+      "source": "https://github.com/BrokkAi/bifrost",
+      "revision": "a54be9be9b08b9d9ddbab1c471e26d7f8bd932df",
+      "referenceRunner": "bifrost",
+      "eligibleForFreeze": true
+    },
+    {
+      "id": "gopls",
+      "runner": "lsp",
+      "name": "gopls",
+      "requestedVersion": "0.23.0",
+      "source": "https://go.googlesource.com/tools",
+      "moduleChecksum": "h1:Dn6mf9WXu9iLnTftDDMb9wV0c6Se7PjzEMqP0LEe08Y=",
+      "profile": "adapters/lsp/gopls.json",
+      "referenceRunner": "gopls",
+      "eligibleForFreeze": true
+    },
+    {
+      "id": "metals",
+      "runner": "lsp",
+      "name": "Metals",
+      "requestedVersion": "1.6.8",
+      "source": "https://github.com/scalameta/metals/releases/tag/v1.6.8",
+      "profile": "adapters/lsp/metals.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet install Coursier and SBT"
+    },
+    {
+      "id": "clangd",
+      "runner": "lsp",
+      "name": "clangd",
+      "requestedVersion": "22.1.6",
+      "source": "https://github.com/clangd/clangd/releases/tag/22.1.6",
+      "profile": "adapters/lsp/clangd.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet install clangd"
+    },
+    {
+      "id": "ccls",
+      "runner": "lsp",
+      "name": "ccls",
+      "requestedVersion": "0.20250815.1",
+      "source": "https://github.com/MaskRay/ccls/releases/tag/0.20250815.1",
+      "profile": "adapters/lsp/ccls.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet install ccls"
+    },
+    {
+      "id": "roslyn",
+      "runner": "lsp",
+      "name": "Microsoft.CodeAnalysis.LanguageServer",
+      "requestedVersion": "vscode-csharp 2.140.9",
+      "source": "https://github.com/dotnet/vscode-csharp/releases/tag/v2.140.9",
+      "profile": "adapters/lsp/roslyn.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet contain the official Roslyn server"
+    },
+    {
+      "id": "csharp-ls",
+      "runner": "lsp",
+      "name": "csharp-ls",
+      "requestedVersion": "0.26.0",
+      "source": "https://github.com/razzmatazz/csharp-language-server/releases/tag/0.26.0",
+      "profile": "adapters/lsp/csharp-ls.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the published 0.26.0 package is not a usable dotnet tool"
+    },
+    {
+      "id": "eclipse-jdtls",
+      "runner": "lsp",
+      "name": "Eclipse JDT LS",
+      "requestedVersion": "1.61.0-202607142124",
+      "source": "https://download.eclipse.org/jdtls/snapshots/",
+      "profile": "adapters/lsp/eclipse-jdtls.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet install JDT LS"
+    },
+    {
+      "id": "typescript-language-server",
+      "runner": "lsp",
+      "name": "typescript-language-server",
+      "requestedVersion": "5.3.0 (TypeScript 5.9.3)",
+      "source": "https://github.com/typescript-language-server/typescript-language-server",
+      "profile": "adapters/lsp/typescript-language-server.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet define a Node package cache contract"
+    },
+    {
+      "id": "pyright",
+      "runner": "lsp",
+      "name": "Pyright",
+      "requestedVersion": "1.1.411",
+      "source": "https://github.com/microsoft/pyright/releases/tag/1.1.411",
+      "profile": "adapters/lsp/pyright.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet define a Node package cache contract"
+    },
+    {
+      "id": "ruby-lsp",
+      "runner": "lsp",
+      "name": "Ruby LSP",
+      "requestedVersion": "0.26.10",
+      "source": "https://github.com/Shopify/ruby-lsp/releases/tag/v0.26.10",
+      "profile": "adapters/lsp/ruby-lsp.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet define a Ruby gem installation contract"
+    },
+    {
+      "id": "solargraph",
+      "runner": "lsp",
+      "name": "Solargraph",
+      "requestedVersion": "0.60.2",
+      "source": "https://github.com/castwide/solargraph/tree/v0.60.2",
+      "profile": "adapters/lsp/solargraph.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet define a Ruby gem installation contract"
+    },
+    {
+      "id": "intelephense",
+      "runner": "lsp",
+      "name": "Intelephense",
+      "requestedVersion": "1.18.5",
+      "source": "https://www.npmjs.com/package/intelephense/v/1.18.5",
+      "profile": "adapters/lsp/intelephense.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet define a Node package cache contract"
+    },
+    {
+      "id": "phpactor",
+      "runner": "lsp",
+      "name": "Phpactor",
+      "requestedVersion": "2026.06.25.0",
+      "source": "https://github.com/phpactor/phpactor/releases/tag/2026.06.25.0",
+      "profile": "adapters/lsp/phpactor.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet install Phpactor"
+    },
+    {
+      "id": "rust-analyzer",
+      "runner": "lsp",
+      "name": "rust-analyzer",
+      "requestedVersion": "2026-07-13",
+      "source": "https://github.com/rust-lang/rust-analyzer/releases/tag/2026-07-13",
+      "profile": "adapters/lsp/rust-analyzer.json",
+      "eligibleForFreeze": false,
+      "ineligibleReason": "the protected runner image does not yet install rust-analyzer"
+    }
+  ]
+}

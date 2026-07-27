@@ -7,6 +7,7 @@ use std::{
 };
 use url::Url;
 
+pub mod freeze;
 pub mod runners;
 
 /// Compatibility re-export for integrations that imported the original module.

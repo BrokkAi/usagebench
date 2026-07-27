@@ -3,7 +3,7 @@
   "name": "gopls",
   "languages": ["go"],
   "requestedVersion": "0.23.0",
-  "source": "https://github.com/golang/tools/releases/tag/gopls/v0.23.0",
+  "source": "https://go.googlesource.com/tools",
   "command": ["gopls"],
   "fileExtensions": [".go"],
   "languageIds": {".go": "go"},

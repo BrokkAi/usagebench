@@ -76,6 +76,42 @@ the curated release asset when a minimal reproducibility bundle is preferred.
 4. Confirm that the release workflow validates the corpus and citation file,
    publishes the curated archive and checksum, and creates the GitHub Release.
 
+## Freezing a benchmark snapshot
+
+Use the **Freeze benchmark snapshot** manual workflow to turn a reviewed main
+revision into a release. It accepts the new benchmark version, an exact source
+revision (or `main`), `development` or `evaluation` evidence, and a
+comma-separated list of candidate IDs from `adapters/candidates.json`.
+
+`adapters/candidates.json` is the release registry for analyzer identities. It
+records each candidate's requested version, source, pinned revision where one
+exists, and LSP profile. It also names the candidates whose installation and
+execution contract is currently reproducible in the protected runner. Update
+the registry when adding or advancing a candidate; do not put a release ref in
+the workflow input. A candidate becomes executable by assigning its
+`referenceRunner` to a corresponding versioned reference environment.
+
+The reference-environment manifest retains the candidate values needed for a
+self-contained release bundle, but its build scripts reject any mismatch with
+this registry. The registry is therefore the maintained source of truth rather
+than a second independent release setting.
+
+The workflow resolves the selected source to a full commit, proves it is
+reachable from `main`, checks that `CITATION.cff` agrees with the requested
+version, validates the corpus, and freezes one report per selected candidate.
+It then writes a versioned manifest with the scoring contract, corpus policy,
+candidate identities, environment provenance, and SHA-256 report digests. A
+development snapshot remains explicitly labeled as development evidence. An
+evaluation snapshot fails unless every executed document has the existing
+evaluation, preregistration, and independent-review metadata.
+
+The only job with `contents: write` waits for the protected `release`
+environment. Immediately after approval it checks the tag again, creates an
+annotated tag, and pushes it without force. Existing tags always fail; the
+workflow never moves or replaces a release tag. The curated release archive
+contains the source bundle plus `evidence/freeze-manifest.json`, the selected
+reports, and `evidence/SHA256SUMS`.
+
 Repository administrators should protect the `v*` tag namespace with a ruleset
 that limits tag creation and updates to release maintainers. The workflow's
 `release` environment should require an approving reviewer and allow deployment

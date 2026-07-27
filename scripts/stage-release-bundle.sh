@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  echo "usage: $0 SOURCE_ROOT DESTINATION RELEASE_TAG REVISION" >&2
+  echo "usage: $0 SOURCE_ROOT DESTINATION RELEASE_TAG REVISION [FREEZE_EVIDENCE_DIRECTORY]" >&2
   exit 2
 }
 
@@ -10,6 +10,7 @@ source_root="${1:-}"
 destination="${2:-}"
 release_tag="${3:-}"
 revision="${4:-}"
+freeze_evidence_directory="${5:-}"
 [[ -d "$source_root" && -n "$destination" ]] || usage
 [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || usage
 [[ "$revision" =~ ^[0-9a-f]{40}$ ]] || usage
@@ -45,3 +46,16 @@ jq -n \
   --arg revision "$revision" \
   '{releaseTag: $releaseTag, releaseVersion: $releaseVersion, revision: $revision}' \
   > "$destination/.usagebench-release.json"
+
+if [[ -n "$freeze_evidence_directory" ]]; then
+  [[ -d "$freeze_evidence_directory" && -f "$freeze_evidence_directory/freeze-manifest.json" ]] || {
+    echo "freeze evidence must contain freeze-manifest.json: $freeze_evidence_directory" >&2
+    exit 1
+  }
+  mkdir -p "$destination/evidence"
+  cp "$freeze_evidence_directory"/*.json "$destination/evidence/"
+  (
+    cd "$destination/evidence"
+    sha256sum *.json > SHA256SUMS
+  )
+fi
