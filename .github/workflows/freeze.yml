@@ -207,7 +207,7 @@ jobs:
           RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
           RELEASE_REVISION: ${{ needs.prepare.outputs.revision }}
           SNAPSHOT_KIND: ${{ needs.prepare.outputs.snapshot_kind }}
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           existing_tag_commit="$(git ls-remote origin "refs/tags/$RELEASE_TAG^{}" | awk '{print $1}')"
@@ -226,11 +226,15 @@ jobs:
             echo "checkout does not match frozen revision" >&2
             exit 1
           }
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$RELEASE_TAG" "$RELEASE_REVISION" -m "UsageBench $SNAPSHOT_KIND snapshot $RELEASE_TAG"
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64)" \
-            push origin "refs/tags/$RELEASE_TAG"
+          tag_object="$(gh api --method POST "repos/$GITHUB_REPOSITORY/git/tags" \
+            -f tag="$RELEASE_TAG" \
+            -f message="UsageBench $SNAPSHOT_KIND snapshot $RELEASE_TAG" \
+            -f object="$RELEASE_REVISION" \
+            -f type=commit \
+            --jq .sha)"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/tags/$RELEASE_TAG" \
+            -f sha="$tag_object" >/dev/null
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3
