@@ -19,6 +19,9 @@ mod lsp_protocol;
 mod mcp;
 pub mod report_compare;
 
+/// Version of the machine-readable analyzer-run report contract.
+pub const RUN_REPORT_SCHEMA_VERSION: u32 = 1;
+
 pub use environment::{
     ContainerProvenance, ExecutableProvenance, ExecutionEnvironment, ExecutionMode, PlatformScope,
     ReferenceEnvironmentProvenance,

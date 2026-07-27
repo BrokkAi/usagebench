@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 manifest="$repo_root/containers/reference/v1/manifest.json"
+candidate_registry="$repo_root/adapters/candidates.json"
 
 usage() {
   echo "usage: $0 RUNNER_ID CORPUS_ROOT OUTPUT_FILE [CASE_PATH] [CASE_ID] [INCLUDE_UNSUPPORTED]" >&2
@@ -144,7 +145,7 @@ docker_args=(
 )
 
 if [[ "$runner_id" == "bifrost" ]]; then
-  bifrost_revision="$(jq -r '.runners.bifrost.analyzer.revision' "$manifest")"
+  bifrost_revision="$(jq -r '.candidates[] | select(.id == "bifrost") | .revision' "$candidate_registry")"
   command_args=(
     run-bifrost "/corpus/$case_path" \
     --bifrost-binary /usr/local/bin/bifrost \

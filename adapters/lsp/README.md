@@ -4,6 +4,12 @@ These profiles adapt standard language-server protocol operations to the
 UsageBench report contract. They cover every language currently present in the
 curated corpus.
 
+The release registry at [`../candidates.json`](../candidates.json) is the
+central place for snapshot candidate versions, sources, immutable revisions,
+and freeze eligibility. Keep a profile's `requestedVersion` aligned with its
+registry entry; the profile remains the launch configuration, while the
+registry is the published candidate identity.
+
 ## Run a profile
 
 Put the profile's executable on `PATH`, then run:

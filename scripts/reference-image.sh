@@ -5,6 +5,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 manifest="$repo_root/containers/reference/v1/manifest.json"
 schema="$repo_root/schema/reference-environment.schema.json"
 dockerfile="$repo_root/containers/reference/v1/Dockerfile"
+candidate_registry="$repo_root/adapters/candidates.json"
 
 usage() {
   echo "usage: $0 RUNNER_ID USAGEBENCH_RELEASE [USAGEBENCH_REVISION]" >&2
@@ -82,15 +83,25 @@ rust_base="$(jq -r --arg runner "$runner_id" '.runners[$runner].baseImages.harne
 bifrost_base="$(jq -r '.runners.bifrost.baseImages.analyzerBuilder | .reference + "@" + .digest' "$manifest")"
 runtime_base="$(jq -r --arg runner "$runner_id" '.runners[$runner].baseImages.runtime | .reference + "@" + .digest' "$manifest")"
 go_base="$(jq -r '.runners.gopls.baseImages.analyzerBuilder | .reference + "@" + .digest' "$manifest")"
-bifrost_revision="$(jq -r '.runners.bifrost.analyzer.revision' "$manifest")"
-gopls_version="$(jq -r '.runners.gopls.analyzer.requestedVersion' "$manifest")"
-gopls_checksum="$(jq -r '.runners.gopls.analyzer.moduleChecksum' "$manifest")"
+bifrost_revision="$(jq -r '.candidates[] | select(.id == "bifrost") | .revision' "$candidate_registry")"
+gopls_version="$(jq -r '.candidates[] | select(.id == "gopls") | .requestedVersion' "$candidate_registry")"
+gopls_checksum="$(jq -r '.candidates[] | select(.id == "gopls") | .moduleChecksum' "$candidate_registry")"
+[[ "$bifrost_revision" == "$(jq -r '.runners.bifrost.analyzer.revision' "$manifest")" ]] || {
+  echo "Bifrost candidate registry does not match the reference environment" >&2
+  exit 1
+}
+[[ "$gopls_version" == "$(jq -r '.runners.gopls.analyzer.requestedVersion' "$manifest")" \
+  && "$gopls_checksum" == "$(jq -r '.runners.gopls.analyzer.moduleChecksum' "$manifest")" ]] || {
+  echo "gopls candidate registry does not match the reference environment" >&2
+  exit 1
+}
 
 definition_digest="sha256:$(
   for definition_file in \
     "$manifest" \
     "$schema" \
     "$dockerfile" \
+    "$candidate_registry" \
     "$repo_root/scripts/reference-image.sh" \
     "$repo_root/scripts/run-reference.sh"; do
     printf '%s\0' "${definition_file#$repo_root/}"

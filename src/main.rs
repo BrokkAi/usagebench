@@ -5,6 +5,7 @@ use usagebench::bifrost_runner::{
     run_bifrost, BifrostRunReport, CaseStatus, NormalizedLocation, RunBifrostOptions,
     TypeLookupReport, UsageDefinitionReport,
 };
+use usagebench::freeze::{create_manifest, FreezeManifestOptions, SnapshotKind};
 use usagebench::runners::lsp::{run_lsp, RunLspOptions};
 
 #[derive(Debug, Parser)]
@@ -35,6 +36,30 @@ enum Command {
         expected: PathBuf,
         /// Newly reproduced report.
         actual: PathBuf,
+    },
+    /// Validate selected candidate evidence and write an immutable snapshot manifest.
+    FreezeManifest {
+        /// Development evidence is explicitly labeled; evaluation requires promoted corpus metadata.
+        #[arg(long)]
+        snapshot_kind: SnapshotKind,
+        /// Immutable benchmark tag to create, for example v0.2.0.
+        #[arg(long)]
+        version: String,
+        /// Exact 40-character UsageBench commit being frozen.
+        #[arg(long)]
+        revision: String,
+        /// Central registry of candidate versions and revisions.
+        #[arg(long, default_value = "adapters/candidates.json")]
+        candidates_file: PathBuf,
+        /// Comma-separated candidate IDs, in the order they should appear in the manifest.
+        #[arg(long, value_delimiter = ',')]
+        candidates: Vec<String>,
+        /// Report produced by each selected candidate. Repeat once per candidate.
+        #[arg(long, required = true)]
+        report: Vec<PathBuf>,
+        /// Destination for the machine-readable snapshot manifest.
+        #[arg(long)]
+        output: PathBuf,
     },
     /// Run benchmark case YAML files against Bifrost.
     RunBifrost {
@@ -130,6 +155,32 @@ fn main() -> Result<()> {
                 }
                 bail!("reports differ in {} semantic field(s)", differences.len());
             }
+        }
+        Command::FreezeManifest {
+            snapshot_kind,
+            version,
+            revision,
+            candidates_file,
+            candidates,
+            report,
+            output,
+        } => {
+            let manifest = create_manifest(FreezeManifestOptions {
+                snapshot_kind,
+                version,
+                revision,
+                candidates_file,
+                candidate_ids: candidates,
+                report_paths: report,
+            })?;
+            usagebench::freeze::write_manifest(&output, &manifest)?;
+            println!(
+                "wrote {} {} snapshot manifest for {} candidate(s) to {}",
+                manifest.snapshot_kind,
+                manifest.version,
+                manifest.candidates.len(),
+                output.display()
+            );
         }
         Command::RunBifrost {
             path,
