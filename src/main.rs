@@ -24,6 +24,11 @@ enum Command {
         /// Case file or directory to validate.
         path: PathBuf,
     },
+    /// Validate promoted evaluation case files and their frozen evidence links.
+    ValidateEvaluation {
+        /// Evaluation case file or directory to validate.
+        path: PathBuf,
+    },
     /// Print the JSON Schema generated from the Rust model.
     Schema,
     /// Print the JSON Schema generated for analyzer run reports.
@@ -193,6 +198,13 @@ fn main() -> Result<()> {
         Command::Validate { path } => {
             let files = usagebench::validate_path(&path)?;
             println!("validated {} benchmark case file(s)", files.len());
+        }
+        Command::ValidateEvaluation { path } => {
+            let files = usagebench::evaluation::validate_path(&path)?;
+            println!(
+                "validated {} evaluation benchmark case file(s)",
+                files.len()
+            );
         }
         Command::Schema => {
             println!("{}", usagebench::generated_schema_json()?);

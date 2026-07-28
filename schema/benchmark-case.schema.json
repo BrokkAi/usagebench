@@ -55,6 +55,18 @@
         "freezeId": {
           "type": "string",
           "minLength": 1
+        },
+        "selectionManifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewManifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceLock": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
@@ -93,7 +105,7 @@
             },
             "commit": {
               "type": "string",
-              "minLength": 1
+              "pattern": "^[0-9a-f]{40}$"
             }
           }
         },

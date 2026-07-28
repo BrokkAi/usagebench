@@ -160,7 +160,11 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         }
         executed_case_files.push(display_path(case_file));
 
-        let source = prepare_source_root(&document.source, &repo_root, &run_dir)?;
+        let source =
+            match crate::evaluation::materialized_source_root(&document, &repo_root, &run_dir)? {
+                Some(source) => source,
+                None => prepare_source_root(&document.source, &repo_root, &run_dir)?,
+            };
         let source_root = run_dir.join(format!("source-{index}"));
         copy_source_tree(&source, &source_root)?;
         write_workspace_files(&profile, &source_root)?;

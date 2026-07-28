@@ -147,7 +147,11 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             .with_context(|| format!("read benchmark cases {}", case_file.display()))?;
         let document: BenchmarkDocument = serde_yaml::from_str(&yaml)
             .with_context(|| format!("deserialize benchmark cases {}", case_file.display()))?;
-        let source_root = prepare_source_root(&document.source, &repo_root, &work_dir)?;
+        let source_root =
+            match crate::evaluation::materialized_source_root(&document, &repo_root, &work_dir)? {
+                Some(source_root) => source_root,
+                None => prepare_source_root(&document.source, &repo_root, &work_dir)?,
+            };
         let cases = run_document_cases(
             &document,
             &source_root,

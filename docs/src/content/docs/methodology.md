@@ -190,7 +190,16 @@ An evaluation document is accepted only when all of these are true:
 1. case selection was pre-registered before running the compared analyzers;
 2. the document has an immutable `freezeId`;
 3. at least two named reviewers independently checked source locations; and
-4. disagreements were adjudicated before the freeze.
+4. disagreements were adjudicated before the freeze; and
+5. the selection, reviews, and exact public Git source are bound by hashed
+   manifests, including a source-lock entry for the offline materialization.
+
+The protocol comes first: it records the target language/profile strata,
+population snapshot, eligibility and exclusion rules, sampling/replacement
+procedure, and the limited claim scope before repositories or declarations are
+selected. A selection manifest then commits to the actual repository commits
+and case IDs; the reviewers and source lock hash that manifest. This makes a
+later analyzer run an outcome of the frozen slice, not an input to its choice.
 
 Changing a frozen assertion creates a new freeze and preserves the old report.
 Reports include partition, selection, review status, and reference policy, and
