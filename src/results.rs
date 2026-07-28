@@ -6,6 +6,7 @@
 
 use crate::{
     freeze::{FreezeManifest, ManifestCandidate, FREEZE_MANIFEST_SCHEMA_VERSION},
+    reproduction::validate_evidence,
     runners::{CaseRunReport, CaseStatus, RequiredDestinationStatus, RunReport},
 };
 use anyhow::{bail, Context, Result};
@@ -148,6 +149,16 @@ fn load_snapshot(manifest_path: &Path) -> Result<Snapshot> {
     if candidates.len() != manifest.candidates.len() {
         bail!("freeze manifest contains duplicate candidate IDs");
     }
+    let evidence_links = manifest
+        .candidate_evidence
+        .iter()
+        .map(|evidence| (evidence.candidate_id.clone(), evidence))
+        .collect::<BTreeMap<_, _>>();
+    if evidence_links.len() != manifest.candidate_evidence.len()
+        || evidence_links.len() != manifest.candidates.len()
+    {
+        bail!("freeze manifest must contain one unique evidence link per candidate");
+    }
 
     let mut reports = BTreeMap::new();
     let mut report_files = BTreeSet::new();
@@ -187,7 +198,52 @@ fn load_snapshot(manifest_path: &Path) -> Result<Snapshot> {
                 manifest.revision
             );
         }
+        if report.usagebench_release.as_deref() != Some(manifest.version.as_str()) {
+            bail!(
+                "report {} release does not match snapshot {}",
+                entry.file,
+                manifest.version
+            );
+        }
         validate_candidate_report(&candidate, &report)?;
+        let evidence_link = evidence_links.get(&entry.candidate_id).with_context(|| {
+            format!(
+                "candidate {} lacks reproduction evidence",
+                entry.candidate_id
+            )
+        })?;
+        if evidence_link.class != candidate.reproduction_class {
+            bail!(
+                "candidate {} evidence class does not match manifest",
+                entry.candidate_id
+            );
+        }
+        let evidence_file = safe_report_file_name(&evidence_link.file)?;
+        let evidence_path = evidence_directory.join(evidence_file);
+        let evidence_bytes = fs::read(&evidence_path)
+            .with_context(|| format!("read reproduction evidence {}", evidence_path.display()))?;
+        if hex_digest(&evidence_bytes) != evidence_link.sha256 {
+            bail!(
+                "checksum mismatch for reproduction evidence {}",
+                evidence_link.file
+            );
+        }
+        let validated = validate_evidence(
+            &evidence_path,
+            &entry.candidate_id,
+            candidate.reproduction_class,
+            candidate.reference_runner.as_deref(),
+            &candidate.requested_version,
+            candidate.profile_sha256.as_deref(),
+            &report_path,
+            &report,
+        )?;
+        if !validated.accepted {
+            bail!(
+                "candidate {} reproduction evidence is not accepted",
+                entry.candidate_id
+            );
+        }
         if report.runner != entry.runner
             || report.environment != entry.environment
             || report.totals != entry.totals
@@ -248,8 +304,13 @@ fn validate_candidate_report(candidate: &ManifestCandidate, report: &RunReport) 
                 .and_then(|name| name.to_str())
                 .context("LSP manifest profile has no file stem")?;
             if report.invocation.profile.as_deref() != Some(profile_id)
+                || report.invocation.profile_sha256 != candidate.profile_sha256
                 || report.runner.requested_version != candidate.requested_version
                 || report.runner.source != candidate.source
+                || candidate
+                    .resolved_version_prefix
+                    .as_deref()
+                    .is_some_and(|prefix| !report.runner.resolved_version.starts_with(prefix))
             {
                 bail!(
                     "LSP report identity does not match manifest candidate {}",
@@ -410,13 +471,19 @@ fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> String {
     let mut output = provenance_header(snapshot);
     output.push_str("## Snapshot inputs\n\n");
     output.push_str(
-        "| Candidate | Runner | Requested version | Profile | Environment | Report SHA-256 |\n",
+        "| Candidate | Runner | Requested version | Profile | Environment | Reproduction | Report SHA-256 |\n",
     );
-    output.push_str("|---|---|---|---|---|---|\n");
+    output.push_str("|---|---|---|---|---|---|---|\n");
     for (candidate_id, loaded) in &snapshot.reports {
         let environment = &loaded.report.environment;
+        let evidence = snapshot
+            .manifest
+            .candidate_evidence
+            .iter()
+            .find(|evidence| evidence.candidate_id == *candidate_id)
+            .expect("snapshot validation requires candidate evidence");
         output.push_str(&format!(
-            "| {} | {} | {} | {} | {}/{:?}/{:?}/{:?} | `{}` |\n",
+            "| {} | {} | {} | {} | {}/{:?}/{:?}/{:?} | [{}](../evidence/{}) | `{}` |\n",
             candidate_id,
             loaded.report.runner.name,
             loaded.report.runner.requested_version,
@@ -425,6 +492,8 @@ fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> String {
             environment.architecture,
             environment.execution_mode,
             environment.platform_scope,
+            evidence.class,
+            evidence.file,
             loaded.checksum,
         ));
     }
@@ -604,9 +673,11 @@ mod tests {
             FreezeManifest, ManifestCandidate, ManifestDocument, ManifestReport, ScoringContract,
             SnapshotKind,
         },
+        reproduction::{CandidateEvidenceLink, ReproductionClass},
         runners::{
-            ExecutableProvenance, ExecutionEnvironment, ExecutionMode, PlatformScope,
-            RequiredDestinationTotals, RunInvocation, RunTotals, RunnerMetadata,
+            ContainerProvenance, ExecutableProvenance, ExecutionEnvironment, ExecutionMode,
+            PlatformScope, ReferenceEnvironmentProvenance, RequiredDestinationTotals,
+            RunInvocation, RunTotals, RunnerMetadata,
         },
         CorpusPartition, CorpusSelection, GroundTruthReviewStatus, ReferencePolicy,
     };
@@ -678,6 +749,9 @@ mod tests {
             .contains("| gopls 1.0.0 | 4 | 1 | 1 | 1 | 1 |"));
         assert!(pages.case_comparison.contains("`bifrost-strict`"));
         assert!(pages.case_comparison.contains("`reference-strict`"));
+        assert!(pages
+            .results
+            .contains("[canonical](../evidence/gopls-evidence.json)"));
         assert!(!pages.results.contains("/host/specific/root"));
         assert!(!pages.results.contains("/nonportable/path"));
 
@@ -704,6 +778,44 @@ mod tests {
 
         let error = generate_result_pages(&manifest).unwrap_err();
         assert!(error.to_string().contains("checksum mismatch"));
+    }
+
+    #[test]
+    fn rejects_a_report_from_a_different_release() {
+        let tempdir = tempdir().unwrap();
+        let manifest_path = write_snapshot(
+            tempdir.path(),
+            sample_report(
+                "bifrost",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+            sample_report(
+                "gopls",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+        );
+        let report_path = tempdir.path().join("gopls.json");
+        let mut report: RunReport =
+            serde_json::from_slice(&fs::read(&report_path).unwrap()).unwrap();
+        report.usagebench_release = Some("v9.9.9".to_string());
+        let report_bytes = serde_json::to_vec_pretty(&report).unwrap();
+        fs::write(&report_path, &report_bytes).unwrap();
+        let mut manifest: FreezeManifest =
+            serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
+        manifest
+            .reports
+            .iter_mut()
+            .find(|entry| entry.candidate_id == "gopls")
+            .unwrap()
+            .sha256 = hex_digest(&report_bytes);
+        fs::write(
+            &manifest_path,
+            serde_json::to_vec_pretty(&manifest).unwrap(),
+        )
+        .unwrap();
+
+        let error = generate_result_pages(&manifest_path).unwrap_err();
+        assert!(error.to_string().contains("release does not match"));
     }
 
     #[test]
@@ -744,6 +856,55 @@ mod tests {
 
         let error = generate_result_pages(&manifest_path).unwrap_err();
         assert!(error.to_string().contains("reuses report file"));
+    }
+
+    #[test]
+    fn rejects_missing_reproduction_evidence() {
+        let tempdir = tempdir().unwrap();
+        let manifest_path = write_snapshot(
+            tempdir.path(),
+            sample_report(
+                "bifrost",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+            sample_report(
+                "gopls",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+        );
+        let mut manifest: FreezeManifest =
+            serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
+        manifest.candidate_evidence.pop();
+        fs::write(
+            &manifest_path,
+            serde_json::to_vec_pretty(&manifest).unwrap(),
+        )
+        .unwrap();
+
+        let error = generate_result_pages(&manifest_path).unwrap_err();
+        assert!(error.to_string().contains("one unique evidence link"));
+    }
+
+    #[test]
+    fn rejects_tampered_reproduction_evidence() {
+        let tempdir = tempdir().unwrap();
+        let manifest_path = write_snapshot(
+            tempdir.path(),
+            sample_report(
+                "bifrost",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+            sample_report(
+                "gopls",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+        );
+        fs::write(tempdir.path().join("gopls-evidence.json"), b"{}\n").unwrap();
+
+        let error = generate_result_pages(&manifest_path).unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("checksum mismatch for reproduction evidence"));
     }
 
     #[test]
@@ -799,6 +960,8 @@ mod tests {
         let reference_bytes = serde_json::to_vec_pretty(&reference).unwrap();
         fs::write(directory.join("bifrost.json"), &bifrost_bytes).unwrap();
         fs::write(directory.join("gopls.json"), &reference_bytes).unwrap();
+        let bifrost_evidence = write_canonical_evidence(directory, "bifrost", &bifrost_bytes);
+        let gopls_evidence = write_canonical_evidence(directory, "gopls", &reference_bytes);
         let manifest = FreezeManifest {
             schema_version: FREEZE_MANIFEST_SCHEMA_VERSION,
             snapshot_kind: SnapshotKind::Development,
@@ -815,6 +978,7 @@ mod tests {
                 manifest_report("bifrost", "bifrost.json", &bifrost_bytes, &bifrost),
                 manifest_report("gopls", "gopls.json", &reference_bytes, &reference),
             ],
+            candidate_evidence: vec![bifrost_evidence, gopls_evidence],
             corpus: vec![ManifestDocument {
                 case_file: "benchmarks/cases/sample.yaml".to_string(),
                 language: "go".to_string(),
@@ -838,6 +1002,38 @@ mod tests {
             revision: (runner == "bifrost").then(|| REVISION.to_string()),
             module_checksum: None,
             profile: (runner == "lsp").then(|| format!("adapters/lsp/{id}.json")),
+            profile_sha256: None,
+            resolved_version_prefix: None,
+            reference_runner: Some(id.to_string()),
+            advertised: true,
+            reproduction_class: ReproductionClass::Canonical,
+            runtime_networking: "disabled".to_string(),
+            project_hydration: "fixture".to_string(),
+        }
+    }
+
+    fn write_canonical_evidence(
+        directory: &Path,
+        id: &str,
+        report_bytes: &[u8],
+    ) -> CandidateEvidenceLink {
+        let file = format!("{id}-evidence.json");
+        let bytes = serde_json::to_vec_pretty(&serde_json::json!({
+            "schemaVersion": 1,
+            "candidateId": id,
+            "primaryReport": {"file": format!("{id}.json"), "sha256": hex_digest(report_bytes)},
+            "class": "canonical",
+            "referenceRunner": id,
+            "environmentVersion": "1",
+            "definitionDigest": format!("sha256:{}", "c".repeat(64))
+        }))
+        .unwrap();
+        fs::write(directory.join(&file), &bytes).unwrap();
+        CandidateEvidenceLink {
+            candidate_id: id.to_string(),
+            class: ReproductionClass::Canonical,
+            file,
+            sha256: hex_digest(&bytes),
         }
     }
 
@@ -881,6 +1077,7 @@ mod tests {
                 include_unsupported: false,
                 include_definition_lookups: true,
                 profile: (runner != "bifrost").then(|| runner.to_string()),
+                profile_sha256: None,
                 case_id: None,
             },
             environment: ExecutionEnvironment {
@@ -888,14 +1085,21 @@ mod tests {
                 architecture: "x86_64".to_string(),
                 execution_mode: ExecutionMode::Container,
                 platform_scope: PlatformScope::CanonicalReference,
-                reference_environment: None,
-                container: None,
+                reference_environment: Some(ReferenceEnvironmentProvenance {
+                    version: "1".to_string(),
+                    definition_digest: format!("sha256:{}", "c".repeat(64)),
+                    canonical_platform: "linux/amd64".to_string(),
+                }),
+                container: Some(ContainerProvenance {
+                    image_reference: format!("usagebench-reference:v0.1.0-env1-{runner}"),
+                    image_digest: format!("sha256:{}", "d".repeat(64)),
+                }),
                 analyzer_executable: ExecutableProvenance {
                     command: runner.to_string(),
                     resolved_path: Some("/nonportable/path".to_string()),
-                    sha256: None,
+                    sha256: Some("e".repeat(64)),
                 },
-                toolchains: BTreeMap::new(),
+                toolchains: BTreeMap::from([("rustc".to_string(), "rustc 1.97.0".to_string())]),
             },
             bifrost_repo: None,
             bifrost_commit: None,

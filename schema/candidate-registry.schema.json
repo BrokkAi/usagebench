@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brokk.ai/usagebench/candidate-registry.schema.json",
+  "title": "UsageBench candidate registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "candidates"],
+  "properties": {
+    "schemaVersion": {"const": 2},
+    "candidates": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/candidate"}
+    }
+  },
+  "$defs": {
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "runner", "name", "requestedVersion", "source", "advertised"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "runner": {"enum": ["bifrost", "lsp"]},
+        "name": {"type": "string", "minLength": 1},
+        "requestedVersion": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "format": "uri"},
+        "revision": {"type": "string", "minLength": 1},
+        "moduleChecksum": {"type": "string", "minLength": 1},
+        "profile": {"type": "string", "minLength": 1},
+        "profileSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "resolvedVersionPrefix": {"type": "string", "minLength": 1},
+        "advertised": {"type": "boolean"},
+        "reproductionClass": {"enum": ["canonical", "native_two_host"]},
+        "referenceRunner": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "runtimeNetworking": {"type": "string", "minLength": 1},
+        "projectHydration": {"type": "string", "minLength": 1},
+        "ineligibleReason": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"runner": {"const": "lsp"}}},
+          "then": {"required": ["profile"]}
+        },
+        {
+          "if": {
+            "properties": {"runner": {"const": "lsp"}, "advertised": {"const": true}},
+            "required": ["runner", "advertised"]
+          },
+          "then": {"required": ["profileSha256"]}
+        },
+        {
+          "if": {"properties": {"advertised": {"const": true}}},
+          "then": {
+            "required": ["reproductionClass", "runtimeNetworking", "projectHydration"],
+            "not": {"required": ["ineligibleReason"]}
+          },
+          "else": {
+            "required": ["ineligibleReason"],
+            "not": {"required": ["reproductionClass"]}
+          }
+        },
+        {
+          "if": {"properties": {"reproductionClass": {"const": "canonical"}}, "required": ["reproductionClass"]},
+          "then": {"required": ["referenceRunner"]},
+          "else": {"not": {"required": ["referenceRunner"]}}
+        },
+        {
+          "if": {"properties": {"reproductionClass": {"const": "native_two_host"}}, "required": ["reproductionClass"]},
+          "then": {"required": ["profileSha256"]}
+        }
+      ]
+    }
+  }
+}

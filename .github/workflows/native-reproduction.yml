@@ -1,0 +1,263 @@
+name: Native two-host reproduction
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release identity to embed in reports (for example v0.2.0)'
+        required: true
+        type: string
+      primary_runner_json:
+        description: 'JSON labels for the first pre-provisioned native host'
+        required: true
+        default: '["self-hosted","usagebench-native-primary"]'
+        type: string
+      corroborating_runner_json:
+        description: 'JSON labels for the second pre-provisioned native host'
+        required: true
+        default: '["self-hosted","usagebench-native-corroborating"]'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usagebench-native-reproduction-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  contract:
+    name: validate collection contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source revision
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+
+      - name: Validate release and host inputs
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          PRIMARY_RUNNER: ${{ inputs.primary_runner_json }}
+          CORROBORATING_RUNNER: ${{ inputs.corroborating_runner_json }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "release tag must match vMAJOR.MINOR.PATCH" >&2
+            exit 1
+          }
+          primary_labels="$(jq -ce 'sort | unique' <<< "$PRIMARY_RUNNER")"
+          corroborating_labels="$(jq -ce 'sort | unique' <<< "$CORROBORATING_RUNNER")"
+          [[ "$primary_labels" != "$corroborating_labels" ]] || {
+            echo "native reproduction requires two distinct runner label sets" >&2
+            exit 1
+          }
+          jq -e 'type == "array" and index("usagebench-native-primary") != null' <<< "$PRIMARY_RUNNER" >/dev/null
+          jq -e 'type == "array" and index("usagebench-native-corroborating") != null' <<< "$CORROBORATING_RUNNER" >/dev/null
+          [[ "$(sed -n 's/^version: "\([^"\]*\)"/\1/p' CITATION.cff)" == "${RELEASE_TAG#v}" ]] || {
+            echo "CITATION.cff does not match $RELEASE_TAG" >&2
+            exit 1
+          }
+          scripts/validate-reproduction-contract.sh
+
+  collect:
+    name: ${{ matrix.candidate }} on ${{ matrix.host }}
+    needs: contract
+    strategy:
+      fail-fast: false
+      matrix:
+        candidate:
+          - apple-clangd-21
+          - roslyn
+          - eclipse-jdtls
+          - typescript-language-server
+          - pyright
+          - intelephense
+          - ruby-lsp
+          - rust-analyzer
+          - metals
+        host:
+          - primary
+          - corroborating
+    runs-on: ${{ fromJSON(matrix.host == 'primary' && inputs.primary_runner_json || inputs.corroborating_runner_json) }}
+    steps:
+      - name: Checkout source revision
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: stable
+
+      - name: Build UsageBench
+        run: cargo build --locked --bin usagebench
+
+      - name: Stage release-shaped corpus
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          scripts/stage-release-bundle.sh \
+            "$GITHUB_WORKSPACE" \
+            "$RUNNER_TEMP/release-corpus" \
+            "$RELEASE_TAG" \
+            "$GITHUB_SHA"
+
+      - name: Verify pre-provisioned analyzer
+        shell: bash
+        env:
+          CANDIDATE: ${{ matrix.candidate }}
+        run: |
+          set -euo pipefail
+          profile="$(jq -er --arg id "$CANDIDATE" '.candidates[] | select(.id == $id and .advertised and .reproductionClass == "native_two_host") | .profile' adapters/candidates.json)"
+          executable="$(jq -er '.command[0]' "$profile")"
+          executable_path="$(command -v "$executable")" || {
+            echo "$executable is not installed on native host $RUNNER_NAME" >&2
+            exit 1
+          }
+          host_manifest="/etc/usagebench-native-host.json"
+          [[ -f "$host_manifest" ]] || {
+            echo "$host_manifest is required on each administrator-provisioned host" >&2
+            exit 1
+          }
+          requested_version="$(jq -er --arg id "$CANDIDATE" '.candidates[] | select(.id == $id) | .requestedVersion' adapters/candidates.json)"
+          profile_sha256="$(shasum -a 256 "$profile" | awk '{print $1}')"
+          executable_sha256="$(shasum -a 256 "$executable_path" | awk '{print $1}')"
+          jq -e \
+            --arg candidate "$CANDIDATE" \
+            --arg requested "$requested_version" \
+            --arg profile_sha "$profile_sha256" \
+            --arg executable_sha "$executable_sha256" \
+            '.schemaVersion == 1
+              and (.hostId | type == "string" and length > 0)
+              and .candidates[$candidate].requestedVersion == $requested
+              and .candidates[$candidate].profileSha256 == $profile_sha
+              and .candidates[$candidate].executableSha256 == $executable_sha' \
+            "$host_manifest" >/dev/null || {
+              echo "administrator tool attestation does not match $CANDIDATE" >&2
+              exit 1
+            }
+          jq -n \
+            --arg id "$(jq -er '.hostId' "$host_manifest")" \
+            --arg requestedVersion "$requested_version" \
+            --arg profileSha256 "$profile_sha256" \
+            --arg executableSha256 "$executable_sha256" \
+            '{id: $id, requestedVersion: $requestedVersion, profileSha256: $profileSha256, executableSha256: $executableSha256}' \
+            > "$RUNNER_TEMP/native-tool-attestation.json"
+
+      - name: Run native profile
+        shell: bash
+        env:
+          CANDIDATE: ${{ matrix.candidate }}
+        run: |
+          set -euo pipefail
+          mkdir -p native-report
+          profile="$(jq -er --arg id "$CANDIDATE" '.candidates[] | select(.id == $id) | .profile' adapters/candidates.json)"
+          set +e
+          ./target/debug/usagebench run-lsp \
+            "$RUNNER_TEMP/release-corpus/benchmarks/cases" \
+            --profile "$RUNNER_TEMP/release-corpus/$profile" \
+            --work-dir "$RUNNER_TEMP/native-work" \
+            --output native-report/report.json
+          status=$?
+          set -e
+          [[ -f native-report/report.json ]] || exit "$status"
+          if [[ "$status" -ne 0 ]]; then
+            echo "profile produced non-exact results; preserving the complete report for semantic comparison" >&2
+          fi
+          [[ "$(jq -er '.totals.errors' native-report/report.json)" -eq 0 ]] || {
+            echo "$CANDIDATE report contains runner/session errors" >&2
+            exit 1
+          }
+          jq -n \
+            --arg id "$(jq -er '.id' "$RUNNER_TEMP/native-tool-attestation.json")" \
+            --arg runnerName "$RUNNER_NAME" \
+            --arg provider "github-actions/$RUNNER_ENVIRONMENT" \
+            --arg provenance "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT#job-${{ strategy.job-index }}" \
+            --arg requestedVersion "$(jq -er '.requestedVersion' "$RUNNER_TEMP/native-tool-attestation.json")" \
+            --arg profileSha256 "$(jq -er '.profileSha256' "$RUNNER_TEMP/native-tool-attestation.json")" \
+            '{id: $id, runnerName: $runnerName, provider: $provider, provenance: $provenance,
+              requestedVersion: $requestedVersion, profileSha256: $profileSha256}' \
+            > native-report/host.json
+
+      - name: Upload native report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-report-${{ matrix.candidate }}-${{ matrix.host }}
+          path: native-report
+          if-no-files-found: error
+          retention-days: 30
+
+  assemble:
+    name: assemble reproduction evidence
+    needs: collect
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source revision
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: stable
+
+      - name: Build UsageBench
+        run: cargo build --locked --bin usagebench
+
+      - name: Download both host reports
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: native-report-*
+          path: collected
+
+      - name: Create typed evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p native-evidence
+          while IFS= read -r candidate; do
+            primary="collected/native-report-$candidate-primary"
+            corroborating="collected/native-report-$candidate-corroborating"
+            primary_report="$candidate-primary.json"
+            corroborating_report="$candidate-corroborating.json"
+            cp "$primary/report.json" "native-evidence/$primary_report"
+            cp "$corroborating/report.json" "native-evidence/$corroborating_report"
+            primary_id="$(jq -er '.id' "$primary/host.json")"
+            corroborating_id="$(jq -er '.id' "$corroborating/host.json")"
+            [[ "$primary_id" != "$corroborating_id" ]] || {
+              echo "$candidate ran twice on the same host $primary_id" >&2
+              exit 1
+            }
+            ./target/debug/usagebench create-native-evidence \
+              --candidate "$candidate" \
+              --primary-report "native-evidence/$primary_report" \
+              --primary-host-id "$primary_id" \
+              --primary-runner-name "$(jq -er '.runnerName' "$primary/host.json")" \
+              --primary-host-provider "$(jq -er '.provider' "$primary/host.json")" \
+              --primary-host-provenance "$(jq -er '.provenance' "$primary/host.json")" \
+              --primary-requested-version "$(jq -er '.requestedVersion' "$primary/host.json")" \
+              --primary-profile-sha256 "$(jq -er '.profileSha256' "$primary/host.json")" \
+              --corroborating-report "native-evidence/$corroborating_report" \
+              --corroborating-host-id "$corroborating_id" \
+              --corroborating-runner-name "$(jq -er '.runnerName' "$corroborating/host.json")" \
+              --corroborating-host-provider "$(jq -er '.provider' "$corroborating/host.json")" \
+              --corroborating-host-provenance "$(jq -er '.provenance' "$corroborating/host.json")" \
+              --corroborating-requested-version "$(jq -er '.requestedVersion' "$corroborating/host.json")" \
+              --corroborating-profile-sha256 "$(jq -er '.profileSha256' "$corroborating/host.json")" \
+              --output "native-evidence/$candidate-evidence.json" \
+              --diff-output "native-evidence/$candidate-diff.json"
+          done < <(jq -r '.candidates[] | select(.advertised and .reproductionClass == "native_two_host") | .id' adapters/candidates.json)
+
+      - name: Upload complete native evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-reproduction-evidence
+          path: native-evidence
+          if-no-files-found: error
+          retention-days: 90

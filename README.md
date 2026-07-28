@@ -134,6 +134,17 @@ profile must be installed or available through the profile's package launcher;
 arguments. See [the LSP profile guide](adapters/lsp/README.md) for setup and
 the measured comparison.
 
+The primary public profile registry distinguishes canonical reference runners
+from independently reproduced native profiles. Bifrost and gopls use the
+canonical `linux/amd64` environment. The remaining advertised LSP rows require
+equivalent reports from two documented hosts before generated result pages will
+include them. Apple clangd 21 and upstream clangd 22 are separate candidate
+identities.
+
+Release maintainers produce those pairs with the manual **Native two-host
+reproduction** workflow on two distinct pre-provisioned self-hosted runners,
+then pass its verified run ID to the freeze workflow.
+
 UsageBench deliberately stays focused on the LSP-shaped task of finding symbol
 references and navigating those references back to declarations and types.
 Broader analysis contracts should use sibling suites—for example, a future

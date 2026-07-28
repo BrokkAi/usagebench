@@ -6,6 +6,7 @@
 //! available) that produced its report.
 
 use crate::{
+    reproduction::{parse_evidence, validate_evidence, CandidateEvidenceLink, ReproductionClass},
     runners::{DocumentRunReport, RunReport, RunnerMetadata},
     CorpusPartition, CorpusSelection, GroundTruthReviewStatus,
 };
@@ -19,7 +20,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub const FREEZE_MANIFEST_SCHEMA_VERSION: u32 = 1;
+pub const FREEZE_MANIFEST_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ValueEnum)]
 #[serde(rename_all = "snake_case")]
@@ -59,8 +60,18 @@ struct Candidate {
     #[serde(default)]
     profile: Option<String>,
     #[serde(default)]
+    profile_sha256: Option<String>,
+    #[serde(default)]
+    resolved_version_prefix: Option<String>,
+    #[serde(default)]
     reference_runner: Option<String>,
-    eligible_for_freeze: bool,
+    advertised: bool,
+    #[serde(default)]
+    reproduction_class: Option<ReproductionClass>,
+    #[serde(default)]
+    runtime_networking: Option<String>,
+    #[serde(default)]
+    project_hydration: Option<String>,
     #[serde(default)]
     ineligible_reason: Option<String>,
 }
@@ -80,6 +91,7 @@ pub struct FreezeManifestOptions {
     pub candidates_file: PathBuf,
     pub candidate_ids: Vec<String>,
     pub report_paths: Vec<PathBuf>,
+    pub evidence_paths: Vec<PathBuf>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -92,6 +104,7 @@ pub struct FreezeManifest {
     pub scoring_contract: ScoringContract,
     pub candidates: Vec<ManifestCandidate>,
     pub reports: Vec<ManifestReport>,
+    pub candidate_evidence: Vec<CandidateEvidenceLink>,
     pub corpus: Vec<ManifestDocument>,
 }
 
@@ -118,6 +131,16 @@ pub struct ManifestCandidate {
     pub module_checksum: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile_sha256: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resolved_version_prefix: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reference_runner: Option<String>,
+    pub advertised: bool,
+    pub reproduction_class: ReproductionClass,
+    pub runtime_networking: String,
+    pub project_hydration: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -155,6 +178,29 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
             options.report_paths.len()
         );
     }
+    if options.candidate_ids.len() != options.evidence_paths.len() {
+        bail!(
+            "expected one --evidence for each selected candidate: {} candidate(s), {} evidence file(s)",
+            options.candidate_ids.len(),
+            options.evidence_paths.len()
+        );
+    }
+
+    let mut evidence_by_candidate = HashMap::new();
+    for evidence_path in &options.evidence_paths {
+        let evidence_bytes = fs::read(evidence_path)
+            .with_context(|| format!("read reproduction evidence {}", evidence_path.display()))?;
+        let evidence = parse_evidence(&evidence_bytes, evidence_path)?;
+        if evidence_by_candidate
+            .insert(evidence.candidate_id.clone(), evidence_path.clone())
+            .is_some()
+        {
+            bail!(
+                "candidate {} has duplicate reproduction evidence",
+                evidence.candidate_id
+            );
+        }
+    }
 
     let registry = load_registry(&options.candidates_file)?;
     let mut known_candidates = HashMap::new();
@@ -170,6 +216,7 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
     let mut selected_ids = BTreeSet::new();
     let mut candidates = Vec::new();
     let mut reports = Vec::new();
+    let mut candidate_evidence = Vec::new();
     let mut documents = Vec::new();
     let mut contract: Option<ScoringContract> = None;
 
@@ -180,9 +227,9 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
         let candidate = known_candidates
             .get(candidate_id)
             .with_context(|| format!("unknown candidate {candidate_id}"))?;
-        if !candidate.eligible_for_freeze {
+        if !candidate.advertised {
             bail!(
-                "candidate {} is not eligible for automated freeze{}",
+                "candidate {} is not advertised for public results{}",
                 candidate.id,
                 candidate
                     .ineligible_reason
@@ -196,7 +243,27 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
             .with_context(|| format!("read candidate report {}", report_path.display()))?;
         let report: RunReport = serde_json::from_slice(&report_bytes)
             .with_context(|| format!("parse candidate report {}", report_path.display()))?;
-        validate_report(candidate, &report, &options.revision)?;
+        validate_report(candidate, &report, &options.revision, &options.version)?;
+        let reproduction_class = candidate
+            .reproduction_class
+            .context("advertised candidate lacks a reproduction class")?;
+        let evidence_path = evidence_by_candidate
+            .get(candidate_id)
+            .with_context(|| format!("candidate {candidate_id} lacks reproduction evidence"))?;
+        let validated = validate_evidence(
+            evidence_path,
+            candidate_id,
+            reproduction_class,
+            candidate.reference_runner.as_deref(),
+            &candidate.requested_version,
+            candidate.profile_sha256.as_deref(),
+            report_path,
+            &report,
+        )?;
+        if !validated.accepted {
+            bail!("candidate {candidate_id} reproduction evidence is not semantically equivalent");
+        }
+        candidate_evidence.push(validated.link);
 
         let report_contract = ScoringContract {
             benchmark_case_schema_version: 2,
@@ -250,6 +317,7 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
             .context("selected reports did not provide a scoring contract")?,
         candidates,
         reports,
+        candidate_evidence,
         corpus,
     })
 }
@@ -263,11 +331,30 @@ pub fn write_manifest(output: &Path, manifest: &FreezeManifest) -> Result<()> {
 }
 
 fn load_registry(path: &Path) -> Result<CandidateRegistry> {
-    let registry: CandidateRegistry = serde_json::from_slice(
-        &fs::read(path).with_context(|| format!("read candidate registry {}", path.display()))?,
-    )
-    .with_context(|| format!("parse candidate registry {}", path.display()))?;
-    if registry.schema_version != 1 {
+    let bytes =
+        fs::read(path).with_context(|| format!("read candidate registry {}", path.display()))?;
+    let value: serde_json::Value = serde_json::from_slice(&bytes)
+        .with_context(|| format!("parse candidate registry {}", path.display()))?;
+    let schema: serde_json::Value =
+        serde_json::from_str(include_str!("../schema/candidate-registry.schema.json"))
+            .context("parse embedded candidate registry schema")?;
+    let compiled = jsonschema::JSONSchema::compile(&schema)
+        .map_err(|error| anyhow::anyhow!("compile candidate registry schema: {error}"))?;
+    if let Err(errors) = compiled.validate(&value) {
+        let messages = errors
+            .take(8)
+            .map(|error| error.to_string())
+            .collect::<Vec<_>>()
+            .join("; ");
+        bail!(
+            "candidate registry {} violates its schema: {}",
+            path.display(),
+            messages
+        );
+    }
+    let registry: CandidateRegistry = serde_json::from_value(value)
+        .with_context(|| format!("decode candidate registry {}", path.display()))?;
+    if registry.schema_version != 2 {
         bail!(
             "unsupported candidate registry schema version {}",
             registry.schema_version
@@ -286,13 +373,31 @@ fn load_registry(path: &Path) -> Result<CandidateRegistry> {
         {
             bail!("LSP candidate {} requires a profile", candidate.id);
         }
-        if candidate.eligible_for_freeze && candidate.ineligible_reason.is_some() {
+        if candidate.advertised && candidate.ineligible_reason.is_some() {
             bail!(
-                "candidate {} cannot be eligible and have an ineligible reason",
+                "advertised candidate {} cannot have an ineligible reason",
                 candidate.id
             );
         }
-        if candidate.eligible_for_freeze
+        if candidate.advertised
+            && (candidate.reproduction_class.is_none()
+                || candidate
+                    .runtime_networking
+                    .as_deref()
+                    .unwrap_or("")
+                    .is_empty()
+                || candidate
+                    .project_hydration
+                    .as_deref()
+                    .unwrap_or("")
+                    .is_empty())
+        {
+            bail!(
+                "advertised candidate {} requires reproductionClass, runtimeNetworking, and projectHydration",
+                candidate.id
+            );
+        }
+        if candidate.reproduction_class == Some(ReproductionClass::Canonical)
             && candidate
                 .reference_runner
                 .as_deref()
@@ -300,7 +405,22 @@ fn load_registry(path: &Path) -> Result<CandidateRegistry> {
                 .is_empty()
         {
             bail!(
-                "eligible candidate {} requires a protected reference runner",
+                "canonical candidate {} requires a reference runner",
+                candidate.id
+            );
+        }
+        if candidate.reproduction_class != Some(ReproductionClass::Canonical)
+            && candidate.reference_runner.is_some()
+        {
+            bail!("only canonical candidates may name a reference runner");
+        }
+        if !candidate.advertised
+            && (candidate.reproduction_class.is_some()
+                || candidate.runtime_networking.is_some()
+                || candidate.project_hydration.is_some())
+        {
+            bail!(
+                "unadvertised candidate {} cannot declare reproduction evidence",
                 candidate.id
             );
         }
@@ -321,13 +441,25 @@ fn load_registry(path: &Path) -> Result<CandidateRegistry> {
     Ok(registry)
 }
 
-fn validate_report(candidate: &Candidate, report: &RunReport, revision: &str) -> Result<()> {
+fn validate_report(
+    candidate: &Candidate,
+    report: &RunReport,
+    revision: &str,
+    version: &str,
+) -> Result<()> {
     if report.usagebench_revision != revision {
         bail!(
             "candidate {} report was produced by UsageBench {}, expected {}",
             candidate.id,
             report.usagebench_revision,
             revision
+        );
+    }
+    if report.usagebench_release.as_deref() != Some(version) {
+        bail!(
+            "candidate {} report release does not match snapshot {}",
+            candidate.id,
+            version
         );
     }
     match candidate.runner {
@@ -358,11 +490,27 @@ fn validate_report(candidate: &Candidate, report: &RunReport, revision: &str) ->
                     candidate.id
                 );
             }
+            if report.invocation.profile_sha256 != candidate.profile_sha256 {
+                bail!(
+                    "candidate {} report used a different LSP profile checksum",
+                    candidate.id
+                );
+            }
             if report.runner.requested_version != candidate.requested_version
                 || report.runner.source != candidate.source
             {
                 bail!(
                     "candidate {} report identity does not match registry",
+                    candidate.id
+                );
+            }
+            if candidate
+                .resolved_version_prefix
+                .as_deref()
+                .is_some_and(|prefix| !report.runner.resolved_version.starts_with(prefix))
+            {
+                bail!(
+                    "candidate {} resolved implementation does not match registry",
                     candidate.id
                 );
             }
@@ -400,6 +548,21 @@ fn manifest_candidate(candidate: &Candidate) -> ManifestCandidate {
         revision: candidate.revision.clone(),
         module_checksum: candidate.module_checksum.clone(),
         profile: candidate.profile.clone(),
+        profile_sha256: candidate.profile_sha256.clone(),
+        resolved_version_prefix: candidate.resolved_version_prefix.clone(),
+        reference_runner: candidate.reference_runner.clone(),
+        advertised: candidate.advertised,
+        reproduction_class: candidate
+            .reproduction_class
+            .expect("advertised candidates were validated"),
+        runtime_networking: candidate
+            .runtime_networking
+            .clone()
+            .expect("advertised candidates were validated"),
+        project_hydration: candidate
+            .project_hydration
+            .clone()
+            .expect("advertised candidates were validated"),
     }
 }
 
@@ -466,13 +629,69 @@ mod tests {
     }
 
     #[test]
+    fn rejects_report_from_a_different_release() {
+        let candidate = sample_bifrost_candidate();
+        let mut report: RunReport = serde_json::from_value(sample_report()).unwrap();
+        report.usagebench_release = Some("v0.1.0".to_string());
+
+        let error = validate_report(
+            &candidate,
+            &report,
+            "0123456789abcdef0123456789abcdef01234567",
+            "v0.2.0",
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("release does not match"));
+    }
+
+    #[test]
+    fn rejects_wrong_resolved_lsp_implementation() {
+        let candidate = Candidate {
+            id: "apple-clangd-21".to_string(),
+            runner: CandidateRunner::Lsp,
+            name: "Apple clangd".to_string(),
+            requested_version: "21.0.0".to_string(),
+            source: "https://developer.apple.com/xcode/".to_string(),
+            revision: None,
+            module_checksum: None,
+            profile: Some("adapters/lsp/apple-clangd-21.json".to_string()),
+            profile_sha256: Some("f".repeat(64)),
+            resolved_version_prefix: Some("Apple clangd 21.0.0".to_string()),
+            reference_runner: None,
+            advertised: true,
+            reproduction_class: Some(ReproductionClass::NativeTwoHost),
+            runtime_networking: Some("disabled".to_string()),
+            project_hydration: Some("fixture".to_string()),
+            ineligible_reason: None,
+        };
+        let mut report: RunReport = serde_json::from_value(sample_report()).unwrap();
+        report.runner.name = "clangd".to_string();
+        report.runner.requested_version = "21.0.0".to_string();
+        report.runner.resolved_version = "clangd version 22.1.6".to_string();
+        report.runner.source = "https://developer.apple.com/xcode/".to_string();
+        report.invocation.profile = Some("apple-clangd-21".to_string());
+        report.invocation.profile_sha256 = Some("f".repeat(64));
+
+        let error = validate_report(
+            &candidate,
+            &report,
+            "0123456789abcdef0123456789abcdef01234567",
+            "v0.2.0",
+        )
+        .unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("resolved implementation does not match"));
+    }
+
+    #[test]
     fn development_manifest_freezes_report_identity_and_digest() {
         let tempdir = tempdir().unwrap();
         let registry = tempdir.path().join("candidates.json");
         std::fs::write(
             &registry,
             r#"{
-              "schemaVersion": 1,
+              "schemaVersion": 2,
               "candidates": [{
                 "id": "bifrost",
                 "runner": "bifrost",
@@ -480,14 +699,18 @@ mod tests {
                 "requestedVersion": "v0.8.8",
                 "source": "https://github.com/BrokkAi/bifrost",
                 "revision": "0123456789abcdef0123456789abcdef01234567",
+                "advertised": true,
+                "reproductionClass": "canonical",
                 "referenceRunner": "bifrost",
-                "eligibleForFreeze": true
+                "runtimeNetworking": "disabled",
+                "projectHydration": "fixture"
               }]
             }"#,
         )
         .unwrap();
         let report = tempdir.path().join("bifrost.json");
         std::fs::write(&report, serde_json::to_vec(&sample_report()).unwrap()).unwrap();
+        let evidence = write_canonical_evidence(tempdir.path(), &report);
 
         let manifest = create_manifest(FreezeManifestOptions {
             snapshot_kind: SnapshotKind::Development,
@@ -496,6 +719,7 @@ mod tests {
             candidates_file: registry,
             candidate_ids: vec!["bifrost".to_string()],
             report_paths: vec![report],
+            evidence_paths: vec![evidence],
         })
         .unwrap();
 
@@ -511,7 +735,7 @@ mod tests {
         std::fs::write(
             &registry,
             r#"{
-              "schemaVersion": 1,
+              "schemaVersion": 2,
               "candidates": [{
                 "id": "bifrost",
                 "runner": "bifrost",
@@ -519,14 +743,18 @@ mod tests {
                 "requestedVersion": "v0.8.8",
                 "source": "https://github.com/BrokkAi/bifrost",
                 "revision": "0123456789abcdef0123456789abcdef01234567",
+                "advertised": true,
+                "reproductionClass": "canonical",
                 "referenceRunner": "bifrost",
-                "eligibleForFreeze": true
+                "runtimeNetworking": "disabled",
+                "projectHydration": "fixture"
               }]
             }"#,
         )
         .unwrap();
         let report = tempdir.path().join("bifrost.json");
         std::fs::write(&report, serde_json::to_vec(&sample_report()).unwrap()).unwrap();
+        let evidence = write_canonical_evidence(tempdir.path(), &report);
 
         let error = create_manifest(FreezeManifestOptions {
             snapshot_kind: SnapshotKind::Evaluation,
@@ -535,6 +763,7 @@ mod tests {
             candidates_file: registry,
             candidate_ids: vec!["bifrost".to_string()],
             report_paths: vec![report],
+            evidence_paths: vec![evidence],
         })
         .unwrap_err();
 
@@ -554,8 +783,8 @@ mod tests {
 
         for candidate in registry.candidates {
             if let Some(profile) = &candidate.profile {
-                let profile: serde_json::Value =
-                    serde_json::from_slice(&std::fs::read(root.join(profile)).unwrap()).unwrap();
+                let profile_bytes = std::fs::read(root.join(profile)).unwrap();
+                let profile: serde_json::Value = serde_json::from_slice(&profile_bytes).unwrap();
                 assert_eq!(
                     profile["requestedVersion"].as_str(),
                     Some(candidate.requested_version.as_str()),
@@ -568,6 +797,14 @@ mod tests {
                     "profile source drift for {}",
                     candidate.id
                 );
+                if let Some(expected_sha256) = candidate.profile_sha256.as_deref() {
+                    assert_eq!(
+                        hex_digest(&profile_bytes),
+                        expected_sha256,
+                        "profile checksum drift for {}",
+                        candidate.id
+                    );
+                }
             }
             let Some(reference_runner) = candidate.reference_runner.as_deref() else {
                 continue;
@@ -608,6 +845,7 @@ mod tests {
         json!({
             "usagebenchVersion": "0.1.0",
             "usagebenchRevision": "0123456789abcdef0123456789abcdef01234567",
+            "usagebenchRelease": "v0.2.0",
             "runner": {
                 "name": "bifrost",
                 "requestedVersion": "0123456789abcdef0123456789abcdef01234567",
@@ -623,10 +861,23 @@ mod tests {
             "environment": {
                 "operatingSystem": "linux",
                 "architecture": "x86_64",
-                "executionMode": "native",
-                "platformScope": "host_specific",
-                "analyzerExecutable": {"command": "bifrost"},
-                "toolchains": {}
+                "executionMode": "container",
+                "platformScope": "canonical_reference",
+                "referenceEnvironment": {
+                    "version": "1",
+                    "definitionDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    "canonicalPlatform": "linux/amd64"
+                },
+                "container": {
+                    "imageReference": "usagebench-reference:v0.2.0-env1-bifrost",
+                    "imageDigest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                },
+                "analyzerExecutable": {
+                    "command": "bifrost",
+                    "resolvedPath": "/usr/local/bin/bifrost",
+                    "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                },
+                "toolchains": {"rustc": "rustc 1.97.0"}
             },
             "bifrostResolvedCommit": "0123456789abcdef0123456789abcdef01234567",
             "startedAtUnixSeconds": 1,
@@ -669,5 +920,49 @@ mod tests {
                 "cases": []
             }]
         })
+    }
+
+    fn sample_bifrost_candidate() -> Candidate {
+        Candidate {
+            id: "bifrost".to_string(),
+            runner: CandidateRunner::Bifrost,
+            name: "Bifrost".to_string(),
+            requested_version: "v0.8.8".to_string(),
+            source: "https://github.com/BrokkAi/bifrost".to_string(),
+            revision: Some("0123456789abcdef0123456789abcdef01234567".to_string()),
+            module_checksum: None,
+            profile: None,
+            profile_sha256: None,
+            resolved_version_prefix: None,
+            reference_runner: Some("bifrost".to_string()),
+            advertised: true,
+            reproduction_class: Some(ReproductionClass::Canonical),
+            runtime_networking: Some("disabled".to_string()),
+            project_hydration: Some("fixture".to_string()),
+            ineligible_reason: None,
+        }
+    }
+
+    fn write_canonical_evidence(directory: &Path, report: &Path) -> PathBuf {
+        let report_bytes = std::fs::read(report).unwrap();
+        let evidence = directory.join("bifrost-evidence.json");
+        std::fs::write(
+            &evidence,
+            serde_json::to_vec_pretty(&json!({
+                "schemaVersion": 1,
+                "candidateId": "bifrost",
+                "primaryReport": {
+                    "file": "bifrost.json",
+                    "sha256": hex_digest(&report_bytes)
+                },
+                "class": "canonical",
+                "referenceRunner": "bifrost",
+                "environmentVersion": "1",
+                "definitionDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        evidence
     }
 }

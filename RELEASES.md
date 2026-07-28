@@ -91,6 +91,12 @@ the registry when adding or advancing a candidate; do not put a release ref in
 the workflow input. A candidate becomes executable by assigning its
 `referenceRunner` to a corresponding versioned reference environment.
 
+Registry schema version 2 separates public advertisement from reproduction
+class. An advertised candidate is either `canonical`, with a protected
+`referenceRunner`, or `native_two_host`, with an independently produced
+evidence manifest. Non-primary alternatives remain registered but cannot be
+selected for generated public results.
+
 The reference-environment manifest retains the candidate values needed for a
 self-contained release bundle, but its build scripts reject any mismatch with
 this registry. The registry is therefore the maintained source of truth rather
@@ -111,6 +117,28 @@ annotated tag, and pushes it without force. Existing tags always fail; the
 workflow never moves or replaces a release tag. The curated release archive
 contains the source bundle plus `evidence/freeze-manifest.json`, the selected
 reports, and `evidence/SHA256SUMS`.
+
+Each selected candidate also has one reproduction-evidence manifest. Canonical
+evidence binds the primary report to its reference-environment definition.
+Native evidence binds the primary report to a corroborating report from a
+second documented host and to the complete comparison result. Result
+generation validates these links and checksums before rendering any row.
+
+Before selecting native candidates, dispatch **Native two-host reproduction**
+at the exact release revision with two distinct pre-provisioned runner label
+sets. Supply its successful run ID as `native_evidence_run_id`. The freeze job
+accepts only the named producer workflow at the frozen revision and then binds
+each selected report to evidence for the same release tag. The collection
+workflow is manual/release-only; it is not part of pull-request CI.
+Both self-hosted runners require administrator-provisioned physical host IDs
+and per-candidate version, profile, and executable checksums. A native pair is
+accepted only on the same platform with matching analyzer identity and zero
+runner/session errors.
+
+This workflow trusts both native-host administrators to provision the requested
+payload behind each recorded launcher. Profile and executable hashes are
+verified, but full package and dependency closures are not. Release notes must
+not describe native evidence as cryptographic payload attestation.
 
 Repository administrators should protect the `v*` tag namespace with a ruleset
 that limits tag creation and updates to release maintainers. The workflow's

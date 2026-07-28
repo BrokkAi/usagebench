@@ -8,6 +8,7 @@ use std::{
 use url::Url;
 
 pub mod freeze;
+pub mod reproduction;
 pub mod results;
 pub mod runners;
 
@@ -971,6 +972,24 @@ cases: []
         if let Err(errors) = compiled.validate(&manifest) {
             let messages = errors.map(|error| error.to_string()).collect::<Vec<_>>();
             panic!("reference environment manifest did not validate: {messages:?}");
+        };
+    }
+
+    #[test]
+    fn candidate_registry_matches_schema() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let schema: serde_json::Value = serde_json::from_slice(
+            &fs::read(root.join("schema/candidate-registry.schema.json")).unwrap(),
+        )
+        .unwrap();
+        let registry: serde_json::Value =
+            serde_json::from_slice(&fs::read(root.join("adapters/candidates.json")).unwrap())
+                .unwrap();
+        let compiled = jsonschema::JSONSchema::compile(&schema).unwrap();
+
+        if let Err(errors) = compiled.validate(&registry) {
+            let messages = errors.map(|error| error.to_string()).collect::<Vec<_>>();
+            panic!("candidate registry did not validate: {messages:?}");
         };
     }
 
