@@ -49,9 +49,12 @@ cargo run -- generate-results \
 ```
 
 The generator rejects missing, altered, mismatched, or non-snapshot reports
-before it writes a page. The first public result-page refresh will use a frozen
-all-profile development snapshot; the current hand-authored 24 July summary
-predates the release evidence pipeline.
+before it writes a page. Location-level precision, recall, and range-quality
+tables require reports produced by UsageBench 0.2.0 or newer; older reports
+remain readable for their existing strict and required-destination fields but
+are never interpreted as having zero location metrics. The first public
+result-page refresh will use a frozen all-profile development snapshot; the
+current hand-authored 24 July summary predates the release evidence pipeline.
 
 ## Directory Structure
 

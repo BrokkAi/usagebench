@@ -1,13 +1,14 @@
 use super::bifrost::{command_output_with_timeout, prepare_source_root};
 use super::lsp_protocol::{InitializeResult, LspSession};
 use super::{
-    combine_case_status, compute_totals, location_match, navigation_response_status,
-    normalize_symbol_location, path_to_slash, required_destination_status,
-    score_declaration_locations, score_navigation_response, symbol_kind_name, CapabilitySupport,
-    CaseRunReport, CaseStatus, ClassifiedExtraUsage, CompatibleUsageDefinitionReport,
-    DeclarationUsageReport, DocumentRunReport, ExtraUsageClassification, ExtraUsageDisposition,
-    LocationMatch, NormalizedLocation, RequiredDestinationStatus, RunDiagnostic, RunInvocation,
-    RunReport, RunTotals, RunnerCapability, RunnerMetadata, RunnerOperation, TypeLookupReport,
+    case_location_metrics, combine_case_status, compute_totals, location_match,
+    navigation_response_status, normalize_symbol_location, path_to_slash,
+    required_destination_status, score_declaration_locations, score_navigation_response,
+    symbol_kind_name, CapabilitySupport, CaseRunReport, CaseStatus, ClassifiedExtraUsage,
+    CompatibleUsageDefinitionReport, DeclarationUsageReport, DocumentRunReport,
+    ExtraUsageClassification, ExtraUsageDisposition, LocationMatch, LocationMetrics,
+    NormalizedLocation, RequiredDestinationStatus, RunDiagnostic, RunInvocation, RunReport,
+    RunTotals, RunnerCapability, RunnerMetadata, RunnerOperation, TypeLookupReport,
     UsageDefinitionReport,
 };
 use crate::{
@@ -377,6 +378,7 @@ fn run_case(
                 usage_to_declaration: Vec::new(),
                 compatible_usage_to_declaration: Vec::new(),
                 required_destination_status: Some(RequiredDestinationStatus::Unsupported),
+                location_metrics: Some(LocationMetrics::default()),
                 type_lookups: Vec::new(),
                 diagnostics: Vec::new(),
             };
@@ -465,6 +467,12 @@ fn run_case(
     {
         required_destination_status = RequiredDestinationStatus::NotPlanned;
     }
+    let location_metrics = case_location_metrics(
+        case,
+        declaration_to_usages.as_ref(),
+        &usage_to_declaration,
+        &compatible_usage_to_declaration,
+    );
     CaseRunReport {
         id: case.id.clone(),
         status,
@@ -475,6 +483,7 @@ fn run_case(
         usage_to_declaration,
         compatible_usage_to_declaration,
         required_destination_status: Some(required_destination_status),
+        location_metrics: Some(location_metrics),
         type_lookups,
         diagnostics,
     }
@@ -1400,6 +1409,7 @@ fn error_case(case: &BenchmarkCase, kind: &str, message: &str) -> CaseRunReport 
         usage_to_declaration: Vec::new(),
         compatible_usage_to_declaration: Vec::new(),
         required_destination_status: Some(RequiredDestinationStatus::Error),
+        location_metrics: Some(LocationMetrics::default()),
         type_lookups: Vec::new(),
         diagnostics: vec![RunDiagnostic {
             kind: kind.to_string(),
@@ -1602,6 +1612,7 @@ mod tests {
                 id: "go-compatible-navigation".to_string(),
                 status: strict_status,
                 required_destination_status: Some(destination_status),
+                location_metrics: None,
                 expected_failure_reason: None,
                 not_planned_reason: None,
                 unsupported_reason: None,
