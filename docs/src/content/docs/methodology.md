@@ -33,6 +33,59 @@ score. A response containing the expected target among many unrelated targets
 can pass this headline metric while still being frustrating. The strict metric
 and case pages preserve that precision evidence.
 
+## Location-level recall, precision, and range quality
+
+Reports produced by UsageBench 0.2.0 and newer retain raw location-level
+counts for reference and navigation queries. A required location is a true
+positive when the response returns its exact token, a containing range, or a
+line-only location. An omitted required location is a false negative. A
+returned location is a false positive only when it is neither required nor
+allowed by the authored or reference-binding policy. True negatives are not
+defined: there is no meaningful finite universe of source tokens that an
+analyzer could have returned but did not.
+
+Returned locations remain separated into four machine-readable categories:
+
+| Category | Meaning |
+|---|---|
+| Required | Matches an authored required location. |
+| Policy allowed | Matches `allowedExtraUsages`, `allowedExtraTargets`, `allowedUnprovenUsages`, or a classified optional binding/export location. |
+| Related, unallowed | Is recognized as a binding, re-export, export-metadata, declaration, or definition location, but the case policy does not allow it. |
+| Unrelated | Does not match an authored location and has no recognized related-location classification. |
+
+An unauthored navigation response is related-unallowed because the analyzer
+presented it as a declaration or definition candidate. Reference responses can
+also be unrelated when source classification finds no recognized relationship.
+
+Destination recall is `TP / (TP + FN)`. Exact-token recall uses the same
+denominator but counts only exact token matches. Strict precision is
+`TP / (TP + all extras)`, so even policy-allowed clutter remains visible;
+policy-adjusted precision is `TP / (TP + related-unallowed + unrelated)`.
+The exact-set case rate requires every scored query in a case to return every
+required location at its exact token range and no extra locations. Extra-result
+burden is the number of all extras per query that found every required
+location.
+
+Range quality is independent of destination correctness. Required locations
+are counted as exact token, containing range, line-only, or missing. Returned
+related-unallowed and unrelated locations are additionally counted as wrong
+locations. A policy-allowed extra is recorded as clutter but not as a wrong
+location. Proven and unproven result channels contribute the same location
+evidence; proof degradation remains visible through the unchanged strict case
+status instead of becoming an unrelated location.
+
+For reviewed compatible navigation operations, the recall-forward metric uses
+the scoreable response with the best range match, preferring the canonical
+operation on a tie. The strict case status remains the canonical operation's
+result. No-movement lookups are excluded from location precision because an
+empty response can satisfy their contract without returning a destination.
+
+The report stores integer evidence rather than rounded rates. Public result
+pages derive pooled micro rates, per-case macro means, and equal-profile means
+from the same counts. Reports from UsageBench 0.1.0 remain readable for their
+existing status fields, but location tables reject them explicitly rather than
+interpreting absent metrics as zero.
+
 ## Secondary metric: strict UsageBench contract
 
 ### Result categories
@@ -96,16 +149,18 @@ requirements for machine consumers.
 
 ## Aggregation and sensitivity
 
-UsageBench keeps raw counts and denominators visible. It reports both
-required-destination recall and strict conformance using three complementary
-summaries:
+UsageBench keeps raw counts and denominators visible. Location metrics report
+three complementary summaries:
 
-- **Pooled, case-weighted rate** divides successful shared cases by all shared
-  scoreable cases. Languages with more authored cases have more influence.
+- **Pooled micro rate** sums location outcomes before dividing. Cases with more
+  required or returned locations have more influence.
+- **Per-case macro mean** computes each case's rate first and weights scoreable
+  cases equally.
 - **Equal-profile mean** computes a rate for each reference profile and gives
   each profile equal weight, regardless of its current case count.
-- **Median profile rate and paired gap** describe the middle profile and reduce
-  the influence of unusually large language-specific differences.
+
+Required-destination and strict case comparisons continue to publish their
+case-weighted totals, profile rates, and sensitivity views separately.
 
 The profile table remains primary evidence because the products, case counts,
 and language semantics are heterogeneous. A leave-one-profile-out sensitivity

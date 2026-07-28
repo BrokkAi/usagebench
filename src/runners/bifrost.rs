@@ -1,14 +1,15 @@
 use super::mcp::{McpSession, ToolClient as SearchToolsClient};
 use super::{
-    combine_case_status, compute_totals, location_match, normalize_symbol_location, path_to_slash,
-    required_destination_status, resolve_usagebench_provenance, score_declaration_locations,
-    score_navigation_response, symbol_kind_name, CapabilitySupport, LocationMatch, RunInvocation,
-    RunReport, RunnerCapability, RunnerMetadata, RunnerOperation,
+    case_location_metrics, combine_case_status, compute_totals, location_match,
+    normalize_symbol_location, path_to_slash, required_destination_status,
+    resolve_usagebench_provenance, score_declaration_locations, score_navigation_response,
+    symbol_kind_name, CapabilitySupport, LocationMatch, RunInvocation, RunReport, RunnerCapability,
+    RunnerMetadata, RunnerOperation,
 };
 pub use super::{
     CaseRunReport, CaseStatus, CompatibleUsageDefinitionReport, DeclarationUsageReport,
-    DocumentRunReport, NormalizedLocation, RequiredDestinationStatus, RunDiagnostic, RunTotals,
-    TypeLookupReport, UsageDefinitionReport,
+    DocumentRunReport, LocationMetrics, NormalizedLocation, RequiredDestinationStatus,
+    RunDiagnostic, RunTotals, TypeLookupReport, UsageDefinitionReport,
 };
 use crate::{
     benchmark_source_path, find_repo_root_for_path, BenchmarkCase, BenchmarkDocument, Location,
@@ -306,6 +307,7 @@ fn run_case(
                 usage_to_declaration: Vec::new(),
                 compatible_usage_to_declaration: Vec::new(),
                 required_destination_status: Some(RequiredDestinationStatus::Unsupported),
+                location_metrics: Some(LocationMetrics::default()),
                 type_lookups: Vec::new(),
                 diagnostics: Vec::new(),
             };
@@ -402,6 +404,12 @@ fn run_case(
     {
         required_destination_status = RequiredDestinationStatus::NotPlanned;
     }
+    let location_metrics = case_location_metrics(
+        case,
+        declaration_to_usages.as_ref(),
+        &usage_to_declaration,
+        &compatible_usage_to_declaration,
+    );
     CaseRunReport {
         id: case.id.clone(),
         status,
@@ -415,6 +423,7 @@ fn run_case(
         usage_to_declaration,
         compatible_usage_to_declaration,
         required_destination_status: Some(required_destination_status),
+        location_metrics: Some(location_metrics),
         type_lookups,
         diagnostics,
     }
@@ -1992,6 +2001,7 @@ mod tests {
                     found: 1,
                     ..Default::default()
                 },
+                location_metrics: None,
             },
             documents: vec![DocumentRunReport {
                 case_file: "benchmarks/cases/rust.yaml".to_string(),
@@ -2004,6 +2014,7 @@ mod tests {
                 cases: vec![CaseRunReport {
                     id: "rust-function".to_string(),
                     status: CaseStatus::Passed,
+                    location_metrics: None,
                     expected_failure_reason: None,
                     not_planned_reason: None,
                     unsupported_reason: None,
@@ -2407,6 +2418,15 @@ mod tests {
         );
 
         assert_eq!(report.status, CaseStatus::Passed);
+        let metrics = report.location_metrics.as_ref().unwrap();
+        assert_eq!(metrics.true_positives, 2);
+        assert_eq!(metrics.returned_locations.required, 2);
+        assert_eq!(metrics.returned_locations.policy_allowed, 1);
+        assert_eq!(metrics.returned_locations.unrelated, 0);
+        assert_eq!(metrics.queries, 2);
+        assert_eq!(metrics.exact_set_queries, 1);
+        assert_eq!(metrics.cases, 1);
+        assert_eq!(metrics.exact_set_cases, 0);
     }
 
     #[test]
@@ -2463,6 +2483,10 @@ mod tests {
             report.required_destination_status,
             Some(RequiredDestinationStatus::Found)
         );
+        let metrics = report.location_metrics.as_ref().unwrap();
+        assert_eq!(metrics.true_positives, 2);
+        assert_eq!(metrics.false_negatives, 0);
+        assert_eq!(metrics.range_quality.line_only, 1);
         let declaration = report.declaration_to_usages.unwrap();
         assert!(declaration.actual.is_empty());
         assert_eq!(declaration.unproven.len(), 2);
@@ -2512,6 +2536,12 @@ mod tests {
         );
 
         assert_eq!(report.status, CaseStatus::Failed);
+        let metrics = report.location_metrics.as_ref().unwrap();
+        assert_eq!(metrics.true_positives, 2);
+        assert_eq!(metrics.false_positives, 0);
+        assert_eq!(metrics.false_negatives, 0);
+        assert_eq!(metrics.range_quality.line_only, 1);
+        assert_eq!(metrics.range_quality.wrong_location, 0);
         let declaration = report.declaration_to_usages.unwrap();
         assert_eq!(declaration.missing.len(), 1);
         assert_eq!(declaration.unexpected_unproven.len(), 1);

@@ -10,7 +10,7 @@ use crate::{
 use anyhow::{bail, Context, Result};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::{fs, path::Path, process::Command};
+use std::{collections::BTreeMap, fs, path::Path, process::Command};
 
 pub mod bifrost;
 mod environment;
@@ -225,6 +225,11 @@ pub struct RunTotals {
     /// operation.
     #[serde(default)]
     pub required_destinations: RequiredDestinationTotals,
+    /// Location-level reference and navigation evidence. Reports produced
+    /// before UsageBench 0.2.0 omit this field; new reports always include it.
+    /// A zero-valued value means the case has no scoreable location query.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location_metrics: Option<LocationMetrics>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -240,6 +245,290 @@ pub struct RequiredDestinationTotals {
     pub errors: usize,
     /// Reports produced before this metric was added.
     pub unreported: usize,
+}
+
+/// Raw location-level counts from reference and navigation queries.
+///
+/// Rates are deliberately derived from these integer counts so report
+/// consumers can reproduce micro, case-macro, and equal-profile views without
+/// depending on serialized floating-point values.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct LocationMetrics {
+    /// Cases contributing at least one scoreable location query.
+    pub cases: usize,
+    /// Cases for which every scoreable query returned exactly the required set.
+    pub exact_set_cases: usize,
+    pub queries: usize,
+    pub successful_queries: usize,
+    /// Query-level evidence retained for reproducible case derivation.
+    pub exact_set_queries: usize,
+    pub required_locations: usize,
+    pub true_positives: usize,
+    /// Returned locations that are neither required nor policy-allowed.
+    pub false_positives: usize,
+    pub false_negatives: usize,
+    pub successful_query_extras: usize,
+    pub returned_locations: ReturnedLocationTotals,
+    pub range_quality: RangeQualityTotals,
+}
+
+impl LocationMetrics {
+    pub(crate) fn merge(&mut self, other: &Self) {
+        self.cases += other.cases;
+        self.exact_set_cases += other.exact_set_cases;
+        self.queries += other.queries;
+        self.successful_queries += other.successful_queries;
+        self.exact_set_queries += other.exact_set_queries;
+        self.required_locations += other.required_locations;
+        self.true_positives += other.true_positives;
+        self.false_positives += other.false_positives;
+        self.false_negatives += other.false_negatives;
+        self.successful_query_extras += other.successful_query_extras;
+        self.returned_locations.merge(&other.returned_locations);
+        self.range_quality.merge(&other.range_quality);
+    }
+
+    pub(crate) fn checked_merge(&mut self, other: &Self) -> Result<()> {
+        checked_add_assign(&mut self.cases, other.cases, "location cases")?;
+        checked_add_assign(
+            &mut self.exact_set_cases,
+            other.exact_set_cases,
+            "exact-set cases",
+        )?;
+        checked_add_assign(&mut self.queries, other.queries, "location queries")?;
+        checked_add_assign(
+            &mut self.successful_queries,
+            other.successful_queries,
+            "successful location queries",
+        )?;
+        checked_add_assign(
+            &mut self.exact_set_queries,
+            other.exact_set_queries,
+            "exact-set queries",
+        )?;
+        checked_add_assign(
+            &mut self.required_locations,
+            other.required_locations,
+            "required locations",
+        )?;
+        checked_add_assign(
+            &mut self.true_positives,
+            other.true_positives,
+            "location true positives",
+        )?;
+        checked_add_assign(
+            &mut self.false_positives,
+            other.false_positives,
+            "location false positives",
+        )?;
+        checked_add_assign(
+            &mut self.false_negatives,
+            other.false_negatives,
+            "location false negatives",
+        )?;
+        checked_add_assign(
+            &mut self.successful_query_extras,
+            other.successful_query_extras,
+            "successful-query extras",
+        )?;
+        self.returned_locations
+            .checked_merge(&other.returned_locations)?;
+        self.range_quality.checked_merge(&other.range_quality)?;
+        Ok(())
+    }
+
+    fn record_query(&mut self, query: QueryLocationMetrics) {
+        self.queries += 1;
+        self.required_locations += query.required_locations;
+        self.true_positives += query.true_positives;
+        self.false_positives += query.false_positives();
+        self.false_negatives += query.false_negatives;
+        self.returned_locations.merge(&query.returned_locations);
+        self.range_quality.merge(&query.range_quality);
+        if query.false_negatives == 0 {
+            self.successful_queries += 1;
+            self.successful_query_extras += query.returned_locations.extra_count();
+        }
+        if query.exact_set() {
+            self.exact_set_queries += 1;
+        }
+    }
+
+    pub(crate) fn validate(&self) -> Result<()> {
+        let required_outcomes = self
+            .true_positives
+            .checked_add(self.false_negatives)
+            .context("location TP + FN overflow")?;
+        if self.required_locations != required_outcomes {
+            bail!(
+                "requiredLocations {} does not equal TP + FN {}",
+                self.required_locations,
+                required_outcomes
+            );
+        }
+
+        let false_positives = self
+            .returned_locations
+            .related_unallowed
+            .checked_add(self.returned_locations.unrelated)
+            .context("related-unallowed + unrelated overflow")?;
+        if self.false_positives != false_positives {
+            bail!(
+                "falsePositives {} does not equal related-unallowed + unrelated {}",
+                self.false_positives,
+                false_positives
+            );
+        }
+        if self.returned_locations.required != self.true_positives {
+            bail!(
+                "returned required locations {} do not equal truePositives {}",
+                self.returned_locations.required,
+                self.true_positives
+            );
+        }
+        if self.range_quality.wrong_location != self.false_positives {
+            bail!(
+                "wrongLocation {} does not equal falsePositives {}",
+                self.range_quality.wrong_location,
+                self.false_positives
+            );
+        }
+        if self.range_quality.missing != self.false_negatives {
+            bail!(
+                "range missing {} does not equal falseNegatives {}",
+                self.range_quality.missing,
+                self.false_negatives
+            );
+        }
+
+        let ranged_required = self
+            .range_quality
+            .exact_token
+            .checked_add(self.range_quality.containing)
+            .and_then(|value| value.checked_add(self.range_quality.line_only))
+            .and_then(|value| value.checked_add(self.range_quality.missing))
+            .context("required range-quality counts overflow")?;
+        if ranged_required != self.required_locations {
+            bail!(
+                "required range-quality outcomes {} do not equal requiredLocations {}",
+                ranged_required,
+                self.required_locations
+            );
+        }
+        if self.successful_queries > self.queries
+            || self.exact_set_queries > self.queries
+            || self.exact_set_queries > self.successful_queries
+            || self.cases > self.queries
+            || self.exact_set_cases > self.cases
+        {
+            bail!("location case/query counts are inconsistent");
+        }
+        if self.successful_queries == 0 && self.successful_query_extras != 0 {
+            bail!("successfulQueryExtras is non-zero without a successful query");
+        }
+        let total_extras = self
+            .returned_locations
+            .policy_allowed
+            .checked_add(self.false_positives)
+            .context("returned extra count overflow")?;
+        if self.successful_query_extras > total_extras {
+            bail!("successfulQueryExtras exceeds all returned extras");
+        }
+        if self.false_negatives == 0
+            && (self.successful_queries != self.queries
+                || self.successful_query_extras != total_extras)
+        {
+            bail!("all queries must be successful when there are no false negatives");
+        }
+        self.true_positives
+            .checked_add(self.false_positives)
+            .and_then(|value| value.checked_add(self.returned_locations.policy_allowed))
+            .context("location precision denominator overflow")?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ReturnedLocationTotals {
+    pub required: usize,
+    pub policy_allowed: usize,
+    pub related_unallowed: usize,
+    pub unrelated: usize,
+}
+
+impl ReturnedLocationTotals {
+    fn merge(&mut self, other: &Self) {
+        self.required += other.required;
+        self.policy_allowed += other.policy_allowed;
+        self.related_unallowed += other.related_unallowed;
+        self.unrelated += other.unrelated;
+    }
+
+    fn checked_merge(&mut self, other: &Self) -> Result<()> {
+        checked_add_assign(&mut self.required, other.required, "returned required")?;
+        checked_add_assign(
+            &mut self.policy_allowed,
+            other.policy_allowed,
+            "returned policy-allowed",
+        )?;
+        checked_add_assign(
+            &mut self.related_unallowed,
+            other.related_unallowed,
+            "returned related-unallowed",
+        )?;
+        checked_add_assign(&mut self.unrelated, other.unrelated, "returned unrelated")?;
+        Ok(())
+    }
+
+    fn extra_count(&self) -> usize {
+        self.policy_allowed + self.related_unallowed + self.unrelated
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct RangeQualityTotals {
+    pub exact_token: usize,
+    pub containing: usize,
+    pub line_only: usize,
+    pub wrong_location: usize,
+    pub missing: usize,
+}
+
+impl RangeQualityTotals {
+    fn merge(&mut self, other: &Self) {
+        self.exact_token += other.exact_token;
+        self.containing += other.containing;
+        self.line_only += other.line_only;
+        self.wrong_location += other.wrong_location;
+        self.missing += other.missing;
+    }
+
+    fn checked_merge(&mut self, other: &Self) -> Result<()> {
+        checked_add_assign(
+            &mut self.exact_token,
+            other.exact_token,
+            "exact-token ranges",
+        )?;
+        checked_add_assign(&mut self.containing, other.containing, "containing ranges")?;
+        checked_add_assign(&mut self.line_only, other.line_only, "line-only ranges")?;
+        checked_add_assign(
+            &mut self.wrong_location,
+            other.wrong_location,
+            "wrong-location ranges",
+        )?;
+        checked_add_assign(&mut self.missing, other.missing, "missing ranges")?;
+        Ok(())
+    }
+}
+
+fn checked_add_assign(target: &mut usize, value: usize, label: &str) -> Result<()> {
+    *target = target
+        .checked_add(value)
+        .with_context(|| format!("{label} overflow while aggregating location metrics"))?;
+    Ok(())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -292,6 +581,11 @@ pub struct CaseRunReport {
     /// canonical endpoint score.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub required_destination_status: Option<RequiredDestinationStatus>,
+    /// Raw reference/navigation metrics for reports produced by UsageBench
+    /// 0.2.0 and newer. `None` denotes a legacy report or a case without a
+    /// scoreable reference/navigation query.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location_metrics: Option<LocationMetrics>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expected_failure_reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -531,6 +825,349 @@ pub(crate) fn location_match(
     }
 }
 
+#[derive(Debug, Default)]
+struct QueryLocationMetrics {
+    required_locations: usize,
+    true_positives: usize,
+    false_negatives: usize,
+    returned_locations: ReturnedLocationTotals,
+    range_quality: RangeQualityTotals,
+}
+
+impl QueryLocationMetrics {
+    fn exact_set(&self) -> bool {
+        self.range_quality.exact_token == self.required_locations
+            && self.returned_locations.required == self.true_positives
+            && self.returned_locations.extra_count() == 0
+    }
+
+    fn record_returned(&mut self, class: ReturnedLocationClass) {
+        match class {
+            ReturnedLocationClass::Required => self.returned_locations.required += 1,
+            ReturnedLocationClass::PolicyAllowed => self.returned_locations.policy_allowed += 1,
+            ReturnedLocationClass::RelatedUnallowed => {
+                self.returned_locations.related_unallowed += 1
+            }
+            ReturnedLocationClass::Unrelated => self.returned_locations.unrelated += 1,
+        }
+    }
+
+    fn finish(mut self) -> Self {
+        self.range_quality.wrong_location = self.false_positives();
+        self
+    }
+
+    fn false_positives(&self) -> usize {
+        self.returned_locations.related_unallowed + self.returned_locations.unrelated
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+enum ReturnedLocationClass {
+    Required,
+    PolicyAllowed,
+    RelatedUnallowed,
+    Unrelated,
+}
+
+/// Compute location evidence while the authored case is still available.
+/// Navigation reports do not retain `allowedExtraTargets`, so this cannot be
+/// reconstructed faithfully from a legacy serialized report.
+pub(crate) fn case_location_metrics(
+    case: &BenchmarkCase,
+    declaration: Option<&DeclarationUsageReport>,
+    canonical_definitions: &[UsageDefinitionReport],
+    compatible_definitions: &[CompatibleUsageDefinitionReport],
+) -> LocationMetrics {
+    if case.not_planned.is_some() {
+        return LocationMetrics::default();
+    }
+
+    let mut metrics = LocationMetrics::default();
+    if let Some(report) = declaration.filter(|report| metric_status_is_scoreable(report.status)) {
+        metrics.record_query(reference_query_metrics(report));
+    }
+
+    for (index, canonical) in canonical_definitions.iter().enumerate() {
+        let Some(lookup) = case.usage_lookups.get(index) else {
+            continue;
+        };
+        // A no-movement contract permits an empty response and therefore has
+        // no returned destination whose precision or range can be measured.
+        if lookup.expect_no_movement {
+            continue;
+        }
+
+        let mut selected =
+            metric_status_is_scoreable(canonical.status).then_some((true, canonical));
+        for alternative in navigation_reports_for_lookup(index, canonical, compatible_definitions)
+            .skip(1)
+            .filter(|report| metric_status_is_scoreable(report.status))
+        {
+            let alternative_rank = (
+                best_location_match(
+                    &alternative.actual_declarations,
+                    &alternative.expected_declaration,
+                ),
+                false,
+            );
+            let selected_rank = selected.map(|(canonical, report)| {
+                (
+                    best_location_match(&report.actual_declarations, &report.expected_declaration),
+                    canonical,
+                )
+            });
+            if selected_rank.is_none_or(|rank| alternative_rank > rank) {
+                selected = Some((false, alternative));
+            }
+        }
+
+        if let Some((_, report)) = selected {
+            let allowed_extra_targets = lookup
+                .allowed_extra_targets
+                .iter()
+                .map(normalize_symbol_location)
+                .collect::<Result<Vec<_>>>()
+                .expect("validated navigation targets must normalize");
+            metrics.record_query(navigation_query_metrics(report, &allowed_extra_targets));
+        }
+    }
+
+    if metrics.queries == 0 {
+        return metrics;
+    }
+    metrics.cases = 1;
+    metrics.exact_set_cases = usize::from(metrics.exact_set_queries == metrics.queries);
+    metrics
+}
+
+fn metric_status_is_scoreable(status: CaseStatus) -> bool {
+    !matches!(
+        status,
+        CaseStatus::NotPlanned | CaseStatus::Unsupported | CaseStatus::Skipped | CaseStatus::Error
+    )
+}
+
+fn reference_query_metrics(report: &DeclarationUsageReport) -> QueryLocationMetrics {
+    let mut query = QueryLocationMetrics {
+        required_locations: report.expected.len() + report.expected_unproven.len(),
+        ..QueryLocationMetrics::default()
+    };
+
+    let required = report
+        .expected
+        .iter()
+        .chain(&report.expected_unproven)
+        .collect::<Vec<_>>();
+    let returned = report
+        .actual
+        .iter()
+        .chain(&report.unproven)
+        .collect::<Vec<_>>();
+    let matches = match_required_locations(&required, &returned);
+    for quality in &matches.required_quality {
+        record_range_quality(*quality, &mut query);
+    }
+
+    let classified_extras = report
+        .extra_usages
+        .iter()
+        .map(|extra| (&extra.location, extra))
+        .collect::<BTreeMap<_, _>>();
+    let actual_count = report.actual.len();
+    for (index, location) in returned.iter().enumerate() {
+        let classified = (index < actual_count)
+            .then(|| classified_extras.get(location).copied())
+            .flatten();
+        let class = if matches.returned_required[index] {
+            ReturnedLocationClass::Required
+        } else if matches_any_expected(
+            location,
+            report.allowed_extra.iter().chain(&report.allowed_unproven),
+        ) || classified
+            .is_some_and(|extra| extra.disposition == ExtraUsageDisposition::AllowedPolicyExtra)
+        {
+            ReturnedLocationClass::PolicyAllowed
+        } else if matches_any_expected(location, required.iter().copied()) {
+            ReturnedLocationClass::RelatedUnallowed
+        } else {
+            classified
+                .map(|extra| match extra.classification {
+                    ExtraUsageClassification::Unclassified => ReturnedLocationClass::Unrelated,
+                    _ => ReturnedLocationClass::RelatedUnallowed,
+                })
+                .unwrap_or(ReturnedLocationClass::Unrelated)
+        };
+        query.record_returned(class);
+    }
+
+    query.finish()
+}
+
+fn navigation_query_metrics(
+    report: &UsageDefinitionReport,
+    allowed_extra_targets: &[NormalizedLocation],
+) -> QueryLocationMetrics {
+    let mut query = QueryLocationMetrics {
+        required_locations: 1,
+        ..QueryLocationMetrics::default()
+    };
+    let required = [&report.expected_declaration];
+    let returned = report.actual_declarations.iter().collect::<Vec<_>>();
+    let matches = match_required_locations(&required, &returned);
+    record_range_quality(matches.required_quality[0], &mut query);
+    for (index, location) in returned.iter().enumerate() {
+        let class = if matches.returned_required[index] {
+            ReturnedLocationClass::Required
+        } else if matches_any_expected(location, allowed_extra_targets.iter()) {
+            ReturnedLocationClass::PolicyAllowed
+        } else {
+            // Every navigation response is presented by the analyzer as a
+            // declaration or definition candidate. An unauthored candidate is
+            // therefore a related-but-unallowed result, even when it points at
+            // the wrong symbol entirely.
+            ReturnedLocationClass::RelatedUnallowed
+        };
+        query.record_returned(class);
+    }
+    query.finish()
+}
+
+#[derive(Debug)]
+struct RequiredLocationMatches {
+    required_quality: Vec<LocationMatch>,
+    returned_required: Vec<bool>,
+}
+
+fn match_required_locations(
+    required: &[&NormalizedLocation],
+    returned: &[&NormalizedLocation],
+) -> RequiredLocationMatches {
+    let mut required_quality = vec![LocationMatch::None; required.len()];
+    let mut returned_required = vec![false; returned.len()];
+    if required.is_empty() {
+        return RequiredLocationMatches {
+            required_quality,
+            returned_required,
+        };
+    }
+
+    // Solve a maximum-weight assignment. The cardinality bonus is larger than
+    // every possible aggregate quality difference, so the result first
+    // maximizes TP count and then prefers exact, containing, and line-only
+    // evidence in that order. Dummy columns represent unmatched requirements.
+    let column_count = returned.len() + required.len();
+    let cardinality_bonus = 3_i64 * required.len() as i64 + 1;
+    let mut row_potential = vec![0_i64; required.len() + 1];
+    let mut column_potential = vec![0_i64; column_count + 1];
+    let mut column_owner = vec![0_usize; column_count + 1];
+    let mut previous_column = vec![0_usize; column_count + 1];
+
+    for row in 1..=required.len() {
+        column_owner[0] = row;
+        let mut column = 0;
+        let mut minimum = vec![i64::MAX; column_count + 1];
+        let mut used = vec![false; column_count + 1];
+        loop {
+            used[column] = true;
+            let current_row = column_owner[column];
+            let mut delta = i64::MAX;
+            let mut next_column = 0;
+            for candidate_column in 1..=column_count {
+                if used[candidate_column] {
+                    continue;
+                }
+                let weight = if candidate_column <= returned.len() {
+                    let quality =
+                        location_match(returned[candidate_column - 1], required[current_row - 1]);
+                    (quality != LocationMatch::None)
+                        .then_some(cardinality_bonus + location_match_weight(quality))
+                        .unwrap_or(0)
+                } else {
+                    0
+                };
+                let reduced_cost =
+                    -weight - row_potential[current_row] - column_potential[candidate_column];
+                if reduced_cost < minimum[candidate_column] {
+                    minimum[candidate_column] = reduced_cost;
+                    previous_column[candidate_column] = column;
+                }
+                if minimum[candidate_column] < delta {
+                    delta = minimum[candidate_column];
+                    next_column = candidate_column;
+                }
+            }
+            for candidate_column in 0..=column_count {
+                if used[candidate_column] {
+                    row_potential[column_owner[candidate_column]] += delta;
+                    column_potential[candidate_column] -= delta;
+                } else {
+                    minimum[candidate_column] -= delta;
+                }
+            }
+            column = next_column;
+            if column_owner[column] == 0 {
+                break;
+            }
+        }
+        loop {
+            let previous = previous_column[column];
+            column_owner[column] = column_owner[previous];
+            column = previous;
+            if column == 0 {
+                break;
+            }
+        }
+    }
+
+    for returned_column in 1..=returned.len() {
+        let owner = column_owner[returned_column];
+        if owner != 0 {
+            let required_index = owner - 1;
+            let quality = location_match(returned[returned_column - 1], required[required_index]);
+            if quality == LocationMatch::None {
+                continue;
+            }
+            required_quality[required_index] = quality;
+            returned_required[returned_column - 1] = true;
+        }
+    }
+    RequiredLocationMatches {
+        required_quality,
+        returned_required,
+    }
+}
+
+fn location_match_weight(quality: LocationMatch) -> i64 {
+    match quality {
+        LocationMatch::None => 0,
+        LocationMatch::LineOnly => 1,
+        LocationMatch::Containing => 2,
+        LocationMatch::Exact => 3,
+    }
+}
+
+fn record_range_quality(quality: LocationMatch, query: &mut QueryLocationMetrics) {
+    match quality {
+        LocationMatch::Exact => {
+            query.true_positives += 1;
+            query.range_quality.exact_token += 1;
+        }
+        LocationMatch::Containing => {
+            query.true_positives += 1;
+            query.range_quality.containing += 1;
+        }
+        LocationMatch::LineOnly => {
+            query.true_positives += 1;
+            query.range_quality.line_only += 1;
+        }
+        LocationMatch::None => {
+            query.false_negatives += 1;
+            query.range_quality.missing += 1;
+        }
+    }
+}
+
 pub(crate) fn navigation_response_status(
     actual: &[NormalizedLocation],
     expected: &NormalizedLocation,
@@ -632,16 +1269,25 @@ pub(crate) fn required_destination_status(
         components.push(declaration_destination_status(report));
     }
     for (index, canonical) in canonical_definitions.iter().enumerate() {
-        let alternatives = compatible_definitions
-            .iter()
-            .filter(|compatible| compatible.usage_lookup_index == index)
-            .flat_map(|compatible| compatible.reports.iter());
         components.push(best_navigation_destination_status(
-            std::iter::once(canonical).chain(alternatives),
+            navigation_reports_for_lookup(index, canonical, compatible_definitions),
         ));
     }
     components.extend(types.iter().map(type_destination_status));
     combine_required_destination_statuses(components)
+}
+
+fn navigation_reports_for_lookup<'a>(
+    index: usize,
+    canonical: &'a UsageDefinitionReport,
+    compatible_definitions: &'a [CompatibleUsageDefinitionReport],
+) -> impl Iterator<Item = &'a UsageDefinitionReport> {
+    std::iter::once(canonical).chain(
+        compatible_definitions
+            .iter()
+            .filter(move |compatible| compatible.usage_lookup_index == index)
+            .flat_map(|compatible| compatible.reports.iter()),
+    )
 }
 
 fn declaration_destination_status(report: &DeclarationUsageReport) -> RequiredDestinationStatus {
@@ -752,8 +1398,14 @@ fn best_location_match(
     actual: &[NormalizedLocation],
     expected: &NormalizedLocation,
 ) -> LocationMatch {
+    best_location_match_iter(actual.iter(), expected)
+}
+
+fn best_location_match_iter<'a>(
+    actual: impl Iterator<Item = &'a NormalizedLocation>,
+    expected: &NormalizedLocation,
+) -> LocationMatch {
     actual
-        .iter()
         .map(|location| location_match(location, expected))
         .max_by_key(|quality| match quality {
             LocationMatch::None => 0,
@@ -926,6 +1578,7 @@ pub(crate) fn path_to_slash(path: &Path) -> String {
 pub(crate) fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
     let mut totals = RunTotals {
         documents: documents.len(),
+        location_metrics: Some(LocationMetrics::default()),
         ..RunTotals::default()
     };
     for document in documents {
@@ -973,7 +1626,211 @@ pub(crate) fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
                 Some(RequiredDestinationStatus::Error) => totals.required_destinations.errors += 1,
                 None => totals.required_destinations.unreported += 1,
             }
+            if let Some(metrics) = &case.location_metrics {
+                totals
+                    .location_metrics
+                    .as_mut()
+                    .expect("newly computed totals include location metrics")
+                    .merge(metrics);
+            }
         }
     }
     totals
+}
+
+#[cfg(test)]
+mod location_metric_tests {
+    use super::*;
+
+    #[test]
+    fn reference_metrics_keep_return_classes_and_range_quality_separate() {
+        let exact = location("src/lib.rs", 1, Some((3, 7)));
+        let missing = location("src/lib.rs", 2, Some((3, 7)));
+        let contained = location("src/lib.rs", 3, Some((3, 7)));
+        let line_only = location("src/lib.rs", 4, Some((3, 7)));
+        let containing_result = location("src/lib.rs", 3, Some((1, 12)));
+        let line_only_result = location("src/lib.rs", 4, None);
+        let explicit_allowed = location("src/lib.rs", 5, Some((3, 7)));
+        let allowed_binding = location("src/lib.rs", 6, Some((3, 7)));
+        let related_unallowed = location("src/lib.rs", 7, Some((3, 7)));
+        let unrelated = location("src/lib.rs", 8, Some((3, 7)));
+        let report = DeclarationUsageReport {
+            status: CaseStatus::Failed,
+            selector: None,
+            expected: vec![exact.clone(), missing, contained, line_only],
+            expected_unproven: Vec::new(),
+            allowed_extra: vec![explicit_allowed.clone()],
+            allowed_unproven: Vec::new(),
+            actual: vec![
+                exact,
+                containing_result,
+                line_only_result,
+                explicit_allowed,
+                allowed_binding.clone(),
+                related_unallowed.clone(),
+                unrelated.clone(),
+            ],
+            unproven: Vec::new(),
+            missing: Vec::new(),
+            missing_unproven: Vec::new(),
+            unexpected: vec![related_unallowed.clone(), unrelated.clone()],
+            unexpected_unproven: Vec::new(),
+            position_unverified: Vec::new(),
+            extra_usages: vec![
+                ClassifiedExtraUsage {
+                    location: allowed_binding,
+                    classification: ExtraUsageClassification::ImportBinding,
+                    disposition: ExtraUsageDisposition::AllowedPolicyExtra,
+                    rationale: "optional binding".to_string(),
+                },
+                ClassifiedExtraUsage {
+                    location: related_unallowed,
+                    classification: ExtraUsageClassification::ImportBinding,
+                    disposition: ExtraUsageDisposition::Unexpected,
+                    rationale: "binding excluded by policy".to_string(),
+                },
+                ClassifiedExtraUsage {
+                    location: unrelated,
+                    classification: ExtraUsageClassification::Unclassified,
+                    disposition: ExtraUsageDisposition::Unexpected,
+                    rationale: "not a recognized related location".to_string(),
+                },
+            ],
+            partial: false,
+            raw_statuses: Vec::new(),
+        };
+
+        let metrics = reference_query_metrics(&report);
+
+        assert_eq!(metrics.required_locations, 4);
+        assert_eq!(metrics.true_positives, 3);
+        assert_eq!(metrics.false_negatives, 1);
+        assert_eq!(metrics.returned_locations.required, 3);
+        assert_eq!(metrics.returned_locations.policy_allowed, 2);
+        assert_eq!(metrics.returned_locations.related_unallowed, 1);
+        assert_eq!(metrics.returned_locations.unrelated, 1);
+        assert_eq!(metrics.range_quality.exact_token, 1);
+        assert_eq!(metrics.range_quality.containing, 1);
+        assert_eq!(metrics.range_quality.line_only, 1);
+        assert_eq!(metrics.range_quality.wrong_location, 2);
+        assert_eq!(metrics.range_quality.missing, 1);
+        assert!(!metrics.exact_set());
+
+        let mut aggregate = LocationMetrics::default();
+        aggregate.record_query(metrics);
+        assert_eq!(aggregate.false_positives, 2);
+        assert_eq!(aggregate.returned_locations.policy_allowed, 2);
+    }
+
+    #[test]
+    fn navigation_metrics_count_authored_extras_without_weakening_range_quality() {
+        let expected = location("src/model.py", 5, Some((5, 11)));
+        let containing = location("src/model.py", 5, Some((1, 20)));
+        let allowed = location("src/model.py", 8, Some((5, 11)));
+        let wrong = location("src/other.py", 2, Some((1, 4)));
+        let report = UsageDefinitionReport {
+            status: CaseStatus::Failed,
+            operation: NavigationOperation::Definition,
+            usage: location("src/use.py", 1, Some((1, 7))),
+            expected_declaration: expected,
+            actual_declarations: vec![containing, allowed.clone(), wrong],
+            raw_status: "multiple_targets".to_string(),
+            diagnostics: Vec::new(),
+        };
+
+        let metrics = navigation_query_metrics(&report, &[allowed]);
+
+        assert_eq!(metrics.true_positives, 1);
+        assert_eq!(metrics.false_negatives, 0);
+        assert_eq!(metrics.returned_locations.required, 1);
+        assert_eq!(metrics.returned_locations.policy_allowed, 1);
+        assert_eq!(metrics.returned_locations.related_unallowed, 1);
+        assert_eq!(metrics.returned_locations.unrelated, 0);
+        assert_eq!(metrics.range_quality.containing, 1);
+        assert_eq!(metrics.range_quality.wrong_location, 1);
+        assert!(!metrics.exact_set());
+    }
+
+    #[test]
+    fn one_broad_return_cannot_satisfy_two_required_locations() {
+        let first = location("src/service.cs", 10, Some((3, 10)));
+        let second = location("src/service.cs", 10, Some((20, 27)));
+        for returned in [
+            location("src/service.cs", 10, None),
+            location("src/service.cs", 10, Some((1, 30))),
+        ] {
+            let report = DeclarationUsageReport {
+                status: CaseStatus::Failed,
+                selector: None,
+                expected: vec![first.clone(), second.clone()],
+                expected_unproven: Vec::new(),
+                allowed_extra: Vec::new(),
+                allowed_unproven: Vec::new(),
+                actual: vec![returned],
+                unproven: Vec::new(),
+                missing: Vec::new(),
+                missing_unproven: Vec::new(),
+                unexpected: Vec::new(),
+                unexpected_unproven: Vec::new(),
+                position_unverified: Vec::new(),
+                extra_usages: Vec::new(),
+                partial: false,
+                raw_statuses: Vec::new(),
+            };
+
+            let metrics = reference_query_metrics(&report);
+
+            assert_eq!(metrics.required_locations, 2);
+            assert_eq!(metrics.true_positives, 1);
+            assert_eq!(metrics.false_negatives, 1);
+            assert_eq!(metrics.returned_locations.required, 1);
+            assert_eq!(metrics.range_quality.missing, 1);
+        }
+    }
+
+    #[test]
+    fn one_to_one_matching_preserves_exact_evidence_before_broader_matches() {
+        let outer = location("src/lib.rs", 4, Some((3, 10)));
+        let inner = location("src/lib.rs", 4, Some((5, 7)));
+        let exact_outer = outer.clone();
+        let line_only = location("src/lib.rs", 4, None);
+        let required = [&outer, &inner];
+        let returned = [&exact_outer, &line_only];
+
+        let matches = match_required_locations(&required, &returned);
+
+        assert_eq!(
+            matches.required_quality,
+            vec![LocationMatch::Exact, LocationMatch::LineOnly]
+        );
+        assert_eq!(matches.returned_required, vec![true, true]);
+    }
+
+    #[test]
+    fn report_schema_keeps_location_metrics_optional_for_legacy_reports() {
+        let schema: serde_json::Value =
+            serde_json::from_str(&generated_report_schema_json().unwrap()).unwrap();
+
+        for definition in ["CaseRunReport", "RunTotals"] {
+            let contract = &schema["definitions"][definition];
+            assert!(contract["properties"]["locationMetrics"].is_object());
+            assert!(!contract["required"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|field| field.as_str() == Some("locationMetrics")));
+        }
+    }
+
+    fn location(path: &str, line: u32, columns: Option<(u32, u32)>) -> NormalizedLocation {
+        NormalizedLocation {
+            path: path.to_string(),
+            line,
+            column: columns.map(|(start, _)| start),
+            end_line: columns.map(|_| line),
+            end_column: columns.map(|(_, end)| end),
+            display_name: None,
+            kind: None,
+        }
+    }
 }

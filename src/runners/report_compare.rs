@@ -568,6 +568,7 @@ mod tests {
                     required_destination_status: Some(
                         super::super::RequiredDestinationStatus::Found,
                     ),
+                    location_metrics: None,
                     type_lookups: Vec::new(),
                     diagnostics: Vec::new(),
                 }],

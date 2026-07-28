@@ -357,6 +357,7 @@ fn main() -> Result<()> {
                 report.totals.errors
             );
             print_required_destination_totals(&report);
+            print_location_metrics(&report);
             print_run_details(&report);
             if report.totals.failed > 0
                 || report.totals.position_unverified > 0
@@ -405,6 +406,7 @@ fn main() -> Result<()> {
                 report.totals.errors
             );
             print_required_destination_totals(&report);
+            print_location_metrics(&report);
             print_run_details(&report);
             if report.totals.failed > 0
                 || report.totals.position_unverified > 0
@@ -435,6 +437,24 @@ fn print_required_destination_totals(report: &BifrostRunReport) {
         totals.skipped,
         totals.errors,
         totals.unreported,
+    );
+}
+
+fn print_location_metrics(report: &BifrostRunReport) {
+    let Some(metrics) = &report.totals.location_metrics else {
+        println!("location metrics: unavailable (requires UsageBench >=0.2.0)");
+        return;
+    };
+    println!(
+        "location metrics: {} TP, {} FP, {} FN, {} exact, {} policy-allowed extra(s), {}/{} exact-set case(s) across {} query/queries",
+        metrics.true_positives,
+        metrics.false_positives,
+        metrics.false_negatives,
+        metrics.range_quality.exact_token,
+        metrics.returned_locations.policy_allowed,
+        metrics.exact_set_cases,
+        metrics.cases,
+        metrics.queries,
     );
 }
 

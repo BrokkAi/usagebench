@@ -7,7 +7,7 @@
 use crate::{
     freeze::{FreezeManifest, ManifestCandidate, FREEZE_MANIFEST_SCHEMA_VERSION},
     reproduction::validate_evidence,
-    runners::{CaseRunReport, CaseStatus, RequiredDestinationStatus, RunReport},
+    runners::{CaseRunReport, CaseStatus, LocationMetrics, RequiredDestinationStatus, RunReport},
 };
 use anyhow::{bail, Context, Result};
 use sha2::{Digest, Sha256};
@@ -15,6 +15,12 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
     path::{Component, Path, PathBuf},
+};
+
+mod location_metrics;
+use location_metrics::{
+    metric_rates, ratio, MetricAverageSet, MetricFormat, MetricRates, ProfileLocationMetrics,
+    METRIC_DESCRIPTORS,
 };
 
 const RESULTS_FILE: &str = "results.md";
@@ -35,6 +41,7 @@ pub fn generate_result_pages(manifest_path: &Path) -> Result<GeneratedResultPage
     if references.is_empty() {
         bail!("snapshot contains no LSP reference reports");
     }
+    ensure_location_metrics_available(&snapshot)?;
 
     let comparisons = references
         .iter()
@@ -42,9 +49,22 @@ pub fn generate_result_pages(manifest_path: &Path) -> Result<GeneratedResultPage
         .collect::<Result<Vec<_>>>()?;
 
     Ok(GeneratedResultPages {
-        results: render_results(&snapshot, &comparisons),
+        results: render_results(&snapshot, &comparisons)?,
         case_comparison: render_case_comparison(&snapshot, &comparisons),
     })
+}
+
+fn ensure_location_metrics_available(snapshot: &Snapshot) -> Result<()> {
+    for (candidate_id, loaded) in &snapshot.reports {
+        if loaded.report.totals.location_metrics.is_none() {
+            bail!(
+                "location metrics are unavailable for candidate {} from UsageBench {}; regenerate the report with UsageBench >=0.2.0",
+                candidate_id,
+                loaded.report.usagebench_version,
+            );
+        }
+    }
+    Ok(())
 }
 
 /// Write generated fragments, or fail when the checked-in files are stale.
@@ -206,6 +226,7 @@ fn load_snapshot(manifest_path: &Path) -> Result<Snapshot> {
             );
         }
         validate_candidate_report(&candidate, &report)?;
+        validate_report_location_metrics(&candidate.id, &report)?;
         let evidence_link = evidence_links.get(&entry.candidate_id).with_context(|| {
             format!(
                 "candidate {} lacks reproduction evidence",
@@ -326,6 +347,77 @@ fn validate_candidate_report(candidate: &ManifestCandidate, report: &RunReport) 
     Ok(())
 }
 
+fn validate_report_location_metrics(candidate_id: &str, report: &RunReport) -> Result<()> {
+    let Some(totals) = &report.totals.location_metrics else {
+        if report
+            .documents
+            .iter()
+            .flat_map(|document| &document.cases)
+            .any(|case| case.location_metrics.is_some())
+        {
+            bail!("candidate {candidate_id} mixes case-level location metrics with legacy totals");
+        }
+        return Ok(());
+    };
+    totals
+        .validate()
+        .with_context(|| format!("candidate {candidate_id} has invalid total location metrics"))?;
+
+    let mut merged = LocationMetrics::default();
+    for document in &report.documents {
+        for case in &document.cases {
+            let metrics = case.location_metrics.as_ref().with_context(|| {
+                format!(
+                    "candidate {candidate_id} lacks location metrics for {} / {}",
+                    document.case_file, case.id
+                )
+            })?;
+            metrics.validate().with_context(|| {
+                format!(
+                    "candidate {candidate_id} has invalid location metrics for {} / {}",
+                    document.case_file, case.id
+                )
+            })?;
+            if metrics.cases == 0 {
+                if *metrics != LocationMetrics::default() {
+                    bail!(
+                        "candidate {candidate_id} has non-zero ineligible location metrics for {} / {}",
+                        document.case_file,
+                        case.id
+                    );
+                }
+            } else {
+                let exact_set_evidence = metrics.range_quality.exact_token
+                    == metrics.required_locations
+                    && metrics.returned_locations.required == metrics.true_positives
+                    && metrics.returned_locations.policy_allowed == 0
+                    && metrics.false_positives == 0;
+                if metrics.cases != 1
+                    || metrics.exact_set_cases
+                        != usize::from(metrics.exact_set_queries == metrics.queries)
+                    || metrics.exact_set_cases != usize::from(exact_set_evidence)
+                {
+                    bail!(
+                        "candidate {candidate_id} has inconsistent case-level exact-set metrics for {} / {}",
+                        document.case_file,
+                        case.id
+                    );
+                }
+            }
+            merged.checked_merge(metrics).with_context(|| {
+                format!(
+                    "candidate {candidate_id} location metrics overflow while merging {} / {}",
+                    document.case_file, case.id
+                )
+            })?;
+        }
+    }
+    if merged != *totals {
+        bail!("candidate {candidate_id} total location metrics do not match merged case metrics");
+    }
+    Ok(())
+}
+
 fn safe_report_file_name(file: &str) -> Result<PathBuf> {
     let path = Path::new(file);
     if path.components().count() != 1
@@ -343,6 +435,8 @@ struct Comparison {
     reference_version: String,
     strict: OutcomeTotals,
     required: OutcomeTotals,
+    bifrost_locations: ProfileLocationMetrics,
+    reference_locations: ProfileLocationMetrics,
     bifrost_only: Vec<CaseKey>,
     reference_only: Vec<CaseKey>,
 }
@@ -380,6 +474,8 @@ fn compare_reports(bifrost: &LoadedReport, reference: &LoadedReport) -> Result<C
     let reference_cases = report_cases(&reference.report)?;
     let mut strict = OutcomeTotals::default();
     let mut required = OutcomeTotals::default();
+    let mut bifrost_locations = ProfileLocationMetrics::default();
+    let mut reference_locations = ProfileLocationMetrics::default();
     let mut bifrost_only = Vec::new();
     let mut reference_only = Vec::new();
 
@@ -408,11 +504,26 @@ fn compare_reports(bifrost: &LoadedReport, reference: &LoadedReport) -> Result<C
                 );
             }
         }
+        if let (Some(bifrost_metrics), Some(reference_metrics)) = (
+            bifrost_case.location_metrics.as_ref(),
+            reference_case.location_metrics.as_ref(),
+        ) {
+            if bifrost_metrics.cases == 1 && reference_metrics.cases == 1 {
+                bifrost_locations.add_case(bifrost_metrics)?;
+                reference_locations.add_case(reference_metrics)?;
+            }
+        }
     }
 
     if strict.shared == 0 {
         bail!(
             "Bifrost and {} do not share any strict-scoreable cases",
+            reference.candidate.id
+        );
+    }
+    if bifrost_locations.cases == 0 {
+        bail!(
+            "Bifrost and {} do not share any location-metric cases",
             reference.candidate.id
         );
     }
@@ -422,6 +533,8 @@ fn compare_reports(bifrost: &LoadedReport, reference: &LoadedReport) -> Result<C
         reference_version: reference.candidate.requested_version.clone(),
         strict,
         required,
+        bifrost_locations,
+        reference_locations,
         bifrost_only,
         reference_only,
     })
@@ -467,7 +580,7 @@ fn required_scoreable(status: RequiredDestinationStatus) -> bool {
     )
 }
 
-fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> String {
+fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> Result<String> {
     let mut output = provenance_header(snapshot);
     output.push_str("## Snapshot inputs\n\n");
     output.push_str(
@@ -533,6 +646,8 @@ fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> String {
         percentage(required.reference_only + required.both, required.shared),
     ));
 
+    render_location_comparison(&mut output, comparisons)?;
+
     output.push_str("## Strict contract conformance\n\n");
     output.push_str(
         "| Reference profile | Shared | Both exact | Bifrost only | Reference only | Neither |\n",
@@ -587,7 +702,141 @@ fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> String {
             percentage_points(bifrost_exact, reference_exact, retained.shared),
         ));
     }
-    output
+    Ok(output)
+}
+
+fn render_location_comparison(output: &mut String, comparisons: &[Comparison]) -> Result<()> {
+    output.push_str("## Location-level precision and recall\n\n");
+    output.push_str(
+        "TP, FP, and FN are reported without true negatives. Strict precision counts every extra result; policy-adjusted precision excludes authored and policy-allowed extras.\n\n",
+    );
+    output.push_str("| Reference profile | Analyzer | Cases | TP | FP | FN");
+    for descriptor in METRIC_DESCRIPTORS {
+        output.push_str(&format!(" | {}", descriptor.label));
+    }
+    output.push_str(" |\n");
+    output.push_str("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n");
+    for comparison in comparisons {
+        let profile = format!(
+            "{} {}",
+            comparison.reference_name, comparison.reference_version
+        );
+        push_metric_row(output, &profile, "Bifrost", &comparison.bifrost_locations);
+        push_metric_row(
+            output,
+            &profile,
+            &comparison.reference_name,
+            &comparison.reference_locations,
+        );
+    }
+
+    let mut pooled_bifrost = ProfileLocationMetrics::default();
+    let mut pooled_reference = ProfileLocationMetrics::default();
+    let mut equal_profile_bifrost = MetricAverageSet::default();
+    let mut equal_profile_reference = MetricAverageSet::default();
+    for comparison in comparisons {
+        pooled_bifrost.merge(&comparison.bifrost_locations)?;
+        pooled_reference.merge(&comparison.reference_locations)?;
+        equal_profile_bifrost.add(metric_rates(&comparison.bifrost_locations.micro));
+        equal_profile_reference.add(metric_rates(&comparison.reference_locations.micro));
+    }
+    push_metric_row(output, "**Pooled micro**", "**Bifrost**", &pooled_bifrost);
+    push_metric_row(
+        output,
+        "**Pooled micro**",
+        "**Reference**",
+        &pooled_reference,
+    );
+    output.push('\n');
+
+    output.push_str("### Macro and equal-profile views\n\n");
+    output.push_str("| Aggregation | Analyzer");
+    for descriptor in METRIC_DESCRIPTORS {
+        output.push_str(&format!(" | {}", descriptor.label));
+    }
+    output.push_str(" |\n");
+    output.push_str("|---|---|---:|---:|---:|---:|---:|---:|\n");
+    push_rate_row(
+        output,
+        "Case macro",
+        "Bifrost",
+        pooled_bifrost.case_macro.rates(),
+    );
+    push_rate_row(
+        output,
+        "Case macro",
+        "Reference",
+        pooled_reference.case_macro.rates(),
+    );
+    push_rate_row(
+        output,
+        "Equal profile",
+        "Bifrost",
+        equal_profile_bifrost.rates(),
+    );
+    push_rate_row(
+        output,
+        "Equal profile",
+        "Reference",
+        equal_profile_reference.rates(),
+    );
+    output.push('\n');
+
+    output.push_str("### Pooled range quality\n\n");
+    output.push_str(
+        "| Analyzer | Exact token | Containing | Line-only | Wrong location | Missing |\n",
+    );
+    output.push_str("|---|---:|---:|---:|---:|---:|\n");
+    push_range_row(output, "Bifrost", &pooled_bifrost.micro);
+    push_range_row(output, "Reference", &pooled_reference.micro);
+    output.push('\n');
+    Ok(())
+}
+
+fn push_metric_row(
+    output: &mut String,
+    profile: &str,
+    analyzer: &str,
+    metrics: &ProfileLocationMetrics,
+) {
+    let rates = metric_rates(&metrics.micro);
+    output.push_str(&format!(
+        "| {profile} | {analyzer} | {} | {} | {} | {}",
+        metrics.cases,
+        metrics.micro.true_positives,
+        metrics.micro.false_positives,
+        metrics.micro.false_negatives,
+    ));
+    push_rate_cells(output, rates);
+    output.push_str(" |\n");
+}
+
+fn push_rate_row(output: &mut String, aggregation: &str, analyzer: &str, rates: MetricRates) {
+    output.push_str(&format!("| {aggregation} | {analyzer}"));
+    push_rate_cells(output, rates);
+    output.push_str(" |\n");
+}
+
+fn push_rate_cells(output: &mut String, rates: MetricRates) {
+    for descriptor in METRIC_DESCRIPTORS {
+        let rate = rates.get(descriptor.kind);
+        let rendered = match descriptor.format {
+            MetricFormat::Percentage => rate_percentage(rate),
+            MetricFormat::Decimal => rate_decimal(rate),
+        };
+        output.push_str(&format!(" | {rendered}"));
+    }
+}
+
+fn push_range_row(output: &mut String, analyzer: &str, metrics: &LocationMetrics) {
+    output.push_str(&format!(
+        "| {analyzer} | {} | {} | {} | {} | {} |\n",
+        metrics.range_quality.exact_token,
+        metrics.range_quality.containing,
+        metrics.range_quality.line_only,
+        metrics.range_quality.wrong_location,
+        metrics.range_quality.missing,
+    ));
 }
 
 fn render_case_comparison(snapshot: &Snapshot, comparisons: &[Comparison]) -> String {
@@ -647,11 +896,17 @@ fn aggregate<T>(comparisons: &[T], select: impl Fn(&T) -> OutcomeTotals) -> Outc
 }
 
 fn percentage(numerator: usize, denominator: usize) -> String {
-    if denominator == 0 {
-        "n/a".to_string()
-    } else {
-        format!("{:.1}%", numerator as f64 * 100.0 / denominator as f64)
-    }
+    rate_percentage(ratio(numerator, denominator))
+}
+
+fn rate_percentage(rate: Option<f64>) -> String {
+    rate.map(|rate| format!("{:.1}%", rate * 100.0))
+        .unwrap_or_else(|| "n/a".to_string())
+}
+
+fn rate_decimal(rate: Option<f64>) -> String {
+    rate.map(|rate| format!("{rate:.2}"))
+        .unwrap_or_else(|| "n/a".to_string())
 }
 
 fn percentage_points(left: usize, right: usize, denominator: usize) -> String {
@@ -676,14 +931,104 @@ mod tests {
         reproduction::{CandidateEvidenceLink, ReproductionClass},
         runners::{
             ContainerProvenance, ExecutableProvenance, ExecutionEnvironment, ExecutionMode,
-            PlatformScope, ReferenceEnvironmentProvenance, RequiredDestinationTotals,
-            RunInvocation, RunTotals, RunnerMetadata,
+            PlatformScope, RangeQualityTotals, ReferenceEnvironmentProvenance,
+            RequiredDestinationTotals, ReturnedLocationTotals, RunInvocation, RunTotals,
+            RunnerMetadata,
         },
         CorpusPartition, CorpusSelection, GroundTruthReviewStatus, ReferencePolicy,
     };
     use tempfile::tempdir;
 
     const REVISION: &str = "0123456789abcdef0123456789abcdef01234567";
+
+    #[test]
+    fn metric_rates_separate_policy_extras_from_false_positives() {
+        let metrics = LocationMetrics {
+            queries: 1,
+            successful_queries: 1,
+            required_locations: 2,
+            true_positives: 2,
+            false_positives: 2,
+            successful_query_extras: 3,
+            returned_locations: ReturnedLocationTotals {
+                required: 2,
+                policy_allowed: 1,
+                related_unallowed: 1,
+                unrelated: 1,
+            },
+            range_quality: RangeQualityTotals {
+                exact_token: 1,
+                containing: 1,
+                wrong_location: 2,
+                ..RangeQualityTotals::default()
+            },
+            ..LocationMetrics::default()
+        };
+
+        let rates = metric_rates(&metrics);
+
+        assert_eq!(rates.destination_recall, Some(1.0));
+        assert_eq!(rates.exact_token_recall, Some(0.5));
+        assert_eq!(rates.strict_precision, Some(0.4));
+        assert_eq!(rates.policy_adjusted_precision, Some(0.5));
+        assert_eq!(rates.extra_result_burden, Some(3.0));
+    }
+
+    #[test]
+    fn exact_set_rate_requires_every_query_in_the_case_to_be_exact() {
+        let metrics = LocationMetrics {
+            cases: 1,
+            exact_set_cases: 0,
+            queries: 2,
+            exact_set_queries: 1,
+            ..LocationMetrics::default()
+        };
+
+        assert_eq!(metric_rates(&metrics).exact_set_rate, Some(0.0));
+    }
+
+    #[test]
+    fn case_macro_weights_cases_equally_instead_of_pooling_locations() {
+        let mut profile = ProfileLocationMetrics::default();
+        profile
+            .add_case(&LocationMetrics {
+                cases: 1,
+                queries: 1,
+                required_locations: 10,
+                true_positives: 9,
+                false_negatives: 1,
+                returned_locations: ReturnedLocationTotals {
+                    required: 9,
+                    ..ReturnedLocationTotals::default()
+                },
+                range_quality: RangeQualityTotals {
+                    exact_token: 9,
+                    missing: 1,
+                    ..RangeQualityTotals::default()
+                },
+                ..LocationMetrics::default()
+            })
+            .unwrap();
+        profile
+            .add_case(&LocationMetrics {
+                cases: 1,
+                queries: 1,
+                required_locations: 1,
+                false_negatives: 1,
+                range_quality: RangeQualityTotals {
+                    missing: 1,
+                    ..RangeQualityTotals::default()
+                },
+                ..LocationMetrics::default()
+            })
+            .unwrap();
+
+        assert_eq!(
+            metric_rates(&profile.micro).destination_recall,
+            Some(9.0 / 11.0)
+        );
+        assert_eq!(profile.case_macro.rates().destination_recall, Some(0.45));
+    }
 
     #[test]
     fn generates_strict_and_compatibility_aware_pages_from_verified_reports() {
@@ -747,6 +1092,18 @@ mod tests {
         assert!(pages
             .results
             .contains("| gopls 1.0.0 | 4 | 1 | 1 | 1 | 1 |"));
+        assert!(pages
+            .results
+            .contains("## Location-level precision and recall"));
+        assert!(pages.results.contains(
+            "| gopls 1.0.0 | Bifrost | 4 | 3 | 0 | 1 | 75.0% | 50.0% | 100.0% | 100.0% | 50.0% | 0.00 |"
+        ));
+        assert!(pages.results.contains(
+            "| gopls 1.0.0 | gopls | 4 | 4 | 0 | 0 | 100.0% | 50.0% | 100.0% | 100.0% | 50.0% | 0.00 |"
+        ));
+        assert!(pages.results.contains("| Case macro | Bifrost |"));
+        assert!(pages.results.contains("| Equal profile | Reference |"));
+        assert!(pages.results.contains("### Pooled range quality"));
         assert!(pages.case_comparison.contains("`bifrost-strict`"));
         assert!(pages.case_comparison.contains("`reference-strict`"));
         assert!(pages
@@ -758,6 +1115,144 @@ mod tests {
         let generated = tempdir.path().join("generated");
         write_result_pages(&manifest, &generated, false).unwrap();
         write_result_pages(&manifest, &generated, true).unwrap();
+    }
+
+    #[test]
+    fn rejects_legacy_reports_when_location_tables_are_requested() {
+        let tempdir = tempdir().unwrap();
+        let mut bifrost = sample_report(
+            "bifrost",
+            vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+        );
+        bifrost.usagebench_version = "0.1.0".to_string();
+        bifrost.totals.location_metrics = None;
+        for document in &mut bifrost.documents {
+            for case in &mut document.cases {
+                case.location_metrics = None;
+            }
+        }
+        let manifest = write_snapshot(
+            tempdir.path(),
+            bifrost,
+            sample_report(
+                "gopls",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+        );
+
+        let error = generate_result_pages(&manifest).unwrap_err();
+
+        assert!(error.to_string().contains("candidate bifrost"));
+        assert!(error.to_string().contains("UsageBench 0.1.0"));
+        assert!(error.to_string().contains("UsageBench >=0.2.0"));
+    }
+
+    #[test]
+    fn rejects_internally_inconsistent_location_metrics() {
+        let tempdir = tempdir().unwrap();
+        let mut bifrost = sample_report(
+            "bifrost",
+            vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+        );
+        bifrost
+            .totals
+            .location_metrics
+            .as_mut()
+            .unwrap()
+            .false_positives = 1;
+        let manifest = write_snapshot(
+            tempdir.path(),
+            bifrost,
+            sample_report(
+                "gopls",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+        );
+
+        let error = generate_result_pages(&manifest).unwrap_err();
+
+        assert!(error
+            .to_string()
+            .contains("candidate bifrost has invalid total location metrics"));
+    }
+
+    #[test]
+    fn rejects_missing_case_level_location_metrics() {
+        let mut report = sample_report(
+            "bifrost",
+            vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+        );
+        report.documents[0].cases[0].location_metrics = None;
+
+        let error = validate_report_location_metrics("bifrost", &report).unwrap_err();
+
+        assert!(error.to_string().contains("lacks location metrics"));
+    }
+
+    #[test]
+    fn rejects_exact_set_claim_without_exact_range_evidence() {
+        let mut report = sample_report(
+            "bifrost",
+            vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+        );
+        let metrics = report.documents[0].cases[0]
+            .location_metrics
+            .as_mut()
+            .unwrap();
+        metrics.range_quality.exact_token = 0;
+        metrics.range_quality.containing = 1;
+        report.totals.location_metrics = Some(metrics.clone());
+
+        let error = validate_report_location_metrics("bifrost", &report).unwrap_err();
+
+        assert!(error
+            .to_string()
+            .contains("inconsistent case-level exact-set"));
+    }
+
+    #[test]
+    fn rejects_overflow_while_merging_case_metrics() {
+        let mut report = sample_report(
+            "bifrost",
+            vec![
+                (
+                    "first",
+                    CaseStatus::Passed,
+                    RequiredDestinationStatus::Found,
+                ),
+                (
+                    "second",
+                    CaseStatus::Passed,
+                    RequiredDestinationStatus::Found,
+                ),
+            ],
+        );
+        let huge = LocationMetrics {
+            cases: 1,
+            exact_set_cases: 1,
+            queries: 1,
+            successful_queries: 1,
+            exact_set_queries: 1,
+            required_locations: usize::MAX,
+            true_positives: usize::MAX,
+            returned_locations: ReturnedLocationTotals {
+                required: usize::MAX,
+                ..ReturnedLocationTotals::default()
+            },
+            range_quality: RangeQualityTotals {
+                exact_token: usize::MAX,
+                ..RangeQualityTotals::default()
+            },
+            ..LocationMetrics::default()
+        };
+        for case in &mut report.documents[0].cases {
+            case.location_metrics = Some(huge.clone());
+        }
+        report.totals.location_metrics = Some(LocationMetrics::default());
+
+        let error = validate_report_location_metrics("bifrost", &report).unwrap_err();
+
+        assert!(error.to_string().contains("overflow while merging"));
     }
 
     #[test]
@@ -944,6 +1439,7 @@ mod tests {
 
     fn duplicate_document(report: &mut RunReport) {
         let mut document = report.documents[0].clone();
+        let location_metrics = document.cases[0].location_metrics.clone();
         document.case_file = "benchmarks/cases/second.yaml".to_string();
         report.case_files.push(document.case_file.clone());
         report.documents.push(document);
@@ -953,6 +1449,12 @@ mod tests {
         report.totals.passed = 2;
         report.totals.required_destinations.scoreable_cases = 2;
         report.totals.required_destinations.found = 2;
+        if let (Some(total), Some(case)) = (
+            report.totals.location_metrics.as_mut(),
+            location_metrics.as_ref(),
+        ) {
+            total.merge(case);
+        }
     }
 
     fn write_snapshot(directory: &Path, bifrost: RunReport, reference: RunReport) -> PathBuf {
@@ -965,7 +1467,7 @@ mod tests {
         let manifest = FreezeManifest {
             schema_version: FREEZE_MANIFEST_SCHEMA_VERSION,
             snapshot_kind: SnapshotKind::Development,
-            version: "v0.1.0".to_string(),
+            version: "v0.2.0".to_string(),
             revision: REVISION.to_string(),
             scoring_contract: ScoringContract {
                 benchmark_case_schema_version: 2,
@@ -1055,22 +1557,25 @@ mod tests {
     ) -> RunReport {
         let exact = cases
             .iter()
-            .filter(|(_, status, _)| matches!(status, CaseStatus::Passed | CaseStatus::Improved))
+            .filter(|(_, status, required)| {
+                matches!(status, CaseStatus::Passed | CaseStatus::Improved)
+                    && *required == RequiredDestinationStatus::Found
+            })
             .count();
         let found = cases
             .iter()
             .filter(|(_, _, status)| *status == RequiredDestinationStatus::Found)
             .count();
         RunReport {
-            usagebench_version: "0.1.0".to_string(),
+            usagebench_version: "0.2.0".to_string(),
             usagebench_revision: REVISION.to_string(),
-            usagebench_release: Some("v0.1.0".to_string()),
+            usagebench_release: Some("v0.2.0".to_string()),
             runner: RunnerMetadata {
                 name: runner.to_string(),
                 requested_version: "1.0.0".to_string(),
                 resolved_version: "1.0.0".to_string(),
                 source: "https://example.test".to_string(),
-                adapter_version: "0.1.0".to_string(),
+                adapter_version: "0.2.0".to_string(),
                 capabilities: Vec::new(),
             },
             invocation: RunInvocation {
@@ -1091,7 +1596,7 @@ mod tests {
                     canonical_platform: "linux/amd64".to_string(),
                 }),
                 container: Some(ContainerProvenance {
-                    image_reference: format!("usagebench-reference:v0.1.0-env1-{runner}"),
+                    image_reference: format!("usagebench-reference:v0.2.0-env1-{runner}"),
                     image_digest: format!("sha256:{}", "d".repeat(64)),
                 }),
                 analyzer_executable: ExecutableProvenance {
@@ -1119,6 +1624,28 @@ mod tests {
                     missing: cases.len() - found,
                     ..RequiredDestinationTotals::default()
                 },
+                location_metrics: Some(LocationMetrics {
+                    cases: cases.len(),
+                    exact_set_cases: exact,
+                    queries: cases.len(),
+                    successful_queries: found,
+                    exact_set_queries: exact,
+                    required_locations: cases.len(),
+                    true_positives: found,
+                    false_positives: 0,
+                    false_negatives: cases.len() - found,
+                    successful_query_extras: 0,
+                    returned_locations: ReturnedLocationTotals {
+                        required: found,
+                        ..ReturnedLocationTotals::default()
+                    },
+                    range_quality: RangeQualityTotals {
+                        exact_token: exact,
+                        containing: found - exact,
+                        missing: cases.len() - found,
+                        ..RangeQualityTotals::default()
+                    },
+                }),
                 ..RunTotals::default()
             },
             documents: vec![crate::runners::DocumentRunReport {
@@ -1131,18 +1658,45 @@ mod tests {
                 reference_policy: ReferencePolicy::BindingsOptional,
                 cases: cases
                     .into_iter()
-                    .map(|(id, status, required_destination_status)| CaseRunReport {
-                        id: id.to_string(),
-                        status,
-                        required_destination_status: Some(required_destination_status),
-                        expected_failure_reason: None,
-                        not_planned_reason: None,
-                        unsupported_reason: None,
-                        declaration_to_usages: None,
-                        usage_to_declaration: Vec::new(),
-                        compatible_usage_to_declaration: Vec::new(),
-                        type_lookups: Vec::new(),
-                        diagnostics: Vec::new(),
+                    .map(|(id, status, required_destination_status)| {
+                        let found = required_destination_status == RequiredDestinationStatus::Found;
+                        let exact =
+                            found && matches!(status, CaseStatus::Passed | CaseStatus::Improved);
+                        CaseRunReport {
+                            id: id.to_string(),
+                            status,
+                            required_destination_status: Some(required_destination_status),
+                            location_metrics: Some(LocationMetrics {
+                                cases: 1,
+                                exact_set_cases: usize::from(exact),
+                                queries: 1,
+                                successful_queries: usize::from(found),
+                                exact_set_queries: usize::from(exact),
+                                required_locations: 1,
+                                true_positives: usize::from(found),
+                                false_positives: 0,
+                                false_negatives: usize::from(!found),
+                                successful_query_extras: 0,
+                                returned_locations: ReturnedLocationTotals {
+                                    required: usize::from(found),
+                                    ..ReturnedLocationTotals::default()
+                                },
+                                range_quality: RangeQualityTotals {
+                                    exact_token: usize::from(exact),
+                                    containing: usize::from(found && !exact),
+                                    missing: usize::from(!found),
+                                    ..RangeQualityTotals::default()
+                                },
+                            }),
+                            expected_failure_reason: None,
+                            not_planned_reason: None,
+                            unsupported_reason: None,
+                            declaration_to_usages: None,
+                            usage_to_declaration: Vec::new(),
+                            compatible_usage_to_declaration: Vec::new(),
+                            type_lookups: Vec::new(),
+                            diagnostics: Vec::new(),
+                        }
                     })
                     .collect(),
             }],
