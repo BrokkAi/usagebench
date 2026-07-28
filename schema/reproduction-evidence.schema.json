@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brokk.ai/usagebench/reproduction-evidence.schema.json",
+  "title": "UsageBench reproduction evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "candidateId", "primaryReport", "class"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "candidateId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "primaryReport": {"$ref": "#/$defs/file"},
+    "class": {"enum": ["canonical", "native_two_host"]},
+    "referenceRunner": {"type": "string", "minLength": 1},
+    "environmentVersion": {"type": "string", "minLength": 1},
+    "definitionDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "primaryHost": {"$ref": "#/$defs/host"},
+    "corroboratingHost": {"$ref": "#/$defs/host"},
+    "corroboratingReport": {"$ref": "#/$defs/file"},
+    "comparison": {"$ref": "#/$defs/comparison"}
+  },
+  "oneOf": [
+    {
+      "properties": {"class": {"const": "canonical"}},
+      "required": ["referenceRunner", "environmentVersion", "definitionDigest"],
+      "not": {
+        "anyOf": [
+          {"required": ["primaryHost"]},
+          {"required": ["corroboratingHost"]},
+          {"required": ["corroboratingReport"]},
+          {"required": ["comparison"]}
+        ]
+      }
+    },
+    {
+      "properties": {"class": {"const": "native_two_host"}},
+      "required": ["primaryHost", "corroboratingHost", "corroboratingReport", "comparison"],
+      "not": {
+        "anyOf": [
+          {"required": ["referenceRunner"]},
+          {"required": ["environmentVersion"]},
+          {"required": ["definitionDigest"]}
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "sha256"],
+      "properties": {
+        "file": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "runnerName",
+        "provider",
+        "operatingSystem",
+        "architecture",
+        "provenance",
+        "requestedVersion",
+        "profileSha256",
+        "executableSha256"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "runnerName": {"type": "string", "minLength": 1},
+        "provider": {"type": "string", "minLength": 1},
+        "operatingSystem": {"type": "string", "minLength": 1},
+        "architecture": {"type": "string", "minLength": 1},
+        "provenance": {"type": "string", "format": "uri"},
+        "requestedVersion": {"type": "string", "minLength": 1},
+        "profileSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "executableSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "status"],
+      "properties": {
+        "scope": {"const": "native_results"},
+        "status": {"enum": ["equivalent", "different"]},
+        "diff": {"$ref": "#/$defs/file"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "different"}}},
+          "then": {"required": ["diff"]},
+          "else": {"not": {"required": ["diff"]}}
+        }
+      ]
+    }
+  }
+}

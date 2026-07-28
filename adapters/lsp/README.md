@@ -41,6 +41,7 @@ from incorrect results.
 
 | Profile | Corpus language(s) | Requested release | Default command source |
 |---|---|---|---|
+| `apple-clangd-21.json` | C++ | Apple clangd 21.0.0 | Xcode toolchain `clangd` |
 | `clangd.json` | C++ | 22.1.6 | installed `clangd` |
 | `clangd-configured.json` | C++ configured regression | 22.1.6 | installed `clangd` |
 | `ccls.json` | C++ | 0.20250815.1 | installed `ccls` |
@@ -157,3 +158,14 @@ workspace. Profiles are therefore comparable for correctness, but the current
 report does not measure warm-start or request latency. See
 [`docs/runner-adapters.md`](../../docs/runner-adapters.md) for the measured
 correctness table and the exact scoring semantics.
+
+## Reproduction classes
+
+`adapters/candidates.json` is the publication registry. An `advertised`
+candidate declares either a canonical reference runner or native two-host
+evidence, together with its runtime-network and project-hydration requirements.
+Profiles present in this directory are not automatically part of the public
+aggregate.
+
+Apple clangd 21 has its own `apple-clangd-21.json` profile. Do not use the
+upstream `clangd.json` requested-version metadata for an Apple clangd report.

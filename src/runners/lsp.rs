@@ -17,6 +17,7 @@ use crate::{
 use anyhow::{bail, Context, Result};
 use serde::Deserialize;
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
     fs,
@@ -127,6 +128,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         repo_root.join(&options.profile)
     };
     let profile = load_profile(&profile_path)?;
+    let profile_sha256 = format!("{:x}", Sha256::digest(fs::read(&profile_path)?));
     validate_profile(&profile)?;
     let case_files = crate::validate_path(&options.case_path)?;
     let work_dir = if options.work_dir.is_absolute() {
@@ -266,6 +268,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
             include_unsupported: options.include_unsupported,
             include_definition_lookups: true,
             profile: Some(profile.id.clone()),
+            profile_sha256: Some(profile_sha256),
             case_id: options.case_id.clone(),
         },
         environment,

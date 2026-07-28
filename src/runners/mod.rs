@@ -98,6 +98,8 @@ pub struct RunInvocation {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile_sha256: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub case_id: Option<String>,
 }
 

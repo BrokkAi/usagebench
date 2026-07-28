@@ -6,6 +6,7 @@ use usagebench::bifrost_runner::{
     TypeLookupReport, UsageDefinitionReport,
 };
 use usagebench::freeze::{create_manifest, FreezeManifestOptions, SnapshotKind};
+use usagebench::reproduction::{create_native_evidence, CreateNativeEvidenceOptions};
 use usagebench::runners::lsp::{run_lsp, RunLspOptions};
 
 #[derive(Debug, Parser)]
@@ -36,6 +37,12 @@ enum Command {
         expected: PathBuf,
         /// Newly reproduced report.
         actual: PathBuf,
+        /// Comparison contract: canonical provenance or cross-host native results.
+        #[arg(long, value_enum, default_value_t)]
+        scope: usagebench::runners::report_compare::ComparisonScope,
+        /// Optional complete machine-readable semantic diff.
+        #[arg(long)]
+        output_diff: Option<PathBuf>,
     },
     /// Validate selected candidate evidence and write an immutable snapshot manifest.
     FreezeManifest {
@@ -57,6 +64,9 @@ enum Command {
         /// Report produced by each selected candidate. Repeat once per candidate.
         #[arg(long, required = true)]
         report: Vec<PathBuf>,
+        /// Reproduction evidence for a selected candidate. Repeat once per candidate.
+        #[arg(long, required = true)]
+        evidence: Vec<PathBuf>,
         /// Destination for the machine-readable snapshot manifest.
         #[arg(long)]
         output: PathBuf,
@@ -72,6 +82,43 @@ enum Command {
         /// Fail instead of writing when generated fragments differ from disk.
         #[arg(long)]
         check: bool,
+    },
+    /// Create typed two-host reproduction evidence from two native reports.
+    CreateNativeEvidence {
+        #[arg(long)]
+        candidate: String,
+        #[arg(long)]
+        primary_report: PathBuf,
+        #[arg(long)]
+        primary_host_id: String,
+        #[arg(long)]
+        primary_runner_name: String,
+        #[arg(long)]
+        primary_host_provider: String,
+        #[arg(long)]
+        primary_host_provenance: String,
+        #[arg(long)]
+        primary_requested_version: String,
+        #[arg(long)]
+        primary_profile_sha256: String,
+        #[arg(long)]
+        corroborating_report: PathBuf,
+        #[arg(long)]
+        corroborating_host_id: String,
+        #[arg(long)]
+        corroborating_runner_name: String,
+        #[arg(long)]
+        corroborating_host_provider: String,
+        #[arg(long)]
+        corroborating_host_provenance: String,
+        #[arg(long)]
+        corroborating_requested_version: String,
+        #[arg(long)]
+        corroborating_profile_sha256: String,
+        #[arg(long)]
+        output: PathBuf,
+        #[arg(long)]
+        diff_output: PathBuf,
     },
     /// Run benchmark case YAML files against Bifrost.
     RunBifrost {
@@ -153,16 +200,27 @@ fn main() -> Result<()> {
         Command::ReportSchema | Command::BifrostReportSchema => {
             println!("{}", usagebench::runners::generated_report_schema_json()?);
         }
-        Command::CompareReports { expected, actual } => {
-            let differences =
-                usagebench::runners::report_compare::compare_report_files(&expected, &actual)?;
+        Command::CompareReports {
+            expected,
+            actual,
+            scope,
+            output_diff,
+        } => {
+            let differences = usagebench::runners::report_compare::compare_report_files_with_scope(
+                &expected, &actual, scope,
+            )?;
+            if let Some(path) = output_diff {
+                usagebench::runners::report_compare::write_differences(&path, &differences)?;
+            }
             if differences.is_empty() {
                 println!("reports are semantically equivalent");
             } else {
                 for difference in &differences {
                     println!(
                         "{}: expected {}, actual {}",
-                        difference.path, difference.expected, difference.actual
+                        difference.path,
+                        usagebench::runners::report_compare::compact(&difference.expected),
+                        usagebench::runners::report_compare::compact(&difference.actual)
                     );
                 }
                 bail!("reports differ in {} semantic field(s)", differences.len());
@@ -175,6 +233,7 @@ fn main() -> Result<()> {
             candidates_file,
             candidates,
             report,
+            evidence,
             output,
         } => {
             let manifest = create_manifest(FreezeManifestOptions {
@@ -184,6 +243,7 @@ fn main() -> Result<()> {
                 candidates_file,
                 candidate_ids: candidates,
                 report_paths: report,
+                evidence_paths: evidence,
             })?;
             usagebench::freeze::write_manifest(&output, &manifest)?;
             println!(
@@ -208,6 +268,51 @@ fn main() -> Result<()> {
                     output_directory.display()
                 );
             }
+        }
+        Command::CreateNativeEvidence {
+            candidate,
+            primary_report,
+            primary_host_id,
+            primary_runner_name,
+            primary_host_provider,
+            primary_host_provenance,
+            primary_requested_version,
+            primary_profile_sha256,
+            corroborating_report,
+            corroborating_host_id,
+            corroborating_runner_name,
+            corroborating_host_provider,
+            corroborating_host_provenance,
+            corroborating_requested_version,
+            corroborating_profile_sha256,
+            output,
+            diff_output,
+        } => {
+            let evidence = create_native_evidence(CreateNativeEvidenceOptions {
+                candidate_id: candidate,
+                primary_report,
+                primary_host_id,
+                primary_runner_name,
+                primary_host_provider,
+                primary_host_provenance,
+                primary_requested_version,
+                primary_profile_sha256,
+                corroborating_report,
+                corroborating_host_id,
+                corroborating_runner_name,
+                corroborating_host_provider,
+                corroborating_host_provenance,
+                corroborating_requested_version,
+                corroborating_profile_sha256,
+                output: output.clone(),
+                diff_output,
+            })?;
+            println!(
+                "wrote {} reproduction evidence for {} to {}",
+                evidence.proof.class(),
+                evidence.candidate_id,
+                output.display()
+            );
         }
         Command::RunBifrost {
             path,

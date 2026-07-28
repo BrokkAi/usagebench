@@ -212,6 +212,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             include_unsupported: options.include_unsupported,
             include_definition_lookups: options.include_definition_lookups,
             profile: None,
+            profile_sha256: None,
             case_id: options.case_id.clone(),
         },
         environment,
@@ -1941,6 +1942,7 @@ mod tests {
                 include_unsupported: false,
                 include_definition_lookups: true,
                 profile: None,
+                profile_sha256: None,
                 case_id: None,
             },
             environment: super::super::ExecutionEnvironment {

@@ -8,6 +8,12 @@ description: Required-destination and strict-contract results from the reviewed 
 > `legacy_unattributed`. A second independent review, preregistration, and an
 > immutable freeze are still required for evaluation promotion.
 
+> **Historical identity limitation.** This pre-schema-v2 page requested the
+> upstream clangd 22.1.6 profile while the host resolved Apple clangd 21.0.0.
+> It is preserved as development history, but that row is not valid
+> reproduction evidence. New freezes use the distinct `apple-clangd-21`
+> candidate and reject upstream or unverified executables.
+
 This corrected native result replaces the legacy 16 July figures. Bifrost was
 rerun across the full corpus at the pinned revision. gopls, TypeScript LS, and
 Intelephense were rerun after adding reviewed compatible-operation evidence and

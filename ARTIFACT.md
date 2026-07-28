@@ -19,6 +19,38 @@ The checked-in corpus is currently a development and diagnosis corpus. Its
 reproducible execution environment does not change the separate ground-truth
 review status recorded in each benchmark document.
 
+The wider public comparison uses independently reproduced native evidence when
+a canonical image is not available. A native evidence set contains the primary
+report, a corroborating report from a distinct documented host, and the
+`native-results` comparison. Host provenance is preserved in both reports even
+though it is excluded from cross-host semantic equality. Unequal evidence must
+retain its complete diff and is not accepted for a generated aggregate.
+
+The manual **Native two-host reproduction** workflow is the supported producer
+for this envelope. It runs all advertised native profiles on two separately
+labeled, pre-provisioned self-hosted machines and emits the
+`native-reproduction-evidence` artifact consumed by the freeze workflow. The
+two jobs must report different runner names. Freeze verifies that the artifact
+came from that workflow at the frozen commit before validating report and
+evidence checksums.
+
+The two administrators provision different physical `hostId` values in
+`/etc/usagebench-native-host.json`. Per-candidate entries bind the requested
+release to the checked-in profile and installed executable checksums. Accepted
+pairs use the same OS, architecture, profile, and executable on those distinct
+machines; matching runner/session errors are rejected rather than treated as
+semantic reproduction.
+
+Native host administrators remain part of the trusted computing base. The
+recorded executable checksum covers the launched command or launcher, and the
+profile checksum covers its exact arguments. It does not prove the complete
+transitive payload behind package launchers such as `npx`, `cs`, or `jdtls`.
+Consequently this native contract is semantic two-host reproduction with
+reviewed administrator provisioning, not cryptographic software-supply-chain
+attestation. Reviewers who require that stronger claim must additionally hash
+and verify the resolved package/dependency closure outside this version of the
+contract.
+
 ## Requirements
 
 - Docker Engine or Docker Desktop with `docker buildx` and amd64 container
@@ -26,6 +58,11 @@ review status recorded in each benchmark document.
 - Bash, Git, and jq;
 - outbound network access while building images; and
 - enough free disk for Rust, Go, Bifrost, and gopls build layers.
+
+Native evidence hosts additionally need the exact profile executables already
+installed, plus permission for language servers such as Roslyn to create local
+project-build sockets. See `docs/src/content/docs/reproduce.md` and
+`adapters/lsp/README.md` for the full profile list and hydration requirements.
 
 Runtime analysis is network-disabled. On an Apple Silicon development machine,
 the clean amd64 Bifrost analyzer build took about nine minutes under emulation;
@@ -138,3 +175,6 @@ semantics to match.
 - a semantic diff after a successful run: preserve both JSON reports. The diff
   is evidence of a result, capability, executable, or environment discrepancy,
   not a reason to relax the benchmark assertion.
+- `native reproduction requires two distinct host identities`: the primary and
+  corroborating reports were attributed to the same host identity; collect the
+  corroborating report independently and retain its provenance link.
