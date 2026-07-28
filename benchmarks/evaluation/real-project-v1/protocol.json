@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "freezeId": "real-project-v1",
+  "targetProfiles": [
+    {
+      "language": "go",
+      "candidateId": "gopls",
+      "profile": "adapters/lsp/gopls.json"
+    },
+    {
+      "language": "python",
+      "candidateId": "pyright",
+      "profile": "adapters/lsp/pyright.json"
+    },
+    {
+      "language": "typescript",
+      "candidateId": "typescript-language-server",
+      "profile": "adapters/lsp/typescript-language-server.json"
+    }
+  ],
+  "population": {
+    "snapshot": "benchmarks/evaluation/real-project-v1/population.json, generated and committed after this protocol's merge and before any repository or declaration draw",
+    "eligibility": "Public, non-fork, non-archived GitHub repositories returned by the recorded GitHub API snapshot; each must have a default-branch commit, an OSI-recognized license reported by GitHub, at least 100 stars at snapshot time, and the profile's root build marker (go.mod; pyproject.toml or setup.cfg; package.json plus tsconfig.json). The repository must contain at least 20 non-generated source files for its profile language after vendored, generated, dependency, and test-only paths are excluded.",
+    "exclusions": "Forks, mirrors, archived repositories, repositories without the stated build marker or source-file count, repositories whose default-branch source archive exceeds 150 MiB, generated or vendored sources, tests, examples, benchmarks, lockfiles, declarations-only files, and declarations whose source-only review cannot establish an unambiguous location and at least one in-repository occurrence."
+  },
+  "sampling": {
+    "seedDerivation": "For each language/candidate profile, rank every eligible repository by the lowercase hexadecimal SHA-256 of `usagebench-real-project-v1\\0` + the Git commit that introduced this protocol + `\\0` + language + `\\0` + candidate ID + `\\0` + repository full name. Rank declaration candidates within each chosen pinned repository by the same digest with `declaration\\0` and the portable source URI plus zero-based declaration range appended. Sort bytewise ascending; use source text and syntax only, never Bifrost or language-server outcomes.",
+    "repositoriesPerProfile": 4,
+    "declarationsPerRepository": 3,
+    "replacementRule": "Persist the complete ranked eligible population before drawing. If a chosen repository fails a stated eligibility check after its source archive is pinned, replace it with the next unselected repository in that profile's recorded rank order. If a declaration fails source-only authoring or independent review, replace it with the next recorded declaration candidate from the same pinned repository; if none remains, replace the repository using the same rank order. Record every exclusion and replacement in the selection manifest before any analyzer run."
+  },
+  "operations": ["references", "definition"],
+  "claimScope": "This frozen slice supports only descriptive, per-profile comparisons for the source-only sampled public repositories and the References and Definition operations recorded here. It does not estimate language-wide, ecosystem-wide, latency, memory, or cold-start performance."
+}

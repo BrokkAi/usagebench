@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BrokkAi/usagebench/schema/evaluation-review.schema.json",
+  "title": "UsageBench Evaluation Review Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "freezeId", "selection", "reviewers", "adjudication"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "freezeId": { "type": "string", "minLength": 1 },
+    "selection": { "$ref": "#/$defs/artifactLink" },
+    "reviewers": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/reviewArtifact" }
+    },
+    "adjudication": { "$ref": "#/$defs/reviewArtifact" }
+  },
+  "$defs": {
+    "artifactLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "sha256"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "reviewArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "file", "sha256"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "file": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

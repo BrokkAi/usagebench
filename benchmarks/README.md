@@ -35,6 +35,34 @@ source and recorded with `verification.method: manual_inspection`. Promotion to
 `freezeId`, `groundTruth.status: independently_reviewed`, and at least two named
 reviewers. Validation enforces those requirements.
 
+Evaluation cases also bind their assertions to four repository-relative,
+content-addressed records. This prevents post-hoc repository choice, source
+drift, and unreviewed ground-truth edits from being presented as an evaluation
+result:
+
+```yaml
+corpus:
+  partition: evaluation
+  selection: pre_registered
+  freezeId: real-project-v1
+  selectionManifest: evaluation/real-project-v1/selection.json
+  reviewManifest: evaluation/real-project-v1/review.json
+  sourceLock: evaluation/real-project-v1/sources.json
+```
+
+- The selection manifest hashes the protocol that defines the eligible
+  population, sampling rule, target language/profile strata, and claim scope.
+- The review manifest hashes the selection and the two independent reviewer
+  records plus their adjudication.
+- The source lock hashes a `git archive` materialization for each selected,
+  exact 40-character commit. Validation checks both the archive digest and its
+  embedded Git commit; canonical execution consumes that checked source
+  material rather than cloning during a run.
+
+Use `cargo run -- validate-evaluation <case-path>` to check these cross-file
+links. Do not add the first real-project manifests or evaluation cases until the
+protocol is reviewed and merged; that ordering is the preregistration boundary.
+
 ## Source URIs
 
 Use portable corpus URIs instead of checkout-specific file paths:
@@ -52,8 +80,10 @@ location:
 ```
 
 The URI path is relative to the pinned source root declared by the document's
-`source` block. Public repositories must use `source.kind: git` with a pinned
-commit. In-repository fixtures use `source.kind: fixture`.
+`source` block. Public repositories must use `source.kind: git` with a pinned,
+lowercase 40-character commit. In-repository fixtures use `source.kind:
+fixture`. Evaluation documents always use the former and bind it to their
+source lock.
 
 For fixture-backed cases, `source.path` is resolved relative to the repository
 working directory, and validation requires every referenced

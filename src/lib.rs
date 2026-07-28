@@ -7,6 +7,7 @@ use std::{
 };
 use url::Url;
 
+pub mod evaluation;
 pub mod freeze;
 pub mod reproduction;
 pub mod results;
@@ -36,6 +37,12 @@ pub struct CorpusMetadata {
     pub selection: CorpusSelection,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub freeze_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection_manifest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub review_manifest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_lock: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -377,10 +384,13 @@ fn validate_file(
         ));
     }
 
-    serde_yaml::from_str::<BenchmarkDocument>(&yaml)
-        .with_context(|| format!("deserialize benchmark document {}", file.display()))?
+    let benchmark = serde_yaml::from_str::<BenchmarkDocument>(&yaml)
+        .with_context(|| format!("deserialize benchmark document {}", file.display()))?;
+    benchmark
         .validate_with_base(repo_root)
         .with_context(|| format!("validate benchmark semantics {}", file.display()))?;
+    evaluation::validate_document_evidence(&benchmark, file, repo_root)
+        .with_context(|| format!("validate evaluation evidence {}", file.display()))?;
     Ok(())
 }
 
@@ -422,7 +432,14 @@ impl BenchmarkDocument {
                 }
                 Some(canonical_fixture)
             }
-            Source::Git { .. } => None,
+            Source::Git { commit, .. } => {
+                if !is_exact_git_commit(commit) {
+                    bail!(
+                        "git source commits must be exact 40-character lowercase hexadecimal IDs"
+                    );
+                }
+                None
+            }
         };
 
         for case in &self.cases {
@@ -463,6 +480,21 @@ impl BenchmarkDocument {
             {
                 bail!("evaluation corpus documents require a non-empty freezeId");
             }
+            for (field, value) in [
+                (
+                    "selectionManifest",
+                    self.corpus.selection_manifest.as_deref(),
+                ),
+                ("reviewManifest", self.corpus.review_manifest.as_deref()),
+                ("sourceLock", self.corpus.source_lock.as_deref()),
+            ] {
+                if value.is_none_or(|value| value.trim().is_empty()) {
+                    bail!("evaluation corpus documents require a non-empty {field}");
+                }
+            }
+            if !matches!(self.source, Source::Git { .. }) {
+                bail!("evaluation corpus documents must use git sources");
+            }
             if self.cases.iter().any(|case| {
                 case.usage_lookups
                     .iter()
@@ -473,6 +505,13 @@ impl BenchmarkDocument {
         }
         Ok(())
     }
+}
+
+pub(crate) fn is_exact_git_commit(value: &str) -> bool {
+    value.len() == 40
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
 }
 
 impl BenchmarkCase {
@@ -1493,18 +1532,27 @@ usageLookups:
         freeze_id: &str,
         reviewers: &str,
     ) -> BenchmarkDocument {
+        let evaluation_metadata = if partition == "evaluation" {
+            "  selectionManifest: evaluation/selection.json\n  reviewManifest: evaluation/review.json\n  sourceLock: evaluation/sources.json\n"
+        } else {
+            ""
+        };
+        let source = if partition == "evaluation" {
+            "  kind: git\n  repo: https://example.test/repo.git\n  commit: 0123456789abcdef0123456789abcdef01234567"
+        } else {
+            "  kind: fixture\n  path: fixtures/fixture"
+        };
         serde_yaml::from_str(&format!(
             r#"schemaVersion: 2
 corpus:
   partition: {partition}
   selection: {selection}
-{freeze_id}groundTruth:
+{freeze_id}{evaluation_metadata}groundTruth:
   status: {review_status}
 {reviewers}
 referencePolicy: bindings_optional
 source:
-  kind: fixture
-  path: fixtures/fixture
+{source}
 language: text
 cases: []
 "#
