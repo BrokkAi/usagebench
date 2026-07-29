@@ -13,8 +13,6 @@ source:
 language: ruby
 cases:
   - id: ruby-require-relative-class-construction
-    expectedFailure:
-      reason: "Bifrost misses the Invoice self-construction inside Invoice.build."
     declaration:
       location:
         uri: benchmark://source/lib/billing/invoice.rb
