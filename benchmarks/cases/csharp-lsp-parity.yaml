@@ -290,6 +290,8 @@ cases:
         BufferHandler.Handle definition. Interface-typed and ConsoleHandler
         calls are not usages of this concrete method identity.
   - id: csharp-parity-extension-method-call
+    expectedFailure:
+      reason: Bifrost intentionally returns no exact definition for extension calls on the unindexed external System.String receiver; an applicable external instance method would take precedence until library indexing is available.
     declaration:
       location:
         uri: benchmark://source/src/Handlers.cs
@@ -351,10 +353,14 @@ cases:
     verification:
       method: manual_inspection
       notes: >
-        Reviewed by DavidBakerEffendi on 2026-07-22. Name and the result of
-        handler.Handle both have the static type string, so each Tag extension
-        call resolves exactly to HandlerExtensions.Tag. Definition navigation
-        from either call reaches the same static method body.
+        Re-reviewed by DavidBakerEffendi on 2026-07-29 after Bifrost #1266.
+        Roslyn resolves both calls to HandlerExtensions.Tag because it indexes
+        System.String and confirms it has no applicable instance Tag method.
+        Bifrost does not yet index external library declarations, so exact
+        definition navigation must not claim the workspace extension: an
+        applicable external instance member would take precedence. The source
+        contract remains valid; this is an expected Bifrost limitation until
+        library indexing is available.
         Parity source: dotnet/roslyn@a5accec75c395ff60afbfb77aa630df8d9b75342.
         Upstream reference: Roslyn LanguageServerProtocol definition and references tests for extension methods.
         Adapted fixture: fixtures/csharp/lsp-parity/.
