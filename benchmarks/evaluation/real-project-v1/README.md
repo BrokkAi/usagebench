@@ -18,6 +18,15 @@ replaced only through the deterministic, source-only procedure in the protocol;
 an analyzer result is never a reason to select, exclude, replace, or alter a
 case.
 
+The recorded population frame has a uniform 20,000-star minimum. This keeps
+each profile below GitHub Search's 1,000-result window while retaining a
+complete, source-only eligible population rather than selecting a ranked prefix.
+Capture spaces GitHub REST requests by 800 ms so the complete snapshot remains
+within the authenticated API budget.
+If a transient request fails, capture resumes from its uncommitted
+`population.partial.json` checkpoint; only the completed `population.json`
+belongs in the immutable population commit.
+
 ## Selection procedure
 
 1. Capture the GitHub API population in `population.json`, including the exact
@@ -26,6 +35,17 @@ case.
    drawing any repository.
 2. Apply the recorded eligibility and exclusion checks. Preserve the complete
    ranked candidate list, including exclusions and reasons, in `selection.json`.
+
+   ```bash
+   cargo run -- capture-real-project-population
+   git add benchmarks/evaluation/real-project-v1/population.json
+   git commit -m "Capture real-project-v1 population"
+   cargo run -- draw-real-project-selection --protocol-commit <protocol-introducing-commit>
+   ```
+
+   The draw command rejects a missing, uncommitted, or modified population
+   snapshot. It only reads the frozen protocol and snapshot; it never calls an
+   analyzer or language server.
 3. Archive each selected exact Git commit with `git archive`; record the commit,
    tree, relative archive path, and SHA-256 in `sources.json`.
 4. Author YAML documents under `benchmarks/cases/evaluation/real-project-v1/`

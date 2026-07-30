@@ -4,11 +4,28 @@
   "title": "UsageBench Evaluation Selection",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "freezeId", "protocol", "documents"],
+  "required": ["schemaVersion", "freezeId", "protocol"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "freezeId": { "type": "string", "minLength": 1 },
     "protocol": { "$ref": "#/$defs/artifactLink" },
+    "population": { "$ref": "#/$defs/artifactLink" },
+    "protocolCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["language", "candidateId", "ranked", "selected"],
+        "properties": {
+          "language": { "type": "string", "minLength": 1 },
+          "candidateId": { "type": "string", "minLength": 1 },
+          "ranked": { "type": "array" },
+          "selected": { "type": "array" }
+        }
+      }
+    },
+    "replacements": { "type": "array" },
     "documents": {
       "type": "array",
       "minItems": 1,

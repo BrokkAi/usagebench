@@ -6,6 +6,10 @@ use usagebench::bifrost_runner::{
     TypeLookupReport, UsageDefinitionReport,
 };
 use usagebench::freeze::{create_manifest, FreezeManifestOptions, SnapshotKind};
+use usagebench::real_project::{
+    capture_population, draw_selection, require_committed_population, CapturePopulationOptions,
+    DrawSelectionOptions,
+};
 use usagebench::reproduction::{create_native_evidence, CreateNativeEvidenceOptions};
 use usagebench::runners::lsp::{run_lsp, RunLspOptions};
 
@@ -19,6 +23,51 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Capture a source-only GitHub repository population for real-project-v1.
+    CaptureRealProjectPopulation {
+        /// Frozen real-project protocol to bind into the snapshot.
+        #[arg(
+            long,
+            default_value = "benchmarks/evaluation/real-project-v1/protocol.json"
+        )]
+        protocol: PathBuf,
+        /// Destination population manifest.
+        #[arg(
+            long,
+            default_value = "benchmarks/evaluation/real-project-v1/population.json"
+        )]
+        output: PathBuf,
+        /// GitHub REST API base URL.
+        #[arg(long, default_value = "https://api.github.com")]
+        github_api_base: String,
+        /// Optional UTC RFC3339 capture timestamp, useful for deterministic fixture runs.
+        #[arg(long)]
+        captured_at: Option<String>,
+    },
+    /// Draw a real-project-v1 selection from an already captured population snapshot.
+    DrawRealProjectSelection {
+        /// Frozen real-project protocol used for the source-only draw.
+        #[arg(
+            long,
+            default_value = "benchmarks/evaluation/real-project-v1/protocol.json"
+        )]
+        protocol: PathBuf,
+        /// Previously captured and committed population snapshot.
+        #[arg(
+            long,
+            default_value = "benchmarks/evaluation/real-project-v1/population.json"
+        )]
+        population: PathBuf,
+        /// Destination selection manifest.
+        #[arg(
+            long,
+            default_value = "benchmarks/evaluation/real-project-v1/selection.json"
+        )]
+        output: PathBuf,
+        /// Exact commit that introduced the frozen protocol.
+        #[arg(long)]
+        protocol_commit: String,
+    },
     /// Validate benchmark case YAML files.
     Validate {
         /// Case file or directory to validate.
@@ -195,6 +244,43 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Command::CaptureRealProjectPopulation {
+            protocol,
+            output,
+            github_api_base,
+            captured_at,
+        } => {
+            let snapshot = capture_population(CapturePopulationOptions {
+                protocol,
+                output: output.clone(),
+                github_api_base,
+                captured_at,
+            })?;
+            println!(
+                "captured {} profile population(s) to {}",
+                snapshot.profiles.len(),
+                output.display()
+            );
+        }
+        Command::DrawRealProjectSelection {
+            protocol,
+            population,
+            output,
+            protocol_commit,
+        } => {
+            require_committed_population(&population)?;
+            let selection = draw_selection(DrawSelectionOptions {
+                protocol,
+                population,
+                output: output.clone(),
+                protocol_commit,
+            })?;
+            println!(
+                "drew {} profile selection(s) to {}",
+                selection.profiles.len(),
+                output.display()
+            );
+        }
         Command::Validate { path } => {
             let files = usagebench::validate_path(&path)?;
             println!("validated {} benchmark case file(s)", files.len());
