@@ -26,11 +26,12 @@
     "population": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["snapshot", "eligibility", "exclusions"],
+      "required": ["snapshot", "eligibility", "exclusions", "minimumStars"],
       "properties": {
         "snapshot": { "type": "string", "minLength": 1 },
         "eligibility": { "type": "string", "minLength": 1 },
-        "exclusions": { "type": "string", "minLength": 1 }
+        "exclusions": { "type": "string", "minLength": 1 },
+        "minimumStars": { "type": "integer", "minimum": 1 }
       }
     },
     "sampling": {

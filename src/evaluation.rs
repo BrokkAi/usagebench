@@ -54,6 +54,7 @@ struct EvaluationSelection {
     schema_version: u32,
     freeze_id: String,
     protocol: ArtifactLink,
+    #[serde(default)]
     documents: Vec<SelectedDocument>,
 }
 
@@ -638,7 +639,7 @@ mod tests {
                     {"language": "go", "candidateId": "gopls", "profile": "adapters/lsp/gopls.json"},
                     {"language": "python", "candidateId": "pyright", "profile": "adapters/lsp/pyright.json"}
                 ],
-                "population": {"snapshot": "population.json", "eligibility": "documented", "exclusions": "documented"},
+                "population": {"snapshot": "population.json", "eligibility": "documented", "exclusions": "documented", "minimumStars": 100},
                 "sampling": {"seedDerivation": "protocol commit", "repositoriesPerProfile": 4, "declarationsPerRepository": 3, "replacementRule": "documented"},
                 "operations": ["references", "definition"],
                 "claimScope": "the sampled repositories"
@@ -737,7 +738,7 @@ mod tests {
                     {"language": "go", "candidateId": "gopls", "profile": "adapters/lsp/gopls.json"},
                     {"language": "python", "candidateId": "pyright", "profile": "adapters/lsp/pyright.json"}
                 ],
-                "population": {"snapshot": "population.json", "eligibility": "documented", "exclusions": "documented"},
+                "population": {"snapshot": "population.json", "eligibility": "documented", "exclusions": "documented", "minimumStars": 100},
                 "sampling": {"seedDerivation": "protocol commit", "repositoriesPerProfile": 4, "declarationsPerRepository": 3, "replacementRule": "documented"},
                 "operations": ["references"],
                 "claimScope": "the sampled repositories"

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BrokkAi/usagebench/schema/evaluation-population.schema.json",
+  "title": "UsageBench Real-project Population Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "freezeId", "protocol", "capturedAt", "profiles"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "freezeId": { "type": "string", "minLength": 1 },
+    "protocol": { "$ref": "#/$defs/artifactLink" },
+    "capturedAt": { "type": "string", "format": "date-time" },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["language", "candidateId", "requests", "repositories"],
+        "properties": {
+          "language": { "type": "string", "minLength": 1 },
+          "candidateId": { "type": "string", "minLength": 1 },
+          "requests": { "type": "array", "minItems": 1 },
+          "repositories": { "type": "array" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "artifactLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "sha256"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}
