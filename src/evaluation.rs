@@ -5,14 +5,17 @@
 //! identities that were fixed before analyzer outcomes are inspected.
 
 use crate::{
-    is_exact_git_commit, BenchmarkDocument, CorpusPartition, GroundTruthReviewStatus, Source,
+    benchmark_source_path, is_exact_git_commit, BenchmarkDocument, CorpusPartition,
+    GroundTruthReviewStatus, Location, NavigationOperation, Source, SymbolKind, SymbolLocation,
 };
 use anyhow::{anyhow, bail, Context, Result};
+use flate2::read::GzDecoder;
 use serde::{de::DeserializeOwned, Deserialize};
 use sha2::{Digest, Sha256};
 use std::{
-    collections::BTreeSet,
+    collections::{BTreeMap, BTreeSet},
     fs,
+    io::{Read, Write},
     path::{Component, Path, PathBuf},
     process::{Command, Stdio},
 };
@@ -24,6 +27,51 @@ const EVALUATION_SELECTION_SCHEMA: &str =
 const EVALUATION_REVIEW_SCHEMA: &str = include_str!("../schema/evaluation-review.schema.json");
 const SOURCE_MATERIALIZATION_SCHEMA: &str =
     include_str!("../schema/source-materialization.schema.json");
+const MAX_COMPRESSED_ARCHIVE_BYTES: u64 = 256 * 1024 * 1024;
+const MAX_EXPANDED_ARCHIVE_BYTES: u64 = 2 * 1024 * 1024 * 1024;
+const MAX_ARCHIVE_FILE_BYTES: u64 = 256 * 1024 * 1024;
+const MAX_ARCHIVE_ENTRIES: usize = 200_000;
+const MAX_PAX_HEADER_BYTES: u64 = 1024;
+const MAX_TAR_STREAM_BYTES: u64 =
+    MAX_EXPANDED_ARCHIVE_BYTES + (MAX_ARCHIVE_ENTRIES as u64 * 1024) + 1024 * 1024;
+
+struct BoundedReader<R> {
+    inner: R,
+    remaining: u64,
+}
+
+struct ArchiveTreeEntry {
+    path: String,
+    mode: &'static str,
+}
+
+impl<R: Read> BoundedReader<R> {
+    fn new(inner: R) -> Self {
+        Self {
+            inner,
+            remaining: MAX_TAR_STREAM_BYTES,
+        }
+    }
+}
+
+impl<R: Read> Read for BoundedReader<R> {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        if self.remaining == 0 {
+            let mut extra = [0_u8; 1];
+            return match self.inner.read(&mut extra)? {
+                0 => Ok(0),
+                _ => Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "materialized source archive exceeds the tar-stream limit",
+                )),
+            };
+        }
+        let length = buffer.len().min(self.remaining as usize);
+        let read = self.inner.read(&mut buffer[..length])?;
+        self.remaining -= read as u64;
+        Ok(read)
+    }
+}
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,6 +79,14 @@ struct EvaluationProtocol {
     schema_version: u32,
     freeze_id: String,
     target_profiles: Vec<TargetProfile>,
+    sampling: EvaluationSampling,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct EvaluationSampling {
+    repositories_per_profile: usize,
+    declarations_per_repository: usize,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -54,8 +110,57 @@ struct EvaluationSelection {
     schema_version: u32,
     freeze_id: String,
     protocol: ArtifactLink,
-    #[serde(default)]
+    protocol_commit: String,
+    profiles: Vec<SelectionProfile>,
     documents: Vec<SelectedDocument>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SelectionProfile {
+    language: String,
+    candidate_id: String,
+    selected: Vec<PlannedRepository>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PlannedRepository {
+    full_name: String,
+    source: GitSource,
+    case_file: String,
+    case_ids: Vec<String>,
+    declaration_draw: DeclarationDraw,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct DeclarationDraw {
+    selected: Vec<SelectedDeclaration>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SelectedDeclaration {
+    case_id: String,
+    rank: usize,
+    uri: Url,
+    range: crate::Range,
+    kind: SymbolKind,
+    display_name: String,
+}
+
+impl SelectedDeclaration {
+    fn symbol(&self) -> SymbolLocation {
+        SymbolLocation {
+            location: Location {
+                uri: self.uri.clone(),
+                range: self.range.clone(),
+            },
+            kind: self.kind.clone(),
+            display_name: self.display_name.clone(),
+            disambiguation: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -95,6 +200,58 @@ struct ReviewArtifact {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct ReviewerEvidence {
+    schema_version: u32,
+    reviewer: String,
+    reference_policy: String,
+    selection_algorithm: String,
+    records: Vec<EvidenceRecord>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AdjudicationEvidence {
+    schema_version: u32,
+    freeze_id: String,
+    protocol_commit: String,
+    records: Vec<EvidenceRecord>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct EvidenceRecord {
+    case_id: String,
+    decision: String,
+    declaration: EvidenceDeclaration,
+    expected_usages: Vec<SymbolLocation>,
+    definition_usage: Option<SymbolLocation>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct EvidenceDeclaration {
+    repository: String,
+    commit: String,
+    language: String,
+    selection_rank: usize,
+    location: Location,
+    kind: SymbolKind,
+    display_name: String,
+}
+
+impl EvidenceDeclaration {
+    fn symbol(&self) -> SymbolLocation {
+        SymbolLocation {
+            location: self.location.clone(),
+            kind: self.kind.clone(),
+            display_name: self.display_name.clone(),
+            disambiguation: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct SourceMaterialization {
     schema_version: u32,
     freeze_id: String,
@@ -107,9 +264,19 @@ struct SourceMaterialization {
 struct MaterializedSource {
     repo: Url,
     commit: String,
+    commit_object: String,
     tree: String,
+    archive_tree: String,
     archive: String,
     sha256: String,
+    #[serde(default)]
+    gitlinks: Vec<Gitlink>,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+struct Gitlink {
+    path: String,
+    commit: String,
 }
 
 /// Validate the evidence linked from one evaluation document.
@@ -191,6 +358,7 @@ pub fn validate_document_evidence(
     }
     validate_document_source(document, &selected.source)?;
     validate_case_ids(document, &selected.case_ids, &case_file)?;
+    validate_document_draw(document, &selection, &case_file)?;
 
     let (review, review_bytes) = load_checked::<EvaluationReview>(
         &review_path,
@@ -210,7 +378,7 @@ pub fn validate_document_evidence(
         &selection_bytes,
         "evaluation review selection",
     )?;
-    validate_reviewers(document, &review, repo_root)?;
+    validate_reviewers(document, &selection, &review, repo_root)?;
 
     let (source_lock, _) = load_checked::<SourceMaterialization>(
         &source_lock_path,
@@ -231,6 +399,7 @@ pub fn validate_document_evidence(
         "evaluation source lock selection",
     )?;
     validate_source_lock(&source_lock.sources, &selected.source, repo_root)?;
+    validate_archive_ranges(document, &source_lock.sources, &selected.source, repo_root)?;
 
     let _ = review_bytes;
     Ok(())
@@ -238,7 +407,11 @@ pub fn validate_document_evidence(
 
 /// Validate a path containing only promoted evaluation documents.
 pub fn validate_path(path: impl AsRef<Path>) -> Result<Vec<PathBuf>> {
+    let path = path.as_ref();
     let files = crate::validate_path(path)?;
+    let repo_root = crate::find_repo_root_for_path(path)?;
+    let mut actual_documents = BTreeMap::<String, BTreeSet<String>>::new();
+    let mut selection_manifest = None::<String>;
     for file in &files {
         let yaml = fs::read_to_string(file).with_context(|| format!("read {}", file.display()))?;
         let document: BenchmarkDocument = serde_yaml::from_str(&yaml)
@@ -246,8 +419,152 @@ pub fn validate_path(path: impl AsRef<Path>) -> Result<Vec<PathBuf>> {
         if document.corpus.partition != CorpusPartition::Evaluation {
             bail!("{} is not an evaluation document", file.display());
         }
+        let manifest = required_metadata(&document.corpus.selection_manifest, "selectionManifest")?;
+        if let Some(expected) = &selection_manifest {
+            require_same("evaluation corpus selection manifest", manifest, expected)?;
+        } else {
+            selection_manifest = Some(manifest.to_string());
+        }
+        let relative = repo_relative(file, &repo_root)?;
+        let case_ids = document
+            .cases
+            .iter()
+            .map(|case| case.id.clone())
+            .collect::<BTreeSet<_>>();
+        if case_ids.len() != document.cases.len()
+            || actual_documents
+                .insert(relative.clone(), case_ids)
+                .is_some()
+        {
+            bail!("evaluation corpus contains duplicate cases or document {relative}");
+        }
+    }
+
+    if path.is_dir() {
+        let selection_path = evidence_path(
+            &repo_root,
+            selection_manifest
+                .as_deref()
+                .context("evaluation corpus has no selection manifest")?,
+        )?;
+        let (selection, _) = load_checked::<EvaluationSelection>(
+            &selection_path,
+            EVALUATION_SELECTION_SCHEMA,
+            "evaluation selection manifest",
+        )?;
+        let protocol_path = evidence_path(&repo_root, &selection.protocol.file)?;
+        let (protocol, protocol_bytes) = load_checked::<EvaluationProtocol>(
+            &protocol_path,
+            EVALUATION_PROTOCOL_SCHEMA,
+            "evaluation protocol",
+        )?;
+        validate_link(
+            &selection.protocol,
+            &protocol_path,
+            &protocol_bytes,
+            "evaluation selection protocol",
+        )?;
+        validate_selection_coverage(&actual_documents, &selection, &protocol)?;
     }
     Ok(files)
+}
+
+fn validate_selection_coverage(
+    actual_documents: &BTreeMap<String, BTreeSet<String>>,
+    selection: &EvaluationSelection,
+    protocol: &EvaluationProtocol,
+) -> Result<()> {
+    let expected_documents = selection
+        .documents
+        .iter()
+        .map(|document| {
+            (
+                document.case_file.clone(),
+                document.case_ids.iter().cloned().collect::<BTreeSet<_>>(),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    if expected_documents.len() != selection.documents.len() {
+        bail!("evaluation selection contains duplicate document paths");
+    }
+    let expected_case_ids = selection
+        .documents
+        .iter()
+        .flat_map(|document| document.case_ids.iter())
+        .collect::<BTreeSet<_>>();
+    if expected_case_ids.len()
+        != selection
+            .documents
+            .iter()
+            .map(|document| document.case_ids.len())
+            .sum::<usize>()
+    {
+        bail!("evaluation selection contains duplicate case IDs across documents");
+    }
+    let actual_case_ids = actual_documents
+        .values()
+        .flat_map(|case_ids| case_ids.iter())
+        .collect::<BTreeSet<_>>();
+    if actual_case_ids.len() != actual_documents.values().map(BTreeSet::len).sum::<usize>() {
+        bail!("evaluation corpus contains duplicate case IDs across documents");
+    }
+    if actual_documents != &expected_documents {
+        bail!("evaluation corpus documents and case IDs do not exactly cover the selection");
+    }
+    if selection.profiles.len() != protocol.target_profiles.len() {
+        bail!("evaluation repository draw does not cover every target profile");
+    }
+    let mut profile_identities = BTreeSet::new();
+    let mut planned_documents = BTreeMap::new();
+    for profile in &selection.profiles {
+        if !protocol.target_profiles.iter().any(|target| {
+            target.language == profile.language && target.candidate_id == profile.candidate_id
+        }) || !profile_identities.insert((&profile.language, &profile.candidate_id))
+        {
+            bail!("evaluation repository draw contains an unknown or duplicate target profile");
+        }
+        if profile.selected.len() != protocol.sampling.repositories_per_profile {
+            bail!("evaluation repository draw has the wrong repository count for a profile");
+        }
+        for repository in &profile.selected {
+            let selected_document = selection
+                .documents
+                .iter()
+                .find(|document| document.case_file == repository.case_file)
+                .context("repository draw is missing its selected document")?;
+            if selected_document.language != profile.language
+                || selected_document.candidate_id != profile.candidate_id
+                || selected_document.source != repository.source
+                || selected_document.case_ids != repository.case_ids
+            {
+                bail!("evaluation selected document identity does not match its repository draw");
+            }
+            let case_ids = repository.case_ids.iter().cloned().collect::<BTreeSet<_>>();
+            if case_ids.len() != repository.case_ids.len()
+                || case_ids.len() != protocol.sampling.declarations_per_repository
+                || planned_documents
+                    .insert(repository.case_file.clone(), case_ids.clone())
+                    .is_some()
+            {
+                bail!("evaluation repository draw contains duplicate documents or case IDs");
+            }
+            let declaration_case_ids = repository
+                .declaration_draw
+                .selected
+                .iter()
+                .map(|declaration| declaration.case_id.clone())
+                .collect::<BTreeSet<_>>();
+            if declaration_case_ids.len() != repository.declaration_draw.selected.len()
+                || declaration_case_ids != case_ids
+            {
+                bail!("evaluation declaration draw does not cover its planned case IDs");
+            }
+        }
+    }
+    if planned_documents != expected_documents {
+        bail!("evaluation documents do not exactly cover the repository draw");
+    }
+    Ok(())
 }
 
 /// Extract the locked source archive for an evaluation document into a runner
@@ -281,38 +598,119 @@ pub fn materialized_source_root(
     let [source] = matching.as_slice() else {
         bail!("source lock does not contain exactly one entry for the evaluation document source");
     };
+    let selected = GitSource {
+        repo: repo.clone(),
+        commit: commit.clone(),
+    };
+    validate_source_lock(&source_lock.sources, &selected, repo_root)?;
     let archive_path = evidence_path(repo_root, &source.archive)?;
-    let destination = work_dir.join("sources").join(&source.sha256);
-    if destination.is_dir() {
-        return destination
-            .canonicalize()
-            .with_context(|| format!("canonicalize {}", destination.display()))
-            .map(Some);
-    }
-    fs::create_dir_all(&destination)
-        .with_context(|| format!("create materialized source root {}", destination.display()))?;
-    let status = Command::new("tar")
-        .arg("-xf")
-        .arg(&archive_path)
-        .arg("-C")
-        .arg(&destination)
-        .status()
-        .with_context(|| {
-            format!(
-                "extract materialized source archive {}",
-                archive_path.display()
-            )
-        })?;
-    if !status.success() {
-        bail!(
-            "extract materialized source archive {}",
-            archive_path.display()
-        );
-    }
+    let sources_directory = work_dir.join("sources");
+    fs::create_dir_all(&sources_directory).with_context(|| {
+        format!(
+            "create materialized source cache {}",
+            sources_directory.display()
+        )
+    })?;
+    let temporary = tempfile::Builder::new()
+        .prefix(&format!("{}-", source.sha256))
+        .tempdir_in(&sources_directory)
+        .context("create temporary materialized source root")?;
+    let _ = extract_materialized_archive(&archive_path, temporary.path(), commit)?;
+    let destination = temporary.keep();
     destination
         .canonicalize()
         .with_context(|| format!("canonicalize {}", destination.display()))
         .map(Some)
+}
+
+fn extract_materialized_archive(
+    archive_path: &Path,
+    destination: &Path,
+    expected_commit: &str,
+) -> Result<Vec<ArchiveTreeEntry>> {
+    let file = fs::File::open(archive_path).with_context(|| {
+        format!(
+            "open materialized source archive {}",
+            archive_path.display()
+        )
+    })?;
+    let mut archive = tar::Archive::new(BoundedReader::new(GzDecoder::new(file)));
+    let mut entry_count = 0_usize;
+    let mut expanded_bytes = 0_u64;
+    let mut seen_paths = BTreeSet::new();
+    let mut tree_entries = Vec::new();
+    for entry in archive
+        .entries()
+        .with_context(|| format!("read entries from {}", archive_path.display()))?
+        .raw(true)
+    {
+        let mut entry =
+            entry.with_context(|| format!("read entry from {}", archive_path.display()))?;
+        entry_count += 1;
+        if entry_count > MAX_ARCHIVE_ENTRIES {
+            bail!("materialized source archive contains too many entries");
+        }
+        let entry_type = entry.header().entry_type();
+        if entry_type.is_pax_global_extensions() {
+            validate_global_pax_header(&mut entry, expected_commit)?;
+            continue;
+        }
+        if entry_type.is_pax_local_extensions()
+            || entry_type.is_gnu_longname()
+            || entry_type.is_gnu_longlink()
+        {
+            bail!("materialized source archive contains unsupported extension metadata");
+        }
+        let path = entry.path().context("decode materialized source path")?;
+        validate_archive_path(&path)?;
+        let path = path
+            .to_str()
+            .context("materialized source path is not valid UTF-8")?
+            .to_string();
+        if !(entry_type.is_file() || entry_type.is_dir() || entry_type.is_symlink()) {
+            bail!("materialized source archive contains an unsupported entry type");
+        }
+        let size = if entry_type.is_symlink() {
+            entry
+                .link_name()?
+                .context("archived symlink has no target")?
+                .as_os_str()
+                .len() as u64
+        } else {
+            entry.size()
+        };
+        if size > MAX_ARCHIVE_FILE_BYTES {
+            bail!("materialized source archive entry exceeds the file-size limit");
+        }
+        expanded_bytes = expanded_bytes
+            .checked_add(size)
+            .context("materialized source archive expanded-size overflow")?;
+        if expanded_bytes > MAX_EXPANDED_ARCHIVE_BYTES {
+            bail!("materialized source archive exceeds the expanded-size limit");
+        }
+        if !entry
+            .unpack_in(destination)
+            .context("extract validated materialized source entry")?
+        {
+            bail!("materialized source archive entry escaped the destination");
+        }
+        if !entry_type.is_dir() {
+            if !seen_paths.insert(path.clone()) {
+                bail!("materialized source archive contains duplicate path {path}");
+            }
+            tree_entries.push(ArchiveTreeEntry {
+                path,
+                mode: if entry_type.is_symlink() {
+                    "120000"
+                } else if entry.header().mode().unwrap_or(0) & 0o111 != 0 {
+                    "100755"
+                } else {
+                    "100644"
+                },
+            });
+        }
+    }
+    Ok(tree_entries)
 }
 
 fn load_checked<T: DeserializeOwned>(
@@ -459,8 +857,47 @@ fn validate_case_ids(
     Ok(())
 }
 
+fn validate_document_draw(
+    document: &BenchmarkDocument,
+    selection: &EvaluationSelection,
+    case_file: &str,
+) -> Result<()> {
+    let planned = selection
+        .profiles
+        .iter()
+        .flat_map(|profile| &profile.selected)
+        .filter(|repository| repository.case_file == case_file)
+        .collect::<Vec<_>>();
+    let [planned] = planned.as_slice() else {
+        bail!("evaluation repository draw does not contain exactly one entry for {case_file}");
+    };
+    validate_document_source(document, &planned.source)?;
+    for case in &document.cases {
+        let selected = planned
+            .declaration_draw
+            .selected
+            .iter()
+            .filter(|declaration| declaration.case_id == case.id)
+            .collect::<Vec<_>>();
+        let [selected] = selected.as_slice() else {
+            bail!(
+                "evaluation declaration draw does not contain exactly one slot for {}",
+                case.id
+            );
+        };
+        if selected.rank == 0 || case.declaration.as_ref() != Some(&selected.symbol()) {
+            bail!(
+                "evaluation case {} does not match its declaration draw",
+                case.id
+            );
+        }
+    }
+    Ok(())
+}
+
 fn validate_reviewers(
     document: &BenchmarkDocument,
+    selection: &EvaluationSelection,
     review: &EvaluationReview,
     repo_root: &Path,
 ) -> Result<()> {
@@ -481,17 +918,190 @@ fn validate_reviewers(
     if actual.len() != review.reviewers.len() || actual != expected {
         bail!("evaluation review evidence reviewers do not match groundTruth reviewers");
     }
+    let selected_case_ids = selection
+        .documents
+        .iter()
+        .flat_map(|document| document.case_ids.iter().cloned())
+        .collect::<BTreeSet<_>>();
+    let mut reviewer_records = Vec::new();
     for reviewer in &review.reviewers {
-        validate_review_artifact(reviewer, repo_root, "reviewer evidence")?;
+        let evidence =
+            load_review_artifact::<ReviewerEvidence>(reviewer, repo_root, "reviewer evidence")?;
+        validate_schema_version(evidence.schema_version, "reviewer evidence")?;
+        require_same(
+            "reviewer evidence identity",
+            &evidence.reviewer,
+            &reviewer.id,
+        )?;
+        require_same(
+            "reviewer evidence reference policy",
+            &evidence.reference_policy,
+            "bindings_optional",
+        )?;
+        require_same(
+            "reviewer evidence selection algorithm",
+            &evidence.selection_algorithm,
+            "real-project-v1-source-syntax-v1",
+        )?;
+        validate_evidence_records(&evidence.records, &selected_case_ids, "reviewer evidence")?;
+        for record in &evidence.records {
+            validate_evidence_identity(record, selection, "reviewer evidence")?;
+        }
+        reviewer_records.push(evidence.records);
     }
-    validate_review_artifact(&review.adjudication, repo_root, "adjudication evidence")
+    let adjudication = load_review_artifact::<AdjudicationEvidence>(
+        &review.adjudication,
+        repo_root,
+        "adjudication evidence",
+    )?;
+    validate_schema_version(adjudication.schema_version, "adjudication evidence")?;
+    require_same(
+        "adjudication freezeId",
+        &adjudication.freeze_id,
+        &selection.freeze_id,
+    )?;
+    require_same(
+        "adjudication protocol commit",
+        &adjudication.protocol_commit,
+        &selection.protocol_commit,
+    )?;
+    validate_evidence_records(
+        &adjudication.records,
+        &selected_case_ids,
+        "adjudication evidence",
+    )?;
+    for record in &adjudication.records {
+        validate_evidence_identity(record, selection, "adjudication evidence")?;
+    }
+
+    for case in &document.cases {
+        let adjudicated = adjudication
+            .records
+            .iter()
+            .find(|record| record.case_id == case.id)
+            .with_context(|| format!("adjudication is missing case {}", case.id))?;
+        let declaration = case
+            .declaration
+            .as_ref()
+            .with_context(|| format!("evaluation case {} is missing a declaration", case.id))?;
+        if adjudicated.declaration.symbol() != *declaration
+            || adjudicated.expected_usages != case.expected_usages
+        {
+            bail!(
+                "evaluation case {} does not match adjudicated evidence",
+                case.id
+            );
+        }
+        let [lookup] = case.usage_lookups.as_slice() else {
+            bail!(
+                "evaluation case {} must contain one definition lookup",
+                case.id
+            );
+        };
+        if lookup.operation != NavigationOperation::Definition
+            || lookup.expected_declaration != *declaration
+            || adjudicated.definition_usage.as_ref() != Some(&lookup.usage)
+        {
+            bail!(
+                "evaluation case {} definition lookup does not match adjudication",
+                case.id
+            );
+        }
+        for records in &reviewer_records {
+            let reviewed = records
+                .iter()
+                .find(|record| record.case_id == case.id)
+                .with_context(|| format!("reviewer evidence is missing case {}", case.id))?;
+            if reviewed.declaration.symbol() != *declaration {
+                bail!(
+                    "reviewer evidence declaration does not match case {}",
+                    case.id
+                );
+            }
+        }
+    }
+    Ok(())
 }
 
-fn validate_review_artifact(artifact: &ReviewArtifact, repo_root: &Path, kind: &str) -> Result<()> {
+fn load_review_artifact<T: DeserializeOwned>(
+    artifact: &ReviewArtifact,
+    repo_root: &Path,
+    kind: &str,
+) -> Result<T> {
     let path = evidence_path(repo_root, &artifact.file)?;
     let bytes = fs::read(&path).with_context(|| format!("read {kind} {}", path.display()))?;
     if !is_hex_digest(&artifact.sha256) || sha256(&bytes) != artifact.sha256 {
         bail!("{kind} sha256 does not match {}", path.display());
+    }
+    serde_json::from_slice(&bytes).with_context(|| format!("parse {kind} {}", path.display()))
+}
+
+fn validate_evidence_records(
+    records: &[EvidenceRecord],
+    selected_case_ids: &BTreeSet<String>,
+    kind: &str,
+) -> Result<()> {
+    let case_ids = records
+        .iter()
+        .map(|record| record.case_id.clone())
+        .collect::<BTreeSet<_>>();
+    if case_ids.len() != records.len() || &case_ids != selected_case_ids {
+        bail!("{kind} case IDs do not exactly cover the selection");
+    }
+    for record in records {
+        if record.decision != "accepted" {
+            bail!("{kind} contains a non-accepted final decision");
+        }
+        let definition_usage = record
+            .definition_usage
+            .as_ref()
+            .with_context(|| format!("{kind} case {} has no definition usage", record.case_id))?;
+        if !record.expected_usages.contains(definition_usage) {
+            bail!("{kind} definition usage is not an expected usage");
+        }
+        if !is_exact_git_commit(&record.declaration.commit)
+            || record.declaration.repository.trim().is_empty()
+            || record.declaration.language.trim().is_empty()
+            || record.declaration.selection_rank == 0
+        {
+            bail!("{kind} contains an invalid declaration identity");
+        }
+    }
+    Ok(())
+}
+
+fn validate_evidence_identity(
+    record: &EvidenceRecord,
+    selection: &EvaluationSelection,
+    kind: &str,
+) -> Result<()> {
+    let matches = selection
+        .profiles
+        .iter()
+        .flat_map(|profile| {
+            profile.selected.iter().flat_map(move |repository| {
+                repository
+                    .declaration_draw
+                    .selected
+                    .iter()
+                    .filter(move |declaration| declaration.case_id == record.case_id)
+                    .map(move |declaration| (profile, repository, declaration))
+            })
+        })
+        .collect::<Vec<_>>();
+    let [(profile, repository, selected)] = matches.as_slice() else {
+        bail!("{kind} case identity does not resolve to exactly one declaration slot");
+    };
+    if record.declaration.repository != repository.full_name
+        || record.declaration.commit != repository.source.commit
+        || record.declaration.language != profile.language
+        || record.declaration.selection_rank != selected.rank
+        || record.declaration.symbol() != selected.symbol()
+    {
+        bail!(
+            "{kind} case {} does not match selection identity",
+            record.case_id
+        );
     }
     Ok(())
 }
@@ -509,6 +1119,7 @@ fn validate_source_lock(
         bail!("source lock does not contain exactly one entry for the selected git source");
     };
     if !is_exact_git_commit(&source.tree)
+        || source.archive_tree != source.tree
         || !is_hex_digest(&source.sha256)
         || Path::new(&source.archive).is_absolute()
         || Path::new(&source.archive).components().any(|component| {
@@ -521,6 +1132,15 @@ fn validate_source_lock(
         bail!("source lock contains an invalid materialized source entry");
     }
     let archive_path = evidence_path(repo_root, &source.archive)?;
+    let archive_size = fs::metadata(&archive_path)
+        .with_context(|| format!("read metadata for {}", archive_path.display()))?
+        .len();
+    if archive_size > MAX_COMPRESSED_ARCHIVE_BYTES {
+        bail!(
+            "materialized source archive {} exceeds the compressed-size limit",
+            archive_path.display()
+        );
+    }
     let archive = fs::read(&archive_path).with_context(|| {
         format!(
             "read materialized source archive {}",
@@ -533,40 +1153,255 @@ fn validate_source_lock(
             archive_path.display()
         );
     }
-    validate_archive_commit(&archive_path, &source.commit)?;
+    validate_commit_object(source)?;
     Ok(())
 }
 
-fn validate_archive_commit(archive_path: &Path, expected_commit: &str) -> Result<()> {
-    let archive = fs::File::open(archive_path).with_context(|| {
-        format!(
-            "open materialized source archive {}",
-            archive_path.display()
-        )
-    })?;
-    let output = Command::new("git")
-        .arg("get-tar-commit-id")
-        .stdin(Stdio::from(archive))
-        .output()
-        .with_context(|| {
-            format!(
-                "read Git commit from source archive {}",
-                archive_path.display()
-            )
-        })?;
+fn validate_commit_object(source: &MaterializedSource) -> Result<()> {
+    let bytes = decode_hex(&source.commit_object).context("decode source lock commit object")?;
+    let mut child = Command::new("git")
+        .args(["hash-object", "-t", "commit", "--stdin"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .context("start Git commit-object verification")?;
+    child
+        .stdin
+        .take()
+        .context("open Git commit-object verification input")?
+        .write_all(&bytes)?;
+    let output = child
+        .wait_with_output()
+        .context("wait for Git commit-object verification")?;
     if !output.status.success() {
-        bail!(
-            "materialized source archive {} is not a git archive",
-            archive_path.display()
+        bail!("Git commit-object verification failed");
+    }
+    require_same(
+        "materialized source commit object",
+        String::from_utf8(output.stdout)?.trim(),
+        &source.commit,
+    )?;
+    let header = bytes
+        .split(|byte| *byte == b'\n')
+        .next()
+        .context("source lock commit object is empty")?;
+    require_same(
+        "materialized source commit tree",
+        std::str::from_utf8(header)?
+            .strip_prefix("tree ")
+            .unwrap_or(""),
+        &source.tree,
+    )
+}
+
+fn validate_archive_ranges(
+    document: &BenchmarkDocument,
+    sources: &[MaterializedSource],
+    selected: &GitSource,
+    repo_root: &Path,
+) -> Result<()> {
+    let source = sources
+        .iter()
+        .find(|source| source.repo == selected.repo && source.commit == selected.commit)
+        .context("selected source is missing from source lock")?;
+    let archive_path = evidence_path(repo_root, &source.archive)?;
+    let mut locations = Vec::<&SymbolLocation>::new();
+    for case in &document.cases {
+        locations.extend(
+            case.symbol_locations()
+                .into_iter()
+                .map(|(_, location)| location),
         );
     }
-    let actual = String::from_utf8(output.stdout)
-        .context("decode Git commit from materialized source archive")?;
+
+    let extracted = tempfile::tempdir().context("create archive extraction directory")?;
+    let tree_entries =
+        extract_materialized_archive(&archive_path, extracted.path(), &source.commit)?;
+    let repository = tempfile::tempdir().context("create archive tree verification repository")?;
+    git_status(repository.path(), &["init", "--bare", "--quiet"])?;
+    let mut fast_import = Command::new("git")
+        .args(["fast-import", "--quiet"])
+        .current_dir(repository.path())
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
+        .spawn()
+        .context("start Git archive-tree reconstruction")?;
+    let mut importer = fast_import
+        .stdin
+        .take()
+        .context("open Git archive-tree reconstruction input")?;
+    importer.write_all(
+        b"feature done\ncommit refs/heads/archive\ncommitter UsageBench <usagebench@example.invalid> 0 +0000\ndata 0\n\n",
+    )?;
+    for entry in tree_entries {
+        let path = extracted.path().join(&entry.path);
+        let bytes = if entry.mode == "120000" {
+            fs::read_link(&path)?
+                .to_str()
+                .context("archived symlink target is not valid UTF-8")?
+                .as_bytes()
+                .to_vec()
+        } else {
+            fs::read(&path)
+                .with_context(|| format!("read extracted archive entry {}", entry.path))?
+        };
+        fast_import_inline(&mut importer, entry.mode, &entry.path, &bytes)?;
+    }
+    for gitlink in &source.gitlinks {
+        if !is_exact_git_commit(&gitlink.commit) {
+            bail!("source lock contains an invalid gitlink commit");
+        }
+        let path = Path::new(&gitlink.path);
+        validate_archive_path(path)?;
+        writeln!(
+            importer,
+            "M 160000 {} {}",
+            gitlink.commit,
+            serde_json::to_string(&gitlink.path)?
+        )?;
+    }
+    importer.write_all(b"\ndone\n")?;
+    drop(importer);
+    let output = fast_import
+        .wait_with_output()
+        .context("wait for Git archive-tree reconstruction")?;
+    if !output.status.success() {
+        bail!(
+            "reconstruct materialized source Git tree: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
+    }
+    let actual_tree = git_stdout(
+        repository.path(),
+        &["rev-parse", "refs/heads/archive^{tree}"],
+    )?;
     require_same(
-        "materialized source archive commit",
-        actual.trim(),
-        expected_commit,
-    )
+        "materialized source archive content tree",
+        &actual_tree,
+        &source.archive_tree,
+    )?;
+
+    for location in locations {
+        let relative = benchmark_source_path(&location.location.uri)?;
+        let relative = relative
+            .to_str()
+            .context("evaluation source path is not valid UTF-8")?
+            .to_string();
+        let source_path = extracted.path().join(&relative);
+        let metadata = fs::symlink_metadata(&source_path).with_context(|| {
+            format!(
+                "location uri {} maps to missing archived source file",
+                location.location.uri
+            )
+        })?;
+        if !metadata.file_type().is_file() {
+            bail!(
+                "location uri {} does not map to a regular archived source file",
+                location.location.uri
+            );
+        }
+        let text = fs::read_to_string(&source_path)
+            .with_context(|| format!("decode referenced archived source file {relative}"))?;
+        location
+            .location
+            .range
+            .validate_with_source_text(&text, document.position_encoding)
+            .with_context(|| format!("range for {} in archived source", location.location.uri))?;
+        if !location.location.range.is_zero_width() {
+            let selected_text = location
+                .location
+                .range
+                .text_from_source(&text, document.position_encoding)?;
+            if selected_text != location.display_name {
+                bail!(
+                    "range for {} does not select displayName {:?}",
+                    location.location.uri,
+                    location.display_name
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
+fn validate_archive_path(path: &Path) -> Result<()> {
+    if path.as_os_str().is_empty()
+        || path.is_absolute()
+        || path.as_os_str().to_string_lossy().starts_with('-')
+        || path.components().next().is_some_and(
+            |component| matches!(component, Component::Normal(value) if value == ".git"),
+        )
+        || path.components().any(|component| {
+            matches!(
+                component,
+                Component::ParentDir | Component::RootDir | Component::Prefix(_)
+            )
+        })
+    {
+        bail!("materialized source archive contains an unsafe path");
+    }
+    Ok(())
+}
+
+fn validate_global_pax_header<R: Read>(
+    entry: &mut tar::Entry<'_, R>,
+    expected_commit: &str,
+) -> Result<()> {
+    if entry.size() > MAX_PAX_HEADER_BYTES {
+        bail!("materialized source archive global PAX header is too large");
+    }
+    let extensions = entry
+        .pax_extensions()
+        .context("read materialized source global PAX header")?
+        .context("materialized source global PAX header is empty")?
+        .collect::<std::io::Result<Vec<_>>>()?;
+    let [extension] = extensions.as_slice() else {
+        bail!("materialized source archive has unexpected global PAX metadata");
+    };
+    if extension.key()? != "comment" || extension.value()? != expected_commit {
+        bail!("materialized source archive has unexpected global PAX metadata");
+    }
+    Ok(())
+}
+
+fn fast_import_inline(
+    importer: &mut impl Write,
+    mode: &str,
+    path: &str,
+    bytes: &[u8],
+) -> Result<()> {
+    writeln!(importer, "M {mode} inline {}", serde_json::to_string(path)?)?;
+    writeln!(importer, "data {}", bytes.len())?;
+    importer.write_all(bytes)?;
+    importer.write_all(b"\n")?;
+    Ok(())
+}
+
+fn git_status(path: &Path, args: &[&str]) -> Result<()> {
+    let status = Command::new("git")
+        .args(args)
+        .current_dir(path)
+        .status()
+        .with_context(|| format!("run git {}", args.join(" ")))?;
+    if !status.success() {
+        bail!("git {} failed", args.join(" "));
+    }
+    Ok(())
+}
+
+fn git_stdout(path: &Path, args: &[&str]) -> Result<String> {
+    let output = Command::new("git")
+        .args(args)
+        .current_dir(path)
+        .output()
+        .with_context(|| format!("run git {}", args.join(" ")))?;
+    if !output.status.success() {
+        bail!("git {} failed", args.join(" "));
+    }
+    String::from_utf8(output.stdout)
+        .context("decode git output")
+        .map(|value| value.trim().to_string())
 }
 
 fn is_hex_digest(value: &str) -> bool {
@@ -574,6 +1409,20 @@ fn is_hex_digest(value: &str) -> bool {
         && value
             .bytes()
             .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+}
+
+fn decode_hex(value: &str) -> Result<Vec<u8>> {
+    if value.len() % 2 != 0 || !value.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        bail!("invalid hexadecimal value");
+    }
+    value
+        .as_bytes()
+        .chunks_exact(2)
+        .map(|pair| {
+            let text = std::str::from_utf8(pair)?;
+            u8::from_str_radix(text, 16).context("decode hexadecimal byte")
+        })
+        .collect()
 }
 
 fn sha256(bytes: &[u8]) -> String {
@@ -584,8 +1433,8 @@ fn sha256(bytes: &[u8]) -> String {
 mod tests {
     use super::*;
     use crate::{
-        BenchmarkCase, CorpusMetadata, CorpusSelection, GroundTruthReview, PositionEncoding,
-        ReferencePolicy,
+        BenchmarkCase, CorpusMetadata, CorpusSelection, GroundTruthReview, Location, Position,
+        PositionEncoding, Range, ReferencePolicy, SymbolKind, UsageLookup,
     };
     use serde_json::json;
     use tempfile::tempdir;
@@ -612,6 +1461,51 @@ mod tests {
     }
 
     #[test]
+    fn evaluation_directory_must_cover_every_selected_document_and_case() {
+        let commit = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        let selection = EvaluationSelection {
+            schema_version: 1,
+            freeze_id: "real-project-v1".to_string(),
+            protocol: ArtifactLink {
+                file: "protocol.json".to_string(),
+                sha256: "b".repeat(64),
+            },
+            protocol_commit: commit.to_string(),
+            profiles: Vec::new(),
+            documents: vec![SelectedDocument {
+                case_file: "benchmarks/cases/evaluation/real-project-v1/go-01.yaml".to_string(),
+                language: "go".to_string(),
+                candidate_id: "gopls".to_string(),
+                source: GitSource {
+                    repo: Url::parse("https://github.com/example/project").unwrap(),
+                    commit: commit.to_string(),
+                },
+                case_ids: vec!["case-1".to_string(), "case-2".to_string()],
+            }],
+        };
+        let actual = BTreeMap::from([(
+            "benchmarks/cases/evaluation/real-project-v1/go-01.yaml".to_string(),
+            BTreeSet::from(["case-1".to_string()]),
+        )]);
+        let protocol = EvaluationProtocol {
+            schema_version: 1,
+            freeze_id: "real-project-v1".to_string(),
+            target_profiles: vec![TargetProfile {
+                language: "go".to_string(),
+                candidate_id: "gopls".to_string(),
+                profile: "adapters/lsp/gopls.json".to_string(),
+            }],
+            sampling: EvaluationSampling {
+                repositories_per_profile: 1,
+                declarations_per_repository: 2,
+            },
+        };
+
+        let error = validate_selection_coverage(&actual, &selection, &protocol).unwrap_err();
+        assert!(format!("{error:#}").contains("do not exactly cover the selection"));
+    }
+
+    #[test]
     fn matching_evaluation_evidence_is_accepted() {
         let temp = tempdir().unwrap();
         let root = temp.path();
@@ -624,11 +1518,20 @@ mod tests {
         );
         git(&archive_input, &["config", "user.name", "UsageBench test"]);
         git(&archive_input, &["config", "commit.gpgSign", "false"]);
-        fs::write(archive_input.join("source.txt"), "archived source").unwrap();
+        fs::write(archive_input.join("source.txt"), "archived archived").unwrap();
         git(&archive_input, &["add", "source.txt"]);
         git(&archive_input, &["commit", "-m", "archive source"]);
         let commit = git_stdout(&archive_input, &["rev-parse", "HEAD"]);
         let tree = git_stdout(&archive_input, &["rev-parse", "HEAD^{tree}"]);
+        let commit_object = Command::new("git")
+            .args(["cat-file", "commit", &commit])
+            .current_dir(&archive_input)
+            .output()
+            .unwrap()
+            .stdout
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>();
         let protocol_path = root.join("protocol.json");
         write_json(
             &protocol_path,
@@ -652,6 +1555,26 @@ mod tests {
                 "schemaVersion": 1,
                 "freezeId": "real-project-v1",
                 "protocol": artifact_link("protocol.json", &protocol_path),
+                "protocolCommit": commit,
+                "profiles": [{
+                    "language": "go",
+                    "candidateId": "gopls",
+                    "ranked": [],
+                    "selected": [{
+                        "fullName": "example/project",
+                        "source": {"repo": "https://github.com/example/project.git", "commit": commit},
+                        "caseFile": "cases/example.yaml",
+                        "caseIds": ["selected-call"],
+                        "declarationDraw": {"selected": [{
+                            "caseId": "selected-call",
+                            "rank": 1,
+                            "uri": "benchmark://source/source.txt",
+                            "range": {"start": {"line": 0, "character": 0}, "end": {"line": 0, "character": 8}},
+                            "kind": "variable",
+                            "displayName": "archived"
+                        }]}
+                    }]
+                }],
                 "documents": [{
                     "caseFile": "cases/example.yaml",
                     "language": "go",
@@ -664,9 +1587,7 @@ mod tests {
         let reviewer_a = root.join("review-a.json");
         let reviewer_b = root.join("review-b.json");
         let adjudication = root.join("adjudication.json");
-        fs::write(&reviewer_a, "first independent derivation").unwrap();
-        fs::write(&reviewer_b, "second independent derivation").unwrap();
-        fs::write(&adjudication, "adjudicated").unwrap();
+        write_evidence_artifacts(root, &commit, &commit);
         let review_path = root.join("review.json");
         write_json(
             &review_path,
@@ -682,11 +1603,11 @@ mod tests {
             }),
         );
         let source_lock_path = root.join("sources.json");
-        let archive = root.join("sources/example-project.tar");
+        let archive = root.join("sources/example-project.tar.gz");
         fs::create_dir_all(archive.parent().unwrap()).unwrap();
         let status = Command::new("git")
             .arg("archive")
-            .arg("--format=tar")
+            .arg("--format=tar.gz")
             .arg("--output")
             .arg(&archive)
             .arg("HEAD")
@@ -703,8 +1624,10 @@ mod tests {
                 "sources": [{
                     "repo": "https://github.com/example/project.git",
                     "commit": commit,
+                    "commitObject": commit_object,
                     "tree": tree,
-                    "archive": "sources/example-project.tar",
+                    "archiveTree": tree,
+                    "archive": "sources/example-project.tar.gz",
                     "sha256": sha256(&fs::read(&archive).unwrap())
                 }]
             }),
@@ -720,7 +1643,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             fs::read_to_string(extracted.join("source.txt")).unwrap(),
-            "archived source"
+            "archived archived"
         );
     }
 
@@ -751,6 +1674,26 @@ mod tests {
                 "schemaVersion": 1,
                 "freezeId": "real-project-v1",
                 "protocol": artifact_link("protocol.json", &protocol_path),
+                "protocolCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "profiles": [{
+                    "language": "go",
+                    "candidateId": "gopls",
+                    "ranked": [],
+                    "selected": [{
+                        "fullName": "example/project",
+                        "source": {"repo": "https://github.com/example/project.git", "commit": "dddddddddddddddddddddddddddddddddddddddd"},
+                        "caseFile": "cases/example.yaml",
+                        "caseIds": ["selected-call"],
+                        "declarationDraw": {"selected": [{
+                            "caseId": "selected-call",
+                            "rank": 1,
+                            "uri": "benchmark://source/source.txt",
+                            "range": {"start": {"line": 0, "character": 0}, "end": {"line": 0, "character": 8}},
+                            "kind": "variable",
+                            "displayName": "archived"
+                        }]}
+                    }]
+                }],
                 "documents": [{
                     "caseFile": "cases/example.yaml",
                     "language": "go",
@@ -787,7 +1730,9 @@ mod tests {
                 "sources": [{
                     "repo": "https://github.com/example/project.git",
                     "commit": "dddddddddddddddddddddddddddddddddddddddd",
+                    "commitObject": "00",
                     "tree": TREE,
+                    "archiveTree": TREE,
                     "archive": "sources/example-project.tar",
                     "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
                 }]
@@ -807,6 +1752,42 @@ mod tests {
     }
 
     fn document(commit: &str) -> BenchmarkDocument {
+        let declaration = SymbolLocation {
+            location: Location {
+                uri: Url::parse("benchmark://source/source.txt").unwrap(),
+                range: Range {
+                    start: Position {
+                        line: 0,
+                        character: 0,
+                    },
+                    end: Position {
+                        line: 0,
+                        character: 8,
+                    },
+                },
+            },
+            kind: SymbolKind::Variable,
+            display_name: "archived".to_string(),
+            disambiguation: None,
+        };
+        let usage = SymbolLocation {
+            location: Location {
+                uri: Url::parse("benchmark://source/source.txt").unwrap(),
+                range: Range {
+                    start: Position {
+                        line: 0,
+                        character: 9,
+                    },
+                    end: Position {
+                        line: 0,
+                        character: 17,
+                    },
+                },
+            },
+            kind: SymbolKind::Variable,
+            display_name: "archived".to_string(),
+            disambiguation: None,
+        };
         BenchmarkDocument {
             schema_version: 2,
             position_encoding: PositionEncoding::Utf16,
@@ -830,13 +1811,20 @@ mod tests {
             reference_policy: ReferencePolicy::BindingsOptional,
             cases: vec![BenchmarkCase {
                 id: "selected-call".to_string(),
-                declaration: None,
+                declaration: Some(declaration.clone()),
                 reference_probe: None,
-                expected_usages: Vec::new(),
+                expected_usages: vec![usage.clone()],
                 expected_unproven_usages: Vec::new(),
                 allowed_extra_usages: Vec::new(),
                 allowed_unproven_usages: Vec::new(),
-                usage_lookups: Vec::new(),
+                usage_lookups: vec![UsageLookup {
+                    operation: NavigationOperation::Definition,
+                    compatible_operations: Vec::new(),
+                    expect_no_movement: false,
+                    usage,
+                    expected_declaration: declaration,
+                    allowed_extra_targets: Vec::new(),
+                }],
                 type_lookups: Vec::new(),
                 expected_failure: None,
                 not_planned: None,
@@ -844,6 +1832,57 @@ mod tests {
                 verification: None,
             }],
         }
+    }
+
+    fn write_evidence_artifacts(root: &Path, commit: &str, protocol_commit: &str) {
+        let declaration = json!({
+            "repository": "example/project",
+            "commit": commit,
+            "language": "go",
+            "selectionRank": 1,
+            "location": {
+                "uri": "benchmark://source/source.txt",
+                "range": {"start": {"line": 0, "character": 0}, "end": {"line": 0, "character": 8}}
+            },
+            "kind": "variable",
+            "displayName": "archived"
+        });
+        let usage = json!({
+            "location": {
+                "uri": "benchmark://source/source.txt",
+                "range": {"start": {"line": 0, "character": 9}, "end": {"line": 0, "character": 17}}
+            },
+            "kind": "variable",
+            "displayName": "archived"
+        });
+        let record = json!({
+            "caseId": "selected-call",
+            "decision": "accepted",
+            "declaration": declaration,
+            "expectedUsages": [usage.clone()],
+            "definitionUsage": usage
+        });
+        for (file, reviewer) in [("review-a.json", "alice"), ("review-b.json", "bob")] {
+            write_json(
+                &root.join(file),
+                json!({
+                    "schemaVersion": 1,
+                    "reviewer": reviewer,
+                    "referencePolicy": "bindings_optional",
+                    "selectionAlgorithm": "real-project-v1-source-syntax-v1",
+                    "records": [record.clone()]
+                }),
+            );
+        }
+        write_json(
+            &root.join("adjudication.json"),
+            json!({
+                "schemaVersion": 1,
+                "freezeId": "real-project-v1",
+                "protocolCommit": protocol_commit,
+                "records": [record]
+            }),
+        );
     }
 
     fn artifact_link(file: &str, path: &Path) -> serde_json::Value {

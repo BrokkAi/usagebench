@@ -1,0 +1,293 @@
+schemaVersion: 2
+corpus:
+  partition: "evaluation"
+  selection: "pre_registered"
+  freezeId: "real-project-v1"
+  selectionManifest: "benchmarks/evaluation/real-project-v1/selection.json"
+  reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
+  sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
+groundTruth:
+  status: "independently_reviewed"
+  reviewers:
+    - "codex-source-reviewer-a"
+    - "codex-source-reviewer-b"
+referencePolicy: "bindings_optional"
+positionEncoding: "utf-16"
+source:
+  kind: "git"
+  repo: "https://github.com/odysseus-dev/odysseus"
+  commit: "28c333e64780ae2fbb7f0757d752e8bb5fb74990"
+language: "python"
+cases:
+  - id: "real-project-v1-python-04-1"
+    declaration:
+      location:
+        uri: "benchmark://source/routes/contacts/contacts_routes.py"
+        range:
+          start:
+            line: 737
+            character: 4
+          end:
+            line: 737
+            character: 25
+      kind: "function"
+      displayName: "setup_contacts_routes"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/app.py"
+          range:
+            start:
+              line: 859
+              character: 19
+            end:
+              line: 859
+              character: 40
+        kind: "function"
+        displayName: "setup_contacts_routes"
+      - location:
+          uri: "benchmark://source/tests/test_contacts_add_null_name.py"
+          range:
+            start:
+              line: 15
+              character: 16
+            end:
+              line: 15
+              character: 37
+        kind: "function"
+        displayName: "setup_contacts_routes"
+      - location:
+          uri: "benchmark://source/tests/test_contacts_import_nonstring.py"
+          range:
+            start:
+              line: 12
+              character: 13
+            end:
+              line: 12
+              character: 34
+        kind: "function"
+        displayName: "setup_contacts_routes"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/app.py"
+            range:
+              start:
+                line: 859
+                character: 19
+              end:
+                line: 859
+                character: 40
+          kind: "function"
+          displayName: "setup_contacts_routes"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/routes/contacts/contacts_routes.py"
+            range:
+              start:
+                line: 737
+                character: 4
+              end:
+                line: 737
+                character: 25
+          kind: "function"
+          displayName: "setup_contacts_routes"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Included both setup_contacts_routes calls in contact tests. They are ordinary calls, not bindings or same-name text. Included both setup_contacts_routes calls in contact tests. They are ordinary calls, not bindings or same-name text."
+  - id: "real-project-v1-python-04-2"
+    declaration:
+      location:
+        uri: "benchmark://source/src/chroma_client.py"
+        range:
+          start:
+            line: 30
+            character: 4
+          end:
+            line: 30
+            character: 21
+      kind: "function"
+      displayName: "get_chroma_client"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/scripts/migrate_faiss_to_chroma.py"
+          range:
+            start:
+              line: 91
+              character: 13
+            end:
+              line: 91
+              character: 30
+        kind: "function"
+        displayName: "get_chroma_client"
+      - location:
+          uri: "benchmark://source/scripts/migrate_faiss_to_chroma.py"
+          range:
+            start:
+              line: 144
+              character: 13
+            end:
+              line: 144
+              character: 30
+        kind: "function"
+        displayName: "get_chroma_client"
+      - location:
+          uri: "benchmark://source/src/embedding_lanes.py"
+          range:
+            start:
+              line: 255
+              character: 20
+            end:
+              line: 255
+              character: 37
+        kind: "function"
+        displayName: "get_chroma_client"
+      - location:
+          uri: "benchmark://source/src/embedding_lanes.py"
+          range:
+            start:
+              line: 282
+              character: 24
+            end:
+              line: 282
+              character: 41
+        kind: "function"
+        displayName: "get_chroma_client"
+      - location:
+          uri: "benchmark://source/src/memory_vector.py"
+          range:
+            start:
+              line: 92
+              character: 21
+            end:
+              line: 92
+              character: 38
+        kind: "function"
+        displayName: "get_chroma_client"
+      - location:
+          uri: "benchmark://source/src/memory_vector.py"
+          range:
+            start:
+              line: 195
+              character: 17
+            end:
+              line: 195
+              character: 34
+        kind: "function"
+        displayName: "get_chroma_client"
+      - location:
+          uri: "benchmark://source/src/rag_vector.py"
+          range:
+            start:
+              line: 162
+              character: 25
+            end:
+              line: 162
+              character: 42
+        kind: "function"
+        displayName: "get_chroma_client"
+      - location:
+          uri: "benchmark://source/src/rag_vector.py"
+          range:
+            start:
+              line: 447
+              character: 21
+            end:
+              line: 447
+              character: 38
+        kind: "function"
+        displayName: "get_chroma_client"
+      - location:
+          uri: "benchmark://source/tests/test_chroma_client.py"
+          range:
+            start:
+              line: 48
+              character: 11
+            end:
+              line: 48
+              character: 28
+        kind: "function"
+        displayName: "get_chroma_client"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/scripts/migrate_faiss_to_chroma.py"
+            range:
+              start:
+                line: 91
+                character: 13
+              end:
+                line: 91
+                character: 30
+          kind: "function"
+          displayName: "get_chroma_client"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/src/chroma_client.py"
+            range:
+              start:
+                line: 30
+                character: 4
+              end:
+                line: 30
+                character: 21
+          kind: "function"
+          displayName: "get_chroma_client"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Included the get_chroma_client call in tests/test_chroma_client.py. It is an ordinary module-qualified call. Retained reviewer A's valid migration-script call as definitionUsage. Included the get_chroma_client call in tests/test_chroma_client.py. It is an ordinary module-qualified call. Retained reviewer A's valid migration-script call as definitionUsage."
+  - id: "real-project-v1-python-04-3"
+    declaration:
+      location:
+        uri: "benchmark://source/src/builtin_actions.py"
+        range:
+          start:
+            line: 418
+            character: 10
+          end:
+            line: 418
+            character: 30
+      kind: "function"
+      displayName: "action_tidy_research"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/src/builtin_actions.py"
+          range:
+            start:
+              line: 2806
+              character: 21
+            end:
+              line: 2806
+              character: 41
+        kind: "function"
+        displayName: "action_tidy_research"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/src/builtin_actions.py"
+            range:
+              start:
+                line: 2806
+                character: 21
+              end:
+                line: 2806
+                character: 41
+          kind: "function"
+          displayName: "action_tidy_research"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/src/builtin_actions.py"
+            range:
+              start:
+                line: 418
+                character: 10
+              end:
+                line: 418
+                character: 30
+          kind: "function"
+          displayName: "action_tidy_research"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."

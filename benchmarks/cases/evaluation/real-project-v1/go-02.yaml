@@ -1,0 +1,315 @@
+schemaVersion: 2
+corpus:
+  partition: "evaluation"
+  selection: "pre_registered"
+  freezeId: "real-project-v1"
+  selectionManifest: "benchmarks/evaluation/real-project-v1/selection.json"
+  reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
+  sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
+groundTruth:
+  status: "independently_reviewed"
+  reviewers:
+    - "codex-source-reviewer-a"
+    - "codex-source-reviewer-b"
+referencePolicy: "bindings_optional"
+positionEncoding: "utf-16"
+source:
+  kind: "git"
+  repo: "https://github.com/gin-gonic/gin"
+  commit: "34dac209ffb6ef85cc78c5d217bbb7ad001d68fd"
+language: "go"
+cases:
+  - id: "real-project-v1-go-02-1"
+    declaration:
+      location:
+        uri: "benchmark://source/routergroup.go"
+        range:
+          start:
+            line: 180
+            character: 26
+          end:
+            line: 180
+            character: 43
+      kind: "method"
+      displayName: "staticFileHandler"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/routergroup.go"
+          range:
+            start:
+              line: 166
+              character: 14
+            end:
+              line: 166
+              character: 31
+        kind: "method"
+        displayName: "staticFileHandler"
+      - location:
+          uri: "benchmark://source/routergroup.go"
+          range:
+            start:
+              line: 175
+              character: 14
+            end:
+              line: 175
+              character: 31
+        kind: "method"
+        displayName: "staticFileHandler"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/routergroup.go"
+            range:
+              start:
+                line: 166
+                character: 14
+              end:
+                line: 166
+                character: 31
+          kind: "method"
+          displayName: "staticFileHandler"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/routergroup.go"
+            range:
+              start:
+                line: 180
+                character: 26
+              end:
+                line: 180
+                character: 43
+          kind: "method"
+          displayName: "staticFileHandler"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
+  - id: "real-project-v1-go-02-2"
+    declaration:
+      location:
+        uri: "benchmark://source/binding/bson.go"
+        range:
+          start:
+            line: 13
+            character: 5
+          end:
+            line: 13
+            character: 16
+      kind: "class"
+      displayName: "bsonBinding"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/binding/binding.go"
+          range:
+            start:
+              line: 89
+              character: 29
+            end:
+              line: 89
+              character: 40
+        kind: "class"
+        displayName: "bsonBinding"
+      - location:
+          uri: "benchmark://source/binding/binding_nomsgpack.go"
+          range:
+            start:
+              line: 85
+              character: 29
+            end:
+              line: 85
+              character: 40
+        kind: "class"
+        displayName: "bsonBinding"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/binding/binding.go"
+            range:
+              start:
+                line: 89
+                character: 29
+              end:
+                line: 89
+                character: 40
+          kind: "class"
+          displayName: "bsonBinding"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/binding/bson.go"
+            range:
+              start:
+                line: 13
+                character: 5
+              end:
+                line: 13
+                character: 16
+          kind: "class"
+          displayName: "bsonBinding"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Excluded the three extra bsonBinding occurrences because they are receiver-clause bindings on method declarations, not ordinary semantic source references. Excluded the three extra bsonBinding occurrences because they are receiver-clause bindings on method declarations, not ordinary semantic source references."
+  - id: "real-project-v1-go-02-3"
+    declaration:
+      location:
+        uri: "benchmark://source/debug.go"
+        range:
+          start:
+            line: 21
+            character: 5
+          end:
+            line: 21
+            character: 16
+      kind: "function"
+      displayName: "IsDebugging"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/debug.go"
+          range:
+            start:
+              line: 32
+              character: 4
+            end:
+              line: 32
+              character: 15
+        kind: "function"
+        displayName: "IsDebugging"
+      - location:
+          uri: "benchmark://source/debug.go"
+          range:
+            start:
+              line: 44
+              character: 4
+            end:
+              line: 44
+              character: 15
+        kind: "function"
+        displayName: "IsDebugging"
+      - location:
+          uri: "benchmark://source/debug.go"
+          range:
+            start:
+              line: 56
+              character: 5
+            end:
+              line: 56
+              character: 16
+        kind: "function"
+        displayName: "IsDebugging"
+      - location:
+          uri: "benchmark://source/debug.go"
+          range:
+            start:
+              line: 110
+              character: 18
+            end:
+              line: 110
+              character: 29
+        kind: "function"
+        displayName: "IsDebugging"
+      - location:
+          uri: "benchmark://source/debug_test.go"
+          range:
+            start:
+              line: 24
+              character: 16
+            end:
+              line: 24
+              character: 27
+        kind: "function"
+        displayName: "IsDebugging"
+      - location:
+          uri: "benchmark://source/debug_test.go"
+          range:
+            start:
+              line: 26
+              character: 17
+            end:
+              line: 26
+              character: 28
+        kind: "function"
+        displayName: "IsDebugging"
+      - location:
+          uri: "benchmark://source/debug_test.go"
+          range:
+            start:
+              line: 28
+              character: 17
+            end:
+              line: 28
+              character: 28
+        kind: "function"
+        displayName: "IsDebugging"
+      - location:
+          uri: "benchmark://source/gin.go"
+          range:
+            start:
+              line: 276
+              character: 4
+            end:
+              line: 276
+              character: 15
+        kind: "function"
+        displayName: "IsDebugging"
+      - location:
+          uri: "benchmark://source/gin.go"
+          range:
+            start:
+              line: 288
+              character: 4
+            end:
+              line: 288
+              character: 15
+        kind: "function"
+        displayName: "IsDebugging"
+      - location:
+          uri: "benchmark://source/gin.go"
+          range:
+            start:
+              line: 300
+              character: 4
+            end:
+              line: 300
+              character: 15
+        kind: "function"
+        displayName: "IsDebugging"
+      - location:
+          uri: "benchmark://source/recovery.go"
+          range:
+            start:
+              line: 72
+              character: 15
+            end:
+              line: 72
+              character: 26
+        kind: "function"
+        displayName: "IsDebugging"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/debug.go"
+            range:
+              start:
+                line: 32
+                character: 4
+              end:
+                line: 32
+                character: 15
+          kind: "function"
+          displayName: "IsDebugging"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/debug.go"
+            range:
+              start:
+                line: 21
+                character: 5
+              end:
+                line: 21
+                character: 16
+          kind: "function"
+          displayName: "IsDebugging"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Included the three IsDebugging calls in debug_test.go. Test files are source, and these are ordinary calls; the policy does not exclude test usages. Retained reviewer A's valid production call as definitionUsage. Included the three IsDebugging calls in debug_test.go. Test files are source, and these are ordinary calls; the policy does not exclude test usages. Retained reviewer A's valid production call as definitionUsage."

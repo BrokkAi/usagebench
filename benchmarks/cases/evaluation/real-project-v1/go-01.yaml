@@ -1,0 +1,293 @@
+schemaVersion: 2
+corpus:
+  partition: "evaluation"
+  selection: "pre_registered"
+  freezeId: "real-project-v1"
+  selectionManifest: "benchmarks/evaluation/real-project-v1/selection.json"
+  reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
+  sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
+groundTruth:
+  status: "independently_reviewed"
+  reviewers:
+    - "codex-source-reviewer-a"
+    - "codex-source-reviewer-b"
+referencePolicy: "bindings_optional"
+positionEncoding: "utf-16"
+source:
+  kind: "git"
+  repo: "https://github.com/gohugoio/hugo"
+  commit: "8a468df065a75c1c7cf9f6850f32148746590ea5"
+language: "go"
+cases:
+  - id: "real-project-v1-go-01-1"
+    declaration:
+      location:
+        uri: "benchmark://source/hugolib/shortcode.go"
+        range:
+          start:
+            line: 295
+            character: 29
+          end:
+            line: 295
+            character: 36
+      kind: "method"
+      displayName: "addName"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/hugolib/page__content.go"
+          range:
+            start:
+              line: 347
+              character: 6
+            end:
+              line: 347
+              character: 13
+        kind: "method"
+        displayName: "addName"
+      - location:
+          uri: "benchmark://source/hugolib/shortcode.go"
+          range:
+            start:
+              line: 612
+              character: 7
+            end:
+              line: 612
+              character: 14
+        kind: "method"
+        displayName: "addName"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/hugolib/page__content.go"
+            range:
+              start:
+                line: 347
+                character: 6
+              end:
+                line: 347
+                character: 13
+          kind: "method"
+          displayName: "addName"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/hugolib/shortcode.go"
+            range:
+              start:
+                line: 295
+                character: 29
+              end:
+                line: 295
+                character: 36
+          kind: "method"
+          displayName: "addName"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
+  - id: "real-project-v1-go-01-2"
+    declaration:
+      location:
+        uri: "benchmark://source/hugofs/rootmapping_fs.go"
+        range:
+          start:
+            line: 317
+            character: 5
+          end:
+            line: 317
+            character: 18
+      kind: "class"
+      displayName: "ComponentPath"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/hugofs/rootmapping_fs.go"
+          range:
+            start:
+              line: 328
+              character: 35
+            end:
+              line: 328
+              character: 48
+        kind: "class"
+        displayName: "ComponentPath"
+      - location:
+          uri: "benchmark://source/hugofs/rootmapping_fs.go"
+          range:
+            start:
+              line: 329
+              character: 55
+            end:
+              line: 329
+              character: 68
+        kind: "class"
+        displayName: "ComponentPath"
+      - location:
+          uri: "benchmark://source/hugofs/rootmapping_fs.go"
+          range:
+            start:
+              line: 333
+              character: 59
+            end:
+              line: 333
+              character: 72
+        kind: "class"
+        displayName: "ComponentPath"
+      - location:
+          uri: "benchmark://source/hugofs/rootmapping_fs.go"
+          range:
+            start:
+              line: 337
+              character: 79
+            end:
+              line: 337
+              character: 92
+        kind: "class"
+        displayName: "ComponentPath"
+      - location:
+          uri: "benchmark://source/hugofs/rootmapping_fs.go"
+          range:
+            start:
+              line: 347
+              character: 11
+            end:
+              line: 347
+              character: 24
+        kind: "class"
+        displayName: "ComponentPath"
+      - location:
+          uri: "benchmark://source/hugofs/rootmapping_fs.go"
+          range:
+            start:
+              line: 370
+              character: 20
+            end:
+              line: 370
+              character: 33
+        kind: "class"
+        displayName: "ComponentPath"
+      - location:
+          uri: "benchmark://source/hugolib/filesystems/basefs.go"
+          range:
+            start:
+              line: 328
+              character: 67
+            end:
+              line: 328
+              character: 80
+        kind: "class"
+        displayName: "ComponentPath"
+      - location:
+          uri: "benchmark://source/hugolib/filesystems/basefs.go"
+          range:
+            start:
+              line: 329
+              character: 19
+            end:
+              line: 329
+              character: 32
+        kind: "class"
+        displayName: "ComponentPath"
+      - location:
+          uri: "benchmark://source/hugolib/filesystems/basefs.go"
+          range:
+            start:
+              line: 366
+              character: 86
+            end:
+              line: 366
+              character: 99
+        kind: "class"
+        displayName: "ComponentPath"
+      - location:
+          uri: "benchmark://source/hugolib/filesystems/basefs.go"
+          range:
+            start:
+              line: 367
+              character: 18
+            end:
+              line: 367
+              character: 31
+        kind: "class"
+        displayName: "ComponentPath"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/hugofs/rootmapping_fs.go"
+            range:
+              start:
+                line: 370
+                character: 20
+              end:
+                line: 370
+                character: 33
+          kind: "class"
+          displayName: "ComponentPath"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/hugofs/rootmapping_fs.go"
+            range:
+              start:
+                line: 317
+                character: 5
+              end:
+                line: 317
+                character: 18
+          kind: "class"
+          displayName: "ComponentPath"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Excluded the extra ComponentPath occurrence in the receiver clause `func (c ComponentPath)`: it is a receiver binding/type attachment, so it is optional and excluded under bindings_optional. Both proposed definition usages are valid ordinary references; retained reviewer A's struct-literal usage as definitionUsage. Excluded the extra ComponentPath occurrence in the receiver clause `func (c ComponentPath)`: it is a receiver binding/type attachment, so it is optional and excluded under bindings_optional. Both proposed definition usages are valid ordinary references; retained reviewer A's struct-literal usage as definitionUsage."
+  - id: "real-project-v1-go-01-3"
+    declaration:
+      location:
+        uri: "benchmark://source/resources/page/permalinks.go"
+        range:
+          start:
+            line: 330
+            character: 27
+          end:
+            line: 330
+            character: 49
+      kind: "method"
+      displayName: "pageToPermalinkSection"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/resources/page/permalinks.go"
+          range:
+            start:
+              line: 120
+              character: 29
+            end:
+              line: 120
+              character: 51
+        kind: "method"
+        displayName: "pageToPermalinkSection"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/resources/page/permalinks.go"
+            range:
+              start:
+                line: 120
+                character: 29
+              end:
+                line: 120
+                character: 51
+          kind: "method"
+          displayName: "pageToPermalinkSection"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/resources/page/permalinks.go"
+            range:
+              start:
+                line: 330
+                character: 27
+              end:
+                line: 330
+                character: 49
+          kind: "method"
+          displayName: "pageToPermalinkSection"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."

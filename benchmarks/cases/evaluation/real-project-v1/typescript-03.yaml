@@ -1,0 +1,227 @@
+schemaVersion: 2
+corpus:
+  partition: "evaluation"
+  selection: "pre_registered"
+  freezeId: "real-project-v1"
+  selectionManifest: "benchmarks/evaluation/real-project-v1/selection.json"
+  reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
+  sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
+groundTruth:
+  status: "independently_reviewed"
+  reviewers:
+    - "codex-source-reviewer-a"
+    - "codex-source-reviewer-b"
+referencePolicy: "bindings_optional"
+positionEncoding: "utf-16"
+source:
+  kind: "git"
+  repo: "https://github.com/coder/code-server"
+  commit: "14bdb36f9217671bff9e9389f812c9ac9de575c0"
+language: "typescript"
+cases:
+  - id: "real-project-v1-typescript-03-1"
+    declaration:
+      location:
+        uri: "benchmark://source/src/node/cli.ts"
+        range:
+          start:
+            line: 690
+            character: 16
+          end:
+            line: 690
+            character: 40
+      kind: "function"
+      displayName: "getResolvedPathsFromArgs"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/src/node/cli.ts"
+          range:
+            start:
+              line: 681
+              character: 11
+            end:
+              line: 681
+              character: 35
+        kind: "function"
+        displayName: "getResolvedPathsFromArgs"
+      - location:
+          uri: "benchmark://source/src/node/cli.ts"
+          range:
+            start:
+              line: 855
+              character: 16
+            end:
+              line: 855
+              character: 40
+        kind: "function"
+        displayName: "getResolvedPathsFromArgs"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/src/node/cli.ts"
+            range:
+              start:
+                line: 681
+                character: 11
+              end:
+                line: 681
+                character: 35
+          kind: "function"
+          displayName: "getResolvedPathsFromArgs"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/src/node/cli.ts"
+            range:
+              start:
+                line: 690
+                character: 16
+              end:
+                line: 690
+                character: 40
+          kind: "function"
+          displayName: "getResolvedPathsFromArgs"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
+  - id: "real-project-v1-typescript-03-2"
+    declaration:
+      location:
+        uri: "benchmark://source/src/node/vscodeSocket.ts"
+        range:
+          start:
+            line: 30
+            character: 10
+          end:
+            line: 30
+            character: 28
+      kind: "interface"
+      displayName: "GetSessionResponse"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/src/node/vscodeSocket.ts"
+          range:
+            start:
+              line: 42
+              character: 17
+            end:
+              line: 42
+              character: 35
+        kind: "interface"
+        displayName: "GetSessionResponse"
+      - location:
+          uri: "benchmark://source/src/node/vscodeSocket.ts"
+          range:
+            start:
+              line: 50
+              character: 22
+            end:
+              line: 50
+              character: 40
+        kind: "interface"
+        displayName: "GetSessionResponse"
+      - location:
+          uri: "benchmark://source/src/node/vscodeSocket.ts"
+          range:
+            start:
+              line: 154
+              character: 39
+            end:
+              line: 154
+              character: 57
+        kind: "interface"
+        displayName: "GetSessionResponse"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/src/node/vscodeSocket.ts"
+            range:
+              start:
+                line: 42
+                character: 17
+              end:
+                line: 42
+                character: 35
+          kind: "interface"
+          displayName: "GetSessionResponse"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/src/node/vscodeSocket.ts"
+            range:
+              start:
+                line: 30
+                character: 10
+              end:
+                line: 30
+                character: 28
+          kind: "interface"
+          displayName: "GetSessionResponse"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
+  - id: "real-project-v1-typescript-03-3"
+    declaration:
+      location:
+        uri: "benchmark://source/src/node/wrapper.ts"
+        range:
+          start:
+            line: 17
+            character: 16
+          end:
+            line: 17
+            character: 25
+      kind: "function"
+      displayName: "onMessage"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/src/node/wrapper.ts"
+          range:
+            start:
+              line: 180
+              character: 26
+            end:
+              line: 180
+              character: 35
+        kind: "function"
+        displayName: "onMessage"
+      - location:
+          uri: "benchmark://source/src/node/wrapper.ts"
+          range:
+            start:
+              line: 353
+              character: 26
+            end:
+              line: 353
+              character: 35
+        kind: "function"
+        displayName: "onMessage"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/src/node/wrapper.ts"
+            range:
+              start:
+                line: 180
+                character: 26
+              end:
+                line: 180
+                character: 35
+          kind: "function"
+          displayName: "onMessage"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/src/node/wrapper.ts"
+            range:
+              start:
+                line: 17
+                character: 16
+              end:
+                line: 17
+                character: 25
+          kind: "function"
+          displayName: "onMessage"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."

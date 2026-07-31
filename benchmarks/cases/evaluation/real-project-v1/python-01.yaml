@@ -1,0 +1,601 @@
+schemaVersion: 2
+corpus:
+  partition: "evaluation"
+  selection: "pre_registered"
+  freezeId: "real-project-v1"
+  selectionManifest: "benchmarks/evaluation/real-project-v1/selection.json"
+  reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
+  sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
+groundTruth:
+  status: "independently_reviewed"
+  reviewers:
+    - "codex-source-reviewer-a"
+    - "codex-source-reviewer-b"
+referencePolicy: "bindings_optional"
+positionEncoding: "utf-16"
+source:
+  kind: "git"
+  repo: "https://github.com/3b1b/manim"
+  commit: "6199a00d4c1b1127ebe45cb629c3f22538b10e13"
+language: "python"
+cases:
+  - id: "real-project-v1-python-01-1"
+    declaration:
+      location:
+        uri: "benchmark://source/manimlib/utils/bezier.py"
+        range:
+          start:
+            line: 96
+            character: 4
+          end:
+            line: 96
+            character: 15
+      kind: "function"
+      displayName: "interpolate"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/manimlib/animation/composition.py"
+          range:
+            start:
+              line: 103
+              character: 24
+            end:
+              line: 103
+              character: 35
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/animation/fading.py"
+          range:
+            start:
+              line: 167
+              character: 20
+            end:
+              line: 167
+              character: 31
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/animation/fading.py"
+          range:
+            start:
+              line: 170
+              character: 20
+            end:
+              line: 170
+              character: 31
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/animation/indication.py"
+          range:
+            start:
+              line: 181
+              character: 16
+            end:
+              line: 181
+              character: 27
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/animation/indication.py"
+          range:
+            start:
+              line: 238
+              character: 13
+            end:
+              line: 238
+              character: 24
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/animation/indication.py"
+          range:
+            start:
+              line: 387
+              character: 12
+            end:
+              line: 387
+              character: 23
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/animation/numbers.py"
+          range:
+            start:
+              line: 46
+              character: 22
+            end:
+              line: 46
+              character: 33
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/animation/numbers.py"
+          range:
+            start:
+              line: 61
+              character: 22
+            end:
+              line: 61
+              character: 33
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/mobject.py"
+          range:
+            start:
+              line: 1620
+              character: 15
+            end:
+              line: 1620
+              character: 26
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/number_line.py"
+          range:
+            start:
+              line: 147
+              character: 15
+            end:
+              line: 147
+              character: 26
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/numbers.py"
+          range:
+            start:
+              line: 159
+              character: 29
+            end:
+              line: 159
+              character: 40
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/svg/drawings.py"
+          range:
+            start:
+              line: 484
+              character: 12
+            end:
+              line: 484
+              character: 23
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/svg/drawings.py"
+          range:
+            start:
+              line: 485
+              character: 12
+            end:
+              line: 485
+              character: 23
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/svg/drawings.py"
+          range:
+            start:
+              line: 525
+              character: 30
+            end:
+              line: 525
+              character: 41
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/three_dimensions.py"
+          range:
+            start:
+              line: 74
+              character: 37
+            end:
+              line: 74
+              character: 48
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/three_dimensions.py"
+          range:
+            start:
+              line: 82
+              character: 37
+            end:
+              line: 82
+              character: 48
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/types/surface.py"
+          range:
+            start:
+              line: 137
+              character: 15
+            end:
+              line: 137
+              character: 26
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/types/surface.py"
+          range:
+            start:
+              line: 138
+              character: 12
+            end:
+              line: 138
+              character: 23
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/types/surface.py"
+          range:
+            start:
+              line: 139
+              character: 12
+            end:
+              line: 139
+              character: 23
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/types/surface.py"
+          range:
+            start:
+              line: 213
+              character: 35
+            end:
+              line: 213
+              character: 46
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/types/surface.py"
+          range:
+            start:
+              line: 218
+              character: 39
+            end:
+              line: 218
+              character: 50
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/types/surface.py"
+          range:
+            start:
+              line: 225
+              character: 38
+            end:
+              line: 225
+              character: 49
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/types/surface.py"
+          range:
+            start:
+              line: 230
+              character: 42
+            end:
+              line: 230
+              character: 53
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/types/vectorized_mobject.py"
+          range:
+            start:
+              line: 895
+              character: 15
+            end:
+              line: 895
+              character: 26
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/vector_field.py"
+          range:
+            start:
+              line: 50
+              character: 17
+            end:
+              line: 50
+              character: 28
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/utils/bezier.py"
+          range:
+            start:
+              line: 121
+              character: 73
+            end:
+              line: 121
+              character: 84
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/utils/bezier.py"
+          range:
+            start:
+              line: 147
+              character: 16
+            end:
+              line: 147
+              character: 27
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/utils/bezier.py"
+          range:
+            start:
+              line: 167
+              character: 11
+            end:
+              line: 167
+              character: 22
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/utils/color.py"
+          range:
+            start:
+              line: 112
+              character: 25
+            end:
+              line: 112
+              character: 36
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/utils/color.py"
+          range:
+            start:
+              line: 114
+              character: 22
+            end:
+              line: 114
+              character: 33
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/utils/color.py"
+          range:
+            start:
+              line: 141
+              character: 8
+            end:
+              line: 141
+              character: 19
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/utils/color.py"
+          range:
+            start:
+              line: 142
+              character: 8
+            end:
+              line: 142
+              character: 19
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/utils/color.py"
+          range:
+            start:
+              line: 143
+              character: 8
+            end:
+              line: 143
+              character: 19
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/utils/color.py"
+          range:
+            start:
+              line: 161
+              character: 17
+            end:
+              line: 161
+              character: 28
+        kind: "function"
+        displayName: "interpolate"
+      - location:
+          uri: "benchmark://source/manimlib/utils/paths.py"
+          range:
+            start:
+              line: 32
+              character: 11
+            end:
+              line: 32
+              character: 22
+        kind: "function"
+        displayName: "interpolate"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/manimlib/animation/composition.py"
+            range:
+              start:
+                line: 103
+                character: 24
+              end:
+                line: 103
+                character: 35
+          kind: "function"
+          displayName: "interpolate"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/manimlib/utils/bezier.py"
+            range:
+              start:
+                line: 96
+                character: 4
+              end:
+                line: 96
+                character: 15
+          kind: "function"
+          displayName: "interpolate"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Included numbers.py:160: the unqualified call resolves to the module-level import from manimlib.utils.bezier; the enclosing method named interpolate does not create a local binding for that bare name. Retained reviewer A's valid call as definitionUsage. Included numbers.py:160: the unqualified call resolves to the module-level import from manimlib.utils.bezier; the enclosing method named interpolate does not create a local binding for that bare name. Retained reviewer A's valid call as definitionUsage."
+  - id: "real-project-v1-python-01-2"
+    declaration:
+      location:
+        uri: "benchmark://source/manimlib/utils/color.py"
+        range:
+          start:
+            line: 30
+            character: 4
+          end:
+            line: 30
+            character: 17
+      kind: "function"
+      displayName: "color_to_rgba"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/manimlib/camera/camera.py"
+          range:
+            start:
+              line: 59
+              character: 49
+            end:
+              line: 59
+              character: 62
+        kind: "function"
+        displayName: "color_to_rgba"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/types/point_cloud_mobject.py"
+          range:
+            start:
+              line: 40
+              character: 17
+            end:
+              line: 40
+              character: 30
+        kind: "function"
+        displayName: "color_to_rgba"
+      - location:
+          uri: "benchmark://source/manimlib/mobject/types/point_cloud_mobject.py"
+          range:
+            start:
+              line: 56
+              character: 12
+            end:
+              line: 56
+              character: 25
+        kind: "function"
+        displayName: "color_to_rgba"
+      - location:
+          uri: "benchmark://source/manimlib/scene/scene.py"
+          range:
+            start:
+              line: 876
+              character: 43
+            end:
+              line: 876
+              character: 56
+        kind: "function"
+        displayName: "color_to_rgba"
+      - location:
+          uri: "benchmark://source/manimlib/utils/color.py"
+          range:
+            start:
+              line: 152
+              character: 22
+            end:
+              line: 152
+              character: 35
+        kind: "function"
+        displayName: "color_to_rgba"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/manimlib/camera/camera.py"
+            range:
+              start:
+                line: 59
+                character: 49
+              end:
+                line: 59
+                character: 62
+          kind: "function"
+          displayName: "color_to_rgba"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/manimlib/utils/color.py"
+            range:
+              start:
+                line: 30
+                character: 4
+              end:
+                line: 30
+                character: 17
+          kind: "function"
+          displayName: "color_to_rgba"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. The expected usage sets agree. Both proposed definition usages are valid calls to color_to_rgba; retained reviewer A's camera.py call as definitionUsage. The expected usage sets agree. Both proposed definition usages are valid calls to color_to_rgba; retained reviewer A's camera.py call as definitionUsage."
+  - id: "real-project-v1-python-01-3"
+    declaration:
+      location:
+        uri: "benchmark://source/manimlib/utils/iterables.py"
+        range:
+          start:
+            line: 122
+            character: 4
+          end:
+            line: 122
+            character: 13
+      kind: "function"
+      displayName: "make_even"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/manimlib/mobject/types/vectorized_mobject.py"
+          range:
+            start:
+              line: 284
+              character: 33
+            end:
+              line: 284
+              character: 42
+        kind: "function"
+        displayName: "make_even"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/manimlib/mobject/types/vectorized_mobject.py"
+            range:
+              start:
+                line: 284
+                character: 33
+              end:
+                line: 284
+                character: 42
+          kind: "function"
+          displayName: "make_even"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/manimlib/utils/iterables.py"
+            range:
+              start:
+                line: 122
+                character: 4
+              end:
+                line: 122
+                character: 13
+          kind: "function"
+          displayName: "make_even"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."

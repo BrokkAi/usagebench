@@ -1,0 +1,205 @@
+schemaVersion: 2
+corpus:
+  partition: "evaluation"
+  selection: "pre_registered"
+  freezeId: "real-project-v1"
+  selectionManifest: "benchmarks/evaluation/real-project-v1/selection.json"
+  reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
+  sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
+groundTruth:
+  status: "independently_reviewed"
+  reviewers:
+    - "codex-source-reviewer-a"
+    - "codex-source-reviewer-b"
+referencePolicy: "bindings_optional"
+positionEncoding: "utf-16"
+source:
+  kind: "git"
+  repo: "https://github.com/syncthing/syncthing"
+  commit: "bcef5c5bc68dddfb68a3d341f41fad44c11fb52e"
+language: "go"
+cases:
+  - id: "real-project-v1-go-04-1"
+    declaration:
+      location:
+        uri: "benchmark://source/lib/scanner/walk.go"
+        range:
+          start:
+            line: 667
+            character: 17
+          end:
+            line: 667
+            character: 31
+      kind: "method"
+      displayName: "updateFileInfo"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/lib/scanner/walk.go"
+          range:
+            start:
+              line: 468
+              character: 7
+            end:
+              line: 468
+              character: 21
+        kind: "method"
+        displayName: "updateFileInfo"
+      - location:
+          uri: "benchmark://source/lib/scanner/walk.go"
+          range:
+            start:
+              line: 518
+              character: 7
+            end:
+              line: 518
+              character: 21
+        kind: "method"
+        displayName: "updateFileInfo"
+      - location:
+          uri: "benchmark://source/lib/scanner/walk.go"
+          range:
+            start:
+              line: 573
+              character: 7
+            end:
+              line: 573
+              character: 21
+        kind: "method"
+        displayName: "updateFileInfo"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/lib/scanner/walk.go"
+            range:
+              start:
+                line: 468
+                character: 7
+              end:
+                line: 468
+                character: 21
+          kind: "method"
+          displayName: "updateFileInfo"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/lib/scanner/walk.go"
+            range:
+              start:
+                line: 667
+                character: 17
+              end:
+                line: 667
+                character: 31
+          kind: "method"
+          displayName: "updateFileInfo"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
+  - id: "real-project-v1-go-04-2"
+    declaration:
+      location:
+        uri: "benchmark://source/lib/ignore/ignoreresult/ignoreresult.go"
+        range:
+          start:
+            line: 52
+            character: 11
+          end:
+            line: 52
+            character: 24
+      kind: "method"
+      displayName: "ToggleIgnored"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/lib/ignore/ignore.go"
+          range:
+            start:
+              line: 374
+              character: 35
+            end:
+              line: 374
+              character: 48
+        kind: "method"
+        displayName: "ToggleIgnored"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/lib/ignore/ignore.go"
+            range:
+              start:
+                line: 374
+                character: 35
+              end:
+                line: 374
+                character: 48
+          kind: "method"
+          displayName: "ToggleIgnored"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/lib/ignore/ignoreresult/ignoreresult.go"
+            range:
+              start:
+                line: 52
+                character: 11
+              end:
+                line: 52
+                character: 24
+          kind: "method"
+          displayName: "ToggleIgnored"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
+  - id: "real-project-v1-go-04-3"
+    declaration:
+      location:
+        uri: "benchmark://source/lib/config/deviceconfiguration.go"
+        range:
+          start:
+            line: 99
+            character: 5
+          end:
+            line: 99
+            character: 30
+      kind: "function"
+      displayName: "sortedObservedFolderSlice"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/lib/config/deviceconfiguration.go"
+          range:
+            start:
+              line: 63
+              character: 22
+            end:
+              line: 63
+              character: 47
+        kind: "function"
+        displayName: "sortedObservedFolderSlice"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/lib/config/deviceconfiguration.go"
+            range:
+              start:
+                line: 63
+                character: 22
+              end:
+                line: 63
+                character: 47
+          kind: "function"
+          displayName: "sortedObservedFolderSlice"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/lib/config/deviceconfiguration.go"
+            range:
+              start:
+                line: 99
+                character: 5
+              end:
+                line: 99
+                character: 30
+          kind: "function"
+          displayName: "sortedObservedFolderSlice"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."

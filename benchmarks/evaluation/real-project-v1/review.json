@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "freezeId": "real-project-v1",
+  "selection": {
+    "file": "benchmarks/evaluation/real-project-v1/selection.json",
+    "sha256": "964f23de0130dfd48f38b12bfa35806659be12176b828fdc97fa7ef3dfcc46e8"
+  },
+  "reviewers": [
+    {
+      "id": "codex-source-reviewer-a",
+      "file": "benchmarks/evaluation/real-project-v1/reviews/codex-source-reviewer-a.json",
+      "sha256": "af839ce02048dc3c22f4d5702d0384b74849dab48ced2e4842aefbe801b0c925"
+    },
+    {
+      "id": "codex-source-reviewer-b",
+      "file": "benchmarks/evaluation/real-project-v1/reviews/codex-source-reviewer-b.json",
+      "sha256": "9578039db5eb7a432b89ce473ffd53383064fc440b70e36d21eb1553e1029833"
+    }
+  ],
+  "adjudication": {
+    "id": "source-only-adjudication",
+    "file": "benchmarks/evaluation/real-project-v1/reviews/adjudication.json",
+    "sha256": "3be488e2c0cea72ed367fef28a7a3396470f147f5f6ce486b8edd994a13b453c"
+  }
+}

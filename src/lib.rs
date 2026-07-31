@@ -516,6 +516,42 @@ pub(crate) fn is_exact_git_commit(value: &str) -> bool {
 }
 
 impl BenchmarkCase {
+    pub(crate) fn symbol_locations(&self) -> Vec<(&'static str, &SymbolLocation)> {
+        let mut locations = Vec::new();
+        locations.extend(self.declaration.iter().map(|value| ("declaration", value)));
+        locations.extend(
+            self.reference_probe
+                .iter()
+                .map(|value| ("referenceProbe", value)),
+        );
+        for (field, values) in [
+            ("expectedUsages", &self.expected_usages),
+            ("expectedUnprovenUsages", &self.expected_unproven_usages),
+            ("allowedExtraUsages", &self.allowed_extra_usages),
+            ("allowedUnprovenUsages", &self.allowed_unproven_usages),
+        ] {
+            locations.extend(values.iter().map(|value| (field, value)));
+        }
+        for lookup in &self.usage_lookups {
+            locations.push(("usageLookups usage", &lookup.usage));
+            locations.push((
+                "usageLookups expectedDeclaration",
+                &lookup.expected_declaration,
+            ));
+            locations.extend(
+                lookup
+                    .allowed_extra_targets
+                    .iter()
+                    .map(|value| ("usageLookups allowedExtraTargets", value)),
+            );
+        }
+        for lookup in &self.type_lookups {
+            locations.push(("typeLookups expression", &lookup.expression));
+            locations.push(("typeLookups expectedType", &lookup.expected_type));
+        }
+        locations
+    }
+
     fn validate(&self, fixture_root: Option<&Path>, encoding: PositionEncoding) -> Result<()> {
         let scoring_markers = [
             self.expected_failure.is_some(),
@@ -532,17 +568,14 @@ impl BenchmarkCase {
             );
         }
 
-        if let Some(declaration) = &self.declaration {
-            declaration
+        for (field, location) in self.symbol_locations() {
+            location
                 .validate(fixture_root, encoding)
-                .with_context(|| format!("case {} declaration", self.id))?;
+                .with_context(|| format!("case {} {field}", self.id))?;
         }
 
         if let Some(reference_probe) = &self.reference_probe {
             let declaration = self.reference_probe_declaration()?;
-            reference_probe
-                .validate(fixture_root, encoding)
-                .with_context(|| format!("case {} referenceProbe", self.id))?;
             if reference_probe.location.range.is_zero_width() {
                 bail!("case {} referenceProbe must select a source token", self.id);
             }
@@ -560,43 +593,8 @@ impl BenchmarkCase {
             }
         }
 
-        for usage in &self.expected_usages {
-            usage
-                .validate(fixture_root, encoding)
-                .with_context(|| format!("case {} expectedUsages", self.id))?;
-        }
-
-        for usage in &self.expected_unproven_usages {
-            usage
-                .validate(fixture_root, encoding)
-                .with_context(|| format!("case {} expectedUnprovenUsages", self.id))?;
-        }
-
-        for usage in &self.allowed_extra_usages {
-            usage
-                .validate(fixture_root, encoding)
-                .with_context(|| format!("case {} allowedExtraUsages", self.id))?;
-        }
-
-        for usage in &self.allowed_unproven_usages {
-            usage
-                .validate(fixture_root, encoding)
-                .with_context(|| format!("case {} allowedUnprovenUsages", self.id))?;
-        }
-
         for lookup in &self.usage_lookups {
-            lookup
-                .usage
-                .validate(fixture_root, encoding)
-                .with_context(|| format!("case {} usageLookups usage", self.id))?;
-            lookup
-                .expected_declaration
-                .validate(fixture_root, encoding)
-                .with_context(|| format!("case {} usageLookups expectedDeclaration", self.id))?;
             for target in &lookup.allowed_extra_targets {
-                target.validate(fixture_root, encoding).with_context(|| {
-                    format!("case {} usageLookups allowedExtraTargets", self.id)
-                })?;
                 if target.location == lookup.expected_declaration.location {
                     bail!(
                         "case {} usageLookups allowedExtraTargets must not repeat expectedDeclaration",
@@ -651,17 +649,6 @@ impl BenchmarkCase {
                     self.id
                 );
             }
-        }
-
-        for lookup in &self.type_lookups {
-            lookup
-                .expression
-                .validate(fixture_root, encoding)
-                .with_context(|| format!("case {} typeLookups expression", self.id))?;
-            lookup
-                .expected_type
-                .validate(fixture_root, encoding)
-                .with_context(|| format!("case {} typeLookups expectedType", self.id))?;
         }
 
         Ok(())
@@ -823,6 +810,9 @@ fn benchmark_source_path(uri: &Url) -> Result<PathBuf> {
     }
 
     let path = Path::new(path);
+    if path.as_os_str().to_string_lossy().starts_with('-') {
+        bail!("location uri {uri} source-relative path must not begin with '-'");
+    }
     if path
         .components()
         .any(|component| matches!(component, Component::ParentDir))
@@ -1336,6 +1326,15 @@ cases: []
         let error = document.validate_with_base(tempdir.path()).unwrap_err();
 
         assert!(format!("{error:#}").contains("fixture source path must be relative"));
+    }
+
+    #[test]
+    fn benchmark_source_paths_reject_option_like_names() {
+        let uri = Url::parse("benchmark://source/-checkpoint").unwrap();
+
+        let error = benchmark_source_path(&uri).unwrap_err();
+
+        assert!(format!("{error:#}").contains("must not begin with '-'"));
     }
 
     #[test]

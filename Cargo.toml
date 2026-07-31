@@ -7,13 +7,13 @@ license = "MIT"
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive"] }
+flate2 = "1.1"
 jsonschema = "0.18"
 schemars = { version = "0.8", features = ["url"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
 sha2 = "0.10"
-url = { version = "2.5", features = ["serde"] }
-
-[dev-dependencies]
 tempfile = "3.10"
+tar = "0.4"
+url = { version = "2.5", features = ["serde"] }
