@@ -1,0 +1,458 @@
+schemaVersion: 2
+corpus:
+  partition: "evaluation"
+  selection: "pre_registered"
+  freezeId: "real-project-v1"
+  selectionManifest: "benchmarks/evaluation/real-project-v1/selection.json"
+  reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
+  sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
+groundTruth:
+  status: "independently_reviewed"
+  reviewers:
+    - "codex-source-reviewer-a"
+    - "codex-source-reviewer-b"
+referencePolicy: "bindings_optional"
+positionEncoding: "utf-16"
+source:
+  kind: "git"
+  repo: "https://github.com/fatedier/frp"
+  commit: "9d45a557200fcbc6a4598b5ee0d75c405299c521"
+language: "go"
+cases:
+  - id: "real-project-v1-go-03-1"
+    declaration:
+      location:
+        uri: "benchmark://source/pkg/proto/wire/wire.go"
+        range:
+          start:
+            line: 44
+            character: 5
+          end:
+            line: 44
+            character: 10
+      kind: "class"
+      displayName: "Frame"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/pkg/msg/udp_binary.go"
+          range:
+            start:
+              line: 282
+              character: 33
+            end:
+              line: 282
+              character: 38
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/msg/udp_binary.go"
+          range:
+            start:
+              line: 285
+              character: 46
+            end:
+              line: 285
+              character: 51
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/msg/udp_binary.go"
+          range:
+            start:
+              line: 298
+              character: 33
+            end:
+              line: 298
+              character: 38
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/msg/udp_binary.go"
+          range:
+            start:
+              line: 302
+              character: 43
+            end:
+              line: 302
+              character: 48
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/msg/wire_v2.go"
+          range:
+            start:
+              line: 122
+              character: 34
+            end:
+              line: 122
+              character: 39
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/msg/wire_v2.go"
+          range:
+            start:
+              line: 141
+              character: 38
+            end:
+              line: 141
+              character: 43
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/msg/wire_v2.go"
+          range:
+            start:
+              line: 169
+              character: 44
+            end:
+              line: 169
+              character: 49
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/msg/wire_v2.go"
+          range:
+            start:
+              line: 188
+              character: 14
+            end:
+              line: 188
+              character: 19
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/msg/wire_v2_test.go"
+          range:
+            start:
+              line: 114
+              character: 38
+            end:
+              line: 114
+              character: 43
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/msg/wire_v2_test.go"
+          range:
+            start:
+              line: 117
+              character: 37
+            end:
+              line: 117
+              character: 42
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/msg/wire_v2_test.go"
+          range:
+            start:
+              line: 123
+              character: 37
+            end:
+              line: 123
+              character: 42
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/proto/wire/wire.go"
+          range:
+            start:
+              line: 62
+              character: 29
+            end:
+              line: 62
+              character: 34
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/proto/wire/wire.go"
+          range:
+            start:
+              line: 82
+              character: 9
+            end:
+              line: 82
+              character: 14
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/proto/wire/wire.go"
+          range:
+            start:
+              line: 89
+              character: 29
+            end:
+              line: 89
+              character: 34
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/proto/wire/wire.go"
+          range:
+            start:
+              line: 119
+              character: 33
+            end:
+              line: 119
+              character: 38
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/proto/wire/wire.go"
+          range:
+            start:
+              line: 123
+              character: 46
+            end:
+              line: 123
+              character: 51
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/pkg/proto/wire/wire.go"
+          range:
+            start:
+              line: 128
+              character: 9
+            end:
+              line: 128
+              character: 14
+        kind: "class"
+        displayName: "Frame"
+      - location:
+          uri: "benchmark://source/server/service.go"
+          range:
+            start:
+              line: 644
+              character: 96
+            end:
+              line: 644
+              character: 101
+        kind: "class"
+        displayName: "Frame"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/pkg/msg/udp_binary.go"
+            range:
+              start:
+                line: 282
+                character: 33
+              end:
+                line: 282
+                character: 38
+          kind: "class"
+          displayName: "Frame"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/pkg/proto/wire/wire.go"
+            range:
+              start:
+                line: 44
+                character: 5
+              end:
+                line: 44
+                character: 10
+          kind: "class"
+          displayName: "Frame"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Included the three Frame struct literals in wire_v2_test.go. They are ordinary semantic type references despite occurring in tests. Retained reviewer A's valid production struct literal as definitionUsage. Included the three Frame struct literals in wire_v2_test.go. They are ordinary semantic type references despite occurring in tests. Retained reviewer A's valid production struct literal as definitionUsage."
+  - id: "real-project-v1-go-03-2"
+    declaration:
+      location:
+        uri: "benchmark://source/pkg/metrics/mem/server.go"
+        range:
+          start:
+            line: 89
+            character: 24
+          end:
+            line: 89
+            character: 40
+      kind: "method"
+      displayName: "clearUselessInfo"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/pkg/metrics/mem/server.go"
+          range:
+            start:
+              line: 81
+              character: 21
+            end:
+              line: 81
+              character: 37
+        kind: "method"
+        displayName: "clearUselessInfo"
+      - location:
+          uri: "benchmark://source/pkg/metrics/mem/server.go"
+          range:
+            start:
+              line: 113
+              character: 10
+            end:
+              line: 113
+              character: 26
+        kind: "method"
+        displayName: "clearUselessInfo"
+      - location:
+          uri: "benchmark://source/pkg/metrics/mem/server.go"
+          range:
+            start:
+              line: 117
+              character: 10
+            end:
+              line: 117
+              character: 26
+        kind: "method"
+        displayName: "clearUselessInfo"
+      - location:
+          uri: "benchmark://source/pkg/metrics/mem/server_test.go"
+          range:
+            start:
+              line: 44
+              character: 25
+            end:
+              line: 44
+              character: 41
+        kind: "method"
+        displayName: "clearUselessInfo"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/pkg/metrics/mem/server.go"
+            range:
+              start:
+                line: 81
+                character: 21
+              end:
+                line: 81
+                character: 37
+          kind: "method"
+          displayName: "clearUselessInfo"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/pkg/metrics/mem/server.go"
+            range:
+              start:
+                line: 89
+                character: 24
+              end:
+                line: 89
+                character: 40
+          kind: "method"
+          displayName: "clearUselessInfo"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Included the clearUselessInfo call in server_test.go because it is an ordinary receiver call. Retained reviewer A's valid production call as definitionUsage. Included the clearUselessInfo call in server_test.go because it is an ordinary receiver call. Retained reviewer A's valid production call as definitionUsage."
+  - id: "real-project-v1-go-03-3"
+    declaration:
+      location:
+        uri: "benchmark://source/pkg/naming/names.go"
+        range:
+          start:
+            line: 5
+            character: 5
+          end:
+            line: 5
+            character: 18
+      kind: "function"
+      displayName: "AddUserPrefix"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/client/proxy/proxy_wrapper.go"
+          range:
+            start:
+              line: 119
+              character: 25
+            end:
+              line: 119
+              character: 38
+        kind: "function"
+        displayName: "AddUserPrefix"
+      - location:
+          uri: "benchmark://source/client/proxy/xtcp.go"
+          range:
+            start:
+              line: 87
+              character: 24
+            end:
+              line: 87
+              character: 37
+        kind: "function"
+        displayName: "AddUserPrefix"
+      - location:
+          uri: "benchmark://source/pkg/naming/names.go"
+          range:
+            start:
+              line: 28
+              character: 9
+            end:
+              line: 28
+              character: 22
+        kind: "function"
+        displayName: "AddUserPrefix"
+      - location:
+          uri: "benchmark://source/pkg/naming/names.go"
+          range:
+            start:
+              line: 30
+              character: 8
+            end:
+              line: 30
+              character: 21
+        kind: "function"
+        displayName: "AddUserPrefix"
+      - location:
+          uri: "benchmark://source/pkg/naming/names_test.go"
+          range:
+            start:
+              line: 10
+              character: 23
+            end:
+              line: 10
+              character: 36
+        kind: "function"
+        displayName: "AddUserPrefix"
+      - location:
+          uri: "benchmark://source/pkg/naming/names_test.go"
+          range:
+            start:
+              line: 11
+              character: 29
+            end:
+              line: 11
+              character: 42
+        kind: "function"
+        displayName: "AddUserPrefix"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/client/proxy/proxy_wrapper.go"
+            range:
+              start:
+                line: 119
+                character: 25
+              end:
+                line: 119
+                character: 38
+          kind: "function"
+          displayName: "AddUserPrefix"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/pkg/naming/names.go"
+            range:
+              start:
+                line: 5
+                character: 5
+              end:
+                line: 5
+                character: 18
+          kind: "function"
+          displayName: "AddUserPrefix"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Included both AddUserPrefix calls in names_test.go because test usages remain ordinary semantic references. Retained reviewer A's valid production call as definitionUsage. Included both AddUserPrefix calls in names_test.go because test usages remain ordinary semantic references. Retained reviewer A's valid production call as definitionUsage."

@@ -1,0 +1,4950 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "codex-source-reviewer-a",
+  "reviewBasis": "Pinned extracted sources only; no Bifrost or language-server/analyzer output consulted.",
+  "referencePolicy": "bindings_optional",
+  "selectionAlgorithm": "real-project-v1-source-syntax-v1",
+  "sourceArtifacts": [
+    "real-project-v1-reviewer-a.json",
+    "real-project-v1-reviewer-a-replacements.json",
+    "real-project-v1-reviewer-a-final-replacements.json"
+  ],
+  "records": [
+    {
+      "caseId": "real-project-v1-go-01-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "gohugoio/hugo",
+        "commit": "8a468df065a75c1c7cf9f6850f32148746590ea5",
+        "language": "go",
+        "selectionRank": 7,
+        "location": {
+          "uri": "benchmark://source/hugolib/shortcode.go",
+          "range": {
+            "start": {
+              "line": 295,
+              "character": 29
+            },
+            "end": {
+              "line": 295,
+              "character": 36
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "addName"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/page__content.go",
+            "range": {
+              "start": {
+                "line": 347,
+                "character": 6
+              },
+              "end": {
+                "line": 347,
+                "character": 13
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "addName"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/shortcode.go",
+            "range": {
+              "start": {
+                "line": 612,
+                "character": 7
+              },
+              "end": {
+                "line": 612,
+                "character": 14
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "addName"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/hugolib/page__content.go",
+          "range": {
+            "start": {
+              "line": 347,
+              "character": 6
+            },
+            "end": {
+              "line": 347,
+              "character": 13
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "addName"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import bindings, method receiver bindings, comments, and unrelated same-name tokens. The chosen definition usage is an unambiguous ordinary call or type reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-final-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-go-01-1",
+          "decision": "replace",
+          "declaration": {
+            "repository": "gohugoio/hugo",
+            "commit": "8a468df065a75c1c7cf9f6850f32148746590ea5",
+            "language": "go",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/tpl/internal/go_templates/texttemplate/exec.go",
+              "range": {
+                "start": {
+                  "line": 497,
+                  "character": 16
+                },
+                "end": {
+                  "line": 497,
+                  "character": 28
+                }
+              }
+            },
+            "kind": "method",
+            "displayName": "walkTemplate"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Import/re-export bindings, declarations, comments, strings, and unrelated same-name tokens are not required usages under bindings_optional.",
+          "replacementReason": "Selected declaration is in tpl/internal/go_templates, a copied Go standard-library implementation; replace as vendored/copied source.",
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        },
+        {
+          "caseId": "real-project-v1-go-01-1",
+          "decision": "replace",
+          "declaration": {
+            "repository": "gohugoio/hugo",
+            "commit": "8a468df065a75c1c7cf9f6850f32148746590ea5",
+            "language": "go",
+            "selectionRank": 4,
+            "location": {
+              "uri": "benchmark://source/hugolib/integrationtest_builder.go",
+              "range": {
+                "start": {
+                  "line": 325,
+                  "character": 5
+                },
+                "end": {
+                  "line": 325,
+                  "character": 18
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "lockingBuffer"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Bindings, declarations, comments, strings, copied sources, and test/integration helpers are not required usages.",
+          "replacementReason": "The selected type is an integration-test builder helper in hugolib/integrationtest_builder.go; test/integration harness sources are excluded by the protocol.",
+          "sourceArtifact": "real-project-v1-reviewer-a-replacements.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-go-01-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "gohugoio/hugo",
+        "commit": "8a468df065a75c1c7cf9f6850f32148746590ea5",
+        "language": "go",
+        "selectionRank": 8,
+        "location": {
+          "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+          "range": {
+            "start": {
+              "line": 317,
+              "character": 5
+            },
+            "end": {
+              "line": 317,
+              "character": 18
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "ComponentPath"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 328,
+                "character": 35
+              },
+              "end": {
+                "line": 328,
+                "character": 48
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ComponentPath"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 329,
+                "character": 55
+              },
+              "end": {
+                "line": 329,
+                "character": 68
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ComponentPath"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 333,
+                "character": 59
+              },
+              "end": {
+                "line": 333,
+                "character": 72
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ComponentPath"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 337,
+                "character": 79
+              },
+              "end": {
+                "line": 337,
+                "character": 92
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ComponentPath"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 347,
+                "character": 11
+              },
+              "end": {
+                "line": 347,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ComponentPath"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 370,
+                "character": 20
+              },
+              "end": {
+                "line": 370,
+                "character": 33
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ComponentPath"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 328,
+                "character": 67
+              },
+              "end": {
+                "line": 328,
+                "character": 80
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ComponentPath"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 329,
+                "character": 19
+              },
+              "end": {
+                "line": 329,
+                "character": 32
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ComponentPath"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 366,
+                "character": 86
+              },
+              "end": {
+                "line": 366,
+                "character": 99
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ComponentPath"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 367,
+                "character": 18
+              },
+              "end": {
+                "line": 367,
+                "character": 31
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ComponentPath"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+          "range": {
+            "start": {
+              "line": 370,
+              "character": 20
+            },
+            "end": {
+              "line": 370,
+              "character": 33
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "ComponentPath"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import bindings, method receiver bindings, comments, and unrelated same-name tokens. The chosen definition usage is an unambiguous ordinary call or type reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-final-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-go-01-2",
+          "decision": "replace",
+          "declaration": {
+            "repository": "gohugoio/hugo",
+            "commit": "8a468df065a75c1c7cf9f6850f32148746590ea5",
+            "language": "go",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/config/allconfig/configlanguage.go",
+              "range": {
+                "start": {
+                  "line": 244,
+                  "character": 24
+                },
+                "end": {
+                  "line": 244,
+                  "character": 50
+                }
+              }
+            },
+            "kind": "method",
+            "displayName": "DefaultContentRoleInSubdir"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Import/re-export bindings, declarations, comments, strings, and unrelated same-name tokens are not required usages under bindings_optional.",
+          "replacementReason": "No ordinary reference to the selected accessor method. Other tokens are an interface method declaration, a same-named field, field accesses, and a comment.",
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        },
+        {
+          "caseId": "real-project-v1-go-01-2",
+          "decision": "replace",
+          "declaration": {
+            "repository": "gohugoio/hugo",
+            "commit": "8a468df065a75c1c7cf9f6850f32148746590ea5",
+            "language": "go",
+            "selectionRank": 5,
+            "location": {
+              "uri": "benchmark://source/tpl/internal/go_templates/htmltemplate/transition.go",
+              "range": {
+                "start": {
+                  "line": 622,
+                  "character": 5
+                },
+                "end": {
+                  "line": 622,
+                  "character": 11
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "tError"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Bindings, declarations, comments, strings, copied sources, and test/integration helpers are not required usages.",
+          "replacementReason": "The selected function is copied Go html/template implementation code under tpl/internal/go_templates; replace as vendored/copied source. Same-name tokens in parser/pageparser are unrelated declarations and references.",
+          "sourceArtifact": "real-project-v1-reviewer-a-replacements.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-go-01-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "gohugoio/hugo",
+        "commit": "8a468df065a75c1c7cf9f6850f32148746590ea5",
+        "language": "go",
+        "selectionRank": 6,
+        "location": {
+          "uri": "benchmark://source/resources/page/permalinks.go",
+          "range": {
+            "start": {
+              "line": 330,
+              "character": 27
+            },
+            "end": {
+              "line": 330,
+              "character": 49
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "pageToPermalinkSection"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/resources/page/permalinks.go",
+            "range": {
+              "start": {
+                "line": 120,
+                "character": 29
+              },
+              "end": {
+                "line": 120,
+                "character": 51
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "pageToPermalinkSection"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/resources/page/permalinks.go",
+          "range": {
+            "start": {
+              "line": 120,
+              "character": 29
+            },
+            "end": {
+              "line": 120,
+              "character": 51
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "pageToPermalinkSection"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, imports/re-exports, receiver or other declaration bindings, comments, strings, and unrelated same-name tokens; definitionUsage is an unambiguous ordinary reference.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-go-01-3",
+          "decision": "replace",
+          "declaration": {
+            "repository": "gohugoio/hugo",
+            "commit": "8a468df065a75c1c7cf9f6850f32148746590ea5",
+            "language": "go",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/config/defaultConfigProvider.go",
+              "range": {
+                "start": {
+                  "line": 104,
+                  "character": 32
+                },
+                "end": {
+                  "line": 104,
+                  "character": 50
+                }
+              }
+            },
+            "kind": "method",
+            "displayName": "GetStringMapString"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Import/re-export bindings, declarations, comments, strings, and unrelated same-name tokens are not required usages under bindings_optional.",
+          "replacementReason": "No unambiguous ordinary reference to this concrete implementation. Calls are through the separately declared config.Provider interface method.",
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-go-02-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "gin-gonic/gin",
+        "commit": "34dac209ffb6ef85cc78c5d217bbb7ad001d68fd",
+        "language": "go",
+        "selectionRank": 6,
+        "location": {
+          "uri": "benchmark://source/routergroup.go",
+          "range": {
+            "start": {
+              "line": 180,
+              "character": 26
+            },
+            "end": {
+              "line": 180,
+              "character": 43
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "staticFileHandler"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/routergroup.go",
+            "range": {
+              "start": {
+                "line": 166,
+                "character": 14
+              },
+              "end": {
+                "line": 166,
+                "character": 31
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "staticFileHandler"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/routergroup.go",
+            "range": {
+              "start": {
+                "line": 175,
+                "character": 14
+              },
+              "end": {
+                "line": 175,
+                "character": 31
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "staticFileHandler"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/routergroup.go",
+          "range": {
+            "start": {
+              "line": 166,
+              "character": 14
+            },
+            "end": {
+              "line": 166,
+              "character": 31
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "staticFileHandler"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import bindings, method receiver bindings, comments, and unrelated same-name tokens. The chosen definition usage is an unambiguous ordinary call or type reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-final-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-go-02-1",
+          "decision": "accepted",
+          "declaration": {
+            "repository": "gin-gonic/gin",
+            "commit": "34dac209ffb6ef85cc78c5d217bbb7ad001d68fd",
+            "language": "go",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/context.go",
+              "range": {
+                "start": {
+                  "line": 1109,
+                  "character": 5
+                },
+                "end": {
+                  "line": 1109,
+                  "character": 25
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "bodyAllowedForStatus"
+          },
+          "expectedUsages": [
+            {
+              "location": {
+                "uri": "benchmark://source/context.go",
+                "range": {
+                  "start": {
+                    "line": 1204,
+                    "character": 5
+                  },
+                  "end": {
+                    "line": 1204,
+                    "character": 25
+                  }
+                }
+              },
+              "kind": "function",
+              "displayName": "bodyAllowedForStatus"
+            }
+          ],
+          "definitionUsage": {
+            "location": {
+              "uri": "benchmark://source/context.go",
+              "range": {
+                "start": {
+                  "line": 1204,
+                  "character": 5
+                },
+                "end": {
+                  "line": 1204,
+                  "character": 25
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "bodyAllowedForStatus"
+          },
+          "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+          "replacementReason": null,
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        },
+        {
+          "caseId": "real-project-v1-go-02-1",
+          "decision": "replace",
+          "declaration": {
+            "repository": "gin-gonic/gin",
+            "commit": "34dac209ffb6ef85cc78c5d217bbb7ad001d68fd",
+            "language": "go",
+            "selectionRank": 4,
+            "location": {
+              "uri": "benchmark://source/gin.go",
+              "range": {
+                "start": {
+                  "line": 264,
+                  "character": 22
+                },
+                "end": {
+                  "line": 264,
+                  "character": 38
+                }
+              }
+            },
+            "kind": "method",
+            "displayName": "SecureJsonPrefix"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Bindings, declarations, comments, strings, copied sources, and test/integration helpers are not required usages.",
+          "replacementReason": "No ordinary source reference exists. The only non-declaration token is the method's documentation comment.",
+          "sourceArtifact": "real-project-v1-reviewer-a-replacements.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-go-02-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "gin-gonic/gin",
+        "commit": "34dac209ffb6ef85cc78c5d217bbb7ad001d68fd",
+        "language": "go",
+        "selectionRank": 5,
+        "location": {
+          "uri": "benchmark://source/binding/bson.go",
+          "range": {
+            "start": {
+              "line": 13,
+              "character": 5
+            },
+            "end": {
+              "line": 13,
+              "character": 16
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "bsonBinding"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/binding/binding.go",
+            "range": {
+              "start": {
+                "line": 89,
+                "character": 29
+              },
+              "end": {
+                "line": 89,
+                "character": 40
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "bsonBinding"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/binding/binding_nomsgpack.go",
+            "range": {
+              "start": {
+                "line": 85,
+                "character": 29
+              },
+              "end": {
+                "line": 85,
+                "character": 40
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "bsonBinding"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/binding/binding.go",
+          "range": {
+            "start": {
+              "line": 89,
+              "character": 29
+            },
+            "end": {
+              "line": 89,
+              "character": 40
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "bsonBinding"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, imports/re-exports, receiver or other declaration bindings, comments, strings, and unrelated same-name tokens; definitionUsage is an unambiguous ordinary reference.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-go-02-2",
+          "decision": "replace",
+          "declaration": {
+            "repository": "gin-gonic/gin",
+            "commit": "34dac209ffb6ef85cc78c5d217bbb7ad001d68fd",
+            "language": "go",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/gin.go",
+              "range": {
+                "start": {
+                  "line": 450,
+                  "character": 22
+                },
+                "end": {
+                  "line": 450,
+                  "character": 39
+                }
+              }
+            },
+            "kind": "method",
+            "displayName": "SetTrustedProxies"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Import/re-export bindings, declarations, comments, strings, and unrelated same-name tokens are not required usages under bindings_optional.",
+          "replacementReason": "No ordinary call exists in eligible source; remaining tokens are documentation comments.",
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-go-02-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "gin-gonic/gin",
+        "commit": "34dac209ffb6ef85cc78c5d217bbb7ad001d68fd",
+        "language": "go",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/debug.go",
+          "range": {
+            "start": {
+              "line": 21,
+              "character": 5
+            },
+            "end": {
+              "line": 21,
+              "character": 16
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "IsDebugging"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/debug.go",
+            "range": {
+              "start": {
+                "line": 32,
+                "character": 4
+              },
+              "end": {
+                "line": 32,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "IsDebugging"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/debug.go",
+            "range": {
+              "start": {
+                "line": 44,
+                "character": 4
+              },
+              "end": {
+                "line": 44,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "IsDebugging"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/debug.go",
+            "range": {
+              "start": {
+                "line": 56,
+                "character": 5
+              },
+              "end": {
+                "line": 56,
+                "character": 16
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "IsDebugging"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/debug.go",
+            "range": {
+              "start": {
+                "line": 110,
+                "character": 18
+              },
+              "end": {
+                "line": 110,
+                "character": 29
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "IsDebugging"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/gin.go",
+            "range": {
+              "start": {
+                "line": 276,
+                "character": 4
+              },
+              "end": {
+                "line": 276,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "IsDebugging"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/gin.go",
+            "range": {
+              "start": {
+                "line": 288,
+                "character": 4
+              },
+              "end": {
+                "line": 288,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "IsDebugging"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/gin.go",
+            "range": {
+              "start": {
+                "line": 300,
+                "character": 4
+              },
+              "end": {
+                "line": 300,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "IsDebugging"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/recovery.go",
+            "range": {
+              "start": {
+                "line": 72,
+                "character": 15
+              },
+              "end": {
+                "line": 72,
+                "character": 26
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "IsDebugging"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/debug.go",
+          "range": {
+            "start": {
+              "line": 32,
+              "character": 4
+            },
+            "end": {
+              "line": 32,
+              "character": 15
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "IsDebugging"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-go-03-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "fatedier/frp",
+        "commit": "9d45a557200fcbc6a4598b5ee0d75c405299c521",
+        "language": "go",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/pkg/proto/wire/wire.go",
+          "range": {
+            "start": {
+              "line": 44,
+              "character": 5
+            },
+            "end": {
+              "line": 44,
+              "character": 10
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "Frame"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/udp_binary.go",
+            "range": {
+              "start": {
+                "line": 282,
+                "character": 33
+              },
+              "end": {
+                "line": 282,
+                "character": 38
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/udp_binary.go",
+            "range": {
+              "start": {
+                "line": 285,
+                "character": 46
+              },
+              "end": {
+                "line": 285,
+                "character": 51
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/udp_binary.go",
+            "range": {
+              "start": {
+                "line": 298,
+                "character": 33
+              },
+              "end": {
+                "line": 298,
+                "character": 38
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/udp_binary.go",
+            "range": {
+              "start": {
+                "line": 302,
+                "character": 43
+              },
+              "end": {
+                "line": 302,
+                "character": 48
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/wire_v2.go",
+            "range": {
+              "start": {
+                "line": 122,
+                "character": 34
+              },
+              "end": {
+                "line": 122,
+                "character": 39
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/wire_v2.go",
+            "range": {
+              "start": {
+                "line": 141,
+                "character": 38
+              },
+              "end": {
+                "line": 141,
+                "character": 43
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/wire_v2.go",
+            "range": {
+              "start": {
+                "line": 169,
+                "character": 44
+              },
+              "end": {
+                "line": 169,
+                "character": 49
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/wire_v2.go",
+            "range": {
+              "start": {
+                "line": 188,
+                "character": 14
+              },
+              "end": {
+                "line": 188,
+                "character": 19
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 62,
+                "character": 29
+              },
+              "end": {
+                "line": 62,
+                "character": 34
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 82,
+                "character": 9
+              },
+              "end": {
+                "line": 82,
+                "character": 14
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 89,
+                "character": 29
+              },
+              "end": {
+                "line": 89,
+                "character": 34
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 119,
+                "character": 33
+              },
+              "end": {
+                "line": 119,
+                "character": 38
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 123,
+                "character": 46
+              },
+              "end": {
+                "line": 123,
+                "character": 51
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 128,
+                "character": 9
+              },
+              "end": {
+                "line": 128,
+                "character": 14
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/server/service.go",
+            "range": {
+              "start": {
+                "line": 644,
+                "character": 96
+              },
+              "end": {
+                "line": 644,
+                "character": 101
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Frame"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/pkg/msg/udp_binary.go",
+          "range": {
+            "start": {
+              "line": 282,
+              "character": 33
+            },
+            "end": {
+              "line": 282,
+              "character": 38
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "Frame"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-go-03-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "fatedier/frp",
+        "commit": "9d45a557200fcbc6a4598b5ee0d75c405299c521",
+        "language": "go",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/pkg/metrics/mem/server.go",
+          "range": {
+            "start": {
+              "line": 89,
+              "character": 24
+            },
+            "end": {
+              "line": 89,
+              "character": 40
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "clearUselessInfo"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/metrics/mem/server.go",
+            "range": {
+              "start": {
+                "line": 81,
+                "character": 21
+              },
+              "end": {
+                "line": 81,
+                "character": 37
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "clearUselessInfo"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/metrics/mem/server.go",
+            "range": {
+              "start": {
+                "line": 113,
+                "character": 10
+              },
+              "end": {
+                "line": 113,
+                "character": 26
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "clearUselessInfo"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/metrics/mem/server.go",
+            "range": {
+              "start": {
+                "line": 117,
+                "character": 10
+              },
+              "end": {
+                "line": 117,
+                "character": 26
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "clearUselessInfo"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/pkg/metrics/mem/server.go",
+          "range": {
+            "start": {
+              "line": 81,
+              "character": 21
+            },
+            "end": {
+              "line": 81,
+              "character": 37
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "clearUselessInfo"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-go-03-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "fatedier/frp",
+        "commit": "9d45a557200fcbc6a4598b5ee0d75c405299c521",
+        "language": "go",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/pkg/naming/names.go",
+          "range": {
+            "start": {
+              "line": 5,
+              "character": 5
+            },
+            "end": {
+              "line": 5,
+              "character": 18
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "AddUserPrefix"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/client/proxy/proxy_wrapper.go",
+            "range": {
+              "start": {
+                "line": 119,
+                "character": 25
+              },
+              "end": {
+                "line": 119,
+                "character": 38
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "AddUserPrefix"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/client/proxy/xtcp.go",
+            "range": {
+              "start": {
+                "line": 87,
+                "character": 24
+              },
+              "end": {
+                "line": 87,
+                "character": 37
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "AddUserPrefix"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/naming/names.go",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 9
+              },
+              "end": {
+                "line": 28,
+                "character": 22
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "AddUserPrefix"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/naming/names.go",
+            "range": {
+              "start": {
+                "line": 30,
+                "character": 8
+              },
+              "end": {
+                "line": 30,
+                "character": 21
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "AddUserPrefix"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/client/proxy/proxy_wrapper.go",
+          "range": {
+            "start": {
+              "line": 119,
+              "character": 25
+            },
+            "end": {
+              "line": 119,
+              "character": 38
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "AddUserPrefix"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-go-04-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "syncthing/syncthing",
+        "commit": "bcef5c5bc68dddfb68a3d341f41fad44c11fb52e",
+        "language": "go",
+        "selectionRank": 5,
+        "location": {
+          "uri": "benchmark://source/lib/scanner/walk.go",
+          "range": {
+            "start": {
+              "line": 667,
+              "character": 17
+            },
+            "end": {
+              "line": 667,
+              "character": 31
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "updateFileInfo"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/scanner/walk.go",
+            "range": {
+              "start": {
+                "line": 468,
+                "character": 7
+              },
+              "end": {
+                "line": 468,
+                "character": 21
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "updateFileInfo"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/scanner/walk.go",
+            "range": {
+              "start": {
+                "line": 518,
+                "character": 7
+              },
+              "end": {
+                "line": 518,
+                "character": 21
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "updateFileInfo"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/scanner/walk.go",
+            "range": {
+              "start": {
+                "line": 573,
+                "character": 7
+              },
+              "end": {
+                "line": 573,
+                "character": 21
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "updateFileInfo"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/lib/scanner/walk.go",
+          "range": {
+            "start": {
+              "line": 468,
+              "character": 7
+            },
+            "end": {
+              "line": 468,
+              "character": 21
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "updateFileInfo"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import bindings, method receiver bindings, comments, and unrelated same-name tokens. The chosen definition usage is an unambiguous ordinary call or type reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-final-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-go-04-1",
+          "decision": "replace",
+          "declaration": {
+            "repository": "syncthing/syncthing",
+            "commit": "bcef5c5bc68dddfb68a3d341f41fad44c11fb52e",
+            "language": "go",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/internal/db/olddb/keyer.go",
+              "range": {
+                "start": {
+                  "line": 291,
+                  "character": 22
+                },
+                "end": {
+                  "line": 291,
+                  "character": 40
+                }
+              }
+            },
+            "kind": "method",
+            "displayName": "GenerateIndexIDKey"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Import/re-export bindings, declarations, comments, strings, and unrelated same-name tokens are not required usages under bindings_optional.",
+          "replacementReason": "No ordinary reference to the selected concrete method; the only other token is the separate keyer interface method declaration.",
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        },
+        {
+          "caseId": "real-project-v1-go-04-1",
+          "decision": "replace",
+          "declaration": {
+            "repository": "syncthing/syncthing",
+            "commit": "bcef5c5bc68dddfb68a3d341f41fad44c11fb52e",
+            "language": "go",
+            "selectionRank": 4,
+            "location": {
+              "uri": "benchmark://source/lib/ignore/ignore.go",
+              "range": {
+                "start": {
+                  "line": 136,
+                  "character": 5
+                },
+                "end": {
+                  "line": 136,
+                  "character": 23
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "WithChangeDetector"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Bindings, declarations, comments, strings, copied sources, and test/integration helpers are not required usages.",
+          "replacementReason": "No ordinary source reference exists. The only non-declaration token is the function's documentation comment.",
+          "sourceArtifact": "real-project-v1-reviewer-a-replacements.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-go-04-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "syncthing/syncthing",
+        "commit": "bcef5c5bc68dddfb68a3d341f41fad44c11fb52e",
+        "language": "go",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/lib/ignore/ignoreresult/ignoreresult.go",
+          "range": {
+            "start": {
+              "line": 52,
+              "character": 11
+            },
+            "end": {
+              "line": 52,
+              "character": 24
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "ToggleIgnored"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/ignore/ignore.go",
+            "range": {
+              "start": {
+                "line": 374,
+                "character": 35
+              },
+              "end": {
+                "line": 374,
+                "character": 48
+              }
+            }
+          },
+          "kind": "method",
+          "displayName": "ToggleIgnored"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/lib/ignore/ignore.go",
+          "range": {
+            "start": {
+              "line": 374,
+              "character": 35
+            },
+            "end": {
+              "line": 374,
+              "character": 48
+            }
+          }
+        },
+        "kind": "method",
+        "displayName": "ToggleIgnored"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-go-04-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "syncthing/syncthing",
+        "commit": "bcef5c5bc68dddfb68a3d341f41fad44c11fb52e",
+        "language": "go",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/lib/config/deviceconfiguration.go",
+          "range": {
+            "start": {
+              "line": 99,
+              "character": 5
+            },
+            "end": {
+              "line": 99,
+              "character": 30
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "sortedObservedFolderSlice"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/config/deviceconfiguration.go",
+            "range": {
+              "start": {
+                "line": 63,
+                "character": 22
+              },
+              "end": {
+                "line": 63,
+                "character": 47
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "sortedObservedFolderSlice"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/lib/config/deviceconfiguration.go",
+          "range": {
+            "start": {
+              "line": 63,
+              "character": 22
+            },
+            "end": {
+              "line": 63,
+              "character": 47
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "sortedObservedFolderSlice"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-python-01-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "3b1b/manim",
+        "commit": "6199a00d4c1b1127ebe45cb629c3f22538b10e13",
+        "language": "python",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/manimlib/utils/bezier.py",
+          "range": {
+            "start": {
+              "line": 96,
+              "character": 4
+            },
+            "end": {
+              "line": 96,
+              "character": 15
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "interpolate"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 103,
+                "character": 24
+              },
+              "end": {
+                "line": 103,
+                "character": 35
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/fading.py",
+            "range": {
+              "start": {
+                "line": 167,
+                "character": 20
+              },
+              "end": {
+                "line": 167,
+                "character": 31
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/fading.py",
+            "range": {
+              "start": {
+                "line": 170,
+                "character": 20
+              },
+              "end": {
+                "line": 170,
+                "character": 31
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": {
+                "line": 181,
+                "character": 16
+              },
+              "end": {
+                "line": 181,
+                "character": 27
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": {
+                "line": 238,
+                "character": 13
+              },
+              "end": {
+                "line": 238,
+                "character": 24
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": {
+                "line": 387,
+                "character": 12
+              },
+              "end": {
+                "line": 387,
+                "character": 23
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/numbers.py",
+            "range": {
+              "start": {
+                "line": 46,
+                "character": 22
+              },
+              "end": {
+                "line": 46,
+                "character": 33
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/numbers.py",
+            "range": {
+              "start": {
+                "line": 61,
+                "character": 22
+              },
+              "end": {
+                "line": 61,
+                "character": 33
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject.py",
+            "range": {
+              "start": {
+                "line": 1620,
+                "character": 15
+              },
+              "end": {
+                "line": 1620,
+                "character": 26
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/number_line.py",
+            "range": {
+              "start": {
+                "line": 147,
+                "character": 15
+              },
+              "end": {
+                "line": 147,
+                "character": 26
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": {
+                "line": 159,
+                "character": 29
+              },
+              "end": {
+                "line": 159,
+                "character": 40
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": {
+                "line": 484,
+                "character": 12
+              },
+              "end": {
+                "line": 484,
+                "character": 23
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": {
+                "line": 485,
+                "character": 12
+              },
+              "end": {
+                "line": 485,
+                "character": 23
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": {
+                "line": 525,
+                "character": 30
+              },
+              "end": {
+                "line": 525,
+                "character": 41
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/three_dimensions.py",
+            "range": {
+              "start": {
+                "line": 74,
+                "character": 37
+              },
+              "end": {
+                "line": 74,
+                "character": 48
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/three_dimensions.py",
+            "range": {
+              "start": {
+                "line": 82,
+                "character": 37
+              },
+              "end": {
+                "line": 82,
+                "character": 48
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 15
+              },
+              "end": {
+                "line": 137,
+                "character": 26
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 138,
+                "character": 12
+              },
+              "end": {
+                "line": 138,
+                "character": 23
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 139,
+                "character": 12
+              },
+              "end": {
+                "line": 139,
+                "character": 23
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 213,
+                "character": 35
+              },
+              "end": {
+                "line": 213,
+                "character": 46
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 218,
+                "character": 39
+              },
+              "end": {
+                "line": 218,
+                "character": 50
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 225,
+                "character": 38
+              },
+              "end": {
+                "line": 225,
+                "character": 49
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 230,
+                "character": 42
+              },
+              "end": {
+                "line": 230,
+                "character": 53
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+            "range": {
+              "start": {
+                "line": 895,
+                "character": 15
+              },
+              "end": {
+                "line": 895,
+                "character": 26
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/vector_field.py",
+            "range": {
+              "start": {
+                "line": 50,
+                "character": 17
+              },
+              "end": {
+                "line": 50,
+                "character": 28
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 73
+              },
+              "end": {
+                "line": 121,
+                "character": 84
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 147,
+                "character": 16
+              },
+              "end": {
+                "line": 147,
+                "character": 27
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 167,
+                "character": 11
+              },
+              "end": {
+                "line": 167,
+                "character": 22
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 112,
+                "character": 25
+              },
+              "end": {
+                "line": 112,
+                "character": 36
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 114,
+                "character": 22
+              },
+              "end": {
+                "line": 114,
+                "character": 33
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 141,
+                "character": 8
+              },
+              "end": {
+                "line": 141,
+                "character": 19
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 142,
+                "character": 8
+              },
+              "end": {
+                "line": 142,
+                "character": 19
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 143,
+                "character": 8
+              },
+              "end": {
+                "line": 143,
+                "character": 19
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 161,
+                "character": 17
+              },
+              "end": {
+                "line": 161,
+                "character": 28
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/paths.py",
+            "range": {
+              "start": {
+                "line": 32,
+                "character": 11
+              },
+              "end": {
+                "line": 32,
+                "character": 22
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/manimlib/animation/composition.py",
+          "range": {
+            "start": {
+              "line": 103,
+              "character": 24
+            },
+            "end": {
+              "line": 103,
+              "character": 35
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "interpolate"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-python-01-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "3b1b/manim",
+        "commit": "6199a00d4c1b1127ebe45cb629c3f22538b10e13",
+        "language": "python",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/manimlib/utils/color.py",
+          "range": {
+            "start": {
+              "line": 30,
+              "character": 4
+            },
+            "end": {
+              "line": 30,
+              "character": 17
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "color_to_rgba"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/camera/camera.py",
+            "range": {
+              "start": {
+                "line": 59,
+                "character": 49
+              },
+              "end": {
+                "line": 59,
+                "character": 62
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "color_to_rgba"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/point_cloud_mobject.py",
+            "range": {
+              "start": {
+                "line": 40,
+                "character": 17
+              },
+              "end": {
+                "line": 40,
+                "character": 30
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "color_to_rgba"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/point_cloud_mobject.py",
+            "range": {
+              "start": {
+                "line": 56,
+                "character": 12
+              },
+              "end": {
+                "line": 56,
+                "character": 25
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "color_to_rgba"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/scene/scene.py",
+            "range": {
+              "start": {
+                "line": 876,
+                "character": 43
+              },
+              "end": {
+                "line": 876,
+                "character": 56
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "color_to_rgba"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 152,
+                "character": 22
+              },
+              "end": {
+                "line": 152,
+                "character": 35
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "color_to_rgba"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/manimlib/camera/camera.py",
+          "range": {
+            "start": {
+              "line": 59,
+              "character": 49
+            },
+            "end": {
+              "line": 59,
+              "character": 62
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "color_to_rgba"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-python-01-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "3b1b/manim",
+        "commit": "6199a00d4c1b1127ebe45cb629c3f22538b10e13",
+        "language": "python",
+        "selectionRank": 4,
+        "location": {
+          "uri": "benchmark://source/manimlib/utils/iterables.py",
+          "range": {
+            "start": {
+              "line": 122,
+              "character": 4
+            },
+            "end": {
+              "line": 122,
+              "character": 13
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "make_even"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+            "range": {
+              "start": {
+                "line": 284,
+                "character": 33
+              },
+              "end": {
+                "line": 284,
+                "character": 42
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "make_even"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+          "range": {
+            "start": {
+              "line": 284,
+              "character": 33
+            },
+            "end": {
+              "line": 284,
+              "character": 42
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "make_even"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, imports/re-exports, receiver or other declaration bindings, comments, strings, and unrelated same-name tokens; definitionUsage is an unambiguous ordinary reference.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-python-01-3",
+          "decision": "replace",
+          "declaration": {
+            "repository": "3b1b/manim",
+            "commit": "6199a00d4c1b1127ebe45cb629c3f22538b10e13",
+            "language": "python",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/manimlib/mobject/mobject_update_utils.py",
+              "range": {
+                "start": {
+                  "line": 54,
+                  "character": 4
+                },
+                "end": {
+                  "line": 54,
+                  "character": 17
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "always_redraw"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Import/re-export bindings, declarations, comments, strings, and unrelated same-name tokens are not required usages under bindings_optional.",
+          "replacementReason": "All actual calls are in example_scenes.py; replace because the protocol excludes examples and there is no ordinary non-example use.",
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-python-02-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "github/spec-kit",
+        "commit": "296fdf2ee7188fa9ed12246f83e38186bd700716",
+        "language": "python",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/extensions/git/scripts/python/create_new_feature_branch.py",
+          "range": {
+            "start": {
+              "line": 282,
+              "character": 4
+            },
+            "end": {
+              "line": 282,
+              "character": 21
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "clean_branch_name"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/extensions/git/scripts/python/create_new_feature_branch.py",
+            "range": {
+              "start": {
+                "line": 307,
+                "character": 14
+              },
+              "end": {
+                "line": 307,
+                "character": 31
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "clean_branch_name"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/extensions/git/scripts/python/create_new_feature_branch.py",
+            "range": {
+              "start": {
+                "line": 312,
+                "character": 14
+              },
+              "end": {
+                "line": 312,
+                "character": 31
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "clean_branch_name"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/extensions/git/scripts/python/create_new_feature_branch.py",
+            "range": {
+              "start": {
+                "line": 492,
+                "character": 28
+              },
+              "end": {
+                "line": 492,
+                "character": 45
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "clean_branch_name"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/extensions/git/scripts/python/create_new_feature_branch.py",
+          "range": {
+            "start": {
+              "line": 307,
+              "character": 14
+            },
+            "end": {
+              "line": 307,
+              "character": 31
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "clean_branch_name"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-python-02-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "github/spec-kit",
+        "commit": "296fdf2ee7188fa9ed12246f83e38186bd700716",
+        "language": "python",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/src/specify_cli/workflows/steps/do_while/__init__.py",
+          "range": {
+            "start": {
+              "line": 9,
+              "character": 6
+            },
+            "end": {
+              "line": 9,
+              "character": 17
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "DoWhileStep"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/specify_cli/workflows/__init__.py",
+            "range": {
+              "start": {
+                "line": 59,
+                "character": 19
+              },
+              "end": {
+                "line": 59,
+                "character": 30
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "DoWhileStep"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/specify_cli/workflows/__init__.py",
+          "range": {
+            "start": {
+              "line": 59,
+              "character": 19
+            },
+            "end": {
+              "line": 59,
+              "character": 30
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "DoWhileStep"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-python-02-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "github/spec-kit",
+        "commit": "296fdf2ee7188fa9ed12246f83e38186bd700716",
+        "language": "python",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/src/specify_cli/integrations/kilocode/__init__.py",
+          "range": {
+            "start": {
+              "line": 5,
+              "character": 6
+            },
+            "end": {
+              "line": 5,
+              "character": 25
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "KilocodeIntegration"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/specify_cli/integrations/__init__.py",
+            "range": {
+              "start": {
+                "line": 109,
+                "character": 14
+              },
+              "end": {
+                "line": 109,
+                "character": 33
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "KilocodeIntegration"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/specify_cli/integrations/__init__.py",
+          "range": {
+            "start": {
+              "line": 109,
+              "character": 14
+            },
+            "end": {
+              "line": 109,
+              "character": 33
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "KilocodeIntegration"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-python-03-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "ytdl-org/youtube-dl",
+        "commit": "956b8c585591b401a543e409accb163eeaaa1193",
+        "language": "python",
+        "selectionRank": 6,
+        "location": {
+          "uri": "benchmark://source/youtube_dl/extractor/curiositystream.py",
+          "range": {
+            "start": {
+              "line": 49,
+              "character": 6
+            },
+            "end": {
+              "line": 49,
+              "character": 23
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "CuriosityStreamIE"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/curiositystream.py",
+            "range": {
+              "start": {
+                "line": 173,
+                "character": 16
+              },
+              "end": {
+                "line": 173,
+                "character": 33
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CuriosityStreamIE"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/youtube_dl/extractor/curiositystream.py",
+          "range": {
+            "start": {
+              "line": 173,
+              "character": 16
+            },
+            "end": {
+              "line": 173,
+              "character": 33
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "CuriosityStreamIE"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import bindings, method receiver bindings, comments, and unrelated same-name tokens. The chosen definition usage is an unambiguous ordinary call or type reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-final-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-python-03-1",
+          "decision": "replace",
+          "declaration": {
+            "repository": "ytdl-org/youtube-dl",
+            "commit": "956b8c585591b401a543e409accb163eeaaa1193",
+            "language": "python",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/youtube_dl/extractor/eroprofile.py",
+              "range": {
+                "start": {
+                  "line": 12,
+                  "character": 6
+                },
+                "end": {
+                  "line": 12,
+                  "character": 18
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "EroProfileIE"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Import/re-export bindings, declarations, comments, strings, and unrelated same-name tokens are not required usages under bindings_optional.",
+          "replacementReason": "The only non-declaration occurrence is an import binding in the extractor registry; there is no ordinary explicit use for a definition lookup.",
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        },
+        {
+          "caseId": "real-project-v1-python-03-1",
+          "decision": "replace",
+          "declaration": {
+            "repository": "ytdl-org/youtube-dl",
+            "commit": "956b8c585591b401a543e409accb163eeaaa1193",
+            "language": "python",
+            "selectionRank": 4,
+            "location": {
+              "uri": "benchmark://source/youtube_dl/extractor/vier.py",
+              "range": {
+                "start": {
+                  "line": 206,
+                  "character": 6
+                },
+                "end": {
+                  "line": 206,
+                  "character": 18
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "VierVideosIE"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Bindings, declarations, comments, strings, copied sources, and test/integration helpers are not required usages.",
+          "replacementReason": "The only non-declaration occurrence is an import binding in the extractor registry; there is no ordinary explicit use suitable for definition lookup.",
+          "sourceArtifact": "real-project-v1-reviewer-a-replacements.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-python-03-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "ytdl-org/youtube-dl",
+        "commit": "956b8c585591b401a543e409accb163eeaaa1193",
+        "language": "python",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/devscripts/buildserver.py",
+          "range": {
+            "start": {
+              "line": 119,
+              "character": 4
+            },
+            "end": {
+              "line": 119,
+              "character": 28
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "win_service_report_event"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/devscripts/buildserver.py",
+            "range": {
+              "start": {
+                "line": 147,
+                "character": 8
+              },
+              "end": {
+                "line": 147,
+                "character": 32
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "win_service_report_event"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/devscripts/buildserver.py",
+            "range": {
+              "start": {
+                "line": 177,
+                "character": 8
+              },
+              "end": {
+                "line": 177,
+                "character": 32
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "win_service_report_event"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/devscripts/buildserver.py",
+            "range": {
+              "start": {
+                "line": 198,
+                "character": 8
+              },
+              "end": {
+                "line": 198,
+                "character": 32
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "win_service_report_event"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/devscripts/buildserver.py",
+          "range": {
+            "start": {
+              "line": 147,
+              "character": 8
+            },
+            "end": {
+              "line": 147,
+              "character": 32
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "win_service_report_event"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-python-03-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "ytdl-org/youtube-dl",
+        "commit": "956b8c585591b401a543e409accb163eeaaa1193",
+        "language": "python",
+        "selectionRank": 5,
+        "location": {
+          "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+          "range": {
+            "start": {
+              "line": 30,
+              "character": 6
+            },
+            "end": {
+              "line": 30,
+              "character": 19
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "PornHubBaseIE"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 36,
+                "character": 25
+              },
+              "end": {
+                "line": 36,
+                "character": 38
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "PornHubBaseIE"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 120,
+                "character": 16
+              },
+              "end": {
+                "line": 120,
+                "character": 29
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "PornHubBaseIE"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 131,
+                "character": 26
+              },
+              "end": {
+                "line": 131,
+                "character": 39
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "PornHubBaseIE"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 504,
+                "character": 28
+              },
+              "end": {
+                "line": 504,
+                "character": 41
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "PornHubBaseIE"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 528,
+                "character": 132
+              },
+              "end": {
+                "line": 528,
+                "character": 145
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "PornHubBaseIE"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 635,
+                "character": 74
+              },
+              "end": {
+                "line": 635,
+                "character": 87
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "PornHubBaseIE"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 753,
+                "character": 120
+              },
+              "end": {
+                "line": 753,
+                "character": 133
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "PornHubBaseIE"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+          "range": {
+            "start": {
+              "line": 120,
+              "character": 16
+            },
+            "end": {
+              "line": 120,
+              "character": 29
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "PornHubBaseIE"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, imports/re-exports, receiver or other declaration bindings, comments, strings, and unrelated same-name tokens; definitionUsage is an unambiguous ordinary reference.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-python-03-3",
+          "decision": "replace",
+          "declaration": {
+            "repository": "ytdl-org/youtube-dl",
+            "commit": "956b8c585591b401a543e409accb163eeaaa1193",
+            "language": "python",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/youtube_dl/extractor/heise.py",
+              "range": {
+                "start": {
+                  "line": 16,
+                  "character": 6
+                },
+                "end": {
+                  "line": 16,
+                  "character": 13
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "HeiseIE"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Import/re-export bindings, declarations, comments, strings, and unrelated same-name tokens are not required usages under bindings_optional.",
+          "replacementReason": "The only non-declaration occurrence is an import binding in the extractor registry; there is no ordinary explicit use for a definition lookup.",
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-python-04-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "odysseus-dev/odysseus",
+        "commit": "28c333e64780ae2fbb7f0757d752e8bb5fb74990",
+        "language": "python",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/routes/contacts/contacts_routes.py",
+          "range": {
+            "start": {
+              "line": 737,
+              "character": 4
+            },
+            "end": {
+              "line": 737,
+              "character": 25
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "setup_contacts_routes"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/app.py",
+            "range": {
+              "start": {
+                "line": 859,
+                "character": 19
+              },
+              "end": {
+                "line": 859,
+                "character": 40
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "setup_contacts_routes"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/app.py",
+          "range": {
+            "start": {
+              "line": 859,
+              "character": 19
+            },
+            "end": {
+              "line": 859,
+              "character": 40
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "setup_contacts_routes"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-python-04-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "odysseus-dev/odysseus",
+        "commit": "28c333e64780ae2fbb7f0757d752e8bb5fb74990",
+        "language": "python",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/src/chroma_client.py",
+          "range": {
+            "start": {
+              "line": 30,
+              "character": 4
+            },
+            "end": {
+              "line": 30,
+              "character": 21
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "get_chroma_client"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/scripts/migrate_faiss_to_chroma.py",
+            "range": {
+              "start": {
+                "line": 91,
+                "character": 13
+              },
+              "end": {
+                "line": 91,
+                "character": 30
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "get_chroma_client"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/scripts/migrate_faiss_to_chroma.py",
+            "range": {
+              "start": {
+                "line": 144,
+                "character": 13
+              },
+              "end": {
+                "line": 144,
+                "character": 30
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "get_chroma_client"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/embedding_lanes.py",
+            "range": {
+              "start": {
+                "line": 255,
+                "character": 20
+              },
+              "end": {
+                "line": 255,
+                "character": 37
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "get_chroma_client"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/embedding_lanes.py",
+            "range": {
+              "start": {
+                "line": 282,
+                "character": 24
+              },
+              "end": {
+                "line": 282,
+                "character": 41
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "get_chroma_client"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/memory_vector.py",
+            "range": {
+              "start": {
+                "line": 92,
+                "character": 21
+              },
+              "end": {
+                "line": 92,
+                "character": 38
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "get_chroma_client"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/memory_vector.py",
+            "range": {
+              "start": {
+                "line": 195,
+                "character": 17
+              },
+              "end": {
+                "line": 195,
+                "character": 34
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "get_chroma_client"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/rag_vector.py",
+            "range": {
+              "start": {
+                "line": 162,
+                "character": 25
+              },
+              "end": {
+                "line": 162,
+                "character": 42
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "get_chroma_client"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/rag_vector.py",
+            "range": {
+              "start": {
+                "line": 447,
+                "character": 21
+              },
+              "end": {
+                "line": 447,
+                "character": 38
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "get_chroma_client"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/scripts/migrate_faiss_to_chroma.py",
+          "range": {
+            "start": {
+              "line": 91,
+              "character": 13
+            },
+            "end": {
+              "line": 91,
+              "character": 30
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "get_chroma_client"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-python-04-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "odysseus-dev/odysseus",
+        "commit": "28c333e64780ae2fbb7f0757d752e8bb5fb74990",
+        "language": "python",
+        "selectionRank": 4,
+        "location": {
+          "uri": "benchmark://source/src/builtin_actions.py",
+          "range": {
+            "start": {
+              "line": 418,
+              "character": 10
+            },
+            "end": {
+              "line": 418,
+              "character": 30
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "action_tidy_research"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/builtin_actions.py",
+            "range": {
+              "start": {
+                "line": 2806,
+                "character": 21
+              },
+              "end": {
+                "line": 2806,
+                "character": 41
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "action_tidy_research"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/builtin_actions.py",
+          "range": {
+            "start": {
+              "line": 2806,
+              "character": 21
+            },
+            "end": {
+              "line": 2806,
+              "character": 41
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "action_tidy_research"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, imports/re-exports, receiver or other declaration bindings, comments, strings, and unrelated same-name tokens; definitionUsage is an unambiguous ordinary reference.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-python-04-3",
+          "decision": "replace",
+          "declaration": {
+            "repository": "odysseus-dev/odysseus",
+            "commit": "28c333e64780ae2fbb7f0757d752e8bb5fb74990",
+            "language": "python",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/services/search/analytics.py",
+              "range": {
+                "start": {
+                  "line": 122,
+                  "character": 4
+                },
+                "end": {
+                  "line": 122,
+                  "character": 20
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "get_search_stats"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Import/re-export bindings, declarations, comments, strings, and unrelated same-name tokens are not required usages under bindings_optional.",
+          "replacementReason": "Occurrences outside the declaration are re-export bindings and __all__ strings (including a parallel package tree), not ordinary references.",
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-typescript-01-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "excalidraw/excalidraw",
+        "commit": "786ab266ff3a9cfffaed16804cf9132b44bc08ae",
+        "language": "typescript",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+          "range": {
+            "start": {
+              "line": 27,
+              "character": 5
+            },
+            "end": {
+              "line": 27,
+              "character": 25
+            }
+          }
+        },
+        "kind": "type",
+        "displayName": "AppEventPromiseValue"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 52,
+                "character": 5
+              },
+              "end": {
+                "line": 52,
+                "character": 25
+              }
+            }
+          },
+          "kind": "type",
+          "displayName": "AppEventPromiseValue"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 53,
+                "character": 51
+              },
+              "end": {
+                "line": 53,
+                "character": 71
+              }
+            }
+          },
+          "kind": "type",
+          "displayName": "AppEventPromiseValue"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 62,
+                "character": 13
+              },
+              "end": {
+                "line": 62,
+                "character": 33
+              }
+            }
+          },
+          "kind": "type",
+          "displayName": "AppEventPromiseValue"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 66,
+                "character": 35
+              },
+              "end": {
+                "line": 66,
+                "character": 55
+              }
+            }
+          },
+          "kind": "type",
+          "displayName": "AppEventPromiseValue"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 93,
+                "character": 23
+              },
+              "end": {
+                "line": 93,
+                "character": 43
+              }
+            }
+          },
+          "kind": "type",
+          "displayName": "AppEventPromiseValue"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+          "range": {
+            "start": {
+              "line": 52,
+              "character": 5
+            },
+            "end": {
+              "line": 52,
+              "character": 25
+            }
+          }
+        },
+        "kind": "type",
+        "displayName": "AppEventPromiseValue"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-typescript-01-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "excalidraw/excalidraw",
+        "commit": "786ab266ff3a9cfffaed16804cf9132b44bc08ae",
+        "language": "typescript",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/packages/excalidraw/components/AppStateObserver.ts",
+          "range": {
+            "start": {
+              "line": 61,
+              "character": 13
+            },
+            "end": {
+              "line": 61,
+              "character": 29
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "AppStateObserver"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+            "range": {
+              "start": {
+                "line": 680,
+                "character": 33
+              },
+              "end": {
+                "line": 680,
+                "character": 49
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "AppStateObserver"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+          "range": {
+            "start": {
+              "line": 680,
+              "character": 33
+            },
+            "end": {
+              "line": 680,
+              "character": 49
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "AppStateObserver"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-typescript-01-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "excalidraw/excalidraw",
+        "commit": "786ab266ff3a9cfffaed16804cf9132b44bc08ae",
+        "language": "typescript",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/packages/excalidraw/components/App.viewport.ts",
+          "range": {
+            "start": {
+              "line": 436,
+              "character": 13
+            },
+            "end": {
+              "line": 436,
+              "character": 24
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "AppViewport"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+            "range": {
+              "start": {
+                "line": 687,
+                "character": 19
+              },
+              "end": {
+                "line": 687,
+                "character": 30
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "AppViewport"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+            "range": {
+              "start": {
+                "line": 687,
+                "character": 37
+              },
+              "end": {
+                "line": 687,
+                "character": 48
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "AppViewport"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+          "range": {
+            "start": {
+              "line": 687,
+              "character": 37
+            },
+            "end": {
+              "line": 687,
+              "character": 48
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "AppViewport"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-typescript-02-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "tailwindlabs/tailwindcss",
+        "commit": "6de87c62c4633007872986339f7b3a11600de923",
+        "language": "typescript",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/packages/tailwindcss/src/utilities.ts",
+          "range": {
+            "start": {
+              "line": 6702,
+              "character": 16
+            },
+            "end": {
+              "line": 6702,
+              "character": 40
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "isValidStaticUtilityName"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/tailwindcss/src/utilities.ts",
+            "range": {
+              "start": {
+                "line": 6428,
+                "character": 6
+              },
+              "end": {
+                "line": 6428,
+                "character": 30
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "isValidStaticUtilityName"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/packages/tailwindcss/src/utilities.ts",
+          "range": {
+            "start": {
+              "line": 6428,
+              "character": 6
+            },
+            "end": {
+              "line": 6428,
+              "character": 30
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "isValidStaticUtilityName"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-typescript-02-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "tailwindlabs/tailwindcss",
+        "commit": "6de87c62c4633007872986339f7b3a11600de923",
+        "language": "typescript",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/codemods/template/migrate-variant-order.ts",
+          "range": {
+            "start": {
+              "line": 101,
+              "character": 9
+            },
+            "end": {
+              "line": 101,
+              "character": 28
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "getAppliedNodeStack"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/codemods/template/migrate-variant-order.ts",
+            "range": {
+              "start": {
+                "line": 68,
+                "character": 14
+              },
+              "end": {
+                "line": 68,
+                "character": 33
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "getAppliedNodeStack"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/codemods/template/migrate-variant-order.ts",
+            "range": {
+              "start": {
+                "line": 73,
+                "character": 14
+              },
+              "end": {
+                "line": 73,
+                "character": 33
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "getAppliedNodeStack"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/codemods/template/migrate-variant-order.ts",
+            "range": {
+              "start": {
+                "line": 86,
+                "character": 14
+              },
+              "end": {
+                "line": 86,
+                "character": 33
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "getAppliedNodeStack"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/codemods/template/migrate-variant-order.ts",
+          "range": {
+            "start": {
+              "line": 68,
+              "character": 14
+            },
+            "end": {
+              "line": 68,
+              "character": 33
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "getAppliedNodeStack"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-typescript-02-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "tailwindlabs/tailwindcss",
+        "commit": "6de87c62c4633007872986339f7b3a11600de923",
+        "language": "typescript",
+        "selectionRank": 4,
+        "location": {
+          "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/utils/renderer.ts",
+          "range": {
+            "start": {
+              "line": 115,
+              "character": 16
+            },
+            "end": {
+              "line": 115,
+              "character": 21
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "error"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/codemods/css/analyze.ts",
+            "range": {
+              "start": {
+                "line": 81,
+                "character": 12
+              },
+              "end": {
+                "line": 81,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/codemods/css/link.ts",
+            "range": {
+              "start": {
+                "line": 62,
+                "character": 6
+              },
+              "end": {
+                "line": 62,
+                "character": 11
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/codemods/css/link.ts",
+            "range": {
+              "start": {
+                "line": 117,
+                "character": 6
+              },
+              "end": {
+                "line": 117,
+                "character": 11
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/codemods/template/prepare-config.ts",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 4
+              },
+              "end": {
+                "line": 67,
+                "character": 9
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/index.ts",
+            "range": {
+              "start": {
+                "line": 57,
+                "character": 6
+              },
+              "end": {
+                "line": 57,
+                "character": 11
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/index.ts",
+            "range": {
+              "start": {
+                "line": 72,
+                "character": 4
+              },
+              "end": {
+                "line": 72,
+                "character": 9
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/index.ts",
+            "range": {
+              "start": {
+                "line": 118,
+                "character": 8
+              },
+              "end": {
+                "line": 118,
+                "character": 13
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/index.ts",
+            "range": {
+              "start": {
+                "line": 131,
+                "character": 6
+              },
+              "end": {
+                "line": 131,
+                "character": 11
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/index.ts",
+            "range": {
+              "start": {
+                "line": 143,
+                "character": 8
+              },
+              "end": {
+                "line": 143,
+                "character": 13
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/index.ts",
+            "range": {
+              "start": {
+                "line": 218,
+                "character": 10
+              },
+              "end": {
+                "line": 218,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/index.ts",
+            "range": {
+              "start": {
+                "line": 228,
+                "character": 8
+              },
+              "end": {
+                "line": 228,
+                "character": 13
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/utils/extract-static-plugins.ts",
+            "range": {
+              "start": {
+                "line": 275,
+                "character": 4
+              },
+              "end": {
+                "line": 275,
+                "character": 9
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/utils/packages.ts",
+            "range": {
+              "start": {
+                "line": 47,
+                "character": 8
+              },
+              "end": {
+                "line": 47,
+                "character": 13
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/utils/packages.ts",
+            "range": {
+              "start": {
+                "line": 64,
+                "character": 8
+              },
+              "end": {
+                "line": 64,
+                "character": 13
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "error"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/codemods/css/analyze.ts",
+          "range": {
+            "start": {
+              "line": 81,
+              "character": 12
+            },
+            "end": {
+              "line": 81,
+              "character": 17
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "error"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, imports/re-exports, receiver or other declaration bindings, comments, strings, and unrelated same-name tokens; definitionUsage is an unambiguous ordinary reference.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-typescript-02-3",
+          "decision": "replace",
+          "declaration": {
+            "repository": "tailwindlabs/tailwindcss",
+            "commit": "6de87c62c4633007872986339f7b3a11600de923",
+            "language": "typescript",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/integrations/utils.ts",
+              "range": {
+                "start": {
+                  "line": 91,
+                  "character": 16
+                },
+                "end": {
+                  "line": 91,
+                  "character": 20
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "test"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Import/re-export bindings, declarations, comments, strings, and unrelated same-name tokens are not required usages under bindings_optional.",
+          "replacementReason": "Selected declaration is a test/integration harness helper, excluded by the protocol; most same-name tokens are unrelated RegExp.test calls, strings, comments, or config keys.",
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-typescript-03-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "coder/code-server",
+        "commit": "14bdb36f9217671bff9e9389f812c9ac9de575c0",
+        "language": "typescript",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/src/node/cli.ts",
+          "range": {
+            "start": {
+              "line": 690,
+              "character": 16
+            },
+            "end": {
+              "line": 690,
+              "character": 40
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "getResolvedPathsFromArgs"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/cli.ts",
+            "range": {
+              "start": {
+                "line": 681,
+                "character": 11
+              },
+              "end": {
+                "line": 681,
+                "character": 35
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "getResolvedPathsFromArgs"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/cli.ts",
+            "range": {
+              "start": {
+                "line": 855,
+                "character": 16
+              },
+              "end": {
+                "line": 855,
+                "character": 40
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "getResolvedPathsFromArgs"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/node/cli.ts",
+          "range": {
+            "start": {
+              "line": 681,
+              "character": 11
+            },
+            "end": {
+              "line": 681,
+              "character": 35
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "getResolvedPathsFromArgs"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-typescript-03-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "coder/code-server",
+        "commit": "14bdb36f9217671bff9e9389f812c9ac9de575c0",
+        "language": "typescript",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/src/node/vscodeSocket.ts",
+          "range": {
+            "start": {
+              "line": 30,
+              "character": 10
+            },
+            "end": {
+              "line": 30,
+              "character": 28
+            }
+          }
+        },
+        "kind": "interface",
+        "displayName": "GetSessionResponse"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/vscodeSocket.ts",
+            "range": {
+              "start": {
+                "line": 42,
+                "character": 17
+              },
+              "end": {
+                "line": 42,
+                "character": 35
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "GetSessionResponse"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/vscodeSocket.ts",
+            "range": {
+              "start": {
+                "line": 50,
+                "character": 22
+              },
+              "end": {
+                "line": 50,
+                "character": 40
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "GetSessionResponse"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/vscodeSocket.ts",
+            "range": {
+              "start": {
+                "line": 154,
+                "character": 39
+              },
+              "end": {
+                "line": 154,
+                "character": 57
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "GetSessionResponse"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/node/vscodeSocket.ts",
+          "range": {
+            "start": {
+              "line": 42,
+              "character": 17
+            },
+            "end": {
+              "line": 42,
+              "character": 35
+            }
+          }
+        },
+        "kind": "interface",
+        "displayName": "GetSessionResponse"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-typescript-03-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "coder/code-server",
+        "commit": "14bdb36f9217671bff9e9389f812c9ac9de575c0",
+        "language": "typescript",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/src/node/wrapper.ts",
+          "range": {
+            "start": {
+              "line": 17,
+              "character": 16
+            },
+            "end": {
+              "line": 17,
+              "character": 25
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "onMessage"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 180,
+                "character": 26
+              },
+              "end": {
+                "line": 180,
+                "character": 35
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "onMessage"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 353,
+                "character": 26
+              },
+              "end": {
+                "line": 353,
+                "character": 35
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "onMessage"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/node/wrapper.ts",
+          "range": {
+            "start": {
+              "line": 180,
+              "character": 26
+            },
+            "end": {
+              "line": 180,
+              "character": 35
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "onMessage"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-typescript-04-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "paperclipai/paperclip",
+        "commit": "d5b9f6c8c9d9edb0c9796df86c61826b11400b5b",
+        "language": "typescript",
+        "selectionRank": 4,
+        "location": {
+          "uri": "benchmark://source/packages/plugins/sdk/src/worker-rpc-host.ts",
+          "range": {
+            "start": {
+              "line": 229,
+              "character": 16
+            },
+            "end": {
+              "line": 229,
+              "character": 34
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "isWorkerEntrypoint"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/plugins/sdk/src/worker-rpc-host.ts",
+            "range": {
+              "start": {
+                "line": 283,
+                "character": 6
+              },
+              "end": {
+                "line": 283,
+                "character": 24
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "isWorkerEntrypoint"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/packages/plugins/sdk/src/worker-rpc-host.ts",
+          "range": {
+            "start": {
+              "line": 283,
+              "character": 6
+            },
+            "end": {
+              "line": 283,
+              "character": 24
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "isWorkerEntrypoint"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, imports/re-exports, receiver or other declaration bindings, comments, strings, and unrelated same-name tokens; definitionUsage is an unambiguous ordinary reference.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a-replacements.json",
+      "candidateHistory": [
+        {
+          "caseId": "real-project-v1-typescript-04-1",
+          "decision": "replace",
+          "declaration": {
+            "repository": "paperclipai/paperclip",
+            "commit": "d5b9f6c8c9d9edb0c9796df86c61826b11400b5b",
+            "language": "typescript",
+            "selectionRank": null,
+            "location": {
+              "uri": "benchmark://source/packages/shared/src/validators/agent.ts",
+              "range": {
+                "start": {
+                  "line": 28,
+                  "character": 12
+                },
+                "end": {
+                  "line": 28,
+                  "character": 41
+                }
+              }
+            },
+            "kind": "type",
+            "displayName": "UpdateAgentInstructionsBundle"
+          },
+          "expectedUsages": [],
+          "definitionUsage": null,
+          "notes": "Independent source-only review found no protocol-eligible, unambiguous ordinary usage. Import/re-export bindings, declarations, comments, strings, and unrelated same-name tokens are not required usages under bindings_optional.",
+          "replacementReason": "Occurrences outside the declaration are type re-export bindings and a CLI help string; there is no ordinary semantic use or definition probe.",
+          "sourceArtifact": "real-project-v1-reviewer-a.json"
+        }
+      ]
+    },
+    {
+      "caseId": "real-project-v1-typescript-04-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "paperclipai/paperclip",
+        "commit": "d5b9f6c8c9d9edb0c9796df86c61826b11400b5b",
+        "language": "typescript",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/ui/src/lib/inbox.ts",
+          "range": {
+            "start": {
+              "line": 331,
+              "character": 16
+            },
+            "end": {
+              "line": 331,
+              "character": 45
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "getAvailableInboxIssueColumns"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/components/IssuesList.tsx",
+            "range": {
+              "start": {
+                "line": 1039,
+                "character": 10
+              },
+              "end": {
+                "line": 1039,
+                "character": 39
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "getAvailableInboxIssueColumns"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/pages/Inbox.tsx",
+            "range": {
+              "start": {
+                "line": 1177,
+                "character": 10
+              },
+              "end": {
+                "line": 1177,
+                "character": 39
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "getAvailableInboxIssueColumns"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/ui/src/components/IssuesList.tsx",
+          "range": {
+            "start": {
+              "line": 1039,
+              "character": 10
+            },
+            "end": {
+              "line": 1039,
+              "character": 39
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "getAvailableInboxIssueColumns"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    },
+    {
+      "caseId": "real-project-v1-typescript-04-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "paperclipai/paperclip",
+        "commit": "d5b9f6c8c9d9edb0c9796df86c61826b11400b5b",
+        "language": "typescript",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/ui/src/api/routines.ts",
+          "range": {
+            "start": {
+              "line": 24,
+              "character": 17
+            },
+            "end": {
+              "line": 24,
+              "character": 53
+            }
+          }
+        },
+        "kind": "interface",
+        "displayName": "RestoreRoutineRevisionSecretMaterial"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/api/routines.ts",
+            "range": {
+              "start": {
+                "line": 33,
+                "character": 19
+              },
+              "end": {
+                "line": 33,
+                "character": 55
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "RestoreRoutineRevisionSecretMaterial"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/ui/src/api/routines.ts",
+          "range": {
+            "start": {
+              "line": 33,
+              "character": 19
+            },
+            "end": {
+              "line": 33,
+              "character": 55
+            }
+          }
+        },
+        "kind": "interface",
+        "displayName": "RestoreRoutineRevisionSecretMaterial"
+      },
+      "notes": "Accepted after independent source-syntax and semantic-context inspection. Required usages exclude the declaration, import/re-export bindings, comments, strings, and unrelated same-name members or tokens; definitionUsage is an unambiguous ordinary reference to the selected declaration.",
+      "replacementReason": null,
+      "sourceArtifact": "real-project-v1-reviewer-a.json",
+      "candidateHistory": []
+    }
+  ]
+}

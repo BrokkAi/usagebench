@@ -1,0 +1,271 @@
+schemaVersion: 2
+corpus:
+  partition: "evaluation"
+  selection: "pre_registered"
+  freezeId: "real-project-v1"
+  selectionManifest: "benchmarks/evaluation/real-project-v1/selection.json"
+  reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
+  sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
+groundTruth:
+  status: "independently_reviewed"
+  reviewers:
+    - "codex-source-reviewer-a"
+    - "codex-source-reviewer-b"
+referencePolicy: "bindings_optional"
+positionEncoding: "utf-16"
+source:
+  kind: "git"
+  repo: "https://github.com/ytdl-org/youtube-dl"
+  commit: "956b8c585591b401a543e409accb163eeaaa1193"
+language: "python"
+cases:
+  - id: "real-project-v1-python-03-1"
+    declaration:
+      location:
+        uri: "benchmark://source/youtube_dl/extractor/curiositystream.py"
+        range:
+          start:
+            line: 49
+            character: 6
+          end:
+            line: 49
+            character: 23
+      kind: "class"
+      displayName: "CuriosityStreamIE"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/youtube_dl/extractor/curiositystream.py"
+          range:
+            start:
+              line: 173
+              character: 16
+            end:
+              line: 173
+              character: 33
+        kind: "class"
+        displayName: "CuriosityStreamIE"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/youtube_dl/extractor/curiositystream.py"
+            range:
+              start:
+                line: 173
+                character: 16
+              end:
+                line: 173
+                character: 33
+          kind: "class"
+          displayName: "CuriosityStreamIE"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/youtube_dl/extractor/curiositystream.py"
+            range:
+              start:
+                line: 49
+                character: 6
+              end:
+                line: 49
+                character: 23
+          kind: "class"
+          displayName: "CuriosityStreamIE"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
+  - id: "real-project-v1-python-03-2"
+    declaration:
+      location:
+        uri: "benchmark://source/devscripts/buildserver.py"
+        range:
+          start:
+            line: 119
+            character: 4
+          end:
+            line: 119
+            character: 28
+      kind: "function"
+      displayName: "win_service_report_event"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/devscripts/buildserver.py"
+          range:
+            start:
+              line: 147
+              character: 8
+            end:
+              line: 147
+              character: 32
+        kind: "function"
+        displayName: "win_service_report_event"
+      - location:
+          uri: "benchmark://source/devscripts/buildserver.py"
+          range:
+            start:
+              line: 177
+              character: 8
+            end:
+              line: 177
+              character: 32
+        kind: "function"
+        displayName: "win_service_report_event"
+      - location:
+          uri: "benchmark://source/devscripts/buildserver.py"
+          range:
+            start:
+              line: 198
+              character: 8
+            end:
+              line: 198
+              character: 32
+        kind: "function"
+        displayName: "win_service_report_event"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/devscripts/buildserver.py"
+            range:
+              start:
+                line: 147
+                character: 8
+              end:
+                line: 147
+                character: 32
+          kind: "function"
+          displayName: "win_service_report_event"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/devscripts/buildserver.py"
+            range:
+              start:
+                line: 119
+                character: 4
+              end:
+                line: 119
+                character: 28
+          kind: "function"
+          displayName: "win_service_report_event"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
+  - id: "real-project-v1-python-03-3"
+    declaration:
+      location:
+        uri: "benchmark://source/youtube_dl/extractor/pornhub.py"
+        range:
+          start:
+            line: 30
+            character: 6
+          end:
+            line: 30
+            character: 19
+      kind: "class"
+      displayName: "PornHubBaseIE"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/youtube_dl/extractor/pornhub.py"
+          range:
+            start:
+              line: 36
+              character: 25
+            end:
+              line: 36
+              character: 38
+        kind: "class"
+        displayName: "PornHubBaseIE"
+      - location:
+          uri: "benchmark://source/youtube_dl/extractor/pornhub.py"
+          range:
+            start:
+              line: 120
+              character: 16
+            end:
+              line: 120
+              character: 29
+        kind: "class"
+        displayName: "PornHubBaseIE"
+      - location:
+          uri: "benchmark://source/youtube_dl/extractor/pornhub.py"
+          range:
+            start:
+              line: 131
+              character: 26
+            end:
+              line: 131
+              character: 39
+        kind: "class"
+        displayName: "PornHubBaseIE"
+      - location:
+          uri: "benchmark://source/youtube_dl/extractor/pornhub.py"
+          range:
+            start:
+              line: 504
+              character: 28
+            end:
+              line: 504
+              character: 41
+        kind: "class"
+        displayName: "PornHubBaseIE"
+      - location:
+          uri: "benchmark://source/youtube_dl/extractor/pornhub.py"
+          range:
+            start:
+              line: 528
+              character: 132
+            end:
+              line: 528
+              character: 145
+        kind: "class"
+        displayName: "PornHubBaseIE"
+      - location:
+          uri: "benchmark://source/youtube_dl/extractor/pornhub.py"
+          range:
+            start:
+              line: 635
+              character: 74
+            end:
+              line: 635
+              character: 87
+        kind: "class"
+        displayName: "PornHubBaseIE"
+      - location:
+          uri: "benchmark://source/youtube_dl/extractor/pornhub.py"
+          range:
+            start:
+              line: 753
+              character: 120
+            end:
+              line: 753
+              character: 133
+        kind: "class"
+        displayName: "PornHubBaseIE"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/youtube_dl/extractor/pornhub.py"
+            range:
+              start:
+                line: 120
+                character: 16
+              end:
+                line: 120
+                character: 29
+          kind: "class"
+          displayName: "PornHubBaseIE"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/youtube_dl/extractor/pornhub.py"
+            range:
+              start:
+                line: 30
+                character: 6
+              end:
+                line: 30
+                character: 19
+          kind: "class"
+          displayName: "PornHubBaseIE"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. The expected usage sets agree. Both the subclass base and super() class argument are semantic references; retained reviewer A's subclass-base usage as definitionUsage. The expected usage sets agree. Both the subclass base and super() class argument are semantic references; retained reviewer A's subclass-base usage as definitionUsage."

@@ -83,6 +83,22 @@ cargo test
 cargo run -- validate benchmarks/cases
 ```
 
+### Git LFS
+
+The pinned real-project evaluation source archives under
+`benchmarks/evaluation/real-project-v1/sources/` are tracked with Git LFS. A
+checkout must materialize those objects before validating or running the full
+corpus:
+
+```bash
+git lfs install
+git lfs pull
+```
+
+GitHub workflows that consume the full corpus enable LFS during checkout.
+Self-hosted runners used by the native-reproduction workflow must have the
+`git-lfs` executable installed.
+
 ## Development Corpus
 
 The current corpus uses small checked-in fixtures for Java, Go, Python, TypeScript,

@@ -1,0 +1,249 @@
+schemaVersion: 2
+corpus:
+  partition: "evaluation"
+  selection: "pre_registered"
+  freezeId: "real-project-v1"
+  selectionManifest: "benchmarks/evaluation/real-project-v1/selection.json"
+  reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
+  sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
+groundTruth:
+  status: "independently_reviewed"
+  reviewers:
+    - "codex-source-reviewer-a"
+    - "codex-source-reviewer-b"
+referencePolicy: "bindings_optional"
+positionEncoding: "utf-16"
+source:
+  kind: "git"
+  repo: "https://github.com/excalidraw/excalidraw"
+  commit: "786ab266ff3a9cfffaed16804cf9132b44bc08ae"
+language: "typescript"
+cases:
+  - id: "real-project-v1-typescript-01-1"
+    declaration:
+      location:
+        uri: "benchmark://source/packages/common/src/appEventBus.ts"
+        range:
+          start:
+            line: 27
+            character: 5
+          end:
+            line: 27
+            character: 25
+      kind: "type"
+      displayName: "AppEventPromiseValue"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/packages/common/src/appEventBus.ts"
+          range:
+            start:
+              line: 52
+              character: 5
+            end:
+              line: 52
+              character: 25
+        kind: "type"
+        displayName: "AppEventPromiseValue"
+      - location:
+          uri: "benchmark://source/packages/common/src/appEventBus.ts"
+          range:
+            start:
+              line: 53
+              character: 51
+            end:
+              line: 53
+              character: 71
+        kind: "type"
+        displayName: "AppEventPromiseValue"
+      - location:
+          uri: "benchmark://source/packages/common/src/appEventBus.ts"
+          range:
+            start:
+              line: 62
+              character: 13
+            end:
+              line: 62
+              character: 33
+        kind: "type"
+        displayName: "AppEventPromiseValue"
+      - location:
+          uri: "benchmark://source/packages/common/src/appEventBus.ts"
+          range:
+            start:
+              line: 66
+              character: 35
+            end:
+              line: 66
+              character: 55
+        kind: "type"
+        displayName: "AppEventPromiseValue"
+      - location:
+          uri: "benchmark://source/packages/common/src/appEventBus.ts"
+          range:
+            start:
+              line: 93
+              character: 23
+            end:
+              line: 93
+              character: 43
+        kind: "type"
+        displayName: "AppEventPromiseValue"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/packages/common/src/appEventBus.ts"
+            range:
+              start:
+                line: 52
+                character: 5
+              end:
+                line: 52
+                character: 25
+          kind: "type"
+          displayName: "AppEventPromiseValue"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/packages/common/src/appEventBus.ts"
+            range:
+              start:
+                line: 27
+                character: 5
+              end:
+                line: 27
+                character: 25
+          kind: "type"
+          displayName: "AppEventPromiseValue"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
+  - id: "real-project-v1-typescript-01-2"
+    declaration:
+      location:
+        uri: "benchmark://source/packages/excalidraw/components/AppStateObserver.ts"
+        range:
+          start:
+            line: 61
+            character: 13
+          end:
+            line: 61
+            character: 29
+      kind: "class"
+      displayName: "AppStateObserver"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/packages/excalidraw/components/App.tsx"
+          range:
+            start:
+              line: 680
+              character: 33
+            end:
+              line: 680
+              character: 49
+        kind: "class"
+        displayName: "AppStateObserver"
+      - location:
+          uri: "benchmark://source/packages/excalidraw/tests/appStateHooks.test.tsx"
+          range:
+            start:
+              line: 23
+              character: 23
+            end:
+              line: 23
+              character: 39
+        kind: "class"
+        displayName: "AppStateObserver"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/packages/excalidraw/components/App.tsx"
+            range:
+              start:
+                line: 680
+                character: 33
+              end:
+                line: 680
+                character: 49
+          kind: "class"
+          displayName: "AppStateObserver"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/packages/excalidraw/components/AppStateObserver.ts"
+            range:
+              start:
+                line: 61
+                character: 13
+              end:
+                line: 61
+                character: 29
+          kind: "class"
+          displayName: "AppStateObserver"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Included the AppStateObserver construction in appStateHooks.test.tsx because it is an ordinary class reference. Included the AppStateObserver construction in appStateHooks.test.tsx because it is an ordinary class reference."
+  - id: "real-project-v1-typescript-01-3"
+    declaration:
+      location:
+        uri: "benchmark://source/packages/excalidraw/components/App.viewport.ts"
+        range:
+          start:
+            line: 436
+            character: 13
+          end:
+            line: 436
+            character: 24
+      kind: "class"
+      displayName: "AppViewport"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/packages/excalidraw/components/App.tsx"
+          range:
+            start:
+              line: 687
+              character: 19
+            end:
+              line: 687
+              character: 30
+        kind: "class"
+        displayName: "AppViewport"
+      - location:
+          uri: "benchmark://source/packages/excalidraw/components/App.tsx"
+          range:
+            start:
+              line: 687
+              character: 37
+            end:
+              line: 687
+              character: 48
+        kind: "class"
+        displayName: "AppViewport"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/packages/excalidraw/components/App.tsx"
+            range:
+              start:
+                line: 687
+                character: 37
+              end:
+                line: 687
+                character: 48
+          kind: "class"
+          displayName: "AppViewport"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/packages/excalidraw/components/App.viewport.ts"
+            range:
+              start:
+                line: 436
+                character: 13
+              end:
+                line: 436
+                character: 24
+          kind: "class"
+          displayName: "AppViewport"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. The expected usage sets agree. Both the type annotation and constructor occurrence on App.tsx:688 are semantic references; retained reviewer A's constructor occurrence as definitionUsage. The expected usage sets agree. Both the type annotation and constructor occurrence on App.tsx:688 are semantic references; retained reviewer A's constructor occurrence as definitionUsage."

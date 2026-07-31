@@ -53,6 +53,7 @@ jobs:
         with:
           ref: ${{ inputs.source_revision }}
           fetch-depth: 0
+          lfs: true
           persist-credentials: false
 
       - name: Resolve immutable source identity
@@ -233,6 +234,7 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.revision }}
           fetch-depth: 0
+          lfs: true
           persist-credentials: false
 
       - name: Download release assets before tagging

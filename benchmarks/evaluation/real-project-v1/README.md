@@ -18,7 +18,7 @@ replaced only through the deterministic, source-only procedure in the protocol;
 an analyzer result is never a reason to select, exclude, replace, or alter a
 case.
 
-The recorded population frame has a uniform 20,000-star minimum. This keeps
+The recorded population frame has a uniform 75,000-star minimum. This keeps
 each profile below GitHub Search's 1,000-result window while retaining a
 complete, source-only eligible population rather than selecting a ranked prefix.
 Capture spaces GitHub REST requests by 800 ms so the complete snapshot remains
@@ -46,8 +46,18 @@ belongs in the immutable population commit.
    The draw command rejects a missing, uncommitted, or modified population
    snapshot. It only reads the frozen protocol and snapshot; it never calls an
    analyzer or language server.
-3. Archive each selected exact Git commit with `git archive`; record the commit,
-   tree, relative archive path, and SHA-256 in `sources.json`.
+3. Archive each selected exact Git commit with `git archive --format=tar.gz`;
+   use an empty worktree-attribute view so export and EOL filters cannot alter
+   the committed blob bytes. Then
+   record the raw commit object, commit tree, archive-content tree, relative
+   archive path, and SHA-256 in `sources.json`. Validation hashes the raw commit
+   object, checks its tree pointer and the embedded archive commit, reconstructs
+   the archive-content tree (including gitlinks), and requires both trees to be
+   identical before reading source ranges from the bounded archive stream.
+   These archives are tracked through Git LFS, not as ordinary Git blobs. A
+   checkout that validates or runs this corpus must have Git LFS installed and
+   materialize the objects (`git lfs pull`); CI checkouts that consume the
+   corpus set `lfs: true`.
 4. Author YAML documents under `benchmarks/cases/evaluation/real-project-v1/`
    with portable `benchmark://source/...` locations. Each document must point
    at `selection.json`, `review.json`, and `sources.json` through its corpus
@@ -62,3 +72,23 @@ belongs in the immutable population commit.
 The resulting evidence permits conclusions only within the scope stated in the
 protocol. It does not turn the development fixture corpus into a sampled
 evaluation set.
+
+## Declaration draw
+
+`scripts/real_project_v1_candidates.py` records the complete eligible
+declaration ranking before review. It is source-only and does not invoke an
+analyzer or language server. The version-1 candidate universe consists of
+module/package-level named functions, Go methods, and nominal types in the
+profile language. A candidate must have a unique declaration name in the
+eligible source frame, must not begin with `_`, and must have at least one
+additional in-frame token occurrence. Tests, examples, benchmarks, generated
+sources, dependency/vendor trees, TypeScript declaration files, and common
+derived-output paths are excluded.
+
+Every candidate records its portable URI, exact zero-based UTF-16 range,
+symbol kind, source-token occurrence count, protocol digest, and rank. The
+chosen three also retain all source-token occurrences for independent semantic
+review. If either reviewer establishes that a choice violates the frozen
+exclusions or lacks an unambiguous semantic use, the next unused rank in the
+same repository is selected and the replacement is recorded before any
+analyzer execution.

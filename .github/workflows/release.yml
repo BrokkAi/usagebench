@@ -28,6 +28,7 @@ jobs:
         with:
           ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
           fetch-depth: 0
+          lfs: true
           persist-credentials: false
 
       - name: Resolve and verify tag

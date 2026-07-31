@@ -15,13 +15,27 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["repo", "commit", "tree", "archive", "sha256"],
+        "required": ["repo", "commit", "commitObject", "tree", "archiveTree", "archive", "sha256"],
         "properties": {
           "repo": { "type": "string", "format": "uri" },
           "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+          "commitObject": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
           "tree": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+          "archiveTree": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
           "archive": { "type": "string", "minLength": 1 },
-          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "gitlinks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "commit"],
+              "properties": {
+                "path": { "type": "string", "minLength": 1 },
+                "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+              }
+            }
+          }
         }
       }
     }

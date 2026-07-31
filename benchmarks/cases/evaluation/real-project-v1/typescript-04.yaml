@@ -1,0 +1,238 @@
+schemaVersion: 2
+corpus:
+  partition: "evaluation"
+  selection: "pre_registered"
+  freezeId: "real-project-v1"
+  selectionManifest: "benchmarks/evaluation/real-project-v1/selection.json"
+  reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
+  sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
+groundTruth:
+  status: "independently_reviewed"
+  reviewers:
+    - "codex-source-reviewer-a"
+    - "codex-source-reviewer-b"
+referencePolicy: "bindings_optional"
+positionEncoding: "utf-16"
+source:
+  kind: "git"
+  repo: "https://github.com/paperclipai/paperclip"
+  commit: "d5b9f6c8c9d9edb0c9796df86c61826b11400b5b"
+language: "typescript"
+cases:
+  - id: "real-project-v1-typescript-04-1"
+    declaration:
+      location:
+        uri: "benchmark://source/packages/plugins/sdk/src/worker-rpc-host.ts"
+        range:
+          start:
+            line: 229
+            character: 16
+          end:
+            line: 229
+            character: 34
+      kind: "function"
+      displayName: "isWorkerEntrypoint"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/packages/plugins/sdk/src/worker-rpc-host.ts"
+          range:
+            start:
+              line: 283
+              character: 6
+            end:
+              line: 283
+              character: 24
+        kind: "function"
+        displayName: "isWorkerEntrypoint"
+      - location:
+          uri: "benchmark://source/packages/plugins/sdk/tests/worker-rpc-host.test.ts"
+          range:
+            start:
+              line: 50
+              character: 6
+            end:
+              line: 50
+              character: 24
+        kind: "function"
+        displayName: "isWorkerEntrypoint"
+      - location:
+          uri: "benchmark://source/packages/plugins/sdk/tests/worker-rpc-host.test.ts"
+          range:
+            start:
+              line: 65
+              character: 6
+            end:
+              line: 65
+              character: 24
+        kind: "function"
+        displayName: "isWorkerEntrypoint"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/packages/plugins/sdk/src/worker-rpc-host.ts"
+            range:
+              start:
+                line: 283
+                character: 6
+              end:
+                line: 283
+                character: 24
+          kind: "function"
+          displayName: "isWorkerEntrypoint"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/packages/plugins/sdk/src/worker-rpc-host.ts"
+            range:
+              start:
+                line: 229
+                character: 16
+              end:
+                line: 229
+                character: 34
+          kind: "function"
+          displayName: "isWorkerEntrypoint"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Included both isWorkerEntrypoint calls in worker-rpc-host.test.ts. They are ordinary function references. Included both isWorkerEntrypoint calls in worker-rpc-host.test.ts. They are ordinary function references."
+  - id: "real-project-v1-typescript-04-2"
+    declaration:
+      location:
+        uri: "benchmark://source/ui/src/lib/inbox.ts"
+        range:
+          start:
+            line: 331
+            character: 16
+          end:
+            line: 331
+            character: 45
+      kind: "function"
+      displayName: "getAvailableInboxIssueColumns"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/ui/src/components/IssuesList.tsx"
+          range:
+            start:
+              line: 1039
+              character: 10
+            end:
+              line: 1039
+              character: 39
+        kind: "function"
+        displayName: "getAvailableInboxIssueColumns"
+      - location:
+          uri: "benchmark://source/ui/src/lib/inbox.test.ts"
+          range:
+            start:
+              line: 1198
+              character: 11
+            end:
+              line: 1198
+              character: 40
+        kind: "function"
+        displayName: "getAvailableInboxIssueColumns"
+      - location:
+          uri: "benchmark://source/ui/src/lib/inbox.test.ts"
+          range:
+            start:
+              line: 1208
+              character: 11
+            end:
+              line: 1208
+              character: 40
+        kind: "function"
+        displayName: "getAvailableInboxIssueColumns"
+      - location:
+          uri: "benchmark://source/ui/src/pages/Inbox.tsx"
+          range:
+            start:
+              line: 1177
+              character: 10
+            end:
+              line: 1177
+              character: 39
+        kind: "function"
+        displayName: "getAvailableInboxIssueColumns"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/ui/src/components/IssuesList.tsx"
+            range:
+              start:
+                line: 1039
+                character: 10
+              end:
+                line: 1039
+                character: 39
+          kind: "function"
+          displayName: "getAvailableInboxIssueColumns"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/ui/src/lib/inbox.ts"
+            range:
+              start:
+                line: 331
+                character: 16
+              end:
+                line: 331
+                character: 45
+          kind: "function"
+          displayName: "getAvailableInboxIssueColumns"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Included both getAvailableInboxIssueColumns calls in inbox.test.ts. They are ordinary function references. Retained reviewer A's valid IssuesList.tsx call as definitionUsage. Included both getAvailableInboxIssueColumns calls in inbox.test.ts. They are ordinary function references. Retained reviewer A's valid IssuesList.tsx call as definitionUsage."
+  - id: "real-project-v1-typescript-04-3"
+    declaration:
+      location:
+        uri: "benchmark://source/ui/src/api/routines.ts"
+        range:
+          start:
+            line: 24
+            character: 17
+          end:
+            line: 24
+            character: 53
+      kind: "interface"
+      displayName: "RestoreRoutineRevisionSecretMaterial"
+    expectedUsages:
+      - location:
+          uri: "benchmark://source/ui/src/api/routines.ts"
+          range:
+            start:
+              line: 33
+              character: 19
+            end:
+              line: 33
+              character: 55
+        kind: "interface"
+        displayName: "RestoreRoutineRevisionSecretMaterial"
+    usageLookups:
+      - operation: "definition"
+        usage:
+          location:
+            uri: "benchmark://source/ui/src/api/routines.ts"
+            range:
+              start:
+                line: 33
+                character: 19
+              end:
+                line: 33
+                character: 55
+          kind: "interface"
+          displayName: "RestoreRoutineRevisionSecretMaterial"
+        expectedDeclaration:
+          location:
+            uri: "benchmark://source/ui/src/api/routines.ts"
+            range:
+              start:
+                line: 24
+                character: 17
+              end:
+                line: 24
+                character: 53
+          kind: "interface"
+          displayName: "RestoreRoutineRevisionSecretMaterial"
+    verification:
+      method: "manual_inspection"
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted by exact independent-reviewer agreement and source-token validation. No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
