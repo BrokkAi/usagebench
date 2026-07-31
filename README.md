@@ -49,12 +49,15 @@ cargo run -- generate-results \
 ```
 
 The generator rejects missing, altered, mismatched, or non-snapshot reports
-before it writes a page. Location-level precision, recall, and range-quality
-tables require reports produced by UsageBench 0.2.0 or newer; older reports
-remain readable for their existing strict and required-destination fields but
-are never interpreted as having zero location metrics. The first public
-result-page refresh will use a frozen all-profile development snapshot; the
-current hand-authored 24 July summary predates the release evidence pipeline.
+before it writes a page. Evaluation pages additionally verify the freeze ID,
+bounded claim scope, artifact provenance, denominators, exclusions, and
+replacements, and cannot mix development documents into an evaluation claim.
+Location-level precision, recall, and range-quality tables require reports
+produced by UsageBench 0.2.0 or newer; older reports remain readable for their
+existing strict and required-destination fields but are never interpreted as
+having zero location metrics. The current hand-authored 24 July summary
+predates the release evidence pipeline; `real-project-v1` analyzer results have
+not yet been published.
 
 ## Directory Structure
 
@@ -113,6 +116,18 @@ documents have completed a first human review, preserved in
 This remains a regression and diagnosis corpus, not an independently reviewed
 evaluation partition: promotion still requires a second reviewer,
 preregistered selection, and a freeze ID.
+
+## Evaluation Corpus
+
+`benchmarks/cases/evaluation/real-project-v1` is a separate, preregistered and
+independently reviewed slice: four repositories and three declarations for each
+of Go/gopls, Python/Pyright, and TypeScript/TypeScript LS, for 12 repositories
+and 36 cases. Its source archives, selection, review, adjudication, and source
+lock are checked in and hash-bound. Its analyzer results have not yet been
+published. Any eventual aggregate is evaluation-only and limited to the
+protocol's descriptive per-profile claim; it is not pooled with development
+fixtures or presented as language-wide, ecosystem-wide, causal, or performance
+evidence.
 
 ## Analyzer Runners
 

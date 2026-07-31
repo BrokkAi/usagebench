@@ -66,12 +66,37 @@ belongs in the immutable population commit.
    source archive, record their signed review artifacts, adjudicate differences,
    and hash those records in `review.json`.
 6. Run `cargo run -- validate-evaluation benchmarks/cases/evaluation/real-project-v1`
-   before any Bifrost or reference-LSP execution. Only then can the ordinary
-   freeze and reporting workflows run.
+   before any Bifrost or reference-LSP execution.
 
-The resulting evidence permits conclusions only within the scope stated in the
-protocol. It does not turn the development fixture corpus into a sampled
-evaluation set.
+## Evaluation freeze procedure
+
+Materialize and verify the source and review boundary before running an
+analyzer. The release order is:
+
+1. Pull the Git LFS objects and verify the source lock, selection manifest,
+   independent review records, and adjudication evidence.
+2. Run
+   `cargo run -- validate-evaluation benchmarks/cases/evaluation/real-project-v1`.
+3. Run **Native two-host reproduction** at the exact release revision for only
+   `pyright` and `typescript-language-server`, and retain its accepted evidence
+   artifact.
+4. Run **Freeze benchmark snapshot** with snapshot kind `evaluation`, corpus
+   `benchmarks/cases/evaluation/real-project-v1`, candidates
+   `bifrost,gopls,pyright,typescript-language-server`, and the native-evidence
+   workflow run ID.
+
+The freeze manifest binds `protocol.json`, `selection.json`, `review.json`, and
+`sources.json` by digest and records repository and case denominators,
+exclusions, and replacements. Generated tables must remain labeled as the
+`evaluation` partition and must not be pooled with development cases.
+
+The resulting evidence permits only descriptive per-profile comparisons for
+these 12 source-only sampled repositories, 36 declarations, and the References
+and Definition operations. It does not support language-wide or ecosystem-wide
+estimates, cross-language rankings, causal defect claims, or latency, memory,
+and cold-start claims. It does not turn the development fixture corpus into a
+sampled evaluation set. The corpus and audit evidence are checked in; analyzer
+results have not yet been published.
 
 ## Declaration draw
 

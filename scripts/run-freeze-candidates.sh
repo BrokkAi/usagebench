@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  echo "usage: $0 SOURCE_ROOT CANDIDATE_REGISTRY CANDIDATES CORPUS_ROOT OUTPUT_DIRECTORY REVISION [NATIVE_EVIDENCE_DIRECTORY]" >&2
+  echo "usage: $0 SOURCE_ROOT CANDIDATE_REGISTRY CANDIDATES CORPUS_ROOT CASE_PATH OUTPUT_DIRECTORY REVISION [NATIVE_EVIDENCE_DIRECTORY]" >&2
   exit 2
 }
 
@@ -10,11 +10,33 @@ source_root="${1:-}"
 candidate_registry="${2:-}"
 candidate_input="${3:-}"
 corpus_root="${4:-}"
-output_directory="${5:-}"
-revision="${6:-}"
-native_evidence_directory="${7:-}"
+case_path="${5:-}"
+output_directory="${6:-}"
+revision="${7:-}"
+native_evidence_directory="${8:-}"
 [[ -d "$source_root" && -f "$candidate_registry" && -n "$candidate_input" && -f "$corpus_root/.usagebench-release.json" ]] || usage
 [[ "$revision" =~ ^[0-9a-f]{40}$ ]] || usage
+[[ -n "$case_path" && "$case_path" != /* && "$case_path" != *//* && "$case_path" =~ ^[A-Za-z0-9._/-]+$ ]] || {
+  echo "case path must be a safe path relative to the corpus root" >&2
+  exit 1
+}
+IFS='/' read -r -a case_components <<< "$case_path"
+for component in "${case_components[@]}"; do
+  [[ -n "$component" && "$component" != "." && "$component" != ".." ]] || {
+    echo "case path must not contain empty, dot, or parent components" >&2
+    exit 1
+  }
+done
+corpus_root="$(cd "$corpus_root" && pwd -P)"
+[[ -d "$corpus_root/$case_path" ]] || {
+  echo "case path is not a directory in the corpus: $case_path" >&2
+  exit 1
+}
+case_directory="$(cd "$corpus_root/$case_path" && pwd -P)"
+[[ "$case_directory" == "$corpus_root/"* ]] || {
+  echo "case path resolves outside the corpus root: $case_path" >&2
+  exit 1
+}
 
 mkdir -p "$output_directory"
 IFS=',' read -r -a candidate_ids <<< "$candidate_input"
@@ -23,6 +45,40 @@ IFS=',' read -r -a candidate_ids <<< "$candidate_input"
 seen_ids=','
 report_paths=()
 evidence_paths=()
+
+native_candidates_json="$(
+  for candidate_id in "${candidate_ids[@]}"; do
+    jq -r --arg id "$candidate_id" \
+      '.candidates[] | select(.id == $id and .reproductionClass == "native_two_host") | .id' \
+      "$candidate_registry"
+  done | jq -Rsc 'split("\n") | map(select(length > 0))'
+)"
+if [[ "$(jq -r 'length' <<< "$native_candidates_json")" -gt 0 ]]; then
+  [[ -d "$native_evidence_directory" && -f "$native_evidence_directory/collection.json" && ! -L "$native_evidence_directory/collection.json" ]] || {
+    echo "native candidates require collection metadata from the reproduction workflow" >&2
+    exit 1
+  }
+  jq -e \
+    --arg revision "$revision" \
+    --arg snapshotKind "$SNAPSHOT_KIND" \
+    --arg releaseTag "$SNAPSHOT_VERSION" \
+    --arg casePath "$case_path" \
+    --argjson candidates "$native_candidates_json" \
+    '.schemaVersion == 1
+      and .revision == $revision
+      and .snapshotKind == $snapshotKind
+      and .releaseTag == $releaseTag
+      and .casePath == $casePath
+      and (if $snapshotKind == "evaluation"
+           then .candidates == $candidates
+           else ($candidates - .candidates | length) == 0
+           end)' \
+    "$native_evidence_directory/collection.json" >/dev/null || {
+      echo "native evidence collection does not match this revision, scope, release, case path, or candidate set" >&2
+      exit 1
+    }
+  cp "$native_evidence_directory/collection.json" "$output_directory/native-collection.json"
+fi
 
 stage_native_file() {
   local file="$1"
@@ -69,7 +125,7 @@ for candidate_id in "${candidate_ids[@]}"; do
     "$source_root/scripts/reference-image.sh" "$reference_runner" "$SNAPSHOT_VERSION" "$revision"
     set +e
     "$source_root/scripts/run-reference.sh" \
-      "$reference_runner" "$corpus_root" "$output_directory/$candidate_id.json"
+      "$reference_runner" "$corpus_root" "$output_directory/$candidate_id.json" "$case_path"
     status=$?
     set -e
     [[ -f "$output_directory/$candidate_id.json" ]] || {
@@ -140,13 +196,18 @@ for index in "${!candidate_ids[@]}"; do
   report_args+=(--report "${report_paths[$index]}")
   evidence_args+=(--evidence "${evidence_paths[$index]}")
 done
-cargo run --locked --manifest-path "$source_root/Cargo.toml" -- \
-  freeze-manifest \
+freeze_args=(
+  freeze-manifest
   --snapshot-kind "$SNAPSHOT_KIND" \
   --version "$SNAPSHOT_VERSION" \
   --revision "$revision" \
   --candidates-file "$candidate_registry" \
   --candidates "$candidate_input" \
   "${report_args[@]}" \
-  "${evidence_args[@]}" \
+  "${evidence_args[@]}"
   --output "$output_directory/freeze-manifest.json"
+)
+if [[ "$SNAPSHOT_KIND" == "evaluation" ]]; then
+  freeze_args+=(--evaluation-corpus "$corpus_root/$case_path")
+fi
+cargo run --locked --manifest-path "$source_root/Cargo.toml" -- "${freeze_args[@]}"

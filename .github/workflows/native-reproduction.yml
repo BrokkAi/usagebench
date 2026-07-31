@@ -7,6 +7,14 @@ on:
         description: 'Release identity to embed in reports (for example v0.2.0)'
         required: true
         type: string
+      snapshot_kind:
+        description: 'Development evidence or promoted evaluation release'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - evaluation
       primary_runner_json:
         description: 'JSON labels for the first pre-provisioned native host'
         required: true
@@ -29,6 +37,9 @@ jobs:
   contract:
     name: validate collection contract
     runs-on: ubuntu-latest
+    outputs:
+      candidates: ${{ steps.scope.outputs.candidates }}
+      case_path: ${{ steps.scope.outputs.case_path }}
     steps:
       - name: Checkout source revision
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
@@ -37,9 +48,11 @@ jobs:
           persist-credentials: false
 
       - name: Validate release and host inputs
+        id: scope
         shell: bash
         env:
           RELEASE_TAG: ${{ inputs.release_tag }}
+          SNAPSHOT_KIND: ${{ inputs.snapshot_kind }}
           PRIMARY_RUNNER: ${{ inputs.primary_runner_json }}
           CORROBORATING_RUNNER: ${{ inputs.corroborating_runner_json }}
         run: |
@@ -61,6 +74,13 @@ jobs:
             exit 1
           }
           scripts/validate-reproduction-contract.sh
+          scope="$(bash scripts/resolve-freeze-scope.sh "$SNAPSHOT_KIND" native)"
+          case_path="$(jq -er '.casePath' <<< "$scope")"
+          candidates="$(jq -ec '.candidates' <<< "$scope")"
+          {
+            echo "candidates=$candidates"
+            echo "case_path=$case_path"
+          } >> "$GITHUB_OUTPUT"
 
   collect:
     name: ${{ matrix.candidate }} on ${{ matrix.host }}
@@ -68,16 +88,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        candidate:
-          - apple-clangd-21
-          - roslyn
-          - eclipse-jdtls
-          - typescript-language-server
-          - pyright
-          - intelephense
-          - ruby-lsp
-          - rust-analyzer
-          - metals
+        candidate: ${{ fromJSON(needs.contract.outputs.candidates) }}
         host:
           - primary
           - corroborating
@@ -101,6 +112,7 @@ jobs:
         shell: bash
         env:
           RELEASE_TAG: ${{ inputs.release_tag }}
+          SNAPSHOT_KIND: ${{ inputs.snapshot_kind }}
         run: |
           set -euo pipefail
           scripts/stage-release-bundle.sh \
@@ -108,6 +120,9 @@ jobs:
             "$RUNNER_TEMP/release-corpus" \
             "$RELEASE_TAG" \
             "$GITHUB_SHA"
+          if [[ "$SNAPSHOT_KIND" == "development" ]]; then
+            rm -rf -- "$RUNNER_TEMP/release-corpus/benchmarks/cases/evaluation"
+          fi
 
       - name: Verify pre-provisioned analyzer
         shell: bash
@@ -155,13 +170,19 @@ jobs:
         shell: bash
         env:
           CANDIDATE: ${{ matrix.candidate }}
+          SNAPSHOT_KIND: ${{ inputs.snapshot_kind }}
+          CASE_PATH: ${{ needs.contract.outputs.case_path }}
+          CANDIDATES_JSON: ${{ needs.contract.outputs.candidates }}
         run: |
           set -euo pipefail
           mkdir -p native-report
           profile="$(jq -er --arg id "$CANDIDATE" '.candidates[] | select(.id == $id) | .profile' adapters/candidates.json)"
+          if [[ "$SNAPSHOT_KIND" == "evaluation" ]]; then
+            ./target/debug/usagebench validate-evaluation "$RUNNER_TEMP/release-corpus/$CASE_PATH"
+          fi
           set +e
           ./target/debug/usagebench run-lsp \
-            "$RUNNER_TEMP/release-corpus/benchmarks/cases" \
+            "$RUNNER_TEMP/release-corpus/$CASE_PATH" \
             --profile "$RUNNER_TEMP/release-corpus/$profile" \
             --work-dir "$RUNNER_TEMP/native-work" \
             --output native-report/report.json
@@ -182,8 +203,15 @@ jobs:
             --arg provenance "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT#job-${{ strategy.job-index }}" \
             --arg requestedVersion "$(jq -er '.requestedVersion' "$RUNNER_TEMP/native-tool-attestation.json")" \
             --arg profileSha256 "$(jq -er '.profileSha256' "$RUNNER_TEMP/native-tool-attestation.json")" \
+            --arg candidate "$CANDIDATE" \
+            --arg revision "$GITHUB_SHA" \
+            --arg snapshotKind "$SNAPSHOT_KIND" \
+            --arg casePath "$CASE_PATH" \
+            --argjson candidates "$CANDIDATES_JSON" \
             '{id: $id, runnerName: $runnerName, provider: $provider, provenance: $provenance,
-              requestedVersion: $requestedVersion, profileSha256: $profileSha256}' \
+              requestedVersion: $requestedVersion, profileSha256: $profileSha256,
+              candidate: $candidate, revision: $revision, snapshotKind: $snapshotKind,
+              casePath: $casePath, candidates: $candidates}' \
             > native-report/host.json
 
       - name: Upload native report
@@ -196,7 +224,9 @@ jobs:
 
   assemble:
     name: assemble reproduction evidence
-    needs: collect
+    needs:
+      - contract
+      - collect
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source revision
@@ -221,9 +251,23 @@ jobs:
 
       - name: Create typed evidence
         shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          SNAPSHOT_KIND: ${{ inputs.snapshot_kind }}
+          CASE_PATH: ${{ needs.contract.outputs.case_path }}
+          CANDIDATES_JSON: ${{ needs.contract.outputs.candidates }}
         run: |
           set -euo pipefail
           mkdir -p native-evidence
+          jq -n \
+            --arg releaseTag "$RELEASE_TAG" \
+            --arg revision "$GITHUB_SHA" \
+            --arg snapshotKind "$SNAPSHOT_KIND" \
+            --arg casePath "$CASE_PATH" \
+            --argjson candidates "$CANDIDATES_JSON" \
+            '{schemaVersion: 1, releaseTag: $releaseTag, revision: $revision,
+              snapshotKind: $snapshotKind, casePath: $casePath, candidates: $candidates}' \
+            > native-evidence/collection.json
           while IFS= read -r candidate; do
             primary="collected/native-report-$candidate-primary"
             corroborating="collected/native-report-$candidate-corroborating"
@@ -233,6 +277,21 @@ jobs:
             cp "$corroborating/report.json" "native-evidence/$corroborating_report"
             primary_id="$(jq -er '.id' "$primary/host.json")"
             corroborating_id="$(jq -er '.id' "$corroborating/host.json")"
+            for host in "$primary" "$corroborating"; do
+              jq -e \
+                --arg candidate "$candidate" \
+                --arg revision "$GITHUB_SHA" \
+                --arg snapshotKind "$SNAPSHOT_KIND" \
+                --arg casePath "$CASE_PATH" \
+                --argjson candidates "$CANDIDATES_JSON" \
+                '.candidate == $candidate and .revision == $revision
+                  and .snapshotKind == $snapshotKind and .casePath == $casePath
+                  and .candidates == $candidates' \
+                "$host/host.json" >/dev/null || {
+                  echo "$host metadata does not match the requested collection scope" >&2
+                  exit 1
+                }
+            done
             [[ "$primary_id" != "$corroborating_id" ]] || {
               echo "$candidate ran twice on the same host $primary_id" >&2
               exit 1
@@ -255,7 +314,7 @@ jobs:
               --corroborating-profile-sha256 "$(jq -er '.profileSha256' "$corroborating/host.json")" \
               --output "native-evidence/$candidate-evidence.json" \
               --diff-output "native-evidence/$candidate-diff.json"
-          done < <(jq -r '.candidates[] | select(.advertised and .reproductionClass == "native_two_host") | .id' adapters/candidates.json)
+          done < <(jq -r '.[]' <<< "$CANDIDATES_JSON")
 
       - name: Upload complete native evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

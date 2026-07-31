@@ -148,12 +148,14 @@ both report checksums, and the comparison outcome. The freeze manifest links
 that file by SHA-256, and result generation refuses missing, altered, same-host,
 or non-equivalent evidence.
 
-For a release, run the **Native two-host reproduction** manual workflow at the
-exact source revision before starting the freeze. It schedules every advertised
-`native_two_host` profile on two separately labeled self-hosted runners, rejects
-two jobs that resolve to the same runner name, creates all evidence manifests,
-and uploads one `native-reproduction-evidence` artifact. Pass that workflow run
-ID to the freeze workflow. Freeze verifies the producer workflow path, source
+For a development release, **Native two-host reproduction** may schedule the
+full advertised `native_two_host` matrix. For a `real-project-v1` evaluation
+release, run it at the exact release revision for only Pyright and TypeScript LS
+against `benchmarks/cases/evaluation/real-project-v1`. Two separately labeled
+self-hosted runners execute each selected profile; the workflow rejects two jobs
+that resolve to the same runner name, creates the evidence manifests, and
+uploads one `native-reproduction-evidence` artifact. Pass that workflow run ID
+to the freeze workflow. Freeze verifies the producer workflow path, source
 revision, event, and successful conclusion before downloading the artifact.
 
 Both hosts must be pre-provisioned with Bash, jq, Git, Rust, and every executable
@@ -205,13 +207,33 @@ Apple clangd results are never treated as upstream clangd reproduction.
 The candidate contract also requires the server-reported version to begin with
 `Apple clangd 21.0.0`, so an upstream clangd executable cannot satisfy that row.
 
+## Evaluation release order
+
+For `real-project-v1`, keep the evidence boundary and execution order explicit:
+
+1. materialize Git LFS, then verify the source lock, preregistered selection,
+   independent review records, and adjudication evidence;
+2. run
+   `cargo run -- validate-evaluation benchmarks/cases/evaluation/real-project-v1`;
+3. collect accepted two-host evidence for Pyright and TypeScript LS at the exact
+   release revision; and
+4. freeze the evaluation directory with exactly Bifrost, gopls, Pyright, and
+   TypeScript LS.
+
+The generated result pages verify the manifest's evaluation audit and label the
+partition explicitly. They publish descriptive per-profile denominators and
+recorded exclusions and replacements. They do not support language-wide or
+ecosystem-wide estimates, cross-language ranking, causal defect claims, or
+latency, memory, and cold-start claims.
+
 ## Evidence scope
 
-The current checked-in cases are a development and diagnosis corpus. All 158
-cases have completed a first human review, but every document intentionally
-retains `legacy_unattributed` ground-truth metadata pending a second independent
-review and preregistered freeze. Container reproducibility makes execution
-repeatable; it does not upgrade the review status of the expected locations.
+The checked-in fixture cases remain a development and diagnosis corpus. All 158
+have completed a first human review, but retain `legacy_unattributed`
+ground-truth metadata. The separate `real-project-v1` evaluation partition has
+36 preregistered, independently reviewed, adjudicated, source-locked cases.
+Its analyzer results have not yet been published. Container reproducibility
+makes execution repeatable; it does not by itself upgrade review status.
 
 See the [human ground-truth audit](../ground-truth-review/) for the review
 procedure and the distinction between reviewed development assertions and a

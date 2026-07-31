@@ -121,6 +121,9 @@ enum Command {
         /// Reproduction evidence for a selected candidate. Repeat once per candidate.
         #[arg(long, required = true)]
         evidence: Vec<PathBuf>,
+        /// Promoted evaluation corpus to validate and bind into an evaluation snapshot.
+        #[arg(long)]
+        evaluation_corpus: Option<PathBuf>,
         /// Destination for the machine-readable snapshot manifest.
         #[arg(long)]
         output: PathBuf,
@@ -332,6 +335,7 @@ fn main() -> Result<()> {
             candidates,
             report,
             evidence,
+            evaluation_corpus,
             output,
         } => {
             let manifest = create_manifest(FreezeManifestOptions {
@@ -342,6 +346,7 @@ fn main() -> Result<()> {
                 candidate_ids: candidates,
                 report_paths: report,
                 evidence_paths: evidence,
+                evaluation_corpus,
             })?;
             usagebench::freeze::write_manifest(&output, &manifest)?;
             println!(

@@ -5,6 +5,9 @@
 //! as trustworthy as the immutable report bytes whose digests it verifies.
 
 use crate::{
+    evaluation::{
+        safe_repo_relative_path, validate_report_against_release_audit, EvaluationReleaseAudit,
+    },
     freeze::{FreezeManifest, ManifestCandidate, FREEZE_MANIFEST_SCHEMA_VERSION},
     reproduction::validate_evidence,
     runners::{CaseRunReport, CaseStatus, LocationMetrics, RequiredDestinationStatus, RunReport},
@@ -157,6 +160,7 @@ fn load_snapshot(manifest_path: &Path) -> Result<Snapshot> {
             manifest.schema_version
         );
     }
+    validate_snapshot_audit(manifest_path, &manifest)?;
     let evidence_directory = manifest_path
         .parent()
         .context("freeze manifest has no parent directory")?;
@@ -291,11 +295,108 @@ fn load_snapshot(manifest_path: &Path) -> Result<Snapshot> {
     if reports.len() != manifest.candidates.len() {
         bail!("freeze manifest does not contain one report for every candidate");
     }
+    validate_snapshot_partition(&manifest, &reports)?;
     Ok(Snapshot {
         manifest,
         manifest_checksum: hex_digest(&manifest_bytes),
         reports,
     })
+}
+
+fn validate_snapshot_audit(manifest_path: &Path, manifest: &FreezeManifest) -> Result<()> {
+    match (manifest.snapshot_kind, manifest.evaluation_audit.as_ref()) {
+        (crate::freeze::SnapshotKind::Development, None) => Ok(()),
+        (crate::freeze::SnapshotKind::Development, Some(_)) => {
+            bail!("development snapshot must not contain an evaluation audit")
+        }
+        (crate::freeze::SnapshotKind::Evaluation, None) => {
+            bail!("evaluation snapshot is missing its evaluation audit")
+        }
+        (crate::freeze::SnapshotKind::Evaluation, Some(audit)) => {
+            let first_case = audit
+                .case_files
+                .first()
+                .context("evaluation audit contains no case files")?;
+            let case_path = safe_repo_relative_path(first_case, "evaluation case file")?;
+            let corpus_relative = case_path
+                .parent()
+                .context("evaluation audit case file has no parent directory")?;
+            if audit.case_files.iter().any(|file| {
+                safe_repo_relative_path(file, "evaluation case file")
+                    .ok()
+                    .and_then(|path| path.parent().map(Path::to_path_buf))
+                    .as_deref()
+                    != Some(corpus_relative)
+            }) {
+                bail!("evaluation audit case files must share one corpus directory");
+            }
+            let release_root = crate::find_repo_root_for_path(manifest_path)
+                .context("locate released UsageBench tree for evaluation audit verification")?;
+            let rebuilt =
+                crate::evaluation::build_release_audit(release_root.join(corpus_relative))
+                    .context("verify evaluation audit evidence")?;
+            validate_rebuilt_audit(audit, &rebuilt)
+        }
+    }
+}
+
+fn validate_rebuilt_audit(
+    recorded: &EvaluationReleaseAudit,
+    rebuilt: &EvaluationReleaseAudit,
+) -> Result<()> {
+    if recorded != rebuilt {
+        bail!("evaluation audit does not match the hash-verified release evidence");
+    }
+    Ok(())
+}
+
+fn validate_snapshot_partition(
+    manifest: &FreezeManifest,
+    reports: &BTreeMap<String, LoadedReport>,
+) -> Result<()> {
+    if manifest.snapshot_kind != crate::freeze::SnapshotKind::Evaluation {
+        return Ok(());
+    }
+    let audit = manifest
+        .evaluation_audit
+        .as_ref()
+        .expect("evaluation audit presence was validated");
+    let expected_files = audit.case_files.iter().collect::<BTreeSet<_>>();
+    let expected_candidates = std::iter::once("bifrost")
+        .chain(
+            audit
+                .target_profiles
+                .iter()
+                .map(|profile| profile.candidate_id.as_str()),
+        )
+        .collect::<BTreeSet<_>>();
+    let actual_candidates = manifest
+        .candidates
+        .iter()
+        .map(|candidate| candidate.id.as_str())
+        .collect::<BTreeSet<_>>();
+    if actual_candidates != expected_candidates || reports.keys().len() != expected_candidates.len()
+    {
+        bail!("evaluation snapshot candidates do not match its registered target profiles");
+    }
+    let manifest_files = manifest
+        .corpus
+        .iter()
+        .map(|document| &document.case_file)
+        .collect::<BTreeSet<_>>();
+    if manifest.corpus.len() != expected_files.len()
+        || manifest_files != expected_files
+        || manifest
+            .corpus
+            .iter()
+            .any(|document| document.partition != crate::CorpusPartition::Evaluation)
+    {
+        bail!("evaluation snapshot corpus does not exactly match its evaluation audit");
+    }
+    for (candidate_id, loaded) in reports {
+        validate_report_against_release_audit(&loaded.report, audit, candidate_id)?;
+    }
+    Ok(())
 }
 
 fn validate_candidate_report(candidate: &ManifestCandidate, report: &RunReport) -> Result<()> {
@@ -582,6 +683,7 @@ fn required_scoreable(status: RequiredDestinationStatus) -> bool {
 
 fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> Result<String> {
     let mut output = provenance_header(snapshot);
+    render_evaluation_audit(&mut output, snapshot)?;
     output.push_str("## Snapshot inputs\n\n");
     output.push_str(
         "| Candidate | Runner | Requested version | Profile | Environment | Reproduction | Report SHA-256 |\n",
@@ -634,19 +736,26 @@ fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> Result<Str
             ),
         ));
     }
-    let required = aggregate(comparisons, |comparison| comparison.required);
-    output.push_str(&format!(
-        "| **Pooled** | **{}** | **{}/{} ({})** | **{}/{} ({})** |\n\n",
-        required.shared,
-        required.bifrost_only + required.both,
-        required.shared,
-        percentage(required.bifrost_only + required.both, required.shared),
-        required.reference_only + required.both,
-        required.shared,
-        percentage(required.reference_only + required.both, required.shared),
-    ));
+    if snapshot.manifest.snapshot_kind == crate::freeze::SnapshotKind::Development {
+        let required = aggregate(comparisons, |comparison| comparison.required);
+        output.push_str(&format!(
+            "| **Pooled** | **{}** | **{}/{} ({})** | **{}/{} ({})** |\n",
+            required.shared,
+            required.bifrost_only + required.both,
+            required.shared,
+            percentage(required.bifrost_only + required.both, required.shared),
+            required.reference_only + required.both,
+            required.shared,
+            percentage(required.reference_only + required.both, required.shared),
+        ));
+    }
+    output.push('\n');
 
-    render_location_comparison(&mut output, comparisons)?;
+    render_location_comparison(
+        &mut output,
+        comparisons,
+        snapshot.manifest.snapshot_kind == crate::freeze::SnapshotKind::Development,
+    )?;
 
     output.push_str("## Strict contract conformance\n\n");
     output.push_str(
@@ -666,11 +775,18 @@ fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> Result<Str
             strict.neither,
         ));
     }
-    let strict = aggregate(comparisons, |comparison| comparison.strict);
-    output.push_str(&format!(
-        "| **Pooled** | **{}** | **{}** | **{}** | **{}** | **{}** |\n\n",
-        strict.shared, strict.both, strict.bifrost_only, strict.reference_only, strict.neither
-    ));
+    if snapshot.manifest.snapshot_kind == crate::freeze::SnapshotKind::Development {
+        let strict = aggregate(comparisons, |comparison| comparison.strict);
+        output.push_str(&format!(
+            "| **Pooled** | **{}** | **{}** | **{}** | **{}** | **{}** |\n",
+            strict.shared, strict.both, strict.bifrost_only, strict.reference_only, strict.neither
+        ));
+    }
+    output.push('\n');
+
+    if snapshot.manifest.snapshot_kind == crate::freeze::SnapshotKind::Evaluation {
+        return Ok(output);
+    }
 
     output.push_str("## Strict sensitivity\n\n");
     output.push_str(
@@ -705,7 +821,112 @@ fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> Result<Str
     Ok(output)
 }
 
-fn render_location_comparison(output: &mut String, comparisons: &[Comparison]) -> Result<()> {
+fn render_evaluation_audit(output: &mut String, snapshot: &Snapshot) -> Result<()> {
+    let Some(audit) = snapshot.manifest.evaluation_audit.as_ref() else {
+        return Ok(());
+    };
+    output.push_str("# Evaluation-only results\n\n");
+    output.push_str("> **Partition:** `evaluation` only. These tables do not include or pool development cases.\n\n");
+    output.push_str("## Evaluation scope and audit\n\n");
+    output.push_str(&format!("- Freeze ID: `{}`\n", audit.freeze_id));
+    output.push_str(&format!("- Bounded claim: {}\n", audit.claim_scope));
+    output.push_str(&format!(
+        "- Audited corpus: {} repositories and {} cases\n\n",
+        audit.source_count, audit.case_count
+    ));
+
+    output.push_str("### Per-profile denominators\n\n");
+    output.push_str("| Language | Reference profile | Registered adapter | Repositories | Cases | Population exclusions | Source-review replacements |\n");
+    output.push_str("|---|---|---|---:|---:|---|---|\n");
+    let bifrost = snapshot.bifrost()?;
+    for selection in &audit.selection {
+        let cases = bifrost
+            .report
+            .documents
+            .iter()
+            .filter(|document| document.language == selection.language)
+            .map(|document| document.cases.len())
+            .sum::<usize>();
+        let profile = audit
+            .target_profiles
+            .iter()
+            .find(|profile| {
+                profile.language == selection.language
+                    && profile.candidate_id == selection.candidate_id
+            })
+            .context("evaluation selection lacks a registered target profile")?;
+        output.push_str(&format!(
+            "| {} | `{}` | [`{}`](../{}) | {} | {} | {} | {} |\n",
+            selection.language,
+            selection.candidate_id,
+            profile.profile,
+            profile.profile,
+            selection.selected_repositories,
+            cases,
+            render_audit_counts(
+                selection.excluded_repositories,
+                &selection.exclusion_reasons
+            ),
+            render_audit_counts(selection.replacements, &selection.replacement_reasons),
+        ));
+    }
+    output.push('\n');
+
+    output.push_str("### Hash-bound artifact provenance\n\n");
+    output.push_str("| Artifact | File | SHA-256 |\n|---|---|---|\n");
+    let artifacts = [
+        ("Protocol", &audit.artifacts.protocol),
+        ("Selection", &audit.artifacts.selection),
+        ("Independent review", &audit.artifacts.review),
+        ("Source lock", &audit.artifacts.source_lock),
+    ];
+    for (label, artifact) in artifacts {
+        output.push_str(&format!(
+            "| {label} | [`{}`](../{}) | `{}` |\n",
+            artifact.file, artifact.file, artifact.sha256
+        ));
+    }
+    for reviewer in &audit.reviewers {
+        output.push_str(&format!(
+            "| Reviewer `{}` | [`{}`](../{}) | `{}` |\n",
+            reviewer.id, reviewer.file, reviewer.file, reviewer.sha256
+        ));
+    }
+    output.push_str(&format!(
+        "| Adjudication `{}` | [`{}`](../{}) | `{}` |\n\n",
+        audit.adjudication.id,
+        audit.adjudication.file,
+        audit.adjudication.file,
+        audit.adjudication.sha256
+    ));
+    Ok(())
+}
+
+fn render_audit_counts(total: usize, counts: &[crate::evaluation::EvaluationAuditCount]) -> String {
+    if total == 0 {
+        return "none".to_string();
+    }
+    let reasons = counts
+        .iter()
+        .map(|entry| format!("{} × {}", markdown_table_text(&entry.reason), entry.count))
+        .collect::<Vec<_>>()
+        .join("; ");
+    if reasons.is_empty() {
+        total.to_string()
+    } else {
+        format!("{total} ({reasons})")
+    }
+}
+
+fn markdown_table_text(value: &str) -> String {
+    value.replace('|', "\\|").replace(['\r', '\n'], " ")
+}
+
+fn render_location_comparison(
+    output: &mut String,
+    comparisons: &[Comparison],
+    include_aggregate_views: bool,
+) -> Result<()> {
     output.push_str("## Location-level precision and recall\n\n");
     output.push_str(
         "TP, FP, and FN are reported without true negatives. Strict precision counts every extra result; policy-adjusted precision excludes authored and policy-allowed extras.\n\n",
@@ -728,6 +949,10 @@ fn render_location_comparison(output: &mut String, comparisons: &[Comparison]) -
             &comparison.reference_name,
             &comparison.reference_locations,
         );
+    }
+    if !include_aggregate_views {
+        output.push('\n');
+        return Ok(());
     }
 
     let mut pooled_bifrost = ProfileLocationMetrics::default();
@@ -924,6 +1149,10 @@ fn hex_digest(bytes: &[u8]) -> String {
 mod tests {
     use super::*;
     use crate::{
+        evaluation::{
+            EvaluationArtifactLink, EvaluationAuditArtifacts, EvaluationReleaseAudit,
+            EvaluationReviewArtifact, EvaluationSelectionAudit, EvaluationTargetProfile,
+        },
         freeze::{
             FreezeManifest, ManifestCandidate, ManifestDocument, ManifestReport, ScoringContract,
             SnapshotKind,
@@ -1403,6 +1632,186 @@ mod tests {
     }
 
     #[test]
+    fn rejects_evaluation_snapshot_without_audit() {
+        let tempdir = tempdir().unwrap();
+        let manifest_path = write_snapshot(
+            tempdir.path(),
+            sample_report(
+                "bifrost",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+            sample_report(
+                "gopls",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+        );
+        let mut manifest: FreezeManifest =
+            serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
+        manifest.snapshot_kind = SnapshotKind::Evaluation;
+        fs::write(
+            &manifest_path,
+            serde_json::to_vec_pretty(&manifest).unwrap(),
+        )
+        .unwrap();
+
+        let error = generate_result_pages(&manifest_path).unwrap_err();
+        assert!(error.to_string().contains("missing its evaluation audit"));
+    }
+
+    #[test]
+    fn rejects_tampered_evaluation_audit_summary() {
+        let expected = sample_evaluation_audit();
+        let mut recorded = expected.clone();
+        recorded.claim_scope = "broader claim inserted after freeze".to_string();
+
+        let error = validate_rebuilt_audit(&recorded, &expected).unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("does not match the hash-verified release evidence"));
+    }
+
+    #[test]
+    fn rejects_same_count_evaluation_case_id_substitution() {
+        let mut audit = sample_evaluation_audit();
+        audit.target_profiles = vec![EvaluationTargetProfile {
+            language: "go".to_string(),
+            candidate_id: "gopls".to_string(),
+            profile: "adapters/lsp/gopls.json".to_string(),
+        }];
+        let mut bifrost = sample_report(
+            "bifrost",
+            vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+        );
+        let mut gopls = sample_report(
+            "gopls",
+            vec![(
+                "substituted-case",
+                CaseStatus::Passed,
+                RequiredDestinationStatus::Found,
+            )],
+        );
+        for report in [&mut bifrost, &mut gopls] {
+            report.case_files = audit.case_files.clone();
+            report.documents[0].case_file = audit.case_files[0].clone();
+            report.documents[0].corpus_partition = CorpusPartition::Evaluation;
+            report.totals.development_cases = 0;
+            report.totals.evaluation_cases = 1;
+        }
+        let manifest = FreezeManifest {
+            schema_version: FREEZE_MANIFEST_SCHEMA_VERSION,
+            snapshot_kind: SnapshotKind::Evaluation,
+            version: "v0.2.0".to_string(),
+            revision: REVISION.to_string(),
+            scoring_contract: ScoringContract {
+                benchmark_case_schema_version: 2,
+                report_schema_version: 1,
+                include_unsupported: false,
+                include_definition_lookups: true,
+            },
+            candidates: vec![candidate("bifrost", "bifrost"), candidate("gopls", "lsp")],
+            reports: Vec::new(),
+            candidate_evidence: Vec::new(),
+            corpus: vec![ManifestDocument {
+                case_file: audit.case_files[0].clone(),
+                language: "go".to_string(),
+                partition: CorpusPartition::Evaluation,
+                selection: CorpusSelection::PreRegistered,
+                ground_truth_status: GroundTruthReviewStatus::IndependentlyReviewed,
+            }],
+            evaluation_audit: Some(audit),
+        };
+        let reports = BTreeMap::from([
+            (
+                "bifrost".to_string(),
+                LoadedReport {
+                    candidate: candidate("bifrost", "bifrost"),
+                    report: bifrost,
+                    checksum: "a".repeat(64),
+                },
+            ),
+            (
+                "gopls".to_string(),
+                LoadedReport {
+                    candidate: candidate("gopls", "lsp"),
+                    report: gopls,
+                    checksum: "b".repeat(64),
+                },
+            ),
+        ]);
+
+        let error = validate_snapshot_partition(&manifest, &reports).unwrap_err();
+
+        assert!(error.to_string().contains("substituted"));
+    }
+
+    #[test]
+    fn audit_counts_render_explicit_none() {
+        assert_eq!(render_audit_counts(0, &[]), "none");
+    }
+
+    #[test]
+    fn renders_evaluation_partition_scope_and_denominators() {
+        let bifrost_report = sample_report(
+            "bifrost",
+            vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+        );
+        let bifrost_candidate = candidate("bifrost", "bifrost");
+        let mut manifest = FreezeManifest {
+            schema_version: FREEZE_MANIFEST_SCHEMA_VERSION,
+            snapshot_kind: SnapshotKind::Evaluation,
+            version: "v0.2.0".to_string(),
+            revision: REVISION.to_string(),
+            scoring_contract: ScoringContract {
+                benchmark_case_schema_version: 2,
+                report_schema_version: 1,
+                include_unsupported: false,
+                include_definition_lookups: true,
+            },
+            candidates: vec![bifrost_candidate.clone(), candidate("gopls", "lsp")],
+            reports: Vec::new(),
+            candidate_evidence: Vec::new(),
+            corpus: Vec::new(),
+            evaluation_audit: Some(sample_evaluation_audit()),
+        };
+        manifest.evaluation_audit.as_mut().unwrap().target_profiles =
+            vec![EvaluationTargetProfile {
+                language: "go".to_string(),
+                candidate_id: "gopls".to_string(),
+                profile: "adapters/lsp/gopls.json".to_string(),
+            }];
+        manifest.evaluation_audit.as_mut().unwrap().selection = vec![EvaluationSelectionAudit {
+            language: "go".to_string(),
+            candidate_id: "gopls".to_string(),
+            ranked_repositories: 1,
+            selected_repositories: 1,
+            excluded_repositories: 0,
+            exclusion_reasons: Vec::new(),
+            replacements: 0,
+            replacement_reasons: Vec::new(),
+        }];
+        let snapshot = Snapshot {
+            manifest,
+            manifest_checksum: "d".repeat(64),
+            reports: BTreeMap::from([(
+                "bifrost".to_string(),
+                LoadedReport {
+                    candidate: bifrost_candidate,
+                    report: bifrost_report,
+                    checksum: "e".repeat(64),
+                },
+            )]),
+        };
+        let mut output = String::new();
+
+        render_evaluation_audit(&mut output, &snapshot).unwrap();
+
+        assert!(output.contains("# Evaluation-only results"));
+        assert!(output.contains("Freeze ID: `sample-v1`"));
+        assert!(output.contains("| go | `gopls` |"));
+        assert!(output.contains("| 1 | 1 | none | none |"));
+    }
+
+    #[test]
     fn distinguishes_duplicate_case_ids_from_different_documents() {
         let tempdir = tempdir().unwrap();
         let mut bifrost = sample_report(
@@ -1488,10 +1897,47 @@ mod tests {
                 selection: CorpusSelection::AnalyzerInformed,
                 ground_truth_status: GroundTruthReviewStatus::LegacyUnattributed,
             }],
+            evaluation_audit: None,
         };
         let path = directory.join("freeze-manifest.json");
         fs::write(&path, serde_json::to_vec_pretty(&manifest).unwrap()).unwrap();
         path
+    }
+
+    fn sample_evaluation_audit() -> EvaluationReleaseAudit {
+        let artifact = EvaluationArtifactLink {
+            file: "benchmarks/evaluation/sample.json".to_string(),
+            sha256: "a".repeat(64),
+        };
+        EvaluationReleaseAudit {
+            freeze_id: "sample-v1".to_string(),
+            claim_scope: "bounded descriptive comparison".to_string(),
+            target_profiles: Vec::new(),
+            artifacts: EvaluationAuditArtifacts {
+                protocol: artifact.clone(),
+                selection: artifact.clone(),
+                review: artifact.clone(),
+                source_lock: artifact,
+            },
+            reviewers: vec![EvaluationReviewArtifact {
+                id: "reviewer-a".to_string(),
+                file: "benchmarks/evaluation/reviewer-a.json".to_string(),
+                sha256: "b".repeat(64),
+            }],
+            adjudication: EvaluationReviewArtifact {
+                id: "adjudication".to_string(),
+                file: "benchmarks/evaluation/adjudication.json".to_string(),
+                sha256: "c".repeat(64),
+            },
+            source_count: 1,
+            case_files: vec!["benchmarks/cases/evaluation/sample.yaml".to_string()],
+            case_ids_by_file: BTreeMap::from([(
+                "benchmarks/cases/evaluation/sample.yaml".to_string(),
+                vec!["case".to_string()],
+            )]),
+            case_count: 1,
+            selection: Vec::new(),
+        }
     }
 
     fn candidate(id: &str, runner: &str) -> ManifestCandidate {

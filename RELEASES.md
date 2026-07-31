@@ -109,7 +109,10 @@ It then writes a versioned manifest with the scoring contract, corpus policy,
 candidate identities, environment provenance, and SHA-256 report digests. A
 development snapshot remains explicitly labeled as development evidence. An
 evaluation snapshot fails unless every executed document has the existing
-evaluation, preregistration, and independent-review metadata.
+evaluation, preregistration, and independent-review metadata. It also binds an
+evaluation audit containing the freeze ID, bounded claim scope, hashed protocol,
+selection, review, and source-lock provenance, per-profile repository and case
+denominators, and recorded exclusions and replacements.
 
 The only job with `contents: write` waits for the protected `release`
 environment. Immediately after approval it checks the tag again, creates an
@@ -134,6 +137,17 @@ Both self-hosted runners require administrator-provisioned physical host IDs
 and per-candidate version, profile, and executable checksums. A native pair is
 accepted only on the same platform with matching analyzer identity and zero
 runner/session errors.
+
+For `real-project-v1`, first materialize and verify Git LFS plus the source,
+selection, and review evidence; then run `validate-evaluation`; then collect
+native evaluation evidence for only Pyright and TypeScript LS; finally freeze
+the evaluation directory with exactly Bifrost, gopls, Pyright, and TypeScript
+LS. Development freezes retain the full development-corpus/full-matrix behavior
+while excluding the separately governed evaluation partition. Generated
+evaluation pages remain partition-labeled and limited to descriptive
+per-profile comparisons; they exclude language-wide or ecosystem-wide
+estimates, cross-language ranking, causal defect claims, and latency, memory,
+or cold-start claims.
 
 This workflow trusts both native-host administrators to provision the requested
 payload behind each recorded launcher. Profile and executable hashes are
