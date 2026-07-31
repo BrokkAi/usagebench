@@ -47,6 +47,8 @@ jobs:
       revision: ${{ steps.identity.outputs.revision }}
       snapshot_kind: ${{ steps.identity.outputs.snapshot_kind }}
       release_name: ${{ steps.identity.outputs.release_name }}
+      case_path: ${{ steps.identity.outputs.case_path }}
+      candidates: ${{ steps.identity.outputs.candidates }}
     steps:
       - name: Checkout requested revision
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
@@ -63,6 +65,7 @@ jobs:
           SOURCE_REVISION: ${{ inputs.source_revision }}
           SNAPSHOT_VERSION: ${{ inputs.version }}
           SNAPSHOT_KIND: ${{ inputs.snapshot_kind }}
+          REQUESTED_CANDIDATES: ${{ inputs.candidates }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
@@ -100,14 +103,30 @@ jobs:
             exit 1
           fi
           release_name="$SNAPSHOT_VERSION"
+          case_path="benchmarks/cases"
+          candidates="$REQUESTED_CANDIDATES"
+          [[ "$candidates" =~ ^[a-z0-9][a-z0-9-]*(,[a-z0-9][a-z0-9-]*)*$ ]] || {
+            echo "candidates must be a comma-separated list of candidate IDs without whitespace" >&2
+            exit 1
+          }
           if [[ "$SNAPSHOT_KIND" == "development" ]]; then
             release_name="$SNAPSHOT_VERSION development snapshot"
+          else
+            scope="$(bash scripts/resolve-freeze-scope.sh evaluation all)"
+            case_path="$(jq -er '.casePath' <<< "$scope")"
+            candidates="$(jq -er '.candidates | join(",")' <<< "$scope")"
+            [[ "$REQUESTED_CANDIDATES" == "$candidates" ]] || {
+              echo "evaluation candidates must exactly match the Bifrost baseline plus protocol targets: $candidates" >&2
+              exit 1
+            }
           fi
           {
             echo "tag=$SNAPSHOT_VERSION"
             echo "revision=$revision"
             echo "snapshot_kind=$SNAPSHOT_KIND"
             echo "release_name=$release_name"
+            echo "case_path=$case_path"
+            echo "candidates=$candidates"
           } >> "$GITHUB_OUTPUT"
 
       - name: Set up Rust
@@ -168,7 +187,8 @@ jobs:
         env:
           SNAPSHOT_KIND: ${{ steps.identity.outputs.snapshot_kind }}
           SNAPSHOT_VERSION: ${{ steps.identity.outputs.tag }}
-          CANDIDATES: ${{ inputs.candidates }}
+          CANDIDATES: ${{ steps.identity.outputs.candidates }}
+          CASE_PATH: ${{ steps.identity.outputs.case_path }}
           REVISION: ${{ steps.identity.outputs.revision }}
         run: |
           set -euo pipefail
@@ -177,11 +197,17 @@ jobs:
             "$RUNNER_TEMP/freeze-corpus" \
             "$SNAPSHOT_VERSION" \
             "$REVISION"
+          if [[ "$SNAPSHOT_KIND" == "evaluation" ]]; then
+            cargo run --locked -- validate-evaluation "$RUNNER_TEMP/freeze-corpus/$CASE_PATH"
+          else
+            rm -rf -- "$RUNNER_TEMP/freeze-corpus/benchmarks/cases/evaluation"
+          fi
           scripts/run-freeze-candidates.sh \
             "$GITHUB_WORKSPACE" \
             "$GITHUB_WORKSPACE/adapters/candidates.json" \
             "$CANDIDATES" \
             "$RUNNER_TEMP/freeze-corpus" \
+            "$CASE_PATH" \
             "$RUNNER_TEMP/freeze-evidence" \
             "$REVISION" \
             "$RUNNER_TEMP/native-evidence"
@@ -190,8 +216,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/freeze-corpus/evidence"
+          cp "$RUNNER_TEMP/freeze-evidence"/*.json "$RUNNER_TEMP/freeze-corpus/evidence/"
           cargo run --locked -- generate-results \
-            --manifest "$RUNNER_TEMP/freeze-evidence/freeze-manifest.json" \
+            --manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.json" \
             --output-directory "$RUNNER_TEMP/freeze-results"
 
       - name: Stage release evidence bundle

@@ -6,6 +6,7 @@
 //! available) that produced its report.
 
 use crate::{
+    evaluation::{validate_report_against_release_audit, EvaluationReleaseAudit},
     reproduction::{parse_evidence, validate_evidence, CandidateEvidenceLink, ReproductionClass},
     runners::{DocumentRunReport, RunReport, RunnerMetadata},
     CorpusPartition, CorpusSelection, GroundTruthReviewStatus,
@@ -20,7 +21,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub const FREEZE_MANIFEST_SCHEMA_VERSION: u32 = 2;
+pub const FREEZE_MANIFEST_SCHEMA_VERSION: u32 = 3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ValueEnum)]
 #[serde(rename_all = "snake_case")]
@@ -92,6 +93,7 @@ pub struct FreezeManifestOptions {
     pub candidate_ids: Vec<String>,
     pub report_paths: Vec<PathBuf>,
     pub evidence_paths: Vec<PathBuf>,
+    pub evaluation_corpus: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -106,6 +108,8 @@ pub struct FreezeManifest {
     pub reports: Vec<ManifestReport>,
     pub candidate_evidence: Vec<CandidateEvidenceLink>,
     pub corpus: Vec<ManifestDocument>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub evaluation_audit: Option<EvaluationReleaseAudit>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -171,6 +175,15 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
     if options.candidate_ids.is_empty() {
         bail!("at least one --candidates value is required");
     }
+    let evaluation_audit = match options.snapshot_kind {
+        SnapshotKind::Development => None,
+        SnapshotKind::Evaluation => {
+            let corpus = options.evaluation_corpus.as_deref().context(
+                "evaluation snapshots require --evaluation-corpus pointing to the promoted corpus",
+            )?;
+            Some(crate::evaluation::build_release_audit(corpus)?)
+        }
+    };
     if options.candidate_ids.len() != options.report_paths.len() {
         bail!(
             "expected one --report for each selected candidate: {} candidate(s), {} report(s)",
@@ -244,6 +257,9 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
         let report: RunReport = serde_json::from_slice(&report_bytes)
             .with_context(|| format!("parse candidate report {}", report_path.display()))?;
         validate_report(candidate, &report, &options.revision, &options.version)?;
+        if let Some(audit) = &evaluation_audit {
+            validate_report_against_release_audit(&report, audit, &candidate.id)?;
+        }
         let reproduction_class = candidate
             .reproduction_class
             .context("advertised candidate lacks a reproduction class")?;
@@ -304,8 +320,27 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
     if corpus.is_empty() {
         bail!("selected reports did not execute any benchmark documents");
     }
-    if options.snapshot_kind == SnapshotKind::Evaluation {
+    if options.snapshot_kind == SnapshotKind::Development {
+        validate_development_corpus(&corpus)?;
+    } else {
         validate_evaluation_corpus(&corpus)?;
+        let expected_candidates = std::iter::once("bifrost".to_string())
+            .chain(
+                evaluation_audit
+                    .as_ref()
+                    .expect("evaluation audit was constructed")
+                    .target_profiles
+                    .iter()
+                    .map(|profile| profile.candidate_id.clone()),
+            )
+            .collect::<BTreeSet<_>>();
+        if selected_ids != expected_candidates {
+            bail!(
+                "evaluation snapshot candidates must exactly match Bifrost plus protocol targets: expected {:?}, got {:?}",
+                expected_candidates,
+                selected_ids
+            );
+        }
     }
 
     Ok(FreezeManifest {
@@ -319,6 +354,7 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
         reports,
         candidate_evidence,
         corpus,
+        evaluation_audit,
     })
 }
 
@@ -534,6 +570,18 @@ fn validate_evaluation_corpus(corpus: &[ManifestDocument]) -> Result<()> {
     Ok(())
 }
 
+fn validate_development_corpus(corpus: &[ManifestDocument]) -> Result<()> {
+    for document in corpus {
+        if document.partition != CorpusPartition::Development {
+            bail!(
+                "development snapshot cannot include evaluation document {}",
+                document.case_file
+            );
+        }
+    }
+    Ok(())
+}
+
 fn manifest_candidate(candidate: &Candidate) -> ManifestCandidate {
     ManifestCandidate {
         id: candidate.id.clone(),
@@ -720,12 +768,15 @@ mod tests {
             candidate_ids: vec!["bifrost".to_string()],
             report_paths: vec![report],
             evidence_paths: vec![evidence],
+            evaluation_corpus: None,
         })
         .unwrap();
 
         assert_eq!(manifest.candidates[0].id, "bifrost");
         assert_eq!(manifest.reports[0].sha256.len(), 64);
         assert_eq!(manifest.corpus[0].partition, CorpusPartition::Development);
+        assert!(manifest.evaluation_audit.is_none());
+        assert!(serde_json::to_value(&manifest).unwrap()["evaluationAudit"].is_null());
     }
 
     #[test]
@@ -764,12 +815,27 @@ mod tests {
             candidate_ids: vec!["bifrost".to_string()],
             report_paths: vec![report],
             evidence_paths: vec![evidence],
+            evaluation_corpus: None,
         })
+        .unwrap_err();
+
+        assert!(error.to_string().contains("require --evaluation-corpus"));
+    }
+
+    #[test]
+    fn development_manifest_rejects_evaluation_documents() {
+        let error = validate_development_corpus(&[ManifestDocument {
+            case_file: "benchmarks/cases/evaluation/real-project-v1/go-01.yaml".to_string(),
+            language: "go".to_string(),
+            partition: CorpusPartition::Evaluation,
+            selection: CorpusSelection::PreRegistered,
+            ground_truth_status: GroundTruthReviewStatus::IndependentlyReviewed,
+        }])
         .unwrap_err();
 
         assert!(error
             .to_string()
-            .contains("evaluation snapshot requires promoted evaluation metadata"));
+            .contains("development snapshot cannot include evaluation document"));
     }
 
     #[test]

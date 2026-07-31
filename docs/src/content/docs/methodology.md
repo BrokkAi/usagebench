@@ -4,11 +4,12 @@ description: Classify observed differences without overclaiming analyzer defects
 ---
 
 UsageBench reports required-destination recall first, strict contract agreement
-second, and causal interpretation third. Every current expected location has
-completed one human source review, but the corpus remains a development set
-rather than independently reviewed evaluation ground truth. An analyzer may
-also expose a different public grouping policy without containing an
-implementation bug.
+second, and causal interpretation third. The fixture-backed development corpus
+has completed one human source review. The separate 36-case `real-project-v1`
+slice is preregistered, source-locked, independently reviewed, and adjudicated
+evaluation ground truth; analyzer results for it have not yet been published.
+An analyzer may also expose a different public grouping policy without
+containing an implementation bug.
 
 ## Headline metric: required destinations found
 
@@ -167,16 +168,20 @@ and language semantics are heterogeneous. A leave-one-profile-out sensitivity
 check shows whether the pooled direction depends on any single profile; it is
 not an invitation to remove an inconvenient language.
 
-The current corpus is not sampled from a defined population of repositories or
-developers. UsageBench therefore does not apply language-popularity weights or
-attach sampling confidence intervals to the development result. Either would
-require a preregistered target population and defensible sampling design.
+The development corpus is not sampled from a defined population of repositories
+or developers. UsageBench therefore does not apply language-popularity weights
+or attach sampling confidence intervals to the development result. The
+`real-project-v1` evaluation slice uses a preregistered, source-only repository
+draw, but supports only the bounded descriptive per-profile claim in its
+protocol; it is not a sample of all repositories or developers.
 
 ## Corpus partitions and ground truth
 
 Development cases may be analyzer-informed and may retain legacy review notes.
 They are appropriate for regression work and diagnosis, but their aggregate is
-not an evaluation claim. Each current case document declares this status.
+not an evaluation claim. Every document declares its partition explicitly, and
+public generation rejects a snapshot that mixes development and evaluation
+claims.
 
 The first human audit is complete for all 158 current cases in 35 documents.
 That review corrected and explained individual source contracts, but it does
@@ -204,6 +209,16 @@ later analyzer run an outcome of the frozen slice, not an input to its choice.
 Changing a frozen assertion creates a new freeze and preserves the old report.
 Reports include partition, selection, review status, and reference policy, and
 their totals separate development from evaluation cases.
+
+The initial `real-project-v1` evaluation partition contains four repositories
+and three declarations for each of the gopls, Pyright, and TypeScript LS
+profiles: 12 repositories and 36 cases in total. Published evaluation pages
+must show those per-profile denominators, the recorded population exclusions
+and source-review replacements, the freeze ID and claim scope, and the hashed
+protocol, selection, review, and source-lock provenance. Evaluation tables are
+descriptive only: they exclude language-wide or ecosystem-wide estimates,
+cross-language ranking, causal defect attribution, and latency, memory, or
+cold-start claims.
 
 ## Import and binding policy
 

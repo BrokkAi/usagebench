@@ -4,13 +4,14 @@
 //! YAML to the protocol, independent review record, and materialized source
 //! identities that were fixed before analyzer outcomes are inspected.
 
+use crate::runners::RunReport;
 use crate::{
     benchmark_source_path, is_exact_git_commit, BenchmarkDocument, CorpusPartition,
     GroundTruthReviewStatus, Location, NavigationOperation, Source, SymbolKind, SymbolLocation,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use flate2::read::GzDecoder;
-use serde::{de::DeserializeOwned, Deserialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -80,6 +81,7 @@ struct EvaluationProtocol {
     freeze_id: String,
     target_profiles: Vec<TargetProfile>,
     sampling: EvaluationSampling,
+    claim_scope: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -112,6 +114,8 @@ struct EvaluationSelection {
     protocol: ArtifactLink,
     protocol_commit: String,
     profiles: Vec<SelectionProfile>,
+    #[serde(default)]
+    replacements: Vec<SelectionReplacement>,
     documents: Vec<SelectedDocument>,
 }
 
@@ -120,7 +124,30 @@ struct EvaluationSelection {
 struct SelectionProfile {
     language: String,
     candidate_id: String,
+    ranked: Vec<RankedRepository>,
     selected: Vec<PlannedRepository>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct RankedRepository {
+    eligibility: RepositoryEligibility,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct RepositoryEligibility {
+    eligible: bool,
+    #[serde(default)]
+    reasons: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SelectionReplacement {
+    language: String,
+    candidate_id: String,
+    status: String,
+    #[serde(default)]
+    reason: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -277,6 +304,134 @@ struct MaterializedSource {
 struct Gitlink {
     path: String,
     commit: String,
+}
+
+/// Content-addressed evidence used to publish an evaluation snapshot.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EvaluationArtifactLink {
+    pub file: String,
+    pub sha256: String,
+}
+
+/// A protocol target retained in the public release audit.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EvaluationTargetProfile {
+    pub language: String,
+    pub candidate_id: String,
+    pub profile: String,
+}
+
+/// Content-addressed independent-review evidence.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EvaluationReviewArtifact {
+    pub id: String,
+    pub file: String,
+    pub sha256: String,
+}
+
+/// The evidence manifests bound into an evaluation release.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EvaluationAuditArtifacts {
+    pub protocol: EvaluationArtifactLink,
+    pub selection: EvaluationArtifactLink,
+    pub review: EvaluationArtifactLink,
+    pub source_lock: EvaluationArtifactLink,
+}
+
+/// A counted reason included in the source-only selection audit.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EvaluationAuditCount {
+    pub reason: String,
+    pub count: usize,
+}
+
+/// Per-profile source-only selection and replacement summary.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EvaluationSelectionAudit {
+    pub language: String,
+    pub candidate_id: String,
+    pub ranked_repositories: usize,
+    pub selected_repositories: usize,
+    pub excluded_repositories: usize,
+    pub exclusion_reasons: Vec<EvaluationAuditCount>,
+    pub replacements: usize,
+    pub replacement_reasons: Vec<EvaluationAuditCount>,
+}
+
+/// Validated publication metadata for one frozen evaluation corpus.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EvaluationReleaseAudit {
+    pub freeze_id: String,
+    pub claim_scope: String,
+    pub target_profiles: Vec<EvaluationTargetProfile>,
+    pub artifacts: EvaluationAuditArtifacts,
+    pub reviewers: Vec<EvaluationReviewArtifact>,
+    pub adjudication: EvaluationReviewArtifact,
+    pub source_count: usize,
+    pub case_files: Vec<String>,
+    pub case_ids_by_file: BTreeMap<String, Vec<String>>,
+    pub case_count: usize,
+    pub selection: Vec<EvaluationSelectionAudit>,
+}
+
+pub(crate) fn validate_report_against_release_audit(
+    report: &RunReport,
+    audit: &EvaluationReleaseAudit,
+    candidate_id: &str,
+) -> Result<()> {
+    let expected_files = audit.case_files.iter().cloned().collect::<BTreeSet<_>>();
+    let report_files = report.case_files.iter().cloned().collect::<BTreeSet<_>>();
+    if report.case_files.len() != audit.case_files.len() || report_files != expected_files {
+        bail!(
+            "evaluation report for {candidate_id} must exactly cover the explicit evaluation corpus"
+        );
+    }
+
+    let document_files = report
+        .documents
+        .iter()
+        .map(|document| document.case_file.clone())
+        .collect::<BTreeSet<_>>();
+    let case_ids_by_file = report
+        .documents
+        .iter()
+        .map(|document| {
+            (
+                document.case_file.clone(),
+                document
+                    .cases
+                    .iter()
+                    .map(|case| case.id.clone())
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    let case_count = report
+        .documents
+        .iter()
+        .map(|document| document.cases.len())
+        .sum::<usize>();
+    if report.documents.len() != audit.case_files.len()
+        || document_files != expected_files
+        || case_ids_by_file != audit.case_ids_by_file
+        || case_count != audit.case_count
+        || report
+            .documents
+            .iter()
+            .any(|document| document.corpus_partition != CorpusPartition::Evaluation)
+    {
+        bail!(
+            "evaluation report for {candidate_id} contains missing, duplicate, substituted, or development cases"
+        );
+    }
+    Ok(())
 }
 
 /// Validate the evidence linked from one evaluation document.
@@ -467,6 +622,206 @@ pub fn validate_path(path: impl AsRef<Path>) -> Result<Vec<PathBuf>> {
         validate_selection_coverage(&actual_documents, &selection, &protocol)?;
     }
     Ok(files)
+}
+
+/// Validate a complete evaluation corpus and build its publication audit.
+///
+/// This deliberately starts with [`validate_path`], so the summary can only be
+/// constructed after the protocol, selection, review, adjudication, source
+/// lock, archived sources, and authored documents have passed their existing
+/// semantic checks.
+pub fn build_release_audit(path: impl AsRef<Path>) -> Result<EvaluationReleaseAudit> {
+    let path = path.as_ref();
+    if !path.is_dir() {
+        bail!(
+            "evaluation release corpus must be a directory: {}",
+            path.display()
+        );
+    }
+    let files = validate_path(path).context("validate evaluation release corpus")?;
+    let repo_root = crate::find_repo_root_for_path(path)?;
+    let mut case_files = Vec::with_capacity(files.len());
+    let mut case_ids_by_file = BTreeMap::new();
+    let mut case_count = 0;
+    let mut selection_file = None::<String>;
+    let mut review_file = None::<String>;
+    let mut source_lock_file = None::<String>;
+    for file in &files {
+        let yaml = fs::read_to_string(file).with_context(|| format!("read {}", file.display()))?;
+        let document: BenchmarkDocument = serde_yaml::from_str(&yaml)
+            .with_context(|| format!("deserialize benchmark document {}", file.display()))?;
+        require_common_metadata(
+            &mut selection_file,
+            required_metadata(&document.corpus.selection_manifest, "selectionManifest")?,
+            "selection manifest",
+        )?;
+        require_common_metadata(
+            &mut review_file,
+            required_metadata(&document.corpus.review_manifest, "reviewManifest")?,
+            "review manifest",
+        )?;
+        require_common_metadata(
+            &mut source_lock_file,
+            required_metadata(&document.corpus.source_lock, "sourceLock")?,
+            "source lock",
+        )?;
+        let case_file = repo_relative(file, &repo_root)?;
+        let case_ids = document
+            .cases
+            .iter()
+            .map(|case| case.id.clone())
+            .collect::<Vec<_>>();
+        if case_ids_by_file
+            .insert(case_file.clone(), case_ids)
+            .is_some()
+        {
+            bail!("evaluation corpus contains duplicate case file {case_file}");
+        }
+        case_files.push(case_file);
+        case_count += document.cases.len();
+    }
+    case_files.sort();
+
+    let selection_file = selection_file.context("evaluation corpus has no selection manifest")?;
+    let selection_path = evidence_path(&repo_root, &selection_file)?;
+    let (selection, selection_bytes) = load_checked::<EvaluationSelection>(
+        &selection_path,
+        EVALUATION_SELECTION_SCHEMA,
+        "evaluation selection manifest",
+    )?;
+    let protocol_path = evidence_path(&repo_root, &selection.protocol.file)?;
+    let (protocol, protocol_bytes) = load_checked::<EvaluationProtocol>(
+        &protocol_path,
+        EVALUATION_PROTOCOL_SCHEMA,
+        "evaluation protocol",
+    )?;
+    validate_link(
+        &selection.protocol,
+        &protocol_path,
+        &protocol_bytes,
+        "evaluation selection protocol",
+    )?;
+
+    let review_file = review_file.context("evaluation corpus has no review manifest")?;
+    let review_path = evidence_path(&repo_root, &review_file)?;
+    let (review, review_bytes) = load_checked::<EvaluationReview>(
+        &review_path,
+        EVALUATION_REVIEW_SCHEMA,
+        "evaluation review manifest",
+    )?;
+    let source_lock_file = source_lock_file.context("evaluation corpus has no source lock")?;
+    let source_lock_path = evidence_path(&repo_root, &source_lock_file)?;
+    let (source_lock, source_lock_bytes) = load_checked::<SourceMaterialization>(
+        &source_lock_path,
+        SOURCE_MATERIALIZATION_SCHEMA,
+        "evaluation source lock",
+    )?;
+
+    let selection_audit = selection
+        .profiles
+        .iter()
+        .map(|profile| {
+            let excluded = profile
+                .ranked
+                .iter()
+                .filter(|repository| !repository.eligibility.eligible)
+                .collect::<Vec<_>>();
+            let replacement_reasons = selection
+                .replacements
+                .iter()
+                .filter(|replacement| {
+                    replacement.language == profile.language
+                        && replacement.candidate_id == profile.candidate_id
+                        && replacement.status == "replaced"
+                })
+                .filter_map(|replacement| replacement.reason.as_deref());
+            EvaluationSelectionAudit {
+                language: profile.language.clone(),
+                candidate_id: profile.candidate_id.clone(),
+                ranked_repositories: profile.ranked.len(),
+                selected_repositories: profile.selected.len(),
+                excluded_repositories: excluded.len(),
+                exclusion_reasons: counted_reasons(excluded.iter().flat_map(|repository| {
+                    repository.eligibility.reasons.iter().map(String::as_str)
+                })),
+                replacements: selection
+                    .replacements
+                    .iter()
+                    .filter(|replacement| {
+                        replacement.language == profile.language
+                            && replacement.candidate_id == profile.candidate_id
+                            && replacement.status == "replaced"
+                    })
+                    .count(),
+                replacement_reasons: counted_reasons(replacement_reasons),
+            }
+        })
+        .collect();
+
+    Ok(EvaluationReleaseAudit {
+        freeze_id: protocol.freeze_id,
+        claim_scope: protocol.claim_scope,
+        target_profiles: protocol
+            .target_profiles
+            .into_iter()
+            .map(|profile| EvaluationTargetProfile {
+                language: profile.language,
+                candidate_id: profile.candidate_id,
+                profile: profile.profile,
+            })
+            .collect(),
+        artifacts: EvaluationAuditArtifacts {
+            protocol: EvaluationArtifactLink {
+                file: selection.protocol.file,
+                sha256: selection.protocol.sha256,
+            },
+            selection: artifact_link(selection_file, &selection_bytes),
+            review: artifact_link(review_file, &review_bytes),
+            source_lock: artifact_link(source_lock_file, &source_lock_bytes),
+        },
+        reviewers: review.reviewers.into_iter().map(review_artifact).collect(),
+        adjudication: review_artifact(review.adjudication),
+        source_count: source_lock.sources.len(),
+        case_files,
+        case_ids_by_file,
+        case_count,
+        selection: selection_audit,
+    })
+}
+
+fn require_common_metadata(slot: &mut Option<String>, actual: &str, kind: &str) -> Result<()> {
+    if let Some(expected) = slot {
+        require_same(&format!("evaluation corpus {kind}"), actual, expected)
+    } else {
+        *slot = Some(actual.to_string());
+        Ok(())
+    }
+}
+
+fn artifact_link(file: String, bytes: &[u8]) -> EvaluationArtifactLink {
+    EvaluationArtifactLink {
+        file,
+        sha256: sha256(bytes),
+    }
+}
+
+fn review_artifact(artifact: ReviewArtifact) -> EvaluationReviewArtifact {
+    EvaluationReviewArtifact {
+        id: artifact.id,
+        file: artifact.file,
+        sha256: artifact.sha256,
+    }
+}
+
+fn counted_reasons<'a>(reasons: impl Iterator<Item = &'a str>) -> Vec<EvaluationAuditCount> {
+    let mut counts = BTreeMap::<String, usize>::new();
+    for reason in reasons {
+        *counts.entry(reason.to_string()).or_default() += 1;
+    }
+    counts
+        .into_iter()
+        .map(|(reason, count)| EvaluationAuditCount { reason, count })
+        .collect()
 }
 
 fn validate_selection_coverage(
@@ -745,18 +1100,28 @@ fn required_metadata<'a>(value: &'a Option<String>, field: &str) -> Result<&'a s
 }
 
 fn evidence_path(repo_root: &Path, value: &str) -> Result<PathBuf> {
+    Ok(repo_root.join(safe_repo_relative_path(value, "evaluation evidence path")?))
+}
+
+pub(crate) fn safe_repo_relative_path(value: &str, kind: &str) -> Result<PathBuf> {
     let path = Path::new(value);
-    if path.is_absolute()
-        || path.components().any(|component| {
-            matches!(
-                component,
-                Component::ParentDir | Component::RootDir | Component::Prefix(_)
-            )
-        })
+    validate_safe_repo_relative_path(path, kind)?;
+    Ok(path.to_path_buf())
+}
+
+fn validate_safe_repo_relative_path(path: &Path, kind: &str) -> Result<()> {
+    if path.as_os_str().is_empty()
+        || path.is_absolute()
+        || path
+            .components()
+            .any(|component| !matches!(component, Component::Normal(_)))
     {
-        bail!("evaluation evidence path {value} must be a safe repository-relative path");
+        bail!(
+            "{kind} must be a safe repository-relative path: {}",
+            path.display()
+        );
     }
-    Ok(repo_root.join(path))
+    Ok(())
 }
 
 fn repo_relative(path: &Path, repo_root: &Path) -> Result<String> {
@@ -1121,13 +1486,7 @@ fn validate_source_lock(
     if !is_exact_git_commit(&source.tree)
         || source.archive_tree != source.tree
         || !is_hex_digest(&source.sha256)
-        || Path::new(&source.archive).is_absolute()
-        || Path::new(&source.archive).components().any(|component| {
-            matches!(
-                component,
-                Component::ParentDir | Component::RootDir | Component::Prefix(_)
-            )
-        })
+        || safe_repo_relative_path(&source.archive, "materialized source archive").is_err()
     {
         bail!("source lock contains an invalid materialized source entry");
     }
@@ -1326,18 +1685,11 @@ fn validate_archive_ranges(
 }
 
 fn validate_archive_path(path: &Path) -> Result<()> {
-    if path.as_os_str().is_empty()
-        || path.is_absolute()
+    if validate_safe_repo_relative_path(path, "materialized source archive entry").is_err()
         || path.as_os_str().to_string_lossy().starts_with('-')
         || path.components().next().is_some_and(
             |component| matches!(component, Component::Normal(value) if value == ".git"),
         )
-        || path.components().any(|component| {
-            matches!(
-                component,
-                Component::ParentDir | Component::RootDir | Component::Prefix(_)
-            )
-        })
     {
         bail!("materialized source archive contains an unsafe path");
     }
@@ -1461,6 +1813,50 @@ mod tests {
     }
 
     #[test]
+    fn checked_in_real_project_release_audit_is_complete() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let audit =
+            build_release_audit(root.join("benchmarks/cases/evaluation/real-project-v1")).unwrap();
+
+        assert_eq!(audit.freeze_id, "real-project-v1");
+        assert_eq!(audit.target_profiles.len(), 3);
+        assert_eq!(audit.source_count, 12);
+        assert_eq!(audit.case_files.len(), 12);
+        assert_eq!(audit.case_count, 36);
+        assert_eq!(audit.selection.len(), 3);
+        assert!(audit
+            .selection
+            .iter()
+            .all(|profile| profile.selected_repositories == 4));
+        assert!(audit
+            .selection
+            .iter()
+            .all(|profile| profile.excluded_repositories > 0));
+        assert!(audit
+            .selection
+            .iter()
+            .any(|profile| profile.replacements > 0));
+    }
+
+    #[test]
+    fn counted_audit_reasons_are_stable_and_aggregated() {
+        let counts = counted_reasons(["too large", "missing marker", "too large"].into_iter());
+        assert_eq!(
+            counts,
+            vec![
+                EvaluationAuditCount {
+                    reason: "missing marker".to_string(),
+                    count: 1,
+                },
+                EvaluationAuditCount {
+                    reason: "too large".to_string(),
+                    count: 2,
+                },
+            ]
+        );
+    }
+
+    #[test]
     fn evaluation_directory_must_cover_every_selected_document_and_case() {
         let commit = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         let selection = EvaluationSelection {
@@ -1472,6 +1868,7 @@ mod tests {
             },
             protocol_commit: commit.to_string(),
             profiles: Vec::new(),
+            replacements: Vec::new(),
             documents: vec![SelectedDocument {
                 case_file: "benchmarks/cases/evaluation/real-project-v1/go-01.yaml".to_string(),
                 language: "go".to_string(),
@@ -1499,6 +1896,7 @@ mod tests {
                 repositories_per_profile: 1,
                 declarations_per_repository: 2,
             },
+            claim_scope: "descriptive test scope".to_string(),
         };
 
         let error = validate_selection_coverage(&actual, &selection, &protocol).unwrap_err();
