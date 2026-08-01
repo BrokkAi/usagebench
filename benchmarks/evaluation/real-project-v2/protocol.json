@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 2,
+  "freezeId": "real-project-v2",
+  "targetProfiles": [
+    {
+      "language": "java",
+      "candidateId": "eclipse-jdtls",
+      "profile": "adapters/lsp/eclipse-jdtls.json",
+      "githubLanguage": "Java",
+      "rootBuildMarkers": ["pom.xml", "build.gradle", "build.gradle.kts"],
+      "sourceExtensions": [".java"],
+      "excludedFileSuffixes": ["test.java", "tests.java"]
+    },
+    {
+      "language": "rust",
+      "candidateId": "rust-analyzer",
+      "profile": "adapters/lsp/rust-analyzer.json",
+      "githubLanguage": "Rust",
+      "rootBuildMarkers": ["Cargo.toml"],
+      "sourceExtensions": [".rs"],
+      "excludedFileSuffixes": ["_test.rs"]
+    },
+    {
+      "language": "cpp",
+      "candidateId": "apple-clangd-21",
+      "profile": "adapters/lsp/apple-clangd-21.json",
+      "githubLanguage": "C++",
+      "rootBuildMarkers": ["CMakeLists.txt", "meson.build", "BUILD", "WORKSPACE"],
+      "sourceExtensions": [".cc", ".cpp", ".cxx", ".h", ".hh", ".hpp", ".hxx"],
+      "excludedFileSuffixes": ["_test.cc", "_test.cpp", "_test.cxx", "_benchmark.cc", "_benchmark.cpp"]
+    }
+  ],
+  "population": {
+    "snapshot": "benchmarks/evaluation/real-project-v2/population.json, produced by the first complete source-only capture after this protocol is committed; it records the UTC capture timestamp, exact GitHub API requests, returned repository metadata, and observed default-branch commits",
+    "eligibility": "Public, non-fork, non-mirror, non-archived GitHub repositories in the profile's recorded GitHub language with an exact default-branch commit, a GitHub-reported SPDX license, at least minimumStars stars at capture time, at least minimumSourceFiles eligible source files, a recorded root build marker, and a reported repository size no greater than maximumRepositorySizeBytes.",
+    "minimumStars": 30000,
+    "minimumSourceFiles": 20,
+    "maximumRepositorySizeBytes": 157286400,
+    "exclusions": "Exclude paths under vendored, dependency, generated, derived-output, test-only, example, and benchmark directories; exclude each profile's recorded file suffixes; exclude truncated GitHub trees; and exclude every repository selected by a hash-linked prior evaluation slice. Source-only eligibility, rank, exclusion, and replacement decisions must not consult Bifrost or language-server outcomes.",
+    "excludedPathComponents": [
+      "vendor",
+      "node_modules",
+      "dist",
+      "build",
+      "generated",
+      "gen",
+      "test",
+      "tests",
+      "__tests__",
+      "examples",
+      "example",
+      "benchmarks",
+      "benchmark"
+    ],
+    "priorSelections": [
+      {
+        "file": "benchmarks/evaluation/real-project-v1/selection.json",
+        "sha256": "964f23de0130dfd48f38b12bfa35806659be12176b828fdc97fa7ef3dfcc46e8"
+      }
+    ]
+  },
+  "sampling": {
+    "seedDerivation": "For each language/candidate profile, rank every eligible repository by the lowercase hexadecimal SHA-256 of `usagebench-` + freezeId + `\\0` + the Git commit that introduced this protocol + `\\0` + language + `\\0` + candidate ID + `\\0` + repository full name. Sort bytewise ascending and use source metadata only. A later declaration draw must use the same domain with `declaration\\0` and the portable URI plus zero-based range appended.",
+    "repositoriesPerProfile": 4,
+    "declarationsPerRepository": 3,
+    "minimumReplacementRepositories": 4,
+    "replacementRule": "Persist the complete ranked population, including exclusions and reasons, before drawing. Select the first four eligible repositories and require at least four additional eligible repositories as replacement headroom. A source-only eligibility failure replaces a repository with the next unused eligible rank. Declaration authoring may later replace a declaration only with the next recorded source-only candidate from the same pinned repository, or replace the repository by the same rank order if that list is exhausted. Record each replacement before any analyzer run."
+  },
+  "reviewEvidence": {
+    "minimumIndependentReviewers": 2,
+    "adjudicationRequired": true,
+    "sourceOnly": true,
+    "analyzerBlind": true
+  },
+  "reporting": {
+    "separateSliceDenominators": true,
+    "combinedAggregation": "stratified-only"
+  },
+  "operations": ["references", "definition"],
+  "claimScope": "This independent slice supports only descriptive per-profile comparisons for the source-only sampled Java, Rust, and C++ repositories and the References and Definition operations recorded here. Report v2 separately. A combined v1/v2 view may preserve and aggregate only documented language/profile strata and their denominators; it must not pool the slices into language-wide, ecosystem-wide, cross-language, latency, memory, or cold-start claims."
+}

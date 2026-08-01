@@ -4,7 +4,7 @@
   "title": "UsageBench Evaluation Selection",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "freezeId", "protocol"],
+  "required": ["schemaVersion", "freezeId", "protocol", "population", "protocolCommit", "profiles", "replacements"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "freezeId": { "type": "string", "minLength": 1 },
@@ -28,7 +28,6 @@
     "replacements": { "type": "array" },
     "documents": {
       "type": "array",
-      "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
