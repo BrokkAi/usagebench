@@ -220,6 +220,16 @@ descriptive only: they exclude language-wide or ecosystem-wide estimates,
 cross-language ranking, causal defect attribution, and latency, memory, or
 cold-start claims.
 
+The preregistered `real-project-v2` slice is independent of v1 and targets
+Java/Eclipse JDT LS, Rust/rust-analyzer, and C++/Apple clangd. Its protocol
+hash-links the v1 selection so prior repositories cannot be reused, requires
+four selected and at least four reserved eligible repositories per profile,
+and preserves the same source-only, analyzer-blind ordering. V2 must be
+reported with its own per-profile denominators. A future combined view may
+aggregate only within documented language/profile strata while retaining the
+v1 and v2 denominators; it may not pool unlike profiles into an ecosystem-wide
+or cross-language claim.
+
 ## Import and binding policy
 
 `external_usages` excludes binding-only imports/re-exports;

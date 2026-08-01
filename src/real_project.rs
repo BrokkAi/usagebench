@@ -18,8 +18,23 @@ use std::{
     time::{Duration, Instant},
 };
 
-const MAX_ARCHIVE_BYTES: u64 = 150 * 1024 * 1024;
-const SOURCE_PREFIX: &[u8] = b"usagebench-real-project-v1\0";
+const LEGACY_MAX_ARCHIVE_BYTES: u64 = 150 * 1024 * 1024;
+const LEGACY_MINIMUM_SOURCE_FILES: u64 = 20;
+const LEGACY_EXCLUDED_PATH_COMPONENTS: &[&str] = &[
+    "vendor",
+    "node_modules",
+    "dist",
+    "build",
+    "generated",
+    "gen",
+    "test",
+    "tests",
+    "__tests__",
+    "examples",
+    "example",
+    "benchmarks",
+    "benchmark",
+];
 const GITHUB_REQUEST_INTERVAL: Duration = Duration::from_millis(800);
 const GITHUB_RETRY_ATTEMPTS: u32 = 3;
 static LAST_GITHUB_REQUEST: OnceLock<Mutex<Option<Instant>>> = OnceLock::new();
@@ -54,6 +69,14 @@ struct Protocol {
 #[serde(rename_all = "camelCase")]
 struct PopulationRules {
     minimum_stars: u64,
+    #[serde(default = "legacy_minimum_source_files")]
+    minimum_source_files: u64,
+    #[serde(default = "legacy_maximum_repository_size_bytes")]
+    maximum_repository_size_bytes: u64,
+    #[serde(default)]
+    excluded_path_components: Vec<String>,
+    #[serde(default)]
+    prior_selections: Vec<ArtifactLink>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -61,6 +84,14 @@ struct PopulationRules {
 struct TargetProfile {
     language: String,
     candidate_id: String,
+    #[serde(default)]
+    github_language: Option<String>,
+    #[serde(default)]
+    root_build_markers: Vec<String>,
+    #[serde(default)]
+    source_extensions: Vec<String>,
+    #[serde(default)]
+    excluded_file_suffixes: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -68,6 +99,8 @@ struct TargetProfile {
 struct Sampling {
     repositories_per_profile: usize,
     declarations_per_repository: usize,
+    #[serde(default)]
+    minimum_replacement_repositories: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -232,7 +265,8 @@ pub fn capture_population(options: CapturePopulationOptions) -> Result<Populatio
         for profile in &protocol.target_profiles {
             let (requests, pending_repositories) = capture_search_population(
                 api_base,
-                &profile.language,
+                profile,
+                protocol.schema_version,
                 protocol.population.minimum_stars,
             )?;
             profiles.push(CheckpointProfile {
@@ -255,9 +289,23 @@ pub fn capture_population(options: CapturePopulationOptions) -> Result<Populatio
     };
 
     for index in 0..checkpoint.profiles.len() {
+        let target = protocol
+            .target_profiles
+            .iter()
+            .find(|target| {
+                target.language == checkpoint.profiles[index].language
+                    && target.candidate_id == checkpoint.profiles[index].candidate_id
+            })
+            .cloned()
+            .context("capture checkpoint profile is not present in the protocol")?;
         while let Some(repository) = checkpoint.profiles[index].pending_repositories.pop() {
-            let language = checkpoint.profiles[index].language.clone();
-            let (captured, requests) = capture_repository(api_base, &language, repository)?;
+            let (captured, requests) = capture_repository(
+                api_base,
+                &target,
+                &protocol.population,
+                protocol.schema_version,
+                repository,
+            )?;
             checkpoint.profiles[index].requests.extend(requests);
             checkpoint.profiles[index].repositories.push(captured);
             write_json(&checkpoint_path, &checkpoint)?;
@@ -292,7 +340,9 @@ pub fn capture_population(options: CapturePopulationOptions) -> Result<Populatio
 
 fn capture_repository(
     api_base: &str,
-    language: &str,
+    target: &TargetProfile,
+    population: &PopulationRules,
+    protocol_schema_version: u32,
     repository: Value,
 ) -> Result<(CapturedRepository, Vec<ApiRequest>)> {
     let full_name = repository_string(&repository, "full_name")?;
@@ -308,7 +358,13 @@ fn capture_repository(
     let tree_url = format!("{api_base}/repos/{full_name}/git/trees/{commit}?recursive=1");
     let tree_response = github_json(&tree_url)?;
     requests.push(api_request(&tree_url, 1, &tree_response));
-    let source = inspect_source(language, &tree_response, &repository)?;
+    let source = inspect_source(
+        target,
+        population,
+        protocol_schema_version,
+        &tree_response,
+        &repository,
+    )?;
     Ok((
         CapturedRepository {
             full_name,
@@ -363,6 +419,7 @@ pub fn draw_selection(options: DrawSelectionOptions) -> Result<SelectionManifest
             )
         })?;
     validate_population(&protocol, &population, &options.protocol, &protocol_bytes)?;
+    let prior_repositories = load_prior_repositories(&protocol, &options.protocol)?;
 
     let mut profiles = Vec::new();
     for target in &protocol.target_profiles {
@@ -379,12 +436,11 @@ pub fn draw_selection(options: DrawSelectionOptions) -> Result<SelectionManifest
                 )
             })?;
         profiles.push(select_profile(
+            &protocol,
             target,
             captured,
             &options.protocol_commit,
-            protocol.population.minimum_stars,
-            protocol.sampling.repositories_per_profile,
-            protocol.sampling.declarations_per_repository,
+            &prior_repositories,
         )?);
     }
 
@@ -402,7 +458,10 @@ pub fn draw_selection(options: DrawSelectionOptions) -> Result<SelectionManifest
                 language: profile.language.clone(),
                 candidate_id: profile.candidate_id.clone(),
                 status: "no-replacements".to_string(),
-                rule: "No selected repository has been replaced; the next eligible ranked repository is reserved for a future source-only replacement decision.".to_string(),
+                rule: format!(
+                    "No selected repository has been replaced; at least {} eligible repositories after the selected prefix are reserved for future source-only replacement decisions.",
+                    protocol.sampling.minimum_replacement_repositories
+                ),
             })
             .collect(),
         documents: Vec::new(),
@@ -412,17 +471,24 @@ pub fn draw_selection(options: DrawSelectionOptions) -> Result<SelectionManifest
 }
 
 fn select_profile(
+    protocol: &Protocol,
     target: &TargetProfile,
     captured: &PopulationProfile,
     protocol_commit: &str,
-    minimum_stars: u64,
-    repositories_per_profile: usize,
-    declarations_per_repository: usize,
+    prior_repositories: &BTreeSet<String>,
 ) -> Result<ProfileSelection> {
     let mut ranked = captured
         .repositories
         .iter()
-        .map(|repository| ranked_repository(target, repository, protocol_commit, minimum_stars))
+        .map(|repository| {
+            ranked_repository(
+                protocol,
+                target,
+                repository,
+                protocol_commit,
+                prior_repositories,
+            )
+        })
         .collect::<Vec<_>>();
     let mut eligible = ranked
         .iter()
@@ -439,21 +505,33 @@ fn select_profile(
             .cmp(&right.rank.unwrap_or(usize::MAX))
             .then_with(|| left.full_name.cmp(&right.full_name))
     });
-    if eligible.len() < repositories_per_profile {
+    let required_eligible = protocol
+        .sampling
+        .repositories_per_profile
+        .checked_add(protocol.sampling.minimum_replacement_repositories)
+        .context("real-project repository count overflow")?;
+    if eligible.len() < required_eligible {
         bail!(
-            "{} has only {} eligible repositories; protocol requires {}",
+            "{} has only {} eligible repositories; protocol requires {} selected plus {} replacements",
             target.language,
             eligible.len(),
-            repositories_per_profile
+            protocol.sampling.repositories_per_profile,
+            protocol.sampling.minimum_replacement_repositories,
         );
     }
     let selected = ranked
         .iter()
         .filter(|candidate| candidate.eligibility.eligible)
-        .take(repositories_per_profile)
+        .take(protocol.sampling.repositories_per_profile)
         .enumerate()
         .map(|(index, candidate)| {
-            selected_repository(target, candidate, index + 1, declarations_per_repository)
+            selected_repository(
+                &protocol.freeze_id,
+                target,
+                candidate,
+                index + 1,
+                protocol.sampling.declarations_per_repository,
+            )
         })
         .collect::<Vec<_>>();
     Ok(ProfileSelection {
@@ -509,6 +587,7 @@ pub fn require_committed_population(path: &Path) -> Result<()> {
 }
 
 fn selected_repository(
+    freeze_id: &str,
     target: &TargetProfile,
     candidate: &RankedRepository,
     ordinal: usize,
@@ -519,22 +598,30 @@ fn selected_repository(
         rank: candidate.rank.expect("selected candidates are ranked"),
         full_name: candidate.full_name.clone(),
         source: candidate.source.clone(),
-        case_file: format!("benchmarks/cases/evaluation/real-project-v1/{slug}.yaml"),
+        case_file: format!("benchmarks/cases/evaluation/{freeze_id}/{slug}.yaml"),
         case_ids: (1..=declaration_count)
-            .map(|declaration| format!("real-project-v1-{slug}-{declaration}"))
+            .map(|declaration| format!("{freeze_id}-{slug}-{declaration}"))
             .collect(),
     }
 }
 
 fn ranked_repository(
+    protocol: &Protocol,
     target: &TargetProfile,
     repository: &CapturedRepository,
     protocol_commit: &str,
-    minimum_stars: u64,
+    prior_repositories: &BTreeSet<String>,
 ) -> RankedRepository {
-    let reasons = eligibility_reasons(target, repository, minimum_stars);
+    let reasons = eligibility_reasons(protocol, target, repository, prior_repositories);
     let eligible = reasons.is_empty();
-    let digest = eligible.then(|| ranking_digest(target, protocol_commit, &repository.full_name));
+    let digest = eligible.then(|| {
+        ranking_digest(
+            &protocol.freeze_id,
+            target,
+            protocol_commit,
+            &repository.full_name,
+        )
+    });
     RankedRepository {
         full_name: repository.full_name.clone(),
         source: PortableGitSource {
@@ -548,9 +635,10 @@ fn ranked_repository(
 }
 
 fn eligibility_reasons(
+    protocol: &Protocol,
     target: &TargetProfile,
     repository: &CapturedRepository,
-    minimum_stars: u64,
+    prior_repositories: &BTreeSet<String>,
 ) -> Vec<String> {
     let mut reasons = Vec::new();
     if repository
@@ -584,9 +672,12 @@ fn eligibility_reasons(
         .get("stargazers_count")
         .and_then(Value::as_u64)
         .unwrap_or_default()
-        < minimum_stars
+        < protocol.population.minimum_stars
     {
-        reasons.push(format!("repository has fewer than {minimum_stars} stars"));
+        reasons.push(format!(
+            "repository has fewer than {} stars",
+            protocol.population.minimum_stars
+        ));
     }
     let spdx = repository
         .repository
@@ -596,8 +687,9 @@ fn eligibility_reasons(
     if spdx.is_none_or(|value| value == "NOASSERTION") {
         reasons.push("repository lacks a GitHub-reported SPDX license".to_string());
     }
-    let required_markers =
-        build_markers(&target.language).expect("protocol language was validated");
+    let required_markers = target
+        .resolved_build_markers(protocol.schema_version)
+        .expect("protocol language was validated");
     if !required_markers.iter().any(|marker| {
         repository
             .source
@@ -613,14 +705,23 @@ fn eligibility_reasons(
     if repository.source.tree_truncated {
         reasons.push("repository source tree is truncated by GitHub".to_string());
     }
-    if repository.source.source_file_count < 20 {
-        reasons.push("repository has fewer than 20 eligible source files".to_string());
+    if repository.source.source_file_count < protocol.population.minimum_source_files {
+        reasons.push(format!(
+            "repository has fewer than {} eligible source files",
+            protocol.population.minimum_source_files
+        ));
     }
-    if repository.source.repository_size_bytes > MAX_ARCHIVE_BYTES {
-        reasons.push("repository reported source size exceeds 150 MiB".to_string());
+    if repository.source.repository_size_bytes > protocol.population.maximum_repository_size_bytes {
+        reasons.push(format!(
+            "repository reported source size exceeds {} bytes",
+            protocol.population.maximum_repository_size_bytes
+        ));
     }
     if !is_exact_git_commit(&repository.commit) {
         reasons.push("repository default-branch commit is not exact".to_string());
+    }
+    if prior_repositories.contains(&repository.full_name.to_ascii_lowercase()) {
+        reasons.push("repository was selected by a prior evaluation slice".to_string());
     }
     reasons
 }
@@ -631,8 +732,8 @@ fn validate_population(
     protocol_path: &Path,
     protocol_bytes: &[u8],
 ) -> Result<()> {
-    if population.schema_version != 1 || protocol.schema_version != 1 {
-        bail!("real-project population and protocol schemas must be version 1");
+    if population.schema_version != 1 || !matches!(protocol.schema_version, 1 | 2) {
+        bail!("real-project population schema must be version 1 and protocol schema must be version 1 or 2");
     }
     if population.freeze_id != protocol.freeze_id {
         bail!("population freezeId does not match protocol");
@@ -657,28 +758,30 @@ fn validate_population(
     Ok(())
 }
 
-fn inspect_source(language: &str, tree: &Value, repository: &Value) -> Result<SourceInspection> {
+fn inspect_source(
+    target: &TargetProfile,
+    population: &PopulationRules,
+    protocol_schema_version: u32,
+    tree: &Value,
+    repository: &Value,
+) -> Result<SourceInspection> {
     let entries = tree
         .get("tree")
         .and_then(Value::as_array)
         .context("GitHub tree response missing tree")?;
+    let build_markers = target.resolved_build_markers(protocol_schema_version)?;
     let root_build_markers = entries
         .iter()
         .filter_map(|entry| entry.get("path").and_then(Value::as_str))
         .filter(|path| !path.contains('/'))
-        .filter(|path| {
-            build_markers(language)
-                .expect("language was validated")
-                .iter()
-                .any(|marker| *marker == *path)
-        })
+        .filter(|path| build_markers.iter().any(|marker| *marker == *path))
         .map(ToOwned::to_owned)
         .collect();
     let source_file_count = entries
         .iter()
         .filter(|entry| entry.get("type").and_then(Value::as_str) == Some("blob"))
         .filter_map(|entry| entry.get("path").and_then(Value::as_str))
-        .filter(|path| is_source_file(language, path))
+        .filter(|path| is_source_file(target, population, protocol_schema_version, path))
         .count() as u64;
     let repository_size_bytes = repository
         .get("size")
@@ -696,55 +799,150 @@ fn inspect_source(language: &str, tree: &Value, repository: &Value) -> Result<So
     })
 }
 
-fn is_source_file(language: &str, path: &str) -> bool {
+fn is_source_file(
+    target: &TargetProfile,
+    population: &PopulationRules,
+    protocol_schema_version: u32,
+    path: &str,
+) -> bool {
     let path = path.to_ascii_lowercase();
+    let excluded_components = population.resolved_excluded_path_components();
     if path.split('/').any(|component| {
-        matches!(
-            component,
-            "vendor"
-                | "node_modules"
-                | "dist"
-                | "build"
-                | "generated"
-                | "gen"
-                | "test"
-                | "tests"
-                | "__tests__"
-                | "examples"
-                | "example"
-                | "benchmarks"
-                | "benchmark"
-        )
+        excluded_components
+            .iter()
+            .any(|excluded| *excluded == component)
     }) {
         return false;
     }
-    if path.ends_with("_test.go") || path.ends_with(".d.ts") {
+    let excluded_suffixes = target
+        .resolved_excluded_file_suffixes(protocol_schema_version)
+        .expect("protocol language was validated");
+    if excluded_suffixes
+        .iter()
+        .any(|suffix| path.ends_with(suffix))
+    {
         return false;
     }
-    match language {
-        "go" => path.ends_with(".go"),
-        "python" => path.ends_with(".py"),
-        "typescript" => path.ends_with(".ts") || path.ends_with(".tsx"),
-        _ => false,
+    target
+        .resolved_source_extensions(protocol_schema_version)
+        .expect("protocol language was validated")
+        .iter()
+        .any(|extension| path.ends_with(extension))
+}
+
+impl PopulationRules {
+    fn resolved_excluded_path_components(&self) -> Vec<&str> {
+        if self.excluded_path_components.is_empty() {
+            LEGACY_EXCLUDED_PATH_COMPONENTS.to_vec()
+        } else {
+            self.excluded_path_components
+                .iter()
+                .map(String::as_str)
+                .collect()
+        }
     }
 }
 
-fn build_markers(language: &str) -> Result<&'static [&'static str]> {
-    match language {
-        "go" => Ok(&["go.mod"]),
-        "python" => Ok(&["pyproject.toml", "setup.cfg"]),
-        "typescript" => Ok(&["package.json", "tsconfig.json"]),
-        other => bail!("unsupported real-project language {other}"),
+impl TargetProfile {
+    fn resolved_github_language(&self, protocol_schema_version: u32) -> Result<&str> {
+        if let Some(language) = self.github_language.as_deref() {
+            return Ok(language);
+        }
+        if protocol_schema_version == 1 {
+            return legacy_github_language(&self.language);
+        }
+        bail!(
+            "real-project-v2 profile {}/{} is missing githubLanguage",
+            self.language,
+            self.candidate_id
+        )
+    }
+
+    fn resolved_build_markers(&self, protocol_schema_version: u32) -> Result<Vec<&str>> {
+        if !self.root_build_markers.is_empty() {
+            return Ok(self.root_build_markers.iter().map(String::as_str).collect());
+        }
+        if protocol_schema_version == 1 {
+            return legacy_build_markers(&self.language).map(<[_]>::to_vec);
+        }
+        bail!(
+            "real-project-v2 profile {}/{} is missing rootBuildMarkers",
+            self.language,
+            self.candidate_id
+        )
+    }
+
+    fn resolved_source_extensions(&self, protocol_schema_version: u32) -> Result<Vec<&str>> {
+        if !self.source_extensions.is_empty() {
+            return Ok(self.source_extensions.iter().map(String::as_str).collect());
+        }
+        if protocol_schema_version == 1 {
+            return legacy_source_extensions(&self.language).map(<[_]>::to_vec);
+        }
+        bail!(
+            "real-project-v2 profile {}/{} is missing sourceExtensions",
+            self.language,
+            self.candidate_id
+        )
+    }
+
+    fn resolved_excluded_file_suffixes(&self, protocol_schema_version: u32) -> Result<Vec<&str>> {
+        if !self.excluded_file_suffixes.is_empty() {
+            return Ok(self
+                .excluded_file_suffixes
+                .iter()
+                .map(String::as_str)
+                .collect());
+        }
+        if protocol_schema_version == 1 {
+            return legacy_excluded_file_suffixes(&self.language).map(<[_]>::to_vec);
+        }
+        Ok(Vec::new())
     }
 }
 
-fn github_language(language: &str) -> Result<&'static str> {
+fn legacy_github_language(language: &str) -> Result<&'static str> {
     match language {
         "go" => Ok("Go"),
         "python" => Ok("Python"),
         "typescript" => Ok("TypeScript"),
-        other => bail!("unsupported real-project language {other}"),
+        other => bail!("unsupported real-project-v1 language {other}"),
     }
+}
+
+fn legacy_build_markers(language: &str) -> Result<&'static [&'static str]> {
+    match language {
+        "go" => Ok(&["go.mod"]),
+        "python" => Ok(&["pyproject.toml", "setup.cfg"]),
+        "typescript" => Ok(&["package.json", "tsconfig.json"]),
+        other => bail!("unsupported real-project-v1 language {other}"),
+    }
+}
+
+fn legacy_source_extensions(language: &str) -> Result<&'static [&'static str]> {
+    match language {
+        "go" => Ok(&[".go"]),
+        "python" => Ok(&[".py"]),
+        "typescript" => Ok(&[".ts", ".tsx"]),
+        other => bail!("unsupported real-project-v1 language {other}"),
+    }
+}
+
+fn legacy_excluded_file_suffixes(language: &str) -> Result<&'static [&'static str]> {
+    match language {
+        "go" => Ok(&["_test.go"]),
+        "python" => Ok(&[]),
+        "typescript" => Ok(&[".d.ts"]),
+        other => bail!("unsupported real-project-v1 language {other}"),
+    }
+}
+
+fn legacy_minimum_source_files() -> u64 {
+    LEGACY_MINIMUM_SOURCE_FILES
+}
+
+fn legacy_maximum_repository_size_bytes() -> u64 {
+    LEGACY_MAX_ARCHIVE_BYTES
 }
 
 fn github_json(url: &str) -> Result<Value> {
@@ -837,10 +1035,11 @@ fn github_token() -> Option<String> {
 /// silently dropping the tail of a broad language query.
 fn capture_search_population(
     api_base: &str,
-    language: &str,
+    target: &TargetProfile,
+    protocol_schema_version: u32,
     minimum_stars: u64,
 ) -> Result<(Vec<ApiRequest>, Vec<Value>)> {
-    let github_language = github_language(language)?;
+    let github_language = target.resolved_github_language(protocol_schema_version)?;
     let discovery_query =
         format!("language:{github_language} stars:>={minimum_stars} archived:false fork:false");
     let discovery_url = search_url(api_base, &discovery_query, 1);
@@ -938,9 +1137,88 @@ fn api_request(url: &str, page: u32, response: &Value) -> ApiRequest {
 
 fn load_protocol(path: &Path) -> Result<(Protocol, Vec<u8>)> {
     let bytes = fs::read(path).with_context(|| format!("read protocol {}", path.display()))?;
-    let protocol = serde_json::from_slice(&bytes)
+    let protocol: Protocol = serde_json::from_slice(&bytes)
         .with_context(|| format!("deserialize protocol {}", path.display()))?;
+    validate_protocol(&protocol)?;
     Ok((protocol, bytes))
+}
+
+fn validate_protocol(protocol: &Protocol) -> Result<()> {
+    if !matches!(protocol.schema_version, 1 | 2) {
+        bail!("real-project protocol schemaVersion must be 1 or 2");
+    }
+    if protocol.freeze_id.is_empty()
+        || !protocol
+            .freeze_id
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+    {
+        bail!("real-project protocol freezeId must be a lowercase path-safe slug");
+    }
+    if protocol.population.minimum_stars == 0
+        || protocol.population.minimum_source_files == 0
+        || protocol.population.maximum_repository_size_bytes == 0
+        || protocol.sampling.repositories_per_profile == 0
+        || protocol.sampling.declarations_per_repository == 0
+    {
+        bail!("real-project protocol thresholds and sample counts must be positive");
+    }
+    if protocol.schema_version == 2 {
+        if protocol.population.excluded_path_components.is_empty()
+            || protocol.population.prior_selections.is_empty()
+            || protocol.sampling.minimum_replacement_repositories == 0
+        {
+            bail!("real-project-v2 protocol must record source exclusions, prior selections, and replacement headroom");
+        }
+        for target in &protocol.target_profiles {
+            target.resolved_github_language(protocol.schema_version)?;
+            target.resolved_build_markers(protocol.schema_version)?;
+            target.resolved_source_extensions(protocol.schema_version)?;
+        }
+    }
+    Ok(())
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PriorSelection {
+    profiles: Vec<PriorSelectionProfile>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PriorSelectionProfile {
+    selected: Vec<PriorSelectedRepository>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PriorSelectedRepository {
+    full_name: String,
+}
+
+fn load_prior_repositories(protocol: &Protocol, protocol_path: &Path) -> Result<BTreeSet<String>> {
+    let mut repositories = BTreeSet::new();
+    for link in &protocol.population.prior_selections {
+        let path = if Path::new(&link.file).is_absolute() {
+            PathBuf::from(&link.file)
+        } else {
+            crate::find_repo_root_for_path(protocol_path)?.join(&link.file)
+        };
+        let bytes =
+            fs::read(&path).with_context(|| format!("read prior selection {}", path.display()))?;
+        if sha256(&bytes) != link.sha256 {
+            bail!("prior selection sha256 does not match {}", path.display());
+        }
+        let selection: PriorSelection = serde_json::from_slice(&bytes)
+            .with_context(|| format!("deserialize prior selection {}", path.display()))?;
+        repositories.extend(selection.profiles.into_iter().flat_map(|profile| {
+            profile
+                .selected
+                .into_iter()
+                .map(|selected| selected.full_name.to_ascii_lowercase())
+        }));
+    }
+    Ok(repositories)
 }
 
 fn artifact_link(path: &Path, bytes: &[u8]) -> Result<ArtifactLink> {
@@ -962,10 +1240,17 @@ fn repository_string(value: &Value, key: &str) -> Result<String> {
         .with_context(|| format!("GitHub response missing string {key}"))
 }
 
-fn ranking_digest(target: &TargetProfile, protocol_commit: &str, full_name: &str) -> String {
+fn ranking_digest(
+    freeze_id: &str,
+    target: &TargetProfile,
+    protocol_commit: &str,
+    full_name: &str,
+) -> String {
     let mut hasher = Sha256::new();
+    for part in [b"usagebench-".as_slice(), freeze_id.as_bytes(), b"\0"] {
+        hasher.update(part);
+    }
     for part in [
-        SOURCE_PREFIX,
         protocol_commit.as_bytes(),
         b"\0",
         target.language.as_bytes(),
@@ -1034,11 +1319,22 @@ mod tests {
             target_profiles: vec![TargetProfile {
                 language: "go".to_string(),
                 candidate_id: "gopls".to_string(),
+                github_language: None,
+                root_build_markers: Vec::new(),
+                source_extensions: Vec::new(),
+                excluded_file_suffixes: Vec::new(),
             }],
-            population: PopulationRules { minimum_stars: 100 },
+            population: PopulationRules {
+                minimum_stars: 100,
+                minimum_source_files: LEGACY_MINIMUM_SOURCE_FILES,
+                maximum_repository_size_bytes: LEGACY_MAX_ARCHIVE_BYTES,
+                excluded_path_components: Vec::new(),
+                prior_selections: Vec::new(),
+            },
             sampling: Sampling {
                 repositories_per_profile: 2,
                 declarations_per_repository: 3,
+                minimum_replacement_repositories: 0,
             },
         }
     }
@@ -1068,9 +1364,15 @@ mod tests {
         let repository = serde_json::json!({"size": 42});
 
         assert_eq!(
-            inspect_source("go", &tree, &repository)
-                .unwrap()
-                .repository_size_bytes,
+            inspect_source(
+                &protocol().target_profiles[0],
+                &protocol().population,
+                1,
+                &tree,
+                &repository,
+            )
+            .unwrap()
+            .repository_size_bytes,
             42 * 1024
         );
     }
@@ -1132,10 +1434,32 @@ mod tests {
 
     #[test]
     fn source_filter_excludes_generated_and_test_files() {
-        assert!(is_source_file("go", "cmd/main.go"));
-        assert!(!is_source_file("go", "cmd/main_test.go"));
-        assert!(!is_source_file("typescript", "node_modules/pkg/index.ts"));
-        assert!(!is_source_file("python", "examples/demo.py"));
+        let protocol = protocol();
+        let target = &protocol.target_profiles[0];
+        assert!(is_source_file(
+            target,
+            &protocol.population,
+            1,
+            "cmd/main.go"
+        ));
+        assert!(!is_source_file(
+            target,
+            &protocol.population,
+            1,
+            "cmd/main_test.go"
+        ));
+        assert!(!is_source_file(
+            target,
+            &protocol.population,
+            1,
+            "vendor/pkg/index.go"
+        ));
+        assert!(!is_source_file(
+            target,
+            &protocol.population,
+            1,
+            "examples/demo.go"
+        ));
     }
 
     #[test]
@@ -1143,9 +1467,13 @@ mod tests {
         let target = TargetProfile {
             language: "go".to_string(),
             candidate_id: "gopls".to_string(),
+            github_language: None,
+            root_build_markers: Vec::new(),
+            source_extensions: Vec::new(),
+            excluded_file_suffixes: Vec::new(),
         };
         assert_eq!(
-            ranking_digest(&target, &"b".repeat(40), "owner/repo"),
+            ranking_digest("real-project-v1", &target, &"b".repeat(40), "owner/repo"),
             "9cd334272668821f12055d7a7265038e5f81900fcc6378e8a54803df9f63e652"
         );
     }
@@ -1153,6 +1481,118 @@ mod tests {
     #[test]
     fn protocol_fixture_is_well_formed() {
         assert_eq!(protocol().sampling.repositories_per_profile, 2);
+    }
+
+    #[test]
+    fn v2_draw_excludes_prior_slice_and_uses_v2_identity() {
+        let directory = tempdir().unwrap();
+        let prior_path = directory.path().join("prior-selection.json");
+        let prior_bytes = serde_json::to_vec(&serde_json::json!({
+            "profiles": [{"selected": [{"fullName": "owner/prior"}]}]
+        }))
+        .unwrap();
+        fs::write(&prior_path, &prior_bytes).unwrap();
+        let protocol_path = directory.path().join("protocol.json");
+        let protocol_bytes = serde_json::to_vec(&serde_json::json!({
+            "schemaVersion": 2,
+            "freezeId": "real-project-v2",
+            "targetProfiles": [{
+                "language": "go",
+                "candidateId": "gopls",
+                "githubLanguage": "Go",
+                "rootBuildMarkers": ["go.mod"],
+                "sourceExtensions": [".go"],
+                "excludedFileSuffixes": ["_test.go"]
+            }],
+            "population": {
+                "minimumStars": 100,
+                "minimumSourceFiles": 20,
+                "maximumRepositorySizeBytes": 157286400,
+                "excludedPathComponents": ["vendor"],
+                "priorSelections": [{
+                    "file": prior_path,
+                    "sha256": sha256(&prior_bytes)
+                }]
+            },
+            "sampling": {
+                "repositoriesPerProfile": 1,
+                "declarationsPerRepository": 3,
+                "minimumReplacementRepositories": 1
+            }
+        }))
+        .unwrap();
+        fs::write(&protocol_path, &protocol_bytes).unwrap();
+        let population_path = directory.path().join("population.json");
+        let snapshot = PopulationSnapshot {
+            schema_version: 1,
+            freeze_id: "real-project-v2".to_string(),
+            protocol: artifact_link(&protocol_path, &protocol_bytes).unwrap(),
+            captured_at: "2026-08-01T00:00:00Z".to_string(),
+            profiles: vec![PopulationProfile {
+                language: "go".to_string(),
+                candidate_id: "gopls".to_string(),
+                requests: vec![],
+                repositories: vec![
+                    repository("owner/eligible-a", 100),
+                    repository("owner/prior", 100),
+                    repository("owner/eligible-b", 100),
+                ],
+            }],
+        };
+        write_json(&population_path, &snapshot).unwrap();
+
+        let selection = draw_selection(DrawSelectionOptions {
+            protocol: protocol_path,
+            population: population_path,
+            output: directory.path().join("selection.json"),
+            protocol_commit: "b".repeat(40),
+        })
+        .unwrap();
+
+        assert_eq!(selection.profiles[0].selected.len(), 1);
+        assert!(selection.profiles[0].selected[0]
+            .case_file
+            .contains("real-project-v2"));
+        let prior = selection.profiles[0]
+            .ranked
+            .iter()
+            .find(|candidate| candidate.full_name == "owner/prior")
+            .unwrap();
+        assert!(!prior.eligibility.eligible);
+        assert!(prior
+            .eligibility
+            .reasons
+            .contains(&"repository was selected by a prior evaluation slice".to_string()));
+    }
+
+    #[test]
+    fn v2_draw_fails_without_replacement_headroom() {
+        let mut protocol = protocol();
+        protocol.schema_version = 2;
+        protocol.freeze_id = "real-project-v2".to_string();
+        protocol.target_profiles[0].github_language = Some("Go".to_string());
+        protocol.target_profiles[0].root_build_markers = vec!["go.mod".to_string()];
+        protocol.target_profiles[0].source_extensions = vec![".go".to_string()];
+        protocol.population.excluded_path_components = vec!["vendor".to_string()];
+        protocol.sampling.repositories_per_profile = 1;
+        protocol.sampling.minimum_replacement_repositories = 1;
+        let captured = PopulationProfile {
+            language: "go".to_string(),
+            candidate_id: "gopls".to_string(),
+            requests: vec![],
+            repositories: vec![repository("owner/only", 100)],
+        };
+
+        let error = select_profile(
+            &protocol,
+            &protocol.target_profiles[0],
+            &captured,
+            &"b".repeat(40),
+            &BTreeSet::new(),
+        )
+        .unwrap_err();
+
+        assert!(error.to_string().contains("plus 1 replacements"));
     }
 
     #[test]

@@ -476,7 +476,7 @@ pub fn validate_document_evidence(
         EVALUATION_PROTOCOL_SCHEMA,
         "evaluation protocol",
     )?;
-    validate_schema_version(protocol.schema_version, "evaluation protocol")?;
+    validate_protocol_schema_version(protocol.schema_version, "evaluation protocol")?;
     require_same("protocol freezeId", &protocol.freeze_id, freeze_id)?;
     validate_link(
         &selection.protocol,
@@ -1152,6 +1152,13 @@ fn validate_schema_version(version: u32, kind: &str) -> Result<()> {
     Ok(())
 }
 
+fn validate_protocol_schema_version(version: u32, kind: &str) -> Result<()> {
+    if !matches!(version, 1 | 2) {
+        bail!("{kind} schemaVersion must be 1 or 2");
+    }
+    Ok(())
+}
+
 fn require_same(field: &str, actual: &str, expected: &str) -> Result<()> {
     if actual != expected {
         bail!("{field} {actual} does not match {expected}");
@@ -1794,21 +1801,28 @@ mod tests {
     const TREE: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
     #[test]
-    fn checked_in_real_project_protocol_is_valid() {
+    fn checked_in_real_project_protocols_are_valid() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-        let path = root.join("benchmarks/evaluation/real-project-v1/protocol.json");
-        let (protocol, _) = load_checked::<EvaluationProtocol>(
-            &path,
-            EVALUATION_PROTOCOL_SCHEMA,
-            "checked-in evaluation protocol",
-        )
-        .unwrap();
+        for (freeze_id, schema_version) in [("real-project-v1", 1), ("real-project-v2", 2)] {
+            let path = root.join(format!("benchmarks/evaluation/{freeze_id}/protocol.json"));
+            let (protocol, _) = load_checked::<EvaluationProtocol>(
+                &path,
+                EVALUATION_PROTOCOL_SCHEMA,
+                "checked-in evaluation protocol",
+            )
+            .unwrap();
 
-        validate_schema_version(protocol.schema_version, "checked-in evaluation protocol").unwrap();
-        assert_eq!(protocol.freeze_id, "real-project-v1");
-        validate_profiles(&protocol.target_profiles).unwrap();
-        for profile in protocol.target_profiles {
-            assert!(root.join(profile.profile).is_file());
+            validate_protocol_schema_version(
+                protocol.schema_version,
+                "checked-in evaluation protocol",
+            )
+            .unwrap();
+            assert_eq!(protocol.schema_version, schema_version);
+            assert_eq!(protocol.freeze_id, freeze_id);
+            validate_profiles(&protocol.target_profiles).unwrap();
+            for profile in protocol.target_profiles {
+                assert!(root.join(profile.profile).is_file());
+            }
         }
     }
 
@@ -1953,6 +1967,7 @@ mod tests {
                 "schemaVersion": 1,
                 "freezeId": "real-project-v1",
                 "protocol": artifact_link("protocol.json", &protocol_path),
+                "population": {"file": "population.json", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
                 "protocolCommit": commit,
                 "profiles": [{
                     "language": "go",
@@ -1973,6 +1988,7 @@ mod tests {
                         }]}
                     }]
                 }],
+                "replacements": [],
                 "documents": [{
                     "caseFile": "cases/example.yaml",
                     "language": "go",
@@ -2072,6 +2088,7 @@ mod tests {
                 "schemaVersion": 1,
                 "freezeId": "real-project-v1",
                 "protocol": artifact_link("protocol.json", &protocol_path),
+                "population": {"file": "population.json", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
                 "protocolCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "profiles": [{
                     "language": "go",
@@ -2092,6 +2109,7 @@ mod tests {
                         }]}
                     }]
                 }],
+                "replacements": [],
                 "documents": [{
                     "caseFile": "cases/example.yaml",
                     "language": "go",

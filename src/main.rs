@@ -23,7 +23,7 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Capture a source-only GitHub repository population for real-project-v1.
+    /// Capture a source-only GitHub repository population for a real-project slice.
     CaptureRealProjectPopulation {
         /// Frozen real-project protocol to bind into the snapshot.
         #[arg(
@@ -32,11 +32,8 @@ enum Command {
         )]
         protocol: PathBuf,
         /// Destination population manifest.
-        #[arg(
-            long,
-            default_value = "benchmarks/evaluation/real-project-v1/population.json"
-        )]
-        output: PathBuf,
+        #[arg(long)]
+        output: Option<PathBuf>,
         /// GitHub REST API base URL.
         #[arg(long, default_value = "https://api.github.com")]
         github_api_base: String,
@@ -44,7 +41,7 @@ enum Command {
         #[arg(long)]
         captured_at: Option<String>,
     },
-    /// Draw a real-project-v1 selection from an already captured population snapshot.
+    /// Draw a real-project selection from an already captured population snapshot.
     DrawRealProjectSelection {
         /// Frozen real-project protocol used for the source-only draw.
         #[arg(
@@ -53,17 +50,11 @@ enum Command {
         )]
         protocol: PathBuf,
         /// Previously captured and committed population snapshot.
-        #[arg(
-            long,
-            default_value = "benchmarks/evaluation/real-project-v1/population.json"
-        )]
-        population: PathBuf,
+        #[arg(long)]
+        population: Option<PathBuf>,
         /// Destination selection manifest.
-        #[arg(
-            long,
-            default_value = "benchmarks/evaluation/real-project-v1/selection.json"
-        )]
-        output: PathBuf,
+        #[arg(long)]
+        output: Option<PathBuf>,
         /// Exact commit that introduced the frozen protocol.
         #[arg(long)]
         protocol_commit: String,
@@ -253,6 +244,7 @@ fn main() -> Result<()> {
             github_api_base,
             captured_at,
         } => {
+            let output = sibling_artifact(&protocol, output, "population.json")?;
             let snapshot = capture_population(CapturePopulationOptions {
                 protocol,
                 output: output.clone(),
@@ -271,6 +263,8 @@ fn main() -> Result<()> {
             output,
             protocol_commit,
         } => {
+            let population = sibling_artifact(&protocol, population, "population.json")?;
+            let output = sibling_artifact(&protocol, output, "selection.json")?;
             require_committed_population(&population)?;
             let selection = draw_selection(DrawSelectionOptions {
                 protocol,
@@ -528,6 +522,21 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+fn sibling_artifact(
+    protocol: &std::path::Path,
+    explicit: Option<PathBuf>,
+    file_name: &str,
+) -> Result<PathBuf> {
+    if let Some(path) = explicit {
+        return Ok(path);
+    }
+    let parent = protocol
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .ok_or_else(|| anyhow::anyhow!("protocol path must have a parent directory"))?;
+    Ok(parent.join(file_name))
+}
+
 fn print_required_destination_totals(report: &BifrostRunReport) {
     let totals = &report.totals.required_destinations;
     println!(
@@ -764,6 +773,25 @@ mod tests {
         assert_eq!(
             safe_display("benchmarks/cases/rust.yaml"),
             "benchmarks/cases/rust.yaml"
+        );
+    }
+
+    #[test]
+    fn real_project_artifacts_default_next_to_protocol() {
+        let protocol = PathBuf::from("benchmarks/evaluation/real-project-v2/protocol.json");
+
+        assert_eq!(
+            sibling_artifact(&protocol, None, "population.json").unwrap(),
+            PathBuf::from("benchmarks/evaluation/real-project-v2/population.json")
+        );
+        assert_eq!(
+            sibling_artifact(
+                &protocol,
+                Some(PathBuf::from("custom.json")),
+                "population.json"
+            )
+            .unwrap(),
+            PathBuf::from("custom.json")
         );
     }
 }

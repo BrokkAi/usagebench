@@ -60,8 +60,10 @@ corpus:
   material rather than cloning during a run.
 
 Use `cargo run -- validate-evaluation <case-path>` to check these cross-file
-links. Do not add the first real-project manifests or evaluation cases until the
-protocol is reviewed and merged; that ordering is the preregistration boundary.
+links. Each real-project slice begins with a committed protocol, followed by a
+committed population and repository selection. Declaration authoring, review,
+and analyzer execution happen only after those source-only boundaries are
+frozen. The v1 and v2 directories and denominators remain separate.
 
 ## Source URIs
 
