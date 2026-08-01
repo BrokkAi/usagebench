@@ -1,0 +1,2453 @@
+{
+  "schemaVersion": 1,
+  "freezeId": "real-project-v2",
+  "protocol": {
+    "file": "benchmarks/evaluation/real-project-v2/protocol.json",
+    "sha256": "1c0ff8a5c0fc4f4a66b564dcdb9dd384e1b9f5ee28134a1dd34770b85a4ffbf1"
+  },
+  "population": {
+    "file": "benchmarks/evaluation/real-project-v2/population.json",
+    "sha256": "846d95b72805733ab199f03dc9ad39d59afcf7173538bf144c2176db70c434f2"
+  },
+  "protocolCommit": "8eddcf928f5b55c71cdf0792ba23124e3ea932a4",
+  "profiles": [
+    {
+      "language": "java",
+      "candidateId": "eclipse-jdtls",
+      "ranked": [
+        {
+          "fullName": "xuxueli/xxl-job",
+          "source": {
+            "repo": "https://github.com/xuxueli/xxl-job",
+            "commit": "e74c784f68f81fa89cb350913ef15794865d7b12"
+          },
+          "rank": 1,
+          "digest": "0d67b784885157b49460cd10a04a8058352e048712129199d1e9976ff85fb29d",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "halo-dev/halo",
+          "source": {
+            "repo": "https://github.com/halo-dev/halo",
+            "commit": "669ee1d0b431f45bb260c844eb6eddb071f4f4fb"
+          },
+          "rank": 2,
+          "digest": "27e803f912f179fcbf0f26558d61239a1862dd3f7cc6ede970091bf5cfe10e90",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "Blankj/AndroidUtilCode",
+          "source": {
+            "repo": "https://github.com/Blankj/AndroidUtilCode",
+            "commit": "7b4caf9e5440046b3fefb63b6b6e2ead7ebaf809"
+          },
+          "rank": 3,
+          "digest": "309ee21dfa3e9a6a53ecd0938f6a3b84f1a9bec6b7a3cdd17198c00c1b576233",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "binarywang/WxJava",
+          "source": {
+            "repo": "https://github.com/binarywang/WxJava",
+            "commit": "f96fd58d1c9fb09accaf492f166cf21a3c81dce4"
+          },
+          "rank": 4,
+          "digest": "5dfddc4bd3ede4de3e26489ff508d73b1db95b10a548003e42c1aa17633b6804",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "airbnb/lottie-android",
+          "source": {
+            "repo": "https://github.com/airbnb/lottie-android",
+            "commit": "05ea92e90381eb8a8ae06855ea2b74f322bebbec"
+          },
+          "rank": 5,
+          "digest": "5ecbc350a083fbd1ab6e5694c02a9c9cb4dd43c63123959713d9a9ed4dfa6022",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "TheAlgorithms/Java",
+          "source": {
+            "repo": "https://github.com/TheAlgorithms/Java",
+            "commit": "1f4e2f8d5bf5cd47c24e91dbe33a9b503a6f5c26"
+          },
+          "rank": 6,
+          "digest": "5feb659a03152be828429b8ff0983f32e73011d5c639c64956270de9d8a58275",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "xkcoding/spring-boot-demo",
+          "source": {
+            "repo": "https://github.com/xkcoding/spring-boot-demo",
+            "commit": "87a142f9604c1a5365b4d24d22c2c11c26a9d5ab"
+          },
+          "rank": 7,
+          "digest": "613507dea7b655441be90b9f730334a565c1ae3f0777c9f22a3dd766a96aa258",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "alibaba/nacos",
+          "source": {
+            "repo": "https://github.com/alibaba/nacos",
+            "commit": "59ca6199de25ca4794653f96b1fc7289457b2906"
+          },
+          "rank": 8,
+          "digest": "783fe3c822683ec5e0b9b409c3f1b58fed065096a8f80fafdbb5dc844d81e4a3",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "apache/dubbo",
+          "source": {
+            "repo": "https://github.com/apache/dubbo",
+            "commit": "3a3043227f5571d25eb2889de5bca22f2914843b"
+          },
+          "rank": 9,
+          "digest": "7fbe813c2046468b8cd6e310c0002c502a2205aa14e7d2d52f2fa18afeb56ae7",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "netty/netty",
+          "source": {
+            "repo": "https://github.com/netty/netty",
+            "commit": "10e24f9bfb5d754c2f2c6e1be61c3f5d9ad038a0"
+          },
+          "rank": 10,
+          "digest": "80f92ff1ee88e070deab5ad1f72b28a4d7baaca326a0acc085aca9ed7b9d7f7f",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "alibaba/arthas",
+          "source": {
+            "repo": "https://github.com/alibaba/arthas",
+            "commit": "a960592c79ba5da5182fb82fd9dca7b3b4c85292"
+          },
+          "rank": 11,
+          "digest": "8524f7cf795df9a5f5d2a62a2dd6fa05ff24d74a39797d45b0b9d4faf781feb3",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "lysine-dev/retrofit",
+          "source": {
+            "repo": "https://github.com/lysine-dev/retrofit",
+            "commit": "d0b112dad073b7fe49c953ebc46ff1b424cb1e51"
+          },
+          "rank": 12,
+          "digest": "98688a42390cfe7779c5eab2967d8a484c43a01e83735d87d93e4b4cd4c98c0c",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "chinabugotech/hutool",
+          "source": {
+            "repo": "https://github.com/chinabugotech/hutool",
+            "commit": "8870454b2a0c29cc6ffd31dcf5667c8ceb2fc442"
+          },
+          "rank": 13,
+          "digest": "9df82e5a391e22e57b17cfe1dff330ac1ad768c4499b9015d7edb3d2b7023e6f",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "TeamNewPipe/NewPipe",
+          "source": {
+            "repo": "https://github.com/TeamNewPipe/NewPipe",
+            "commit": "10144cbf9ce52409ec39329558ec1e7f4109fe6a"
+          },
+          "rank": 14,
+          "digest": "a11a14360afb74664596c14e1829f6442303d4df1e4a6d0a4ef63cd696429f91",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "yuliskov/SmartTube",
+          "source": {
+            "repo": "https://github.com/yuliskov/SmartTube",
+            "commit": "cba620bfa28642cc164e8a4a1ba37293ecdf8a79"
+          },
+          "rank": 15,
+          "digest": "be71857a8b4a8e45b052c5a4d44e328c2ea535be07346c9326a79e896d0d6365",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "skylot/jadx",
+          "source": {
+            "repo": "https://github.com/skylot/jadx",
+            "commit": "92faf782402cf72df48c3df0b67a1f443684215f"
+          },
+          "rank": 16,
+          "digest": "bec1156b4dff5f283c8586289243aa7aad49e9d668f44440f9d60a3df9a3b45a",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "macrozheng/mall",
+          "source": {
+            "repo": "https://github.com/macrozheng/mall",
+            "commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7"
+          },
+          "rank": 17,
+          "digest": "bf08f11e170ae35f97301e632ccb84d685f61745f7221f3f2d4929d1e6e8f710",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "conductor-oss/conductor",
+          "source": {
+            "repo": "https://github.com/conductor-oss/conductor",
+            "commit": "65b1a3707d44f7410979d5bb41dd5f12b266dafe"
+          },
+          "rank": 18,
+          "digest": "fb2f568b4675dde9eff11f48fad08622d4b1ae3291c5dc9637e147e18756b88c",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "MisterBooo/LeetCodeAnimation",
+          "source": {
+            "repo": "https://github.com/MisterBooo/LeetCodeAnimation",
+            "commit": "e853d7a5a893292b9d4636c78c080daf11552c81"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository lacks root build marker for java",
+              "repository has fewer than 20 eligible source files",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "NationalSecurityAgency/ghidra",
+          "source": {
+            "repo": "https://github.com/NationalSecurityAgency/ghidra",
+            "commit": "264130231b130b5fd8fd4ac85f1e7f5a8d1af252"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "PhilJay/MPAndroidChart",
+          "source": {
+            "repo": "https://github.com/PhilJay/MPAndroidChart",
+            "commit": "9c7275a0596a7ac0e50ca566e680f7f9d73607af"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "ReactiveX/RxJava",
+          "source": {
+            "repo": "https://github.com/ReactiveX/RxJava",
+            "commit": "ddcbd7bc0e2e7e954e558fe07a830264394bebb4"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "SeleniumHQ/selenium",
+          "source": {
+            "repo": "https://github.com/SeleniumHQ/selenium",
+            "commit": "83f26a2bd8b7b0cc5b980ed2813a2e912710daa9"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for java",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "Stirling-Tools/Stirling-PDF",
+          "source": {
+            "repo": "https://github.com/Stirling-Tools/Stirling-PDF",
+            "commit": "9d473fb43523b79e1c2ba12a7f5c63ad08b12773"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "YunaiV/ruoyi-vue-pro",
+          "source": {
+            "repo": "https://github.com/YunaiV/ruoyi-vue-pro",
+            "commit": "0418084e222612af2fc1141f566af454f9236ab1"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "apache/kafka",
+          "source": {
+            "repo": "https://github.com/apache/kafka",
+            "commit": "429701a0bc0767950f815b0d8ffdd132e485f704"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "ashishps1/awesome-system-design-resources",
+          "source": {
+            "repo": "https://github.com/ashishps1/awesome-system-design-resources",
+            "commit": "25724090f7dd7746129b7194b55504f9d06f86ed"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for java",
+              "repository has fewer than 20 eligible source files"
+            ]
+          }
+        },
+        {
+          "fullName": "bumptech/glide",
+          "source": {
+            "repo": "https://github.com/bumptech/glide",
+            "commit": "688da5a311f0185c5d4ec97b4588c520d388c19c"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "dbeaver/dbeaver",
+          "source": {
+            "repo": "https://github.com/dbeaver/dbeaver",
+            "commit": "17c526213af03c23a071069af7dcf9a74e342864"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "doocs/advanced-java",
+          "source": {
+            "repo": "https://github.com/doocs/advanced-java",
+            "commit": "1659850d7de4739ac9394dddd6c68466a8c38761"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for java",
+              "repository has fewer than 20 eligible source files"
+            ]
+          }
+        },
+        {
+          "fullName": "doocs/leetcode",
+          "source": {
+            "repo": "https://github.com/doocs/leetcode",
+            "commit": "52c7971d137a7eb4d45364e8f629770bcc9793a8"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for java",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "elastic/elasticsearch",
+          "source": {
+            "repo": "https://github.com/elastic/elasticsearch",
+            "commit": "567e0b39e8d7e188e18dc7fde6a2338c46ab38ad"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository source tree is truncated by GitHub",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "eugenp/tutorials",
+          "source": {
+            "repo": "https://github.com/eugenp/tutorials",
+            "commit": "a3f2aab74c74a9a3a8682749608afdb2fd348802"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository source tree is truncated by GitHub"
+            ]
+          }
+        },
+        {
+          "fullName": "geekxh/hello-algorithm",
+          "source": {
+            "repo": "https://github.com/geekxh/hello-algorithm",
+            "commit": "60a2b5f56d4d982c12fa2e04b6005fc27cb8d903"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository lacks root build marker for java",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "google/guava",
+          "source": {
+            "repo": "https://github.com/google/guava",
+            "commit": "76ebb1577a472e722b455931973173e3f5471abb"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "iluwatar/java-design-patterns",
+          "source": {
+            "repo": "https://github.com/iluwatar/java-design-patterns",
+            "commit": "b55fc2bcb5f8e1c4b884bca0a38d402d19fe467c"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "ityouknow/spring-boot-examples",
+          "source": {
+            "repo": "https://github.com/ityouknow/spring-boot-examples",
+            "commit": "53c8c8d6d0b957e9d4ae02f99d5993d5e699d522"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository lacks root build marker for java"
+            ]
+          }
+        },
+        {
+          "fullName": "jeecgboot/JeecgBoot",
+          "source": {
+            "repo": "https://github.com/jeecgboot/JeecgBoot",
+            "commit": "df83f4de76811ea73bf5b37a8fe00cbb59988a1b"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for java"
+            ]
+          }
+        },
+        {
+          "fullName": "kdn251/interviews",
+          "source": {
+            "repo": "https://github.com/kdn251/interviews",
+            "commit": "03fdcb2703ce72dc0606748733d0c13f09d41d21"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for java"
+            ]
+          }
+        },
+        {
+          "fullName": "keycloak/keycloak",
+          "source": {
+            "repo": "https://github.com/keycloak/keycloak",
+            "commit": "7b00e856c1c8b64d338aed71cf5d88e74eb1bb7a"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "krahets/hello-algo",
+          "source": {
+            "repo": "https://github.com/krahets/hello-algo",
+            "commit": "69932aed1891a7b7f6a0de88cd116d3fe13e7032"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository lacks root build marker for java",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "spring-projects/spring-boot",
+          "source": {
+            "repo": "https://github.com/spring-projects/spring-boot",
+            "commit": "db19648b8e1c6a8a0572897b0feeaa1efd8d03c0"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "spring-projects/spring-framework",
+          "source": {
+            "repo": "https://github.com/spring-projects/spring-framework",
+            "commit": "eceebb3077dda9e1b19d73c0398ef022cd91f99c"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "termux/termux-app",
+          "source": {
+            "repo": "https://github.com/termux/termux-app",
+            "commit": "3df69d1da197dd9bd71a3bafd902dffd720576b4"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "zxing/zxing",
+          "source": {
+            "repo": "https://github.com/zxing/zxing",
+            "commit": "19aa2d8254410e161f04dc3c928e68d5e90233c2"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        }
+      ],
+      "selected": [
+        {
+          "rank": 1,
+          "fullName": "xuxueli/xxl-job",
+          "source": {
+            "repo": "https://github.com/xuxueli/xxl-job",
+            "commit": "e74c784f68f81fa89cb350913ef15794865d7b12"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/java-01.yaml",
+          "caseIds": [
+            "real-project-v2-java-01-1",
+            "real-project-v2-java-01-2",
+            "real-project-v2-java-01-3"
+          ]
+        },
+        {
+          "rank": 2,
+          "fullName": "halo-dev/halo",
+          "source": {
+            "repo": "https://github.com/halo-dev/halo",
+            "commit": "669ee1d0b431f45bb260c844eb6eddb071f4f4fb"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/java-02.yaml",
+          "caseIds": [
+            "real-project-v2-java-02-1",
+            "real-project-v2-java-02-2",
+            "real-project-v2-java-02-3"
+          ]
+        },
+        {
+          "rank": 3,
+          "fullName": "Blankj/AndroidUtilCode",
+          "source": {
+            "repo": "https://github.com/Blankj/AndroidUtilCode",
+            "commit": "7b4caf9e5440046b3fefb63b6b6e2ead7ebaf809"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/java-03.yaml",
+          "caseIds": [
+            "real-project-v2-java-03-1",
+            "real-project-v2-java-03-2",
+            "real-project-v2-java-03-3"
+          ]
+        },
+        {
+          "rank": 4,
+          "fullName": "binarywang/WxJava",
+          "source": {
+            "repo": "https://github.com/binarywang/WxJava",
+            "commit": "f96fd58d1c9fb09accaf492f166cf21a3c81dce4"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/java-04.yaml",
+          "caseIds": [
+            "real-project-v2-java-04-1",
+            "real-project-v2-java-04-2",
+            "real-project-v2-java-04-3"
+          ]
+        }
+      ]
+    },
+    {
+      "language": "rust",
+      "candidateId": "rust-analyzer",
+      "ranked": [
+        {
+          "fullName": "starship/starship",
+          "source": {
+            "repo": "https://github.com/starship/starship",
+            "commit": "7946f2d9fbb02a5be76856ed27ddb85da10af3da"
+          },
+          "rank": 1,
+          "digest": "09c9c7c61d57734edf751e349dead47d8455060f365dec1c77621c40599164dc",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "qdrant/qdrant",
+          "source": {
+            "repo": "https://github.com/qdrant/qdrant",
+            "commit": "db8fa43fcb6aedec1e739487e17a99731b74590a"
+          },
+          "rank": 2,
+          "digest": "0b899afcdfa524773ac140d9e90bdf7964998839b273992ae84da4ba8c6a1edf",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "googleworkspace/cli",
+          "source": {
+            "repo": "https://github.com/googleworkspace/cli",
+            "commit": "a3768d0e82ad83cca2da97724e46bea4ff0e6dbd"
+          },
+          "rank": 3,
+          "digest": "17dc0990349a47ca9f33c8d94dfb3c7a5adf0091dab00c1ead8d7bbcb6a4a8d7",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "DioxusLabs/dioxus",
+          "source": {
+            "repo": "https://github.com/DioxusLabs/dioxus",
+            "commit": "0dbfab5274abd3628b0558f909b5946e783dbc65"
+          },
+          "rank": 4,
+          "digest": "1e4575a86517e121c269e955edb83e63f8e5d3faae6b175f496686243c8d99e1",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "tauri-apps/tauri",
+          "source": {
+            "repo": "https://github.com/tauri-apps/tauri",
+            "commit": "7cc68e74ff6981f5c50a52a67d56c5eb2d227188"
+          },
+          "rank": 5,
+          "digest": "3e5ed77fbddddffdfcf5bf273fc7bec98183c9acb856a40064713ae0080d8958",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "typst/typst",
+          "source": {
+            "repo": "https://github.com/typst/typst",
+            "commit": "32fd4cc3861e0ab99f4c42ca6bea281482ba9f51"
+          },
+          "rank": 6,
+          "digest": "3f2004f600aad29bef655130840c51b7a56f3a4cba2d9f560709b0cd0aec04e4",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "FuelLabs/fuels-rs",
+          "source": {
+            "repo": "https://github.com/FuelLabs/fuels-rs",
+            "commit": "d9a250a51818dda64bfeb5ef7cc19cf27bdcd623"
+          },
+          "rank": 7,
+          "digest": "48674554cea2c496a9c91bb310d73d222e754680abdc16881da2845cefa3e232",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "dandavison/delta",
+          "source": {
+            "repo": "https://github.com/dandavison/delta",
+            "commit": "95a0e224f55ccfdf3a7d1278fdea98a3edb9fbf4"
+          },
+          "rank": 8,
+          "digest": "5061040c59531e586b86f57b822ae46c64d2056850b5e8a3dfcbf151c7b59927",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "firecracker-microvm/firecracker",
+          "source": {
+            "repo": "https://github.com/firecracker-microvm/firecracker",
+            "commit": "ab8181ed6a1e67426b75f9692b0128a9ea84dfd1"
+          },
+          "rank": 9,
+          "digest": "5a13fa659322275a8e2e5c67b9cbe860c4bd9d78a6adea2ff7fa71151d92113a",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "ajeetdsouza/zoxide",
+          "source": {
+            "repo": "https://github.com/ajeetdsouza/zoxide",
+            "commit": "cf086b057dfcc7c306450c70829b2788a3e64219"
+          },
+          "rank": 10,
+          "digest": "5aec7387eb66674e9ba90fa0ce5f67b81adc4caddc7330f433e13c1dbc9c7ecf",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "rustfs/rustfs",
+          "source": {
+            "repo": "https://github.com/rustfs/rustfs",
+            "commit": "fd36bdfb1a6d6da62eae9a4fb9cefb010acbfba1"
+          },
+          "rank": 11,
+          "digest": "69ffb4277448d1429431c521ffa8fa9561a892ffef5a653b245548a24c27260c",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "google/comprehensive-rust",
+          "source": {
+            "repo": "https://github.com/google/comprehensive-rust",
+            "commit": "cbb740718a72b2181e5fe6885110cbbffa53b616"
+          },
+          "rank": 12,
+          "digest": "7866e1f339656e3e52a8416ddb8824ea522c3d2a4a833969c925358298768b6d",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "casey/just",
+          "source": {
+            "repo": "https://github.com/casey/just",
+            "commit": "13bf03f642f4cec7799c19f1f8f039e1cb3b095d"
+          },
+          "rank": 13,
+          "digest": "7fc75793b2eefa57e30399dfd5b20b1033faea6a5d5ca326049362bc53c7b865",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "FuelLabs/sway",
+          "source": {
+            "repo": "https://github.com/FuelLabs/sway",
+            "commit": "91be236f71fbb541ee6639ef0d955b2b8cf0a658"
+          },
+          "rank": 14,
+          "digest": "89125e65164e257da337a2333a3c65c623cc03ff10542eb948378a646d5abcc2",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "helix-editor/helix",
+          "source": {
+            "repo": "https://github.com/helix-editor/helix",
+            "commit": "079a789e8cb08ead67f19e1971a1b7438b37354b"
+          },
+          "rank": 15,
+          "digest": "97073bbb4c0d49dbbddbf9419eaf1ff4b19951674af09da4edb947f0d29ea394",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "jdx/mise",
+          "source": {
+            "repo": "https://github.com/jdx/mise",
+            "commit": "0476955c9674b7ac2979fb1092b7575d5d3f6fd7"
+          },
+          "rank": 16,
+          "digest": "9b4b9366ebcfea403eb3c2ce3610e403872ba252a260b81fb32543df54a4ebbb",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "sharkdp/fd",
+          "source": {
+            "repo": "https://github.com/sharkdp/fd",
+            "commit": "41532d114e2ba565fb5367d606c111b29b96450c"
+          },
+          "rank": 17,
+          "digest": "a19e19a95478facdc0b704ee9a82fabdb15ed8e10aa616d6c05ec435c0c7d490",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "rtk-ai/rtk",
+          "source": {
+            "repo": "https://github.com/rtk-ai/rtk",
+            "commit": "8a24ce2e2828117f69ffc31134ed12f36d33fac4"
+          },
+          "rank": 18,
+          "digest": "b285e8fc7234e4274176ea65c8371645aa11d9103f6bc56ea88e1e5b0e791619",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "rustdesk/rustdesk",
+          "source": {
+            "repo": "https://github.com/rustdesk/rustdesk",
+            "commit": "807e05ea9a7e298ed2deb438195faaafce19cdd2"
+          },
+          "rank": 19,
+          "digest": "b7bddbeddf0c8c52f58bd54ab141b0f900c6ecad49dfe46dd5835b2fc058a4c7",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "sharkdp/bat",
+          "source": {
+            "repo": "https://github.com/sharkdp/bat",
+            "commit": "2ba8db9c14e5794572f5ea338c2b90404c9769cb"
+          },
+          "rank": 20,
+          "digest": "bb0d43e3244fee9868f488deb55a07e041e22c0ffb8418711d7272f04561cda6",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "dani-garcia/vaultwarden",
+          "source": {
+            "repo": "https://github.com/dani-garcia/vaultwarden",
+            "commit": "2629bcbe1380c894e3a7f52cafcac3988edb8fbb"
+          },
+          "rank": 21,
+          "digest": "bbc6538c577e2f8d19b2d37b7d878025d5ce9749cd5a51ec792117d8bd6a83a6",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "tokio-rs/tokio",
+          "source": {
+            "repo": "https://github.com/tokio-rs/tokio",
+            "commit": "108d6d3dc038332af2af83957748333091e35b3f"
+          },
+          "rank": 22,
+          "digest": "bc6c3763b8774f5b7581ca0c1ced7c704bd1a81eb3b2208ef94f463a495786e0",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "BurntSushi/ripgrep",
+          "source": {
+            "repo": "https://github.com/BurntSushi/ripgrep",
+            "commit": "435f59fc4b43af3ab32f34d53fa34978f393fe52"
+          },
+          "rank": 23,
+          "digest": "c2b047511b2f40c98dedcad1fd9bf161d5805c0ac8b0d08f9bbfee48c96b074f",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "atuinsh/atuin",
+          "source": {
+            "repo": "https://github.com/atuinsh/atuin",
+            "commit": "307c9a0886ef753185ccd5ebed5f3e102ee4f513"
+          },
+          "rank": 24,
+          "digest": "c2ea738b6bb50db638ed6ebd33e33db7de11892e62aef842dcf858eb87a7aa4b",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "yewstack/yew",
+          "source": {
+            "repo": "https://github.com/yewstack/yew",
+            "commit": "0e4a05472fac4e5fce1befe60fa4a1e43a36b6a3"
+          },
+          "rank": 25,
+          "digest": "c4cf931a8ddb4217c38582f6e80d4c7cc0e7617840e38d0270a893f622a968d9",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "alacritty/alacritty",
+          "source": {
+            "repo": "https://github.com/alacritty/alacritty",
+            "commit": "852e971cddfabe222d2d5bcda466e130f53af207"
+          },
+          "rank": 26,
+          "digest": "d60ecb39602066531446ef93f7e48aa120db8df576ddabf3c300293ee5f324e9",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "nushell/nushell",
+          "source": {
+            "repo": "https://github.com/nushell/nushell",
+            "commit": "b4a98132e3d5a6dbd040b6507f46b482dc37e9ad"
+          },
+          "rank": 27,
+          "digest": "dfc8c5484779ebe10440581573f98b250e8c0f05e2386dc8ad482d936ac84d90",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "AlexsJones/llmfit",
+          "source": {
+            "repo": "https://github.com/AlexsJones/llmfit",
+            "commit": "850e80900a583ebb07f8efeab07589dcfd444d92"
+          },
+          "rank": 28,
+          "digest": "e4e59214f2e235f383277640fc251268a8da749d606bfaa57a1e30c2262b86f4",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "Hmbown/CodeWhale",
+          "source": {
+            "repo": "https://github.com/Hmbown/CodeWhale",
+            "commit": "0010326469d8ceff931a9ddb4e38e987c4eb826e"
+          },
+          "rank": 29,
+          "digest": "ed61f74b96bb9e8eb1b6c48e128bea9fb47c51ced928df99ca452c5b4807729c",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "iced-rs/iced",
+          "source": {
+            "repo": "https://github.com/iced-rs/iced",
+            "commit": "3c81aac2e1b48125efdf0c996fbbb9c72c06ae50"
+          },
+          "rank": 30,
+          "digest": "f4b2ab87b3cc26d199e3681d42105288c3dce4c94795708062460e8b119db16b",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "rust-lang/rustlings",
+          "source": {
+            "repo": "https://github.com/rust-lang/rustlings",
+            "commit": "2f99667f393bec62f8fa94be821026acb0c9105e"
+          },
+          "rank": 31,
+          "digest": "f556f9d12bfe990ccaaaa30ee127f79fce8b7cb553c85c1cb16de2f0b6b52194",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "sxyazi/yazi",
+          "source": {
+            "repo": "https://github.com/sxyazi/yazi",
+            "commit": "e4061f38d095c4aacfd5017881183846b6c62da8"
+          },
+          "rank": 32,
+          "digest": "fcab5d53b85dc13b075b907dcdc1d6132b3756b02085f7cec5bab33cf03abf45",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "lapce/lapce",
+          "source": {
+            "repo": "https://github.com/lapce/lapce",
+            "commit": "c9e4c33948033f10f003991a037d949a708eedf8"
+          },
+          "rank": 33,
+          "digest": "fcbc10b640ce042a2750b40ffe224b8ec6245e716161c9e47dce5a01ff66599c",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "FuelLabs/fuel-core",
+          "source": {
+            "repo": "https://github.com/FuelLabs/fuel-core",
+            "commit": "540fb5f1afdb94e84190834d757e8452640228cb"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "GyulyVGC/sniffnet",
+          "source": {
+            "repo": "https://github.com/GyulyVGC/sniffnet",
+            "commit": "1402225fe7c92c1be9c1c5212ad8eaf62b99e327"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "TabbyML/tabby",
+          "source": {
+            "repo": "https://github.com/TabbyML/tabby",
+            "commit": "21b29048d7bcf6b94f9f482f2d0fd05efadfd19f"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "aaif-goose/goose",
+          "source": {
+            "repo": "https://github.com/aaif-goose/goose",
+            "commit": "20bb609c68f98c856b7fcc473fd1bf140b0406f0"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "astral-sh/ruff",
+          "source": {
+            "repo": "https://github.com/astral-sh/ruff",
+            "commit": "adb763deb889b3fbcf638218996c21f7bba52618"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "astral-sh/uv",
+          "source": {
+            "repo": "https://github.com/astral-sh/uv",
+            "commit": "79bbface771210df216b738e9bdc7df95e5a9e6b"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "bevyengine/bevy",
+          "source": {
+            "repo": "https://github.com/bevyengine/bevy",
+            "commit": "25368b78ce5e9b15dc770cdf2af4595602cc8a7b"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "denoland/deno",
+          "source": {
+            "repo": "https://github.com/denoland/deno",
+            "commit": "fbe07f1a79d4bd8142ada44b562c8dd14e005149"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "farion1231/cc-switch",
+          "source": {
+            "repo": "https://github.com/farion1231/cc-switch",
+            "commit": "ebbf141fc71547a99f669df1be8e345130d1d890"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for rust"
+            ]
+          }
+        },
+        {
+          "fullName": "fish-shell/fish-shell",
+          "source": {
+            "repo": "https://github.com/fish-shell/fish-shell",
+            "commit": "9654f5e4bd00066e8d0db7fdb66e7b12458f8f4e"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "influxdata/influxdb",
+          "source": {
+            "repo": "https://github.com/influxdata/influxdb",
+            "commit": "3ac212d488b8cf30a26dd9ddc9f2dc3aa78ed324"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "jj-vcs/jj",
+          "source": {
+            "repo": "https://github.com/jj-vcs/jj",
+            "commit": "7eb91747df989ad24e0641714ac34fdcd94b35a5"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "juspay/hyperswitch",
+          "source": {
+            "repo": "https://github.com/juspay/hyperswitch",
+            "commit": "63cfcc3e5e880ddc0e634b78c0da5672a0af3d52"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "lbjlaq/Antigravity-Manager",
+          "source": {
+            "repo": "https://github.com/lbjlaq/Antigravity-Manager",
+            "commit": "23a4d36b4664b1006f45d3733205f2d93a8d9e86"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository lacks root build marker for rust"
+            ]
+          }
+        },
+        {
+          "fullName": "lencx/ChatGPT",
+          "source": {
+            "repo": "https://github.com/lencx/ChatGPT",
+            "commit": "a6de9a8b61077fa63ad5c3ecbe2bc12e0cb4b4b9"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository has fewer than 20 eligible source files"
+            ]
+          }
+        },
+        {
+          "fullName": "linera-io/linera-protocol",
+          "source": {
+            "repo": "https://github.com/linera-io/linera-protocol",
+            "commit": "e87cdd21d7bbf98323d618c27ca2bf1ab04e1a99"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "meilisearch/meilisearch",
+          "source": {
+            "repo": "https://github.com/meilisearch/meilisearch",
+            "commit": "ef3fab014841bcfddff626935745f93b1fc4686a"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "openai/codex",
+          "source": {
+            "repo": "https://github.com/openai/codex",
+            "commit": "ee0247f95a6fe2b094ba2253d82cae2a2b4c2dff"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for rust",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "openinterpreter/openinterpreter",
+          "source": {
+            "repo": "https://github.com/openinterpreter/openinterpreter",
+            "commit": "f7112ffc791e01c4dfb06ad4a4e03a191bee6c4a"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for rust",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "oven-sh/bun",
+          "source": {
+            "repo": "https://github.com/oven-sh/bun",
+            "commit": "5f7e62d0b885268a87cee4ff703d5b9c8ed07ecf"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "pnpm/pnpm",
+          "source": {
+            "repo": "https://github.com/pnpm/pnpm",
+            "commit": "a99b8526a0bb300cb6ef2228b37e498f0f2c8cae"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "pola-rs/polars",
+          "source": {
+            "repo": "https://github.com/pola-rs/polars",
+            "commit": "ae588a9f2c91171f45bace43a99fb7b80b90847b"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "rust-lang/rust",
+          "source": {
+            "repo": "https://github.com/rust-lang/rust",
+            "commit": "cb9d1b0640549f1b041aae430dc413ce93f8c204"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository source tree is truncated by GitHub",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "rust-unofficial/awesome-rust",
+          "source": {
+            "repo": "https://github.com/rust-unofficial/awesome-rust",
+            "commit": "8db8c82c35bb67e8f46d90d68c1a6ef563afd7ac"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository has fewer than 20 eligible source files"
+            ]
+          }
+        },
+        {
+          "fullName": "ruvnet/RuView",
+          "source": {
+            "repo": "https://github.com/ruvnet/RuView",
+            "commit": "53e1aaab691c08c225ef1753135470f757019dca"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for rust",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "servo/servo",
+          "source": {
+            "repo": "https://github.com/servo/servo",
+            "commit": "2633cdd4dad58449e9813f94bdab45fe22b137d6"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository source tree is truncated by GitHub",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "spacedriveapp/spacedrive",
+          "source": {
+            "repo": "https://github.com/spacedriveapp/spacedrive",
+            "commit": "6dfeccf2113039e35f2ce735f945e70dc3e4ea45"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "sunface/rust-course",
+          "source": {
+            "repo": "https://github.com/sunface/rust-course",
+            "commit": "386a11f17a7118eaea4fd68671520d757877ebfb"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository lacks root build marker for rust"
+            ]
+          }
+        },
+        {
+          "fullName": "surrealdb/surrealdb",
+          "source": {
+            "repo": "https://github.com/surrealdb/surrealdb",
+            "commit": "9d9a5b0693e499e0d030cac6b618062ec02cd2bc"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "swc-project/swc",
+          "source": {
+            "repo": "https://github.com/swc-project/swc",
+            "commit": "5b758ed173292dccf4d97d372a36a4086a820a7c"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository source tree is truncated by GitHub",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "tinyhumansai/openhuman",
+          "source": {
+            "repo": "https://github.com/tinyhumansai/openhuman",
+            "commit": "43cc1b47464f2f37a2c6b0b1a315020b0cef3131"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "tw93/Pake",
+          "source": {
+            "repo": "https://github.com/tw93/Pake",
+            "commit": "10d3f8165861e0e18a83de60dfc8e35c8a2e71b8"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for rust",
+              "repository has fewer than 20 eligible source files"
+            ]
+          }
+        },
+        {
+          "fullName": "ultraworkers/claw-code",
+          "source": {
+            "repo": "https://github.com/ultraworkers/claw-code",
+            "commit": "4ea31c1bc91c4e9bcbd67d51c550c01e127e6d0d"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for rust"
+            ]
+          }
+        },
+        {
+          "fullName": "unionlabs/union",
+          "source": {
+            "repo": "https://github.com/unionlabs/union",
+            "commit": "031785bb6dc6b957c624e62bc64c184409c97d7b"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "vercel-labs/agent-browser",
+          "source": {
+            "repo": "https://github.com/vercel-labs/agent-browser",
+            "commit": "da1237e2543de87119cfd48cb48284402bd4dc40"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for rust"
+            ]
+          }
+        },
+        {
+          "fullName": "vercel/turborepo",
+          "source": {
+            "repo": "https://github.com/vercel/turborepo",
+            "commit": "c6fbc97bb8841f9c87d106af2d89ce11e97ea56c"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "warpdotdev/warp",
+          "source": {
+            "repo": "https://github.com/warpdotdev/warp",
+            "commit": "7cbb22d5cc5ced52793a39d217001fe436e45e09"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "zed-industries/zed",
+          "source": {
+            "repo": "https://github.com/zed-industries/zed",
+            "commit": "5e1fd392f67e27fa1da91bad43eef7db1a5dec23"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "zellij-org/zellij",
+          "source": {
+            "repo": "https://github.com/zellij-org/zellij",
+            "commit": "0e6e4404027a187f1399a43bf91bdbd13d9636e1"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "zeroclaw-labs/zeroclaw",
+          "source": {
+            "repo": "https://github.com/zeroclaw-labs/zeroclaw",
+            "commit": "b119cc09a939a7ca8faf7187173ae3fd888e1221"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        }
+      ],
+      "selected": [
+        {
+          "rank": 1,
+          "fullName": "starship/starship",
+          "source": {
+            "repo": "https://github.com/starship/starship",
+            "commit": "7946f2d9fbb02a5be76856ed27ddb85da10af3da"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/rust-01.yaml",
+          "caseIds": [
+            "real-project-v2-rust-01-1",
+            "real-project-v2-rust-01-2",
+            "real-project-v2-rust-01-3"
+          ]
+        },
+        {
+          "rank": 2,
+          "fullName": "qdrant/qdrant",
+          "source": {
+            "repo": "https://github.com/qdrant/qdrant",
+            "commit": "db8fa43fcb6aedec1e739487e17a99731b74590a"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/rust-02.yaml",
+          "caseIds": [
+            "real-project-v2-rust-02-1",
+            "real-project-v2-rust-02-2",
+            "real-project-v2-rust-02-3"
+          ]
+        },
+        {
+          "rank": 3,
+          "fullName": "googleworkspace/cli",
+          "source": {
+            "repo": "https://github.com/googleworkspace/cli",
+            "commit": "a3768d0e82ad83cca2da97724e46bea4ff0e6dbd"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/rust-03.yaml",
+          "caseIds": [
+            "real-project-v2-rust-03-1",
+            "real-project-v2-rust-03-2",
+            "real-project-v2-rust-03-3"
+          ]
+        },
+        {
+          "rank": 4,
+          "fullName": "DioxusLabs/dioxus",
+          "source": {
+            "repo": "https://github.com/DioxusLabs/dioxus",
+            "commit": "0dbfab5274abd3628b0558f909b5946e783dbc65"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/rust-04.yaml",
+          "caseIds": [
+            "real-project-v2-rust-04-1",
+            "real-project-v2-rust-04-2",
+            "real-project-v2-rust-04-3"
+          ]
+        }
+      ]
+    },
+    {
+      "language": "cpp",
+      "candidateId": "apple-clangd-21",
+      "ranked": [
+        {
+          "fullName": "shadps4-emu/shadPS4",
+          "source": {
+            "repo": "https://github.com/shadps4-emu/shadPS4",
+            "commit": "65c9463c6a2f7a5bb3cb0ad02f5f3edbaeb3e49a"
+          },
+          "rank": 1,
+          "digest": "1baddfa4fbb8020471916409a7b1a7f6f563e5b8f21ca1af48a65546c5d97d7a",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "tesseract-ocr/tesseract",
+          "source": {
+            "repo": "https://github.com/tesseract-ocr/tesseract",
+            "commit": "25e4fb2e3d17e1a82a0c27950335573b50f8693e"
+          },
+          "rank": 2,
+          "digest": "28e40a1daab14c8691914f764c95605ad41174004e5856e62ebffb0b62e2d4ba",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "hyprwm/Hyprland",
+          "source": {
+            "repo": "https://github.com/hyprwm/Hyprland",
+            "commit": "2effd2da48e8e7bd1485eac589329e8f82f13c41"
+          },
+          "rank": 3,
+          "digest": "2d9c931ea8f9ed8964a29b639e528309283fb9069e2b48c9fc743ca99acda0ea",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "microsoft/WSL",
+          "source": {
+            "repo": "https://github.com/microsoft/WSL",
+            "commit": "e7197ca7774aa0ea66354632a6527c482fbde213"
+          },
+          "rank": 4,
+          "digest": "319d4d3e2d5b9b96ae796c4dfa25ee37f261bd877d390c5cdb03cd181f49f79f",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "aristocratos/btop",
+          "source": {
+            "repo": "https://github.com/aristocratos/btop",
+            "commit": "20d665608bd4e4f9673285b48dda0815a644d3bc"
+          },
+          "rank": 5,
+          "digest": "4a99b8d09882a66c41c164983bdb02dbb9f14be229e9c86c5a98fcaeb909b001",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "google/leveldb",
+          "source": {
+            "repo": "https://github.com/google/leveldb",
+            "commit": "7ee830d02b623e8ffe0b95d59a74db1e58da04c5"
+          },
+          "rank": 6,
+          "digest": "4c779d075d0645cc463053e019a415042b212b250f86bacb4f49441412a356d5",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "WerWolv/ImHex",
+          "source": {
+            "repo": "https://github.com/WerWolv/ImHex",
+            "commit": "29fe6f6242a84a2026701d2745aec757981b2781"
+          },
+          "rank": 7,
+          "digest": "643df3c8de467d4aff64fcdecd20b917d7d3a629b81e6aeb6acb66aa6a2ef9be",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "facebook/folly",
+          "source": {
+            "repo": "https://github.com/facebook/folly",
+            "commit": "b38a50888e5a02af402bbb36d6660e413c1d574e"
+          },
+          "rank": 8,
+          "digest": "81bbb663fa7f2bb5cb94928e96c8cac2b0f9d807cdf1d4c5e68530b108cb2ba8",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "flameshot-org/flameshot",
+          "source": {
+            "repo": "https://github.com/flameshot-org/flameshot",
+            "commit": "cbab9b41774bf11606349ca1d2d356e22f671bff"
+          },
+          "rank": 9,
+          "digest": "85598d1b647dd836781541ba65f97a54608522c07ad8f9df45f24d536505161d",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "barry-ran/QtScrcpy",
+          "source": {
+            "repo": "https://github.com/barry-ran/QtScrcpy",
+            "commit": "2194ca2dd5ec5ad726b7b65314cee674a182f1cd"
+          },
+          "rank": 10,
+          "digest": "9b3f1866cbf3737396bbf0204ccae12f4e833102f49481059cf861ee688c7092",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "ggml-org/whisper.cpp",
+          "source": {
+            "repo": "https://github.com/ggml-org/whisper.cpp",
+            "commit": "2ca53bb45e38748d07b310eeb36245a7157ac882"
+          },
+          "rank": 11,
+          "digest": "9f3bb2d1fbb453a6dcfd6545a20ba4be1d1b2c3e6ff708caa410ebf817ca65b0",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "LizardByte/Sunshine",
+          "source": {
+            "repo": "https://github.com/LizardByte/Sunshine",
+            "commit": "0784774fecb4ffcd7ff1bf1c26bba84af516590e"
+          },
+          "rank": 12,
+          "digest": "c606d239dc82b5101b3bb88a4dc3f6bc7002e57796ac5928b61766e71659d07a",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "TheAlgorithms/C-Plus-Plus",
+          "source": {
+            "repo": "https://github.com/TheAlgorithms/C-Plus-Plus",
+            "commit": "b9c118fb5dca86f6325e816481959e1e6c360373"
+          },
+          "rank": 13,
+          "digest": "d7611674edc390c182be251109e06adc985e7cc540403d6f4164d73c63d1f7fc",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "google/googletest",
+          "source": {
+            "repo": "https://github.com/google/googletest",
+            "commit": "3940de91897160fea4815998e08d0fa3c2fb077e"
+          },
+          "rank": 14,
+          "digest": "fa9895aa497cfece19a61122dd912a9ac724dd178c980d2f0eeb6a9b931980c4",
+          "eligibility": {
+            "eligible": true,
+            "reasons": []
+          }
+        },
+        {
+          "fullName": "BVLC/caffe",
+          "source": {
+            "repo": "https://github.com/BVLC/caffe",
+            "commit": "9b891540183ddc834a02b2bd81b31afae71b2153"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "CMU-Perceptual-Computing-Lab/openpose",
+          "source": {
+            "repo": "https://github.com/CMU-Perceptual-Computing-Lab/openpose",
+            "commit": "5c5d96523ef917bd30301245fdc8343937cae48d"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "ClickHouse/ClickHouse",
+          "source": {
+            "repo": "https://github.com/ClickHouse/ClickHouse",
+            "commit": "1b8ecef8529aefc29c8632d32fe84fcf386b9f34"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository source tree is truncated by GitHub",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "FreeCAD/FreeCAD",
+          "source": {
+            "repo": "https://github.com/FreeCAD/FreeCAD",
+            "commit": "a61ee58c265ca735e1ddbd2df0a9ca78574b5284"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "LadybirdBrowser/ladybird",
+          "source": {
+            "repo": "https://github.com/LadybirdBrowser/ladybird",
+            "commit": "9d060f05dd65fac9625621f4967e25a2c364bb93"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "Light-City/CPlusPlusThings",
+          "source": {
+            "repo": "https://github.com/Light-City/CPlusPlusThings",
+            "commit": "cfc9af1fcbd4ca1cb99b5e2c02c3f13839fa2ee2"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "SerenityOS/serenity",
+          "source": {
+            "repo": "https://github.com/SerenityOS/serenity",
+            "commit": "5f2bd52d8dfa16d79e1b1cc66d01523e1447a690"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "ValveSoftware/Proton",
+          "source": {
+            "repo": "https://github.com/ValveSoftware/Proton",
+            "commit": "0745bfbc4cf4365e8cf048b003990c59def29948"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository lacks root build marker for cpp",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "aria2/aria2",
+          "source": {
+            "repo": "https://github.com/aria2/aria2",
+            "commit": "9e7273583f83e881e3ec067b523ba88724088d2f"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for cpp"
+            ]
+          }
+        },
+        {
+          "fullName": "aseprite/aseprite",
+          "source": {
+            "repo": "https://github.com/aseprite/aseprite",
+            "commit": "717ab76b2ed9b814fda4b65eb388f6ad480ca4ee"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "bitcoin/bitcoin",
+          "source": {
+            "repo": "https://github.com/bitcoin/bitcoin",
+            "commit": "67efced1fc83a0b7215cc1513e7c4754fee0f12f"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "carbon-language/carbon-lang",
+          "source": {
+            "repo": "https://github.com/carbon-language/carbon-lang",
+            "commit": "46b5482bb4723a51b9f6870f4644d7de6af29f07"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "dragonflydb/dragonfly",
+          "source": {
+            "repo": "https://github.com/dragonflydb/dragonfly",
+            "commit": "c2a3f65f79fb9e1c1872238a7901bd67b1824ed8"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "duckdb/duckdb",
+          "source": {
+            "repo": "https://github.com/duckdb/duckdb",
+            "commit": "63094a6f725af5045113dda74e291c7d604f6a88"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "electron/electron",
+          "source": {
+            "repo": "https://github.com/electron/electron",
+            "commit": "b2cf8df39f67cde648c2943a9b152867d4353323"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for cpp",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "facebook/rocksdb",
+          "source": {
+            "repo": "https://github.com/facebook/rocksdb",
+            "commit": "afc922bf5f032a15a76754a27cc45bf6b4e700a7"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "facebookresearch/faiss",
+          "source": {
+            "repo": "https://github.com/facebookresearch/faiss",
+            "commit": "37313e7b6487544e899afce9338f3f987361222f"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "ggml-org/llama.cpp",
+          "source": {
+            "repo": "https://github.com/ggml-org/llama.cpp",
+            "commit": "ddd4ec1428a6201e18975ea52b07c71e0f9aef26"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "godotengine/godot",
+          "source": {
+            "repo": "https://github.com/godotengine/godot",
+            "commit": "eda2a482e9ce82e4056cfffae0ea98c1954605a1"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for cpp",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "google-ai-edge/mediapipe",
+          "source": {
+            "repo": "https://github.com/google-ai-edge/mediapipe",
+            "commit": "bdddcbd09ea1588825d35fe7b715d1a14789a85a"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "grpc/grpc",
+          "source": {
+            "repo": "https://github.com/grpc/grpc",
+            "commit": "f167d6a879e5b3223c99170663b2cc3e791ac6ad"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "huihut/interview",
+          "source": {
+            "repo": "https://github.com/huihut/interview",
+            "commit": "aba5cd97e8173dd6e1d1758b645e3a51534f872d"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository lacks root build marker for cpp"
+            ]
+          }
+        },
+        {
+          "fullName": "microsoft/BitNet",
+          "source": {
+            "repo": "https://github.com/microsoft/BitNet",
+            "commit": "0b341e582afbf9e1011f24744b554c96a3477eb5"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository has fewer than 20 eligible source files"
+            ]
+          }
+        },
+        {
+          "fullName": "microsoft/calculator",
+          "source": {
+            "repo": "https://github.com/microsoft/calculator",
+            "commit": "9f186049101f9a26e99a6e6cdff614d5558b5d27"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for cpp"
+            ]
+          }
+        },
+        {
+          "fullName": "microsoft/terminal",
+          "source": {
+            "repo": "https://github.com/microsoft/terminal",
+            "commit": "fbda436dc654cf551dd196b2667ef95d3e0a7262"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for cpp",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "nlohmann/json",
+          "source": {
+            "repo": "https://github.com/nlohmann/json",
+            "commit": "2222d386c905e6a6ebf73c61571a8a2cf196e843"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "nomic-ai/gpt4all",
+          "source": {
+            "repo": "https://github.com/nomic-ai/gpt4all",
+            "commit": "b666d16db5aeab8b91aaf7963adcee9c643734d7"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for cpp"
+            ]
+          }
+        },
+        {
+          "fullName": "ocornut/imgui",
+          "source": {
+            "repo": "https://github.com/ocornut/imgui",
+            "commit": "9b7699f32597e7c7a799f22b1860ac586c2857b9"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for cpp"
+            ]
+          }
+        },
+        {
+          "fullName": "opencv/opencv",
+          "source": {
+            "repo": "https://github.com/opencv/opencv",
+            "commit": "e35ad60e4e1db55be854df5770f706af65803690"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "protocolbuffers/protobuf",
+          "source": {
+            "repo": "https://github.com/protocolbuffers/protobuf",
+            "commit": "c74a2ae4b38d94308e11e0e4fabba11fee42da9a"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "qbittorrent/qBittorrent",
+          "source": {
+            "repo": "https://github.com/qbittorrent/qBittorrent",
+            "commit": "0c6756f703b28d44a1c35bd18be95cada83d5cf5"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "react/react-native",
+          "source": {
+            "repo": "https://github.com/react/react-native",
+            "commit": "c7d62a125c1225802b55ca52e020a73e67f3ac98"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks root build marker for cpp",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "telegramdesktop/tdesktop",
+          "source": {
+            "repo": "https://github.com/telegramdesktop/tdesktop",
+            "commit": "e86110012eb34965fcccfa04d8e4922c75b8d225"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "tensorflow/tensorflow",
+          "source": {
+            "repo": "https://github.com/tensorflow/tensorflow",
+            "commit": "d9a2091da4562f3ebeb0a97f2faa685ed9e66947"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository reported source size exceeds 157286400 bytes"
+            ]
+          }
+        },
+        {
+          "fullName": "x64dbg/x64dbg",
+          "source": {
+            "repo": "https://github.com/x64dbg/x64dbg",
+            "commit": "43892ef41f092fb13a38925e44218af5987abf08"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license"
+            ]
+          }
+        },
+        {
+          "fullName": "zhongyang219/TrafficMonitor",
+          "source": {
+            "repo": "https://github.com/zhongyang219/TrafficMonitor",
+            "commit": "430f14d49d46a796a41c8960b44ec56a461d4760"
+          },
+          "eligibility": {
+            "eligible": false,
+            "reasons": [
+              "repository lacks a GitHub-reported SPDX license",
+              "repository lacks root build marker for cpp"
+            ]
+          }
+        }
+      ],
+      "selected": [
+        {
+          "rank": 1,
+          "fullName": "shadps4-emu/shadPS4",
+          "source": {
+            "repo": "https://github.com/shadps4-emu/shadPS4",
+            "commit": "65c9463c6a2f7a5bb3cb0ad02f5f3edbaeb3e49a"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/cpp-01.yaml",
+          "caseIds": [
+            "real-project-v2-cpp-01-1",
+            "real-project-v2-cpp-01-2",
+            "real-project-v2-cpp-01-3"
+          ]
+        },
+        {
+          "rank": 2,
+          "fullName": "tesseract-ocr/tesseract",
+          "source": {
+            "repo": "https://github.com/tesseract-ocr/tesseract",
+            "commit": "25e4fb2e3d17e1a82a0c27950335573b50f8693e"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/cpp-02.yaml",
+          "caseIds": [
+            "real-project-v2-cpp-02-1",
+            "real-project-v2-cpp-02-2",
+            "real-project-v2-cpp-02-3"
+          ]
+        },
+        {
+          "rank": 3,
+          "fullName": "hyprwm/Hyprland",
+          "source": {
+            "repo": "https://github.com/hyprwm/Hyprland",
+            "commit": "2effd2da48e8e7bd1485eac589329e8f82f13c41"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/cpp-03.yaml",
+          "caseIds": [
+            "real-project-v2-cpp-03-1",
+            "real-project-v2-cpp-03-2",
+            "real-project-v2-cpp-03-3"
+          ]
+        },
+        {
+          "rank": 4,
+          "fullName": "microsoft/WSL",
+          "source": {
+            "repo": "https://github.com/microsoft/WSL",
+            "commit": "e7197ca7774aa0ea66354632a6527c482fbde213"
+          },
+          "caseFile": "benchmarks/cases/evaluation/real-project-v2/cpp-04.yaml",
+          "caseIds": [
+            "real-project-v2-cpp-04-1",
+            "real-project-v2-cpp-04-2",
+            "real-project-v2-cpp-04-3"
+          ]
+        }
+      ]
+    }
+  ],
+  "replacements": [
+    {
+      "language": "java",
+      "candidateId": "eclipse-jdtls",
+      "status": "no-replacements",
+      "rule": "No selected repository has been replaced; at least 4 eligible repositories after the selected prefix are reserved for future source-only replacement decisions."
+    },
+    {
+      "language": "rust",
+      "candidateId": "rust-analyzer",
+      "status": "no-replacements",
+      "rule": "No selected repository has been replaced; at least 4 eligible repositories after the selected prefix are reserved for future source-only replacement decisions."
+    },
+    {
+      "language": "cpp",
+      "candidateId": "apple-clangd-21",
+      "status": "no-replacements",
+      "rule": "No selected repository has been replaced; at least 4 eligible repositories after the selected prefix are reserved for future source-only replacement decisions."
+    }
+  ]
+}
