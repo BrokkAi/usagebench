@@ -23,6 +23,8 @@ use std::{
 use url::Url;
 
 const EVALUATION_PROTOCOL_SCHEMA: &str = include_str!("../schema/evaluation-protocol.schema.json");
+const EVALUATION_POPULATION_SCHEMA: &str =
+    include_str!("../schema/evaluation-population.schema.json");
 const EVALUATION_SELECTION_SCHEMA: &str =
     include_str!("../schema/evaluation-selection.schema.json");
 const EVALUATION_REVIEW_SCHEMA: &str = include_str!("../schema/evaluation-review.schema.json");
@@ -1090,6 +1092,25 @@ fn load_checked<T: DeserializeOwned>(
     let parsed = serde_json::from_value(value)
         .with_context(|| format!("deserialize {kind} {}", path.display()))?;
     Ok((parsed, bytes))
+}
+
+pub(crate) fn load_evaluation_protocol_checked<T: DeserializeOwned>(
+    path: &Path,
+) -> Result<(T, Vec<u8>)> {
+    load_checked(path, EVALUATION_PROTOCOL_SCHEMA, "evaluation protocol")
+}
+
+pub(crate) fn load_evaluation_population_checked<T: DeserializeOwned>(
+    path: &Path,
+) -> Result<(T, Vec<u8>)> {
+    load_checked(path, EVALUATION_POPULATION_SCHEMA, "evaluation population")
+}
+
+#[cfg(test)]
+pub(crate) fn load_evaluation_selection_checked<T: DeserializeOwned>(
+    path: &Path,
+) -> Result<(T, Vec<u8>)> {
+    load_checked(path, EVALUATION_SELECTION_SCHEMA, "evaluation selection")
 }
 
 fn required_metadata<'a>(value: &'a Option<String>, field: &str) -> Result<&'a str> {

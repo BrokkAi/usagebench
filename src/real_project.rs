@@ -37,6 +37,7 @@ const LEGACY_EXCLUDED_PATH_COMPONENTS: &[&str] = &[
 ];
 const GITHUB_REQUEST_INTERVAL: Duration = Duration::from_millis(800);
 const GITHUB_RETRY_ATTEMPTS: u32 = 3;
+const MAX_PRIOR_SELECTION_BYTES: u64 = 16 * 1024 * 1024;
 static LAST_GITHUB_REQUEST: OnceLock<Mutex<Option<Instant>>> = OnceLock::new();
 
 #[derive(Debug, Clone)]
@@ -405,19 +406,39 @@ fn load_checkpoint(
 }
 
 pub fn draw_selection(options: DrawSelectionOptions) -> Result<SelectionManifest> {
+    draw_selection_with_options(options, true, true)
+}
+
+fn draw_selection_with_options(
+    options: DrawSelectionOptions,
+    verify_commit: bool,
+    validate_schema: bool,
+) -> Result<SelectionManifest> {
     if !is_exact_git_commit(&options.protocol_commit) {
         bail!("protocol commit must be exactly 40 lowercase hexadecimal characters");
     }
-    let (protocol, protocol_bytes) = load_protocol(&options.protocol)?;
-    let population_bytes = fs::read(&options.population)
-        .with_context(|| format!("read population snapshot {}", options.population.display()))?;
-    let population: PopulationSnapshot =
-        serde_json::from_slice(&population_bytes).with_context(|| {
+    let (protocol, protocol_bytes) = if validate_schema {
+        load_protocol(&options.protocol)?
+    } else {
+        load_protocol_unchecked(&options.protocol)?
+    };
+    if verify_commit {
+        verify_protocol_commit(&options.protocol, &protocol_bytes, &options.protocol_commit)?;
+    }
+    let (population, population_bytes): (PopulationSnapshot, Vec<u8>) = if validate_schema {
+        crate::evaluation::load_evaluation_population_checked(&options.population)?
+    } else {
+        let bytes = fs::read(&options.population).with_context(|| {
+            format!("read population snapshot {}", options.population.display())
+        })?;
+        let population = serde_json::from_slice(&bytes).with_context(|| {
             format!(
                 "deserialize population snapshot {}",
                 options.population.display()
             )
         })?;
+        (population, bytes)
+    };
     validate_population(&protocol, &population, &options.protocol, &protocol_bytes)?;
     let prior_repositories = load_prior_repositories(&protocol, &options.protocol)?;
 
@@ -444,6 +465,7 @@ pub fn draw_selection(options: DrawSelectionOptions) -> Result<SelectionManifest
         )?);
     }
 
+    let replacement_rule = replacement_rule(&protocol);
     let manifest = SelectionManifest {
         schema_version: 1,
         freeze_id: protocol.freeze_id,
@@ -458,16 +480,23 @@ pub fn draw_selection(options: DrawSelectionOptions) -> Result<SelectionManifest
                 language: profile.language.clone(),
                 candidate_id: profile.candidate_id.clone(),
                 status: "no-replacements".to_string(),
-                rule: format!(
-                    "No selected repository has been replaced; at least {} eligible repositories after the selected prefix are reserved for future source-only replacement decisions.",
-                    protocol.sampling.minimum_replacement_repositories
-                ),
+                rule: replacement_rule.clone(),
             })
             .collect(),
         documents: Vec::new(),
     };
     write_json(&options.output, &manifest)?;
     Ok(manifest)
+}
+
+fn replacement_rule(protocol: &Protocol) -> String {
+    if protocol.schema_version == 1 && protocol.sampling.minimum_replacement_repositories == 0 {
+        return "No selected repository has been replaced; the next eligible ranked repository is reserved for a future source-only replacement decision.".to_string();
+    }
+    format!(
+        "No selected repository has been replaced; at least {} eligible repositories after the selected prefix are reserved for future source-only replacement decisions.",
+        protocol.sampling.minimum_replacement_repositories
+    )
 }
 
 fn select_profile(
@@ -1136,8 +1165,14 @@ fn api_request(url: &str, page: u32, response: &Value) -> ApiRequest {
 }
 
 fn load_protocol(path: &Path) -> Result<(Protocol, Vec<u8>)> {
+    let (protocol, bytes) = crate::evaluation::load_evaluation_protocol_checked(path)?;
+    validate_protocol(&protocol)?;
+    Ok((protocol, bytes))
+}
+
+fn load_protocol_unchecked(path: &Path) -> Result<(Protocol, Vec<u8>)> {
     let bytes = fs::read(path).with_context(|| format!("read protocol {}", path.display()))?;
-    let protocol: Protocol = serde_json::from_slice(&bytes)
+    let protocol = serde_json::from_slice(&bytes)
         .with_context(|| format!("deserialize protocol {}", path.display()))?;
     validate_protocol(&protocol)?;
     Ok((protocol, bytes))
@@ -1176,6 +1211,47 @@ fn validate_protocol(protocol: &Protocol) -> Result<()> {
             target.resolved_source_extensions(protocol.schema_version)?;
         }
     }
+    let identities = protocol
+        .target_profiles
+        .iter()
+        .map(|target| (&target.language, &target.candidate_id))
+        .collect::<BTreeSet<_>>();
+    if identities.len() != protocol.target_profiles.len() {
+        bail!("real-project protocol contains a duplicate language/candidate profile");
+    }
+    Ok(())
+}
+
+fn verify_protocol_commit(path: &Path, bytes: &[u8], commit: &str) -> Result<()> {
+    let repo_root = crate::find_repo_root_for_path(path)?;
+    let canonical_root = repo_root
+        .canonicalize()
+        .with_context(|| format!("resolve repository root {}", repo_root.display()))?;
+    let absolute = path
+        .canonicalize()
+        .with_context(|| format!("resolve protocol {}", path.display()))?;
+    let relative = absolute
+        .strip_prefix(&canonical_root)
+        .with_context(|| format!("protocol {} is outside repository", path.display()))?
+        .to_str()
+        .context("protocol path is not UTF-8")?
+        .replace('\\', "/");
+    let committed = Command::new("git")
+        .arg("-C")
+        .arg(&repo_root)
+        .args(["show", &format!("{commit}:{relative}")])
+        .output()
+        .with_context(|| format!("read protocol {relative} from commit {commit}"))?;
+    if !committed.status.success() {
+        bail!("protocol commit {commit} does not contain {relative}");
+    }
+    verify_protocol_commit_bytes(bytes, &committed.stdout, commit)
+}
+
+fn verify_protocol_commit_bytes(current: &[u8], committed: &[u8], commit: &str) -> Result<()> {
+    if current != committed {
+        bail!("protocol bytes do not match protocol commit {commit}");
+    }
     Ok(())
 }
 
@@ -1198,14 +1274,40 @@ struct PriorSelectedRepository {
 
 fn load_prior_repositories(protocol: &Protocol, protocol_path: &Path) -> Result<BTreeSet<String>> {
     let mut repositories = BTreeSet::new();
+    if protocol.population.prior_selections.is_empty() {
+        return Ok(repositories);
+    }
+    let repo_root = crate::find_repo_root_for_path(protocol_path)?;
+    let canonical_root = repo_root
+        .canonicalize()
+        .with_context(|| format!("resolve repository root {}", repo_root.display()))?;
     for link in &protocol.population.prior_selections {
-        let path = if Path::new(&link.file).is_absolute() {
-            PathBuf::from(&link.file)
-        } else {
-            crate::find_repo_root_for_path(protocol_path)?.join(&link.file)
-        };
-        let bytes =
-            fs::read(&path).with_context(|| format!("read prior selection {}", path.display()))?;
+        let relative = crate::evaluation::safe_repo_relative_path(
+            &link.file,
+            "prior selection artifact path",
+        )?;
+        let path = repo_root.join(relative);
+        let canonical = path
+            .canonicalize()
+            .with_context(|| format!("resolve prior selection {}", path.display()))?;
+        if !canonical.starts_with(&canonical_root) {
+            bail!("prior selection {} escapes the repository", path.display());
+        }
+        let metadata = canonical
+            .metadata()
+            .with_context(|| format!("inspect prior selection {}", path.display()))?;
+        if !metadata.is_file() {
+            bail!("prior selection {} is not a regular file", path.display());
+        }
+        if metadata.len() > MAX_PRIOR_SELECTION_BYTES {
+            bail!(
+                "prior selection {} exceeds {} bytes",
+                path.display(),
+                MAX_PRIOR_SELECTION_BYTES
+            );
+        }
+        let bytes = fs::read(&canonical)
+            .with_context(|| format!("read prior selection {}", path.display()))?;
         if sha256(&bytes) != link.sha256 {
             bail!("prior selection sha256 does not match {}", path.display());
         }
@@ -1222,7 +1324,20 @@ fn load_prior_repositories(protocol: &Protocol, protocol_path: &Path) -> Result<
 }
 
 fn artifact_link(path: &Path, bytes: &[u8]) -> Result<ArtifactLink> {
+    let root = crate::find_repo_root_for_path(path).with_context(|| {
+        format!(
+            "artifact {} must be inside the UsageBench repository",
+            path.display()
+        )
+    })?;
+    let canonical_root = root
+        .canonicalize()
+        .with_context(|| format!("resolve repository root {}", root.display()))?;
     let file = path
+        .canonicalize()
+        .with_context(|| format!("resolve artifact {}", path.display()))?
+        .strip_prefix(&canonical_root)
+        .with_context(|| format!("artifact {} is outside repository", path.display()))?
         .to_str()
         .context("artifact path is not UTF-8")?
         .replace('\\', "/");
@@ -1312,6 +1427,15 @@ mod tests {
     use super::*;
     use tempfile::tempdir;
 
+    fn initialize_fixture_root(directory: &Path) {
+        fs::write(
+            directory.join("Cargo.toml"),
+            "[package]\nname='fixture'\nversion='0.0.0'\n",
+        )
+        .unwrap();
+        fs::create_dir(directory.join("schema")).unwrap();
+    }
+
     fn protocol() -> Protocol {
         Protocol {
             schema_version: 1,
@@ -1380,6 +1504,7 @@ mod tests {
     #[test]
     fn draw_ranks_only_eligible_repositories_and_preserves_exclusions() {
         let directory = tempdir().unwrap();
+        initialize_fixture_root(directory.path());
         let protocol_path = directory.path().join("protocol.json");
         let protocol_bytes = serde_json::to_vec(&serde_json::json!({"schemaVersion": 1, "freezeId": "real-project-v1", "targetProfiles": [{"language": "go", "candidateId": "gopls"}], "population": {"minimumStars": 100}, "sampling": {"repositoriesPerProfile": 2, "declarationsPerRepository": 3}})).unwrap();
         fs::write(&protocol_path, &protocol_bytes).unwrap();
@@ -1402,12 +1527,16 @@ mod tests {
         };
         write_json(&population_path, &snapshot).unwrap();
         let output = directory.path().join("selection.json");
-        let selection = draw_selection(DrawSelectionOptions {
-            protocol: protocol_path,
-            population: population_path,
-            output,
-            protocol_commit: "b".repeat(40),
-        })
+        let selection = draw_selection_with_options(
+            DrawSelectionOptions {
+                protocol: protocol_path,
+                population: population_path,
+                output,
+                protocol_commit: "b".repeat(40),
+            },
+            false,
+            false,
+        )
         .unwrap();
         assert_eq!(selection.profiles[0].selected.len(), 2);
         assert_eq!(
@@ -1484,8 +1613,75 @@ mod tests {
     }
 
     #[test]
+    fn protocol_loader_enforces_the_checked_schema() {
+        let directory = tempdir().unwrap();
+        let path = directory.path().join("protocol.json");
+        fs::write(
+            &path,
+            br#"{"schemaVersion":2,"freezeId":"real-project-v2"}"#,
+        )
+        .unwrap();
+
+        let error = load_protocol(&path).unwrap_err();
+        assert!(error.to_string().contains("failed schema validation"));
+    }
+
+    #[test]
+    fn protocol_commit_bytes_must_match() {
+        let error =
+            verify_protocol_commit_bytes(b"current", b"committed", &"b".repeat(40)).unwrap_err();
+        assert!(error.to_string().contains("protocol bytes do not match"));
+    }
+
+    #[test]
+    fn artifact_links_reject_absolute_paths_outside_the_repository() {
+        let error =
+            artifact_link(Path::new("/outside-usagebench/protocol.json"), b"{}").unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("must be inside the UsageBench repository"));
+    }
+
+    #[test]
+    fn v1_replacement_rule_text_is_stable() {
+        assert_eq!(
+            replacement_rule(&protocol()),
+            "No selected repository has been replaced; the next eligible ranked repository is reserved for a future source-only replacement decision."
+        );
+    }
+
+    #[test]
+    fn checked_in_v2_repository_selection_is_reproducible() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let directory = root.join("benchmarks/evaluation/real-project-v2");
+        let (expected, expected_bytes): (SelectionManifest, Vec<u8>) =
+            crate::evaluation::load_evaluation_selection_checked(&directory.join("selection.json"))
+                .unwrap();
+        let output_directory = tempdir().unwrap();
+        let output = output_directory.path().join("selection.json");
+        let actual = draw_selection_with_options(
+            DrawSelectionOptions {
+                protocol: directory.join("protocol.json"),
+                population: directory.join("population.json"),
+                output: output.clone(),
+                protocol_commit: expected.protocol_commit.clone(),
+            },
+            false,
+            true,
+        )
+        .unwrap();
+
+        assert_eq!(fs::read(output).unwrap(), expected_bytes);
+        assert_eq!(
+            serde_json::to_value(actual).unwrap(),
+            serde_json::to_value(expected).unwrap()
+        );
+    }
+
+    #[test]
     fn v2_draw_excludes_prior_slice_and_uses_v2_identity() {
         let directory = tempdir().unwrap();
+        initialize_fixture_root(directory.path());
         let prior_path = directory.path().join("prior-selection.json");
         let prior_bytes = serde_json::to_vec(&serde_json::json!({
             "profiles": [{"selected": [{"fullName": "owner/prior"}]}]
@@ -1510,7 +1706,7 @@ mod tests {
                 "maximumRepositorySizeBytes": 157286400,
                 "excludedPathComponents": ["vendor"],
                 "priorSelections": [{
-                    "file": prior_path,
+                    "file": "prior-selection.json",
                     "sha256": sha256(&prior_bytes)
                 }]
             },
@@ -1541,12 +1737,16 @@ mod tests {
         };
         write_json(&population_path, &snapshot).unwrap();
 
-        let selection = draw_selection(DrawSelectionOptions {
-            protocol: protocol_path,
-            population: population_path,
-            output: directory.path().join("selection.json"),
-            protocol_commit: "b".repeat(40),
-        })
+        let selection = draw_selection_with_options(
+            DrawSelectionOptions {
+                protocol: protocol_path,
+                population: population_path,
+                output: directory.path().join("selection.json"),
+                protocol_commit: "b".repeat(40),
+            },
+            false,
+            false,
+        )
         .unwrap();
 
         assert_eq!(selection.profiles[0].selected.len(), 1);
@@ -1598,6 +1798,7 @@ mod tests {
     #[test]
     fn checkpoint_round_trips_only_when_bound_to_the_same_protocol() {
         let directory = tempdir().unwrap();
+        initialize_fixture_root(directory.path());
         let protocol_path = directory.path().join("protocol.json");
         let protocol_bytes = serde_json::to_vec(&serde_json::json!({"schemaVersion": 1, "freezeId": "real-project-v1", "targetProfiles": [{"language": "go", "candidateId": "gopls"}], "population": {"minimumStars": 100}, "sampling": {"repositoriesPerProfile": 2, "declarationsPerRepository": 3}})).unwrap();
         fs::write(&protocol_path, &protocol_bytes).unwrap();
