@@ -1,0 +1,43 @@
+schemaVersion: 2
+corpus: { partition: development, selection: analyzer_informed }
+groundTruth: { status: author_reviewed, reviewers: [DavidBakerEffendi] }
+referencePolicy: bindings_optional
+positionEncoding: utf-16
+source: { kind: fixture, path: fixtures/java/semantic-packs }
+language: java
+semanticPacks:
+  releaseVersion: 0.8.19
+  bundleUrl: https://github.com/BrokkAi/bifrost/releases/download/v0.8.19/bifrost-semantic-packs-v0.8.19.tar.gz
+  bundleSha256: 6f28e083f8be1a5d27465d8aeb0d2de1146b490bfac3e32949481b4478e24568
+  evidence:
+    - language: java
+      ecosystem: jdk
+      module: { name: java.base }
+      toolchain: { name: jdk, version: 21.0.8 }
+      target: jvm
+      artifactSha256: 5440baccc6c54b18671ab9cb9bf6ffdd7698d3a85ee74faa0b47b111312f200c
+  expectedPacks:
+    - packId: bifrost.jdk
+      packVersion: 21.0.8
+      semanticSha256: 90573a5e418654598b49903d0fa11cc753f6b989f079e84484fdc874db4e39eb
+      completeness: partial
+  probes:
+    - symbol: java.util.ArrayList
+      ancestor: java.util.AbstractList
+    - symbol: java.util.ArrayList.size
+      signatureContains: size
+cases:
+  - id: java-published-pack-array-list-navigation
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/Main.java, range: { start: { line: 3, character: 18 }, end: { line: 3, character: 27 } } }
+          kind: class
+          displayName: ArrayList
+        expectedDeclaration:
+          location: { uri: bifrost-model://v1/90573a5e418654598b49903d0fa11cc753f6b989f079e84484fdc874db4e39eb/type/type.7085c38223effc81cafbf18bb7c08e2c08004f151a9a78b87c25e3e65e3664b4, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } }
+          kind: class
+          displayName: java.util.ArrayList
+    verification:
+      method: manual_inspection
+      notes: Exact v0.8.19 release artifact, digest, coordinate, pack version, and semantic digest reviewed on 2026-08-03.

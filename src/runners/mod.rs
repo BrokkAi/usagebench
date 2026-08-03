@@ -75,6 +75,8 @@ pub struct RunReport {
     pub usagebench_release: Option<String>,
     pub runner: RunnerMetadata,
     pub invocation: RunInvocation,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub semantic_pack_runs: Vec<SemanticPackRunEvidence>,
     pub environment: ExecutionEnvironment,
     /// Compatibility fields retained for existing Bifrost report consumers.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -88,6 +90,19 @@ pub struct RunReport {
     pub case_files: Vec<String>,
     pub totals: RunTotals,
     pub documents: Vec<DocumentRunReport>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SemanticPackRunEvidence {
+    pub release_version: String,
+    pub bundle_url: String,
+    pub bundle_sha256: String,
+    pub catalog_root: String,
+    pub installed: bool,
+    pub activation_state: String,
+    pub analyzer_visible_model_destinations: usize,
+    pub expected_packs: Vec<crate::ExpectedSemanticPack>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -782,6 +797,9 @@ pub(crate) fn location_match(
     actual: &NormalizedLocation,
     expected: &NormalizedLocation,
 ) -> LocationMatch {
+    if actual.path.starts_with("bifrost-model://v1/") && actual.path == expected.path {
+        return LocationMatch::Exact;
+    }
     if actual.path != expected.path || actual.line != expected.line {
         return LocationMatch::None;
     }
@@ -1539,9 +1557,13 @@ pub(crate) fn score_declaration_locations(
 }
 
 pub(crate) fn normalize_symbol_location(symbol: &SymbolLocation) -> Result<NormalizedLocation> {
-    let path = benchmark_source_path(&symbol.location.uri)?;
+    let path = if symbol.location.uri.scheme() == "bifrost-model" {
+        symbol.location.uri.as_str().to_string()
+    } else {
+        path_to_slash(&benchmark_source_path(&symbol.location.uri)?)
+    };
     Ok(NormalizedLocation {
-        path: path_to_slash(&path),
+        path,
         line: symbol.location.range.start.line + 1,
         column: Some(symbol.location.range.start.character + 1),
         end_line: Some(symbol.location.range.end.line + 1),

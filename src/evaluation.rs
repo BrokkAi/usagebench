@@ -2246,6 +2246,7 @@ mod tests {
                 reviewers: vec!["alice".to_string(), "bob".to_string()],
             },
             reference_policy: ReferencePolicy::BindingsOptional,
+            semantic_packs: None,
             cases: vec![BenchmarkCase {
                 id: "selected-call".to_string(),
                 declaration: Some(declaration.clone()),

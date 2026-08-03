@@ -9,15 +9,17 @@ use super::{
 pub use super::{
     CaseRunReport, CaseStatus, CompatibleUsageDefinitionReport, DeclarationUsageReport,
     DocumentRunReport, LocationMetrics, NormalizedLocation, RequiredDestinationStatus,
-    RunDiagnostic, RunTotals, TypeLookupReport, UsageDefinitionReport,
+    RunDiagnostic, RunTotals, SemanticPackRunEvidence, TypeLookupReport, UsageDefinitionReport,
 };
 use crate::{
     benchmark_source_path, find_repo_root_for_path, BenchmarkCase, BenchmarkDocument, Location,
-    NavigationOperation, PositionEncoding, ReferencePolicy, Source, SymbolKind, SymbolLocation,
+    NavigationOperation, PositionEncoding, ReferencePolicy, SemanticPackRequirement, Source,
+    SymbolKind, SymbolLocation,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use serde::Deserialize;
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
 use std::{
     collections::{hash_map::DefaultHasher, BTreeSet},
     fs,
@@ -142,6 +144,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     )?;
 
     let mut documents = Vec::new();
+    let mut semantic_pack_runs = Vec::new();
     for case_file in &case_files {
         let yaml = fs::read_to_string(case_file)
             .with_context(|| format!("read benchmark cases {}", case_file.display()))?;
@@ -152,6 +155,18 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
                 Some(source_root) => source_root,
                 None => prepare_source_root(&document.source, &repo_root, &work_dir)?,
             };
+        let semantic_pack = document
+            .semantic_packs
+            .as_ref()
+            .map(|requirement| {
+                prepare_semantic_packs(
+                    requirement,
+                    &work_dir,
+                    &bifrost_binary,
+                    &bifrost_resolved_commit,
+                )
+            })
+            .transpose()?;
         let cases = run_document_cases(
             &document,
             &source_root,
@@ -159,6 +174,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             options.include_unsupported,
             options.include_definition_lookups,
             options.case_id.as_deref(),
+            semantic_pack.as_ref(),
         )
         .with_context(|| format!("run benchmark cases {}", case_file.display()))?;
         documents.push(DocumentRunReport {
@@ -171,6 +187,17 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             reference_policy: document.reference_policy,
             cases,
         });
+        if let Some(mut semantic_pack) = semantic_pack {
+            semantic_pack.evidence.analyzer_visible_model_destinations =
+                cases_model_destinations(documents.last().expect("document was just appended"));
+            semantic_pack.evidence.activation_state =
+                if semantic_pack.evidence.analyzer_visible_model_destinations > 0 {
+                    "analyzer_visible".to_string()
+                } else {
+                    "empty".to_string()
+                };
+            semantic_pack_runs.push(semantic_pack.evidence);
+        }
     }
 
     let finished_at = unix_seconds_now()?;
@@ -220,6 +247,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             profile_sha256: None,
             case_id: options.case_id.clone(),
         },
+        semantic_pack_runs,
         environment,
         bifrost_repo: Some(bifrost_source),
         bifrost_commit: Some(requested_version),
@@ -255,6 +283,7 @@ fn run_document_cases(
     include_unsupported: bool,
     include_definition_lookups: bool,
     case_id: Option<&str>,
+    semantic_pack: Option<&PreparedSemanticPacks>,
 ) -> Result<Vec<CaseRunReport>> {
     let mut command = Command::new(bifrost_binary);
     command
@@ -262,8 +291,19 @@ fn run_document_cases(
         .arg(source_root)
         .arg("--server")
         .arg("searchtools");
+    if let Some(semantic_pack) = semantic_pack {
+        command
+            .env("BIFROST_SEMANTIC_PACK_CATALOG", &semantic_pack.catalog_root)
+            .env(
+                "BIFROST_SEMANTIC_PACK_EVIDENCE",
+                &semantic_pack.evidence_json,
+            );
+    }
     let mut session = McpSession::start(&mut command, "Bifrost")?;
     session.initialize()?;
+    if let Some(requirement) = document.semantic_packs.as_ref() {
+        verify_semantic_pack_probes(requirement, &mut session)?;
+    }
 
     let mut reports = Vec::new();
     for case in document
@@ -282,6 +322,197 @@ fn run_document_cases(
         ));
     }
     Ok(reports)
+}
+
+fn verify_semantic_pack_probes(
+    requirement: &SemanticPackRequirement,
+    session: &mut impl SearchToolsClient,
+) -> Result<()> {
+    for probe in &requirement.probes {
+        let search = session.call_tool(
+            "search_symbols",
+            json!({ "patterns": [probe.symbol], "include_tests": false, "limit": 100 }),
+        )?;
+        let symbols = search
+            .get("model_symbols")
+            .and_then(Value::as_array)
+            .context("semantic-pack probe response omitted model_symbols")?;
+        let symbol = symbols
+            .iter()
+            .find(|symbol| {
+                symbol.get("qualified_name").and_then(Value::as_str) == Some(&probe.symbol)
+            })
+            .with_context(|| format!("active semantic packs did not expose `{}`", probe.symbol))?;
+        if let Some(expected) = &probe.signature_contains {
+            let signature = symbol
+                .get("signature")
+                .and_then(Value::as_str)
+                .with_context(|| {
+                    format!("model symbol `{}` omitted its signature", probe.symbol)
+                })?;
+            if !signature.contains(expected) {
+                bail!(
+                    "model symbol `{}` signature `{signature}` does not contain `{expected}`",
+                    probe.symbol
+                );
+            }
+        }
+        let provenance = symbol
+            .get("provenance")
+            .context("semantic-pack probe omitted provenance")?;
+        let expected = requirement.expected_packs.iter().any(|pack| {
+            provenance.get("pack_id").and_then(Value::as_str) == Some(&pack.pack_id)
+                && provenance.get("pack_version").and_then(Value::as_str)
+                    == Some(&pack.pack_version)
+                && provenance.get("pack_digest").and_then(Value::as_str)
+                    == Some(&pack.semantic_sha256)
+                && provenance.get("completeness").and_then(Value::as_str)
+                    == Some(&pack.completeness)
+        });
+        if !expected {
+            bail!(
+                "model symbol `{}` carried unexpected provenance: {provenance}",
+                probe.symbol
+            );
+        }
+        if let Some(ancestor) = &probe.ancestor {
+            let hierarchy =
+                session.call_tool("get_symbol_ancestors", json!({ "symbols": [probe.symbol] }))?;
+            let found = hierarchy
+                .get("ancestors")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .flat_map(|entry| {
+                    entry
+                        .get("ancestors")
+                        .and_then(Value::as_array)
+                        .into_iter()
+                        .flatten()
+                })
+                .any(|value| value.as_str() == Some(ancestor));
+            if !found {
+                bail!(
+                    "model symbol `{}` did not report ancestor `{ancestor}`: {hierarchy}",
+                    probe.symbol,
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
+struct PreparedSemanticPacks {
+    _run_root: tempfile::TempDir,
+    catalog_root: PathBuf,
+    evidence_json: String,
+    evidence: SemanticPackRunEvidence,
+}
+
+fn prepare_semantic_packs(
+    requirement: &SemanticPackRequirement,
+    work_dir: &Path,
+    bifrost_binary: &Path,
+    _bifrost_revision: &str,
+) -> Result<PreparedSemanticPacks> {
+    let semantic_pack_root = work_dir.join("semantic-packs");
+    fs::create_dir_all(&semantic_pack_root).with_context(|| {
+        format!(
+            "create semantic-pack work root {}",
+            semantic_pack_root.display()
+        )
+    })?;
+    let run_root = tempfile::Builder::new()
+        .prefix(&format!("v{}-", requirement.release_version))
+        .tempdir_in(&semantic_pack_root)
+        .with_context(|| format!("create fresh run under {}", semantic_pack_root.display()))?;
+    let run_path = run_root.path();
+    let archive_path = run_path.join("bundle.tar.gz");
+    let response = ureq::get(requirement.bundle_url.as_str())
+        .call()
+        .with_context(|| format!("download semantic-pack bundle {}", requirement.bundle_url))?;
+    let mut reader = response.into_reader();
+    let mut archive_bytes = Vec::new();
+    reader
+        .read_to_end(&mut archive_bytes)
+        .context("read semantic-pack bundle response")?;
+    let actual_sha256 = format!("{:x}", Sha256::digest(&archive_bytes));
+    if actual_sha256 != requirement.bundle_sha256 {
+        bail!(
+            "semantic-pack bundle SHA-256 mismatch: expected {}, got {}",
+            requirement.bundle_sha256,
+            actual_sha256
+        );
+    }
+    fs::write(&archive_path, &archive_bytes)
+        .with_context(|| format!("write {}", archive_path.display()))?;
+    let bundle_parent = run_path.join("bundle");
+    fs::create_dir_all(&bundle_parent)
+        .with_context(|| format!("create {}", bundle_parent.display()))?;
+    let decoder = flate2::read::GzDecoder::new(archive_bytes.as_slice());
+    tar::Archive::new(decoder)
+        .unpack(&bundle_parent)
+        .with_context(|| format!("extract {}", archive_path.display()))?;
+    let bundle_root = bundle_parent.join("bifrost-semantic-packs");
+    let installer = bifrost_binary
+        .parent()
+        .context("Bifrost binary has no parent directory")?
+        .join(if cfg!(windows) {
+            "bifrost-semantic-pack.exe"
+        } else {
+            "bifrost-semantic-pack"
+        });
+    if !installer.is_file() {
+        bail!(
+            "semantic-pack cases require companion executable {}",
+            installer.display()
+        );
+    }
+    run_command(Command::new(&installer).arg("verify").arg(&bundle_root))
+        .context("verify semantic-pack release bundle")?;
+    let catalog_root = run_path.join("catalog");
+    run_command(
+        Command::new(&installer)
+            .arg("install")
+            .arg(&bundle_root)
+            .arg(&catalog_root),
+    )
+    .context("install semantic-pack release bundle")?;
+    let evidence_json = serde_json::to_string(&requirement.evidence)
+        .context("serialize semantic-pack activation evidence")?;
+    Ok(PreparedSemanticPacks {
+        _run_root: run_root,
+        catalog_root: catalog_root.clone(),
+        evidence_json,
+        evidence: SemanticPackRunEvidence {
+            release_version: requirement.release_version.clone(),
+            bundle_url: requirement.bundle_url.to_string(),
+            bundle_sha256: requirement.bundle_sha256.clone(),
+            catalog_root: display_path(&catalog_root),
+            installed: true,
+            activation_state: "configured".to_string(),
+            analyzer_visible_model_destinations: 0,
+            expected_packs: requirement.expected_packs.clone(),
+        },
+    })
+}
+
+fn cases_model_destinations(document: &DocumentRunReport) -> usize {
+    document
+        .cases
+        .iter()
+        .flat_map(|case| {
+            case.usage_to_declaration
+                .iter()
+                .flat_map(|report| report.actual_declarations.iter())
+                .chain(
+                    case.type_lookups
+                        .iter()
+                        .flat_map(|report| report.actual_types.iter()),
+                )
+        })
+        .filter(|location| location.path.starts_with("bifrost-model://v1/"))
+        .count()
 }
 
 fn run_case(
@@ -1597,7 +1828,24 @@ fn build_bifrost(repo: &Path) -> Result<()> {
             .arg("bifrost")
             .current_dir(repo),
     )
-    .with_context(|| format!("build Bifrost binary in {}", repo.display()))
+    .with_context(|| format!("build Bifrost binary in {}", repo.display()))?;
+    run_command(
+        Command::new("cargo")
+            .arg("build")
+            .arg("-p")
+            .arg("brokk-bifrost-semantic-packs")
+            .arg("--features")
+            .arg("release-tooling")
+            .arg("--bin")
+            .arg("bifrost-semantic-pack")
+            .current_dir(repo),
+    )
+    .with_context(|| {
+        format!(
+            "build Bifrost semantic-pack installer in {}",
+            repo.display()
+        )
+    })
 }
 
 fn bifrost_binary_path(repo: &Path) -> PathBuf {
@@ -1958,6 +2206,7 @@ mod tests {
                 profile_sha256: None,
                 case_id: None,
             },
+            semantic_pack_runs: Vec::new(),
             environment: super::super::ExecutionEnvironment {
                 operating_system: "linux".to_string(),
                 architecture: "x86_64".to_string(),

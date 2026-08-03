@@ -17,3 +17,4 @@ sha2 = "0.10"
 tempfile = "3.10"
 tar = "0.4"
 url = { version = "2.5", features = ["serde"] }
+ureq = { version = "2.12", default-features = false, features = ["tls"] }

@@ -31,6 +31,9 @@
       "type": "string",
       "minLength": 1
     },
+    "semanticPacks": {
+      "$ref": "#/$defs/semanticPacks"
+    },
     "cases": {
       "type": "array",
       "items": {
@@ -39,6 +42,64 @@
     }
   },
   "$defs": {
+    "semanticPacks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["releaseVersion", "bundleUrl", "bundleSha256", "evidence", "expectedPacks", "probes"],
+      "properties": {
+        "releaseVersion": { "type": "string", "minLength": 1 },
+        "bundleUrl": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "bundleSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/semanticPackEvidence" } },
+        "expectedPacks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/expectedSemanticPack" } },
+        "probes": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/semanticPackProbe" } }
+      }
+    },
+    "semanticPackProbe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol"],
+      "properties": {
+        "symbol": { "type": "string", "minLength": 1 },
+        "signatureContains": { "type": "string", "minLength": 1 },
+        "ancestor": { "type": "string", "minLength": 1 }
+      }
+    },
+    "semanticPackEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["language", "ecosystem"],
+      "properties": {
+        "language": { "type": "string", "minLength": 1 },
+        "ecosystem": { "type": "string", "minLength": 1 },
+        "package": { "$ref": "#/$defs/semanticPackCoordinate" },
+        "module": { "$ref": "#/$defs/semanticPackCoordinate" },
+        "toolchain": { "$ref": "#/$defs/semanticPackCoordinate" },
+        "target": { "type": "string", "minLength": 1 },
+        "configuration": { "type": "string", "minLength": 1 },
+        "artifactSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "semanticPackCoordinate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "expectedSemanticPack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packId", "packVersion", "semanticSha256", "completeness"],
+      "properties": {
+        "packId": { "type": "string", "minLength": 1 },
+        "packVersion": { "type": "string", "minLength": 1 },
+        "semanticSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "completeness": { "type": "string", "enum": ["partial", "complete"] }
+      }
+    },
     "corpus": {
       "type": "object",
       "additionalProperties": false,
@@ -233,7 +294,7 @@
       }
     },
     "location": {
-      "description": "LSP Location-compatible object using benchmark://source/... URIs.",
+      "description": "LSP Location-compatible object using workspace source or portable Bifrost model URIs.",
       "type": "object",
       "additionalProperties": false,
       "required": ["uri", "range"],
@@ -241,7 +302,7 @@
         "uri": {
           "type": "string",
           "format": "uri",
-          "pattern": "^benchmark://source/.+"
+          "pattern": "^(benchmark://source/.+|bifrost-model://v1/.+)"
         },
         "range": {
           "$ref": "#/$defs/range"

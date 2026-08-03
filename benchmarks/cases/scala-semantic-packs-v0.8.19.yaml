@@ -1,0 +1,43 @@
+schemaVersion: 2
+corpus: { partition: development, selection: analyzer_informed }
+groundTruth: { status: author_reviewed, reviewers: [DavidBakerEffendi] }
+referencePolicy: bindings_optional
+positionEncoding: utf-16
+source: { kind: fixture, path: fixtures/scala/semantic-packs }
+language: scala
+semanticPacks:
+  releaseVersion: 0.8.19
+  bundleUrl: https://github.com/BrokkAi/bifrost/releases/download/v0.8.19/bifrost-semantic-packs-v0.8.19.tar.gz
+  bundleSha256: 6f28e083f8be1a5d27465d8aeb0d2de1146b490bfac3e32949481b4478e24568
+  evidence:
+    - language: scala
+      ecosystem: maven
+      package: { name: org.scala-lang:scala-library, version: 2.13.16 }
+      toolchain: { name: scala, version: 2.13.16 }
+      target: jvm
+      artifactSha256: c02edc324e7db59c52115214a6ef36e2d78d0a50dff635eda4dcee5502b1dea5
+  expectedPacks:
+    - packId: bifrost.scala-library
+      packVersion: 2.13.16
+      semanticSha256: fca1e3f6491b57b47e16e61d519f84f8c9379612c4deaa48ab2013a733be71c0
+      completeness: complete
+  probes:
+    - symbol: scala.collection.immutable.List
+      ancestor: scala.collection.immutable.LinearSeq
+    - symbol: scala.collection.LinearSeqOps.head
+      signatureContains: head
+cases:
+  - id: scala-published-pack-list-navigation
+    usageLookups:
+      - operation: definition
+        usage:
+          location: { uri: benchmark://source/src/Main.scala, range: { start: { line: 3, character: 26 }, end: { line: 3, character: 30 } } }
+          kind: type
+          displayName: List
+        expectedDeclaration:
+          location: { uri: bifrost-model://v1/fca1e3f6491b57b47e16e61d519f84f8c9379612c4deaa48ab2013a733be71c0/type/type.265e98b629a501e7c6db842e4eb77821f0e3bc373faa3ceabb6aae21620a537f, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } }
+          kind: type
+          displayName: scala.collection.immutable.List
+    verification:
+      method: manual_inspection
+      notes: Exact v0.8.19 release artifact, digest, coordinate, pack version, and semantic digest reviewed on 2026-08-03.
