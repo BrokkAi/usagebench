@@ -276,6 +276,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
             profile_sha256: Some(profile_sha256),
             case_id: options.case_id.clone(),
         },
+        semantic_pack_runs: Vec::new(),
         environment,
         bifrost_repo: None,
         bifrost_commit: None,

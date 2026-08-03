@@ -1,9 +1,12 @@
 use anyhow::{anyhow, bail, Context, Result};
 use serde_json::{json, Value};
 use std::{
-    io::{BufRead, BufReader, Write},
+    io::{BufRead, BufReader, Read, Write},
     process::{Child, ChildStdin, Command, Stdio},
-    sync::mpsc::{self, Receiver},
+    sync::{
+        mpsc::{self, Receiver},
+        Arc, Mutex,
+    },
     thread,
     time::Duration,
 };
@@ -28,21 +31,42 @@ impl McpSession {
         let mut child = command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .stderr(Stdio::null())
+            .stderr(Stdio::piped())
             .spawn()
             .with_context(|| format!("spawn {label} MCP server"))?;
         let stdin = child.stdin.take().context("missing MCP stdin")?;
         let stdout = child.stdout.take().context("missing MCP stdout")?;
+        let stderr = child.stderr.take().context("missing MCP stderr")?;
+        let stderr_output = Arc::new(Mutex::new(String::new()));
+        let stderr_capture = Arc::clone(&stderr_output);
+        thread::spawn(move || {
+            let mut bytes = Vec::new();
+            let _ = BufReader::new(stderr)
+                .take(64 * 1024)
+                .read_to_end(&mut bytes);
+            *stderr_capture.lock().expect("MCP stderr lock poisoned") =
+                String::from_utf8_lossy(&bytes).into_owned();
+        });
         let (sender, stdout_lines) = mpsc::channel();
         let reader_label = label.clone();
+        let reader_stderr = Arc::clone(&stderr_output);
         thread::spawn(move || {
             let mut reader = BufReader::new(stdout);
             loop {
                 let mut line = String::new();
                 match reader.read_line(&mut line) {
                     Ok(0) => {
-                        let _ =
-                            sender.send(Err(format!("{reader_label} MCP server closed stdout")));
+                        thread::yield_now();
+                        let stderr = reader_stderr.lock().expect("MCP stderr lock poisoned");
+                        let message = if stderr.trim().is_empty() {
+                            format!("{reader_label} MCP server closed stdout")
+                        } else {
+                            format!(
+                                "{reader_label} MCP server closed stdout; stderr: {}",
+                                stderr.trim()
+                            )
+                        };
+                        let _ = sender.send(Err(message));
                         break;
                     }
                     Ok(_) => {

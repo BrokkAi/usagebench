@@ -28,7 +28,66 @@ pub struct BenchmarkDocument {
     pub corpus: CorpusMetadata,
     pub ground_truth: GroundTruthReview,
     pub reference_policy: ReferencePolicy,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_packs: Option<SemanticPackRequirement>,
     pub cases: Vec<BenchmarkCase>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SemanticPackRequirement {
+    pub release_version: String,
+    pub bundle_url: Url,
+    pub bundle_sha256: String,
+    pub evidence: Vec<SemanticPackEvidence>,
+    pub expected_packs: Vec<ExpectedSemanticPack>,
+    pub probes: Vec<SemanticPackProbe>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SemanticPackProbe {
+    pub symbol: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub signature_contains: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ancestor: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SemanticPackEvidence {
+    pub language: String,
+    pub ecosystem: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub package: Option<SemanticPackCoordinate>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub module: Option<SemanticPackCoordinate>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub toolchain: Option<SemanticPackCoordinate>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub configuration: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_sha256: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SemanticPackCoordinate {
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ExpectedSemanticPack {
+    pub pack_id: String,
+    pub pack_version: String,
+    pub semantic_sha256: String,
+    pub completeness: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -407,6 +466,9 @@ impl BenchmarkDocument {
             );
         }
         self.validate_methodology_metadata()?;
+        if let Some(requirement) = &self.semantic_packs {
+            requirement.validate()?;
+        }
         let fixture_root = match &self.source {
             Source::Fixture { path } => {
                 validate_fixture_source_path(path)?;
@@ -506,6 +568,48 @@ impl BenchmarkDocument {
         }
         Ok(())
     }
+}
+
+impl SemanticPackRequirement {
+    fn validate(&self) -> Result<()> {
+        if self.release_version.is_empty() || self.release_version == "latest" {
+            bail!("semanticPacks releaseVersion must pin an exact release");
+        }
+        if self.bundle_url.scheme() != "https" {
+            bail!("semanticPacks bundleUrl must use https");
+        }
+        validate_sha256(&self.bundle_sha256, "semanticPacks bundleSha256")?;
+        if self.evidence.is_empty() {
+            bail!("semanticPacks evidence must not be empty");
+        }
+        if self.expected_packs.is_empty() {
+            bail!("semanticPacks expectedPacks must not be empty");
+        }
+        for pack in &self.expected_packs {
+            if pack.pack_id.is_empty() || pack.pack_version.is_empty() {
+                bail!("semanticPacks expectedPacks must pin packId and packVersion");
+            }
+            validate_sha256(
+                &pack.semantic_sha256,
+                "semanticPacks expectedPacks semanticSha256",
+            )?;
+            if !matches!(pack.completeness.as_str(), "partial" | "complete") {
+                bail!("semanticPacks expectedPacks completeness must be partial or complete");
+            }
+        }
+        Ok(())
+    }
+}
+
+fn validate_sha256(value: &str, field: &str) -> Result<()> {
+    if value.len() != 64
+        || !value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+    {
+        bail!("{field} must be a lowercase SHA-256 digest");
+    }
+    Ok(())
 }
 
 pub(crate) fn is_exact_git_commit(value: &str) -> bool {
@@ -663,34 +767,47 @@ impl BenchmarkCase {
 
 impl SymbolLocation {
     fn validate(&self, fixture_root: Option<&Path>, encoding: PositionEncoding) -> Result<()> {
-        if !self.location.uri.scheme().eq_ignore_ascii_case("benchmark")
-            || self.location.uri.host_str() != Some("source")
-        {
+        let workspace_source = self.location.uri.scheme().eq_ignore_ascii_case("benchmark")
+            && self.location.uri.host_str() == Some("source");
+        let model_destination = self
+            .location
+            .uri
+            .scheme()
+            .eq_ignore_ascii_case("bifrost-model")
+            && self.location.uri.host_str() == Some("v1");
+        if !workspace_source && !model_destination {
             bail!(
-                "location uri {} must use the benchmark://source/... form",
+                "location uri {} must use benchmark://source/... or bifrost-model://v1/...",
                 self.location.uri
             );
         }
 
         self.location.range.validate()?;
 
-        if self.location.range.is_zero_width()
+        if workspace_source
+            && self.location.range.is_zero_width()
             && self.disambiguation != Some(Disambiguation::FirstMatchingSymbol)
         {
             bail!("zero-width line-only ranges require disambiguation: first_matching_symbol");
         }
 
-        if let Some(fixture_root) = fixture_root {
-            self.location
-                .validate_fixture_range(fixture_root, encoding)?;
-            if !self.location.range.is_zero_width() {
-                let selected_text = self.location.fixture_range_text(fixture_root, encoding)?;
-                if selected_text != self.display_name {
-                    bail!(
-                        "range for {} does not select displayName {:?}",
-                        self.location.uri,
-                        self.display_name
-                    );
+        if model_destination && self.disambiguation.is_some() {
+            bail!("model destinations must use their exact portable URI and range");
+        }
+
+        if workspace_source {
+            if let Some(fixture_root) = fixture_root {
+                self.location
+                    .validate_fixture_range(fixture_root, encoding)?;
+                if !self.location.range.is_zero_width() {
+                    let selected_text = self.location.fixture_range_text(fixture_root, encoding)?;
+                    if selected_text != self.display_name {
+                        bail!(
+                            "range for {} does not select displayName {:?}",
+                            self.location.uri,
+                            self.display_name
+                        );
+                    }
                 }
             }
         }

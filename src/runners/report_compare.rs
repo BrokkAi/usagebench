@@ -514,6 +514,7 @@ mod tests {
                 profile_sha256: None,
                 case_id: None,
             },
+            semantic_pack_runs: Vec::new(),
             environment: super::super::ExecutionEnvironment {
                 operating_system: "linux".to_string(),
                 architecture: "x86_64".to_string(),
