@@ -30,13 +30,6 @@ shards:
             kind: macro_invocation
             name: define_job_maker
           captures:
-            - name: owner_id
-              binding:
-                source:
-                  kind: enclosing_declaration
-                projection: stable_id
-              value_kind: stable_id
-              cardinality: one
             - name: function_name
               binding:
                 source:
@@ -70,9 +63,6 @@ shards:
                 name: function_id
               declaration:
                 kind: member
-                owner:
-                  op: capture
-                  name: owner_id
                 member_kind: function
                 visibility: public
             - kind: relation
