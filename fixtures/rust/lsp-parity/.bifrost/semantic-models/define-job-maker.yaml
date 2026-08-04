@@ -20,11 +20,12 @@ safety:
 shards:
   - id: rust.define-job-maker.generated-function
     activation:
-      - {}
+      - configurations:
+          - usagebench.rust.define-job-maker
     payload:
       kind: generator_rules
       rules:
-        - id: rust.define-job-maker.generated-function
+        - id: rust.define-job-maker.generated-function-rule
           trigger:
             kind: macro_invocation
             name: define_job_maker
@@ -43,7 +44,7 @@ shards:
                   index: 0
                 projection: name
               value_kind: identifier
-              cardinality: one
+              cardinality: optional
             - name: function_id
               binding:
                 source:
@@ -51,7 +52,7 @@ shards:
                   index: 0
                 projection: stable_id
               value_kind: stable_id
-              cardinality: one
+              cardinality: optional
           emissions:
             - kind: declaration
               id:
