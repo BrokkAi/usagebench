@@ -26,6 +26,10 @@ concurrency:
 jobs:
   benchmark:
     runs-on: ubuntu-latest
+    # Keep an explicit overall ceiling while reserving 130 minutes around the
+    # benchmark step for cold checkout/build work and post-timeout artifact
+    # publication.
+    timeout-minutes: 300
     outputs:
       slack_payload: ${{ steps.slack_payload.outputs.payload }}
     env:
@@ -66,6 +70,9 @@ jobs:
       - name: Run Bifrost usage benchmark
         id: run_usagebench
         continue-on-error: true
+        # Expire well before the job so checkpoint discovery, artifact upload,
+        # and summaries still run after a slow benchmark is terminated.
+        timeout-minutes: 170
         shell: bash
         env:
           INCLUDE_UNSUPPORTED: ${{ inputs.include_unsupported || false }}
@@ -78,6 +85,7 @@ jobs:
             --bifrost-repo bifrost
             --bifrost-commit "$BIFROST_REF"
             --work-dir target/usagebench
+            --scan-usages-max-duration-secs 300
             --output "benchmark-output/run-${GITHUB_RUN_ID}.json"
           )
           if [ "$INCLUDE_UNSUPPORTED" = "true" ]; then
@@ -92,10 +100,21 @@ jobs:
         run: |
           set -euo pipefail
           report_path="benchmark-output/run-${GITHUB_RUN_ID}.json"
-          if [ ! -f "$report_path" ]; then
+          report_complete="true"
+          partial_path="benchmark-output/run-${GITHUB_RUN_ID}.partial.json"
+          if [ -f "$report_path" ]; then
+            report_complete="$(jq -r '.completed // true' "$report_path")"
+          elif [ -f "$partial_path" ] && jq -e '.completed == false' "$partial_path" >/dev/null; then
+            report_path="$partial_path"
+            report_complete="false"
+          elif [ ! -f "$report_path" ]; then
             report_path=""
+            report_complete="false"
           fi
-          echo "report_path=${report_path}" >> "$GITHUB_OUTPUT"
+          {
+            echo "report_path=${report_path}"
+            echo "report_complete=${report_complete}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Record UsageBench provenance
         id: usagebench_provenance
@@ -145,6 +164,7 @@ jobs:
           USAGEBENCH_REVISION: ${{ steps.usagebench_provenance.outputs.revision }}
           USAGEBENCH_RELEASE: ${{ steps.usagebench_provenance.outputs.release }}
           REPORT_PATH: ${{ steps.paths.outputs.report_path }}
+          REPORT_COMPLETE: ${{ steps.paths.outputs.report_complete }}
         run: |
           set -euo pipefail
           {
@@ -156,6 +176,7 @@ jobs:
               echo "- UsageBench release: \`$USAGEBENCH_RELEASE\`"
             fi
             echo "- Bifrost ref: \`${BIFROST_REF}\`"
+            echo "- Complete report: \`${REPORT_COMPLETE}\`"
             if [ -n "$REPORT_PATH" ]; then
               echo "- Report: \`$REPORT_PATH\`"
               echo

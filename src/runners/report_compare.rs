@@ -510,10 +510,13 @@ mod tests {
             invocation: super::super::RunInvocation {
                 include_unsupported: false,
                 include_definition_lookups: true,
+                scan_usages_max_duration_secs: None,
                 profile: None,
                 profile_sha256: None,
                 case_id: None,
             },
+            completed: true,
+            requested_case_files: vec!["benchmarks/cases/rust-baseline.yaml".to_string()],
             semantic_pack_runs: Vec::new(),
             environment: super::super::ExecutionEnvironment {
                 operating_system: "linux".to_string(),

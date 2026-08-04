@@ -11,7 +11,11 @@ use std::{
     time::Duration,
 };
 
-const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(5 * 60);
+// Bifrost usage scans can consume their full five-minute batch budget before
+// cooperative shutdown, serialization, and response delivery. Match the
+// runner's ten-minute process envelope so cold-workspace cleanup cannot turn
+// structured incomplete evidence into a client-side timeout.
+const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 
 pub(crate) trait ToolClient {
     fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value>;
@@ -209,6 +213,16 @@ impl Drop for McpSession {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn request_timeout_exceeds_maximum_bifrost_scan_budget() {
+        assert!(
+            MCP_REQUEST_TIMEOUT
+                >= Duration::from_secs(
+                    crate::runners::bifrost::MAX_SCAN_USAGES_MAX_DURATION_SECS + 5 * 60
+                )
+        );
+    }
 
     #[test]
     fn response_reader_skips_notifications_and_other_ids() {

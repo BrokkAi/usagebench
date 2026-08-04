@@ -236,6 +236,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         &usagebench_provenance.revision,
         usagebench_provenance.release.as_deref(),
     )?;
+    let requested_case_files = executed_case_files.clone();
     let mut report = RunReport {
         usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
         usagebench_revision: usagebench_provenance.revision,
@@ -272,10 +273,13 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         invocation: RunInvocation {
             include_unsupported: options.include_unsupported,
             include_definition_lookups: true,
+            scan_usages_max_duration_secs: None,
             profile: Some(profile.id.clone()),
             profile_sha256: Some(profile_sha256),
             case_id: options.case_id.clone(),
         },
+        completed: true,
+        requested_case_files,
         semantic_pack_runs: Vec::new(),
         environment,
         bifrost_repo: None,
