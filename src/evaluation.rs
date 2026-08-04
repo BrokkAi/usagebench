@@ -2249,6 +2249,7 @@ mod tests {
             semantic_packs: None,
             cases: vec![BenchmarkCase {
                 id: "selected-call".to_string(),
+                workspace_semantic_models: Vec::new(),
                 declaration: Some(declaration.clone()),
                 reference_probe: None,
                 expected_usages: vec![usage.clone()],

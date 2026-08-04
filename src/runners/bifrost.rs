@@ -357,12 +357,42 @@ fn run_document_cases(
     case_id: Option<&str>,
     semantic_pack: Option<&PreparedSemanticPacks>,
 ) -> Result<Vec<CaseRunReport>> {
+    let workspace_models = document
+        .cases
+        .iter()
+        .filter(|case| case_id.is_none_or(|case_id| case.id == case_id))
+        .flat_map(|case| case.workspace_semantic_models.iter().cloned())
+        .collect::<BTreeSet<_>>();
+    if !workspace_models.is_empty() {
+        let model_root = source_root.join(".bifrost/semantic-models");
+        let available_models = fs::read_dir(&model_root)
+            .with_context(|| format!("read workspace models {}", model_root.display()))?
+            .filter_map(|entry| entry.ok())
+            .filter_map(|entry| {
+                let path = entry.path();
+                matches!(
+                    path.extension().and_then(|extension| extension.to_str()),
+                    Some("json" | "yaml" | "yml")
+                )
+                .then(|| path.file_stem()?.to_str().map(str::to_owned))
+                .flatten()
+            })
+            .collect::<BTreeSet<_>>();
+        if available_models != workspace_models {
+            bail!(
+                "selected workspace semantic models {workspace_models:?} do not exactly match fixture models {available_models:?}"
+            );
+        }
+    }
     let mut command = Command::new(bifrost_binary);
     command
         .arg("--root")
         .arg(source_root)
         .arg("--server")
         .arg("searchtools");
+    if !workspace_models.is_empty() {
+        command.env("BIFROST_WORKSPACE_SEMANTIC_MODELS", "on");
+    }
     if let Some(semantic_pack) = semantic_pack {
         command
             .env("BIFROST_SEMANTIC_PACK_CATALOG", &semantic_pack.catalog_root)
@@ -4189,6 +4219,7 @@ mod tests {
     fn benchmark_case() -> BenchmarkCase {
         BenchmarkCase {
             id: "rust-function".to_string(),
+            workspace_semantic_models: Vec::new(),
             declaration: Some(symbol_location(
                 "src/service.rs",
                 29,

@@ -167,6 +167,9 @@ pub enum Source {
 #[serde(rename_all = "camelCase")]
 pub struct BenchmarkCase {
     pub id: String,
+    /// Explicit workspace semantic-model names required by this case.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub workspace_semantic_models: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub declaration: Option<SymbolLocation>,
     /// Additional source occurrence used by token-based runners to expose
@@ -657,6 +660,31 @@ impl BenchmarkCase {
     }
 
     fn validate(&self, fixture_root: Option<&Path>, encoding: PositionEncoding) -> Result<()> {
+        for model in &self.workspace_semantic_models {
+            if model.is_empty()
+                || !model
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
+            {
+                bail!(
+                    "case {} workspaceSemanticModels entry {:?} must be a simple model name",
+                    self.id,
+                    model
+                );
+            }
+        }
+        if self.workspace_semantic_models.len()
+            != self
+                .workspace_semantic_models
+                .iter()
+                .collect::<std::collections::BTreeSet<_>>()
+                .len()
+        {
+            bail!(
+                "case {} workspaceSemanticModels must not contain duplicates",
+                self.id
+            );
+        }
         let scoring_markers = [
             self.expected_failure.is_some(),
             self.not_planned.is_some(),
