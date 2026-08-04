@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use usagebench::bifrost_runner::{
     run_bifrost, BifrostRunReport, CaseStatus, NormalizedLocation, RunBifrostOptions,
-    TypeLookupReport, UsageDefinitionReport,
+    TypeLookupReport, UsageDefinitionReport, DEFAULT_SCAN_USAGES_MAX_DURATION_SECS,
 };
 use usagebench::freeze::{create_manifest, FreezeManifestOptions, SnapshotKind};
 use usagebench::real_project::{
@@ -199,6 +199,9 @@ enum Command {
         /// Deprecated; definition lookups are enabled by default.
         #[arg(long)]
         include_definition_lookups: bool,
+        /// Per-scan wall-clock budget for Bifrost usage lookup (maximum 300 seconds).
+        #[arg(long, default_value_t = DEFAULT_SCAN_USAGES_MAX_DURATION_SECS)]
+        scan_usages_max_duration_secs: u64,
         /// Keep temporary git source checkouts after the run.
         #[arg(long)]
         keep_worktrees: bool,
@@ -422,6 +425,7 @@ fn main() -> Result<()> {
             output,
             include_unsupported,
             include_definition_lookups: _,
+            scan_usages_max_duration_secs,
             keep_worktrees,
             case_id,
         } => {
@@ -434,6 +438,7 @@ fn main() -> Result<()> {
             options.work_dir = work_dir;
             options.output = output;
             options.include_unsupported = include_unsupported;
+            options.scan_usages_max_duration_secs = scan_usages_max_duration_secs;
             options.keep_worktrees = keep_worktrees;
             options.case_id = case_id;
             let report = run_bifrost(options)?;

@@ -24,12 +24,13 @@ use std::{
     collections::{hash_map::DefaultHasher, BTreeSet},
     fs,
     hash::{Hash, Hasher},
-    io::Read,
+    io::{Read, Write},
     path::{Path, PathBuf},
     process::{Command, Stdio},
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
+use tempfile::NamedTempFile;
 use url::{Host, Url};
 
 const DEFAULT_BIFROST_COMMIT: &str = "origin/master";
@@ -38,6 +39,8 @@ const GET_DECLARATIONS_BY_LOCATION_TOOL: &str = "get_declarations_by_location";
 const GET_DEFINITIONS_BY_LOCATION_TOOL: &str = "get_definitions_by_location";
 const GET_TYPE_BY_LOCATION_TOOL: &str = "get_type_by_location";
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(10 * 60);
+pub const DEFAULT_SCAN_USAGES_MAX_DURATION_SECS: u64 = 300;
+pub const MAX_SCAN_USAGES_MAX_DURATION_SECS: u64 = 300;
 
 #[derive(Debug, Clone)]
 pub struct RunBifrostOptions {
@@ -51,6 +54,7 @@ pub struct RunBifrostOptions {
     pub output: Option<PathBuf>,
     pub include_unsupported: bool,
     pub include_definition_lookups: bool,
+    pub scan_usages_max_duration_secs: u64,
     pub keep_worktrees: bool,
     pub case_id: Option<String>,
 }
@@ -68,6 +72,7 @@ impl RunBifrostOptions {
             output: None,
             include_unsupported: false,
             include_definition_lookups: true,
+            scan_usages_max_duration_secs: DEFAULT_SCAN_USAGES_MAX_DURATION_SECS,
             keep_worktrees: false,
             case_id: None,
         }
@@ -88,10 +93,29 @@ pub fn default_bifrost_repo(repo_root: &Path) -> Option<PathBuf> {
 }
 
 pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
+    if options.scan_usages_max_duration_secs > MAX_SCAN_USAGES_MAX_DURATION_SECS {
+        bail!(
+            "Bifrost scan-usages duration must be at most {MAX_SCAN_USAGES_MAX_DURATION_SECS} seconds"
+        );
+    }
     let started_at = unix_seconds_now()?;
     let repo_root = find_repo_root_for_path(&options.case_path)?;
     let usagebench_provenance = resolve_usagebench_provenance(&repo_root)?;
     let case_files = crate::validate_path(&options.case_path)?;
+    let output = options.output.as_ref().map(|output| {
+        if output.is_absolute() {
+            output.clone()
+        } else {
+            repo_root.join(output)
+        }
+    });
+    if let Some(parent) = output.as_deref().and_then(Path::parent) {
+        fs::create_dir_all(parent).with_context(|| format!("create {}", parent.display()))?;
+    }
+    if let Some(output) = &output {
+        remove_stale_report(output)?;
+        remove_stale_report(&partial_report_path(output))?;
+    }
 
     let work_dir = if options.work_dir.is_absolute() {
         options.work_dir.clone()
@@ -143,8 +167,44 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         usagebench_provenance.release.as_deref(),
     )?;
 
-    let mut documents = Vec::new();
-    let mut semantic_pack_runs = Vec::new();
+    let requested_version = if options.bifrost_binary.is_some() {
+        bifrost_resolved_commit.clone()
+    } else {
+        options.bifrost_commit.clone()
+    };
+    let runner = bifrost_runner_metadata(
+        requested_version.clone(),
+        bifrost_resolved_commit.clone(),
+        bifrost_source.clone(),
+    );
+    let requested_case_files = case_files.iter().map(|path| display_path(path)).collect();
+
+    let mut report = BifrostRunReport {
+        usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
+        usagebench_revision: usagebench_provenance.revision,
+        usagebench_release: usagebench_provenance.release,
+        runner,
+        invocation: RunInvocation {
+            include_unsupported: options.include_unsupported,
+            include_definition_lookups: options.include_definition_lookups,
+            scan_usages_max_duration_secs: Some(options.scan_usages_max_duration_secs),
+            profile: None,
+            profile_sha256: None,
+            case_id: options.case_id.clone(),
+        },
+        completed: false,
+        requested_case_files,
+        semantic_pack_runs: Vec::new(),
+        environment,
+        bifrost_repo: Some(bifrost_source),
+        bifrost_commit: Some(requested_version),
+        bifrost_resolved_commit: Some(bifrost_resolved_commit.clone()),
+        started_at_unix_seconds: started_at,
+        finished_at_unix_seconds: started_at,
+        case_files: Vec::new(),
+        totals: RunTotals::default(),
+        documents: Vec::new(),
+    };
     for case_file in &case_files {
         let yaml = fs::read_to_string(case_file)
             .with_context(|| format!("read benchmark cases {}", case_file.display()))?;
@@ -173,11 +233,12 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             &bifrost_binary,
             options.include_unsupported,
             options.include_definition_lookups,
+            options.scan_usages_max_duration_secs,
             options.case_id.as_deref(),
             semantic_pack.as_ref(),
         )
         .with_context(|| format!("run benchmark cases {}", case_file.display()))?;
-        documents.push(DocumentRunReport {
+        report.documents.push(DocumentRunReport {
             case_file: display_path(case_file),
             language: document.language,
             source_root: display_path(&source_root),
@@ -188,29 +249,43 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             cases,
         });
         if let Some(mut semantic_pack) = semantic_pack {
-            semantic_pack.evidence.analyzer_visible_model_destinations =
-                cases_model_destinations(documents.last().expect("document was just appended"));
+            semantic_pack.evidence.analyzer_visible_model_destinations = cases_model_destinations(
+                report.documents.last().expect("document was just appended"),
+            );
             semantic_pack.evidence.activation_state =
                 if semantic_pack.evidence.analyzer_visible_model_destinations > 0 {
                     "analyzer_visible".to_string()
                 } else {
                     "empty".to_string()
                 };
-            semantic_pack_runs.push(semantic_pack.evidence);
+            report.semantic_pack_runs.push(semantic_pack.evidence);
+        }
+        report.case_files.push(display_path(case_file));
+        report.finished_at_unix_seconds = unix_seconds_now()?;
+        report.totals = compute_totals(&report.documents);
+        if let Some(output) = &output {
+            write_report_atomic(&partial_report_path(output), &report)?;
         }
     }
 
-    let finished_at = unix_seconds_now()?;
-    let requested_version = if options.bifrost_binary.is_some() {
-        bifrost_resolved_commit.clone()
-    } else {
-        options.bifrost_commit.clone()
-    };
-    let runner = RunnerMetadata {
+    report.completed = true;
+    if let Some(output) = &output {
+        write_report_atomic(output, &report)?;
+    }
+
+    Ok(report)
+}
+
+fn bifrost_runner_metadata(
+    requested_version: String,
+    resolved_version: String,
+    source: String,
+) -> RunnerMetadata {
+    RunnerMetadata {
         name: "bifrost".to_string(),
-        requested_version: requested_version.clone(),
-        resolved_version: bifrost_resolved_commit.clone(),
-        source: bifrost_source.clone(),
+        requested_version,
+        resolved_version,
+        source,
         adapter_version: env!("CARGO_PKG_VERSION").to_string(),
         capabilities: vec![
             RunnerCapability {
@@ -234,46 +309,42 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
                 notes: "Bifrost get_type_by_location MCP output".to_string(),
             },
         ],
-    };
-    let mut report = BifrostRunReport {
-        usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
-        usagebench_revision: usagebench_provenance.revision,
-        usagebench_release: usagebench_provenance.release,
-        runner,
-        invocation: RunInvocation {
-            include_unsupported: options.include_unsupported,
-            include_definition_lookups: options.include_definition_lookups,
-            profile: None,
-            profile_sha256: None,
-            case_id: options.case_id.clone(),
-        },
-        semantic_pack_runs,
-        environment,
-        bifrost_repo: Some(bifrost_source),
-        bifrost_commit: Some(requested_version),
-        bifrost_resolved_commit: Some(bifrost_resolved_commit),
-        started_at_unix_seconds: started_at,
-        finished_at_unix_seconds: finished_at,
-        case_files: case_files.iter().map(|path| display_path(path)).collect(),
-        totals: RunTotals::default(),
-        documents,
-    };
-    report.totals = compute_totals(&report.documents);
-
-    if let Some(output) = &options.output {
-        let output = if output.is_absolute() {
-            output.clone()
-        } else {
-            repo_root.join(output)
-        };
-        if let Some(parent) = output.parent() {
-            fs::create_dir_all(parent).with_context(|| format!("create {}", parent.display()))?;
-        }
-        fs::write(&output, serde_json::to_vec_pretty(&report)?)
-            .with_context(|| format!("write {}", output.display()))?;
     }
+}
 
-    Ok(report)
+fn partial_report_path(output: &Path) -> PathBuf {
+    output.with_extension("partial.json")
+}
+
+fn write_report_atomic(output: &Path, report: &BifrostRunReport) -> Result<()> {
+    let parent = output
+        .parent()
+        .with_context(|| format!("report output {} has no parent", output.display()))?;
+    let mut temporary = NamedTempFile::new_in(parent)
+        .with_context(|| format!("create temporary report in {}", parent.display()))?;
+    serde_json::to_writer_pretty(temporary.as_file_mut(), report)
+        .context("serialize report checkpoint")?;
+    temporary
+        .as_file_mut()
+        .write_all(b"\n")
+        .context("finish report checkpoint")?;
+    temporary
+        .as_file_mut()
+        .sync_all()
+        .context("sync report checkpoint")?;
+    temporary
+        .persist(output)
+        .map_err(|error| error.error)
+        .with_context(|| format!("publish report checkpoint {}", output.display()))?;
+    Ok(())
+}
+
+fn remove_stale_report(path: &Path) -> Result<()> {
+    match fs::remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error).with_context(|| format!("remove stale report {}", path.display())),
+    }
 }
 
 fn run_document_cases(
@@ -282,6 +353,7 @@ fn run_document_cases(
     bifrost_binary: &Path,
     include_unsupported: bool,
     include_definition_lookups: bool,
+    scan_usages_max_duration_secs: u64,
     case_id: Option<&str>,
     semantic_pack: Option<&PreparedSemanticPacks>,
 ) -> Result<Vec<CaseRunReport>> {
@@ -311,7 +383,7 @@ fn run_document_cases(
         .iter()
         .filter(|case| case_id.is_none_or(|case_id| case.id == case_id))
     {
-        reports.push(run_case(
+        reports.push(run_case_with_scan_duration(
             case,
             document.position_encoding,
             document.reference_policy,
@@ -319,6 +391,7 @@ fn run_document_cases(
             &mut session,
             include_unsupported,
             include_definition_lookups,
+            scan_usages_max_duration_secs,
         ));
     }
     Ok(reports)
@@ -515,6 +588,7 @@ fn cases_model_destinations(document: &DocumentRunReport) -> usize {
         .count()
 }
 
+#[cfg(test)]
 fn run_case(
     case: &BenchmarkCase,
     encoding: PositionEncoding,
@@ -523,6 +597,28 @@ fn run_case(
     session: &mut impl SearchToolsClient,
     include_unsupported: bool,
     include_definition_lookups: bool,
+) -> CaseRunReport {
+    run_case_with_scan_duration(
+        case,
+        encoding,
+        reference_policy,
+        reference_context,
+        session,
+        include_unsupported,
+        include_definition_lookups,
+        DEFAULT_SCAN_USAGES_MAX_DURATION_SECS,
+    )
+}
+
+fn run_case_with_scan_duration(
+    case: &BenchmarkCase,
+    encoding: PositionEncoding,
+    reference_policy: ReferencePolicy,
+    reference_context: Option<(&str, &Path)>,
+    session: &mut impl SearchToolsClient,
+    include_unsupported: bool,
+    include_definition_lookups: bool,
+    scan_usages_max_duration_secs: u64,
 ) -> CaseRunReport {
     if let Some(unsupported) = &case.unsupported {
         if !include_unsupported {
@@ -558,6 +654,7 @@ fn run_case(
             reference_policy,
             reference_context,
             session,
+            scan_usages_max_duration_secs,
             &mut diagnostics,
         )
     });
@@ -671,6 +768,7 @@ fn run_declaration_to_usages(
     reference_policy: ReferencePolicy,
     reference_context: Option<(&str, &Path)>,
     session: &mut impl SearchToolsClient,
+    scan_usages_max_duration_secs: u64,
     diagnostics: &mut Vec<RunDiagnostic>,
 ) -> DeclarationUsageReport {
     let expected = case
@@ -799,6 +897,7 @@ fn run_declaration_to_usages(
             "include_tests": true,
             "include_same_owner": true,
             "include_bindings": reference_policy != ReferencePolicy::ExternalUsages,
+            "max_duration_secs": scan_usages_max_duration_secs,
         }),
     ) {
         Ok(result) => result,
@@ -837,7 +936,9 @@ fn run_declaration_to_usages(
         unproven_override_declarations,
         partial,
         mut raw_statuses,
+        diagnostics: scan_diagnostics,
     } = parsed;
+    diagnostics.extend(scan_diagnostics);
     let override_count = override_declarations.len() + unproven_override_declarations.len();
     let retained_override_declarations = override_declarations
         .into_iter()
@@ -1308,6 +1409,7 @@ struct ParsedScanUsages {
     unproven_override_declarations: Vec<NormalizedLocation>,
     partial: bool,
     raw_statuses: Vec<String>,
+    diagnostics: Vec<RunDiagnostic>,
 }
 
 impl ParsedScanUsages {
@@ -1328,6 +1430,7 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
     let mut unproven_override_declarations = BTreeSet::new();
 
     let mut raw_statuses = Vec::new();
+    let mut diagnostics = Vec::new();
     let mut partial = value
         .get("summary")
         .and_then(|summary| summary.get("partial"))
@@ -1364,6 +1467,7 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
                 .unwrap_or(false)
             {
                 partial = true;
+                diagnostics.push(scan_usages_incomplete_diagnostic(result));
             }
         }
     } else {
@@ -1418,6 +1522,12 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
     if partial && !raw_statuses.iter().any(|status| status == "partial") {
         raw_statuses.push("partial".to_string());
     }
+    if partial && diagnostics.is_empty() {
+        diagnostics.push(RunDiagnostic {
+            kind: "scan_usages_incomplete".to_string(),
+            message: "Bifrost reported a partial scan without per-result details".to_string(),
+        });
+    }
     // A location reported in both tiers has proven evidence. Keep the stronger
     // classification so downstream scoring does not treat it as an unproven
     // extra as well.
@@ -1430,6 +1540,23 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
         unproven_override_declarations: unproven_override_declarations.into_iter().collect(),
         partial,
         raw_statuses,
+        diagnostics,
+    }
+}
+
+fn scan_usages_incomplete_diagnostic(result: &Value) -> RunDiagnostic {
+    let reason = result
+        .get("incomplete_reason")
+        .and_then(Value::as_str)
+        .unwrap_or("unspecified");
+    let mut message = format!("Bifrost scan incomplete: reason={reason}");
+    if let Some(sample) = result.get("candidate_files_sample") {
+        message.push_str("; candidate_files_sample=");
+        message.push_str(&sample.to_string());
+    }
+    RunDiagnostic {
+        kind: "scan_usages_incomplete".to_string(),
+        message,
     }
 }
 
@@ -2123,6 +2250,22 @@ mod tests {
         assert!(options.include_definition_lookups);
         assert!(!options.bifrost_working_tree);
         assert!(options.case_id.is_none());
+        assert_eq!(
+            options.scan_usages_max_duration_secs,
+            DEFAULT_SCAN_USAGES_MAX_DURATION_SECS
+        );
+    }
+
+    #[test]
+    fn bifrost_options_reject_scan_duration_over_ceiling() {
+        let mut options = RunBifrostOptions::with_defaults(PathBuf::from("benchmarks/cases"));
+        options.scan_usages_max_duration_secs = MAX_SCAN_USAGES_MAX_DURATION_SECS + 1;
+
+        let error = run_bifrost(options).unwrap_err();
+
+        assert!(error
+            .to_string()
+            .contains("Bifrost scan-usages duration must be at most 300 seconds"));
     }
 
     #[test]
@@ -2202,10 +2345,13 @@ mod tests {
             invocation: RunInvocation {
                 include_unsupported: false,
                 include_definition_lookups: true,
+                scan_usages_max_duration_secs: Some(DEFAULT_SCAN_USAGES_MAX_DURATION_SECS),
                 profile: None,
                 profile_sha256: None,
                 case_id: None,
             },
+            completed: true,
+            requested_case_files: vec!["benchmarks/cases/rust.yaml".to_string()],
             semantic_pack_runs: Vec::new(),
             environment: super::super::ExecutionEnvironment {
                 operating_system: "linux".to_string(),
@@ -2301,13 +2447,17 @@ mod tests {
             }],
         };
 
-        let json = serde_json::to_value(report).unwrap();
+        let json = serde_json::to_value(&report).unwrap();
 
         assert_eq!(json["usagebenchVersion"], "0.1.0");
         assert_eq!(json["usagebenchRevision"], "def456");
         assert_eq!(json["usagebenchRelease"], "v0.1.0");
         assert_eq!(json["bifrostResolvedCommit"], "abc123");
         assert_eq!(json["invocation"]["includeUnsupported"], false);
+        assert_eq!(
+            json["invocation"]["scanUsagesMaxDurationSecs"],
+            DEFAULT_SCAN_USAGES_MAX_DURATION_SECS
+        );
         assert_eq!(json["environment"]["executionMode"], "container");
         assert_eq!(
             json["environment"]["referenceEnvironment"]["canonicalPlatform"],
@@ -2327,6 +2477,36 @@ mod tests {
             json["documents"][0]["cases"][0]["declarationToUsages"]["unexpected"][0]["path"],
             "src/extra.rs"
         );
+
+        let tempdir = tempfile::tempdir().unwrap();
+        let final_output = tempdir.path().join("run.json");
+        let checkpoint = partial_report_path(&final_output);
+        let mut expected_checkpoint = report.clone();
+        expected_checkpoint.completed = false;
+        expected_checkpoint.finished_at_unix_seconds = 3;
+        write_report_atomic(&checkpoint, &expected_checkpoint).unwrap();
+        expected_checkpoint.finished_at_unix_seconds = 4;
+        write_report_atomic(&checkpoint, &expected_checkpoint).unwrap();
+        let checkpoint_report: BifrostRunReport =
+            serde_json::from_slice(&fs::read(&checkpoint).unwrap()).unwrap();
+        assert_eq!(checkpoint_report, expected_checkpoint);
+        assert!(checkpoint_report.ensure_complete().is_err());
+        assert_eq!(checkpoint, tempdir.path().join("run.partial.json"));
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+
+            let victim = tempdir.path().join("victim.txt");
+            fs::write(&victim, "do not overwrite").unwrap();
+            symlink(&victim, tempdir.path().join("run.json.tmp")).unwrap();
+            write_report_atomic(&final_output, &report).unwrap();
+            assert_eq!(fs::read_to_string(victim).unwrap(), "do not overwrite");
+        }
+
+        fs::write(&final_output, "stale report").unwrap();
+        remove_stale_report(&final_output).unwrap();
+        assert!(!final_output.exists());
     }
 
     #[test]
@@ -2347,7 +2527,7 @@ mod tests {
             ),
         ]);
 
-        let report = run_case(
+        let report = run_case_with_scan_duration(
             &case,
             PositionEncoding::Utf16,
             ReferencePolicy::BindingsOptional,
@@ -2355,6 +2535,7 @@ mod tests {
             &mut client,
             false,
             true,
+            42,
         );
 
         assert_eq!(report.status, CaseStatus::Passed);
@@ -2364,6 +2545,7 @@ mod tests {
         );
         assert_eq!(client.calls[1].1["include_same_owner"], true);
         assert_eq!(client.calls[1].1["include_bindings"], true);
+        assert_eq!(client.calls[1].1["max_duration_secs"], 42);
     }
 
     #[test]
@@ -3339,6 +3521,8 @@ mod tests {
         let declaration = report.declaration_to_usages.unwrap();
         assert!(declaration.partial);
         assert!(declaration.raw_statuses.contains(&"partial".to_string()));
+        assert_eq!(report.diagnostics.len(), 1);
+        assert_eq!(report.diagnostics[0].kind, "scan_usages_incomplete");
     }
 
     #[test]
@@ -3529,6 +3713,37 @@ mod tests {
             parsed.raw_statuses,
             vec!["found".to_string(), "partial".to_string()]
         );
+        assert_eq!(parsed.diagnostics.len(), 1);
+        assert_eq!(parsed.diagnostics[0].kind, "scan_usages_incomplete");
+        assert!(parsed.diagnostics[0].message.contains("reason=unspecified"));
+    }
+
+    #[test]
+    fn parse_scan_usages_preserves_incomplete_reason_and_candidate_sample() {
+        let parsed = parse_scan_usages(&json!({
+            "summary": {"partial": true},
+            "results": [{
+                "status": "found",
+                "complete": false,
+                "incomplete_reason": "candidate_files",
+                "candidate_files_sample": {
+                    "scanned": ["src/a.py", "src/b.py"],
+                    "omitted": ["src/c.py"],
+                    "omitted_count": 7
+                },
+                "files": []
+            }]
+        }));
+
+        assert!(parsed.partial);
+        assert_eq!(parsed.diagnostics.len(), 1);
+        assert_eq!(parsed.diagnostics[0].kind, "scan_usages_incomplete");
+        assert!(parsed.diagnostics[0]
+            .message
+            .contains("reason=candidate_files"));
+        assert!(parsed.diagnostics[0]
+            .message
+            .contains(r#"candidate_files_sample={"omitted":["src/c.py"],"omitted_count":7,"scanned":["src/a.py","src/b.py"]}"#));
     }
 
     #[test]

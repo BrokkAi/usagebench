@@ -483,6 +483,7 @@ fn validate_report(
     revision: &str,
     version: &str,
 ) -> Result<()> {
+    report.ensure_complete()?;
     if report.usagebench_revision != revision {
         bail!(
             "candidate {} report was produced by UsageBench {}, expected {}",

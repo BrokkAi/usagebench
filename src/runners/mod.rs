@@ -75,6 +75,15 @@ pub struct RunReport {
     pub usagebench_release: Option<String>,
     pub runner: RunnerMetadata,
     pub invocation: RunInvocation,
+    /// False only for an interruption-safe checkpoint that does not cover the
+    /// full requested document scope. Older reports predate checkpoints and
+    /// therefore deserialize as complete.
+    #[serde(default = "default_true")]
+    pub completed: bool,
+    /// Full document scope selected for the run. `case_files` contains the
+    /// subset completed in an interruption-safe checkpoint.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub requested_case_files: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub semantic_pack_runs: Vec<SemanticPackRunEvidence>,
     pub environment: ExecutionEnvironment,
@@ -90,6 +99,22 @@ pub struct RunReport {
     pub case_files: Vec<String>,
     pub totals: RunTotals,
     pub documents: Vec<DocumentRunReport>,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+impl RunReport {
+    pub(crate) fn ensure_complete(&self) -> Result<()> {
+        if !self.completed {
+            bail!("incomplete runner checkpoints cannot be used as completed evidence");
+        }
+        if !self.requested_case_files.is_empty() && self.requested_case_files != self.case_files {
+            bail!("completed runner report does not cover its requested document scope");
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -110,6 +135,8 @@ pub struct SemanticPackRunEvidence {
 pub struct RunInvocation {
     pub include_unsupported: bool,
     pub include_definition_lookups: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scan_usages_max_duration_secs: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -739,6 +766,25 @@ pub struct RunDiagnostic {
 pub fn generated_report_schema_json() -> Result<String> {
     let schema = schemars::schema_for!(RunReport);
     serde_json::to_string_pretty(&schema).context("serialize generated runner report schema")
+}
+
+#[cfg(test)]
+mod invocation_tests {
+    use super::*;
+
+    #[test]
+    fn older_invocation_without_scan_budget_remains_readable() {
+        let invocation: RunInvocation = serde_json::from_value(serde_json::json!({
+            "includeUnsupported": false,
+            "includeDefinitionLookups": true,
+            "profile": null,
+            "profileSha256": null,
+            "caseId": null
+        }))
+        .unwrap();
+
+        assert_eq!(invocation.scan_usages_max_duration_secs, None);
+    }
 }
 
 #[cfg(test)]

@@ -90,6 +90,17 @@ cargo run -- run-lsp benchmarks/cases \
   --output benchmark-output/rust-analyzer-native.json
 ```
 
+The Bifrost runner records and sends a 300-second wall-clock budget for each
+usage scan by default, rather than relying on Bifrost's five-second interactive
+default. For a quicker development pass, override the per-scan budget with
+`--scan-usages-max-duration-secs <0-300>`; the effective value is retained in
+the report's invocation metadata. Runs with `--output` atomically update a
+sibling `*.partial.json` checkpoint after each completed benchmark document;
+the requested output path is written only when the full run completes.
+Checkpoints identify themselves with `completed: false`, retain the full
+`requestedCaseFiles` scope, and cannot be used as completed snapshot or
+reproduction evidence.
+
 These commands preserve analyzer and host provenance but are not the canonical
 cross-machine reproducibility claim.
 

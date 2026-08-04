@@ -292,6 +292,7 @@ pub fn validate_evidence(
     primary_report_path: &Path,
     primary_report: &RunReport,
 ) -> Result<ValidatedEvidence> {
+    primary_report.ensure_complete()?;
     let evidence_bytes = fs::read(evidence_path)
         .with_context(|| format!("read reproduction evidence {}", evidence_path.display()))?;
     let evidence = parse_evidence(&evidence_bytes, evidence_path)?;
@@ -459,6 +460,7 @@ fn validate_matching_native_platform(
 }
 
 fn validate_native_host(host: &EvidenceHost, report: &RunReport) -> Result<()> {
+    report.ensure_complete()?;
     if host.id.trim().is_empty()
         || host.runner_name.trim().is_empty()
         || host.provider.trim().is_empty()
@@ -835,6 +837,29 @@ mod tests {
         )
         .unwrap_err();
         assert!(error.to_string().contains("lacks container provenance"));
+    }
+
+    #[test]
+    fn rejects_incomplete_canonical_primary_report() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let evidence_path = tempdir.path().join("bifrost-evidence.json");
+        let report_path = tempdir.path().join("bifrost.partial.json");
+        let mut report = native_report("linux", "x86_64");
+        report.completed = false;
+
+        let error = validate_evidence(
+            &evidence_path,
+            "bifrost",
+            ReproductionClass::Canonical,
+            Some("bifrost"),
+            "1.1.411",
+            None,
+            &report_path,
+            &report,
+        )
+        .unwrap_err();
+
+        assert!(error.to_string().contains("incomplete runner checkpoints"));
     }
 
     fn host(id: &str, operating_system: &str, architecture: &str) -> serde_json::Value {

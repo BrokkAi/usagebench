@@ -400,6 +400,7 @@ fn validate_snapshot_partition(
 }
 
 fn validate_candidate_report(candidate: &ManifestCandidate, report: &RunReport) -> Result<()> {
+    report.ensure_complete()?;
     match candidate.runner.as_str() {
         "bifrost" => {
             if report.runner.name != "bifrost" {
@@ -1851,6 +1852,7 @@ mod tests {
         let location_metrics = document.cases[0].location_metrics.clone();
         document.case_file = "benchmarks/cases/second.yaml".to_string();
         report.case_files.push(document.case_file.clone());
+        report.requested_case_files.push(document.case_file.clone());
         report.documents.push(document);
         report.totals.documents = 2;
         report.totals.cases = 2;
@@ -2027,10 +2029,14 @@ mod tests {
             invocation: RunInvocation {
                 include_unsupported: false,
                 include_definition_lookups: true,
+                scan_usages_max_duration_secs: (runner == "bifrost")
+                    .then_some(crate::runners::bifrost::DEFAULT_SCAN_USAGES_MAX_DURATION_SECS),
                 profile: (runner != "bifrost").then(|| runner.to_string()),
                 profile_sha256: None,
                 case_id: None,
             },
+            completed: true,
+            requested_case_files: vec!["benchmarks/cases/sample.yaml".to_string()],
             semantic_pack_runs: Vec::new(),
             environment: ExecutionEnvironment {
                 operating_system: "linux".to_string(),

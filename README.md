@@ -150,6 +150,16 @@ cargo run -- run-bifrost benchmarks/cases \
   --bifrost-working-tree
 ```
 
+`run-bifrost` supplies an explicit 300-second wall-clock budget to each
+`scan_usages_by_location` call. This batch-oriented default avoids inheriting
+Bifrost's five-second interactive budget and is recorded in report invocation
+metadata. Use `--scan-usages-max-duration-secs <0-300>` to select a smaller
+per-scan budget for development runs. When `--output` is set, the runner also
+atomically updates a sibling `*.partial.json` checkpoint after each completed
+benchmark document so interrupted batch runs retain valid evidence. Checkpoints
+record `completed: false` plus the full `requestedCaseFiles` scope and are
+rejected by snapshot and reproduction tooling as completed evidence.
+
 The generic LSP adapter starts a versioned stdio language server, opens an
 isolated fixture workspace, and translates the protocol's native references,
 definition, and type-definition responses into the same report:
