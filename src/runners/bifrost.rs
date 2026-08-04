@@ -1312,7 +1312,7 @@ fn resolve_declaration_selector(
         }),
     )?;
     let search = parse_search_symbols(&result)?;
-    let candidates = search
+    let mut candidates = search
         .files
         .into_iter()
         .filter(|file| file.path == expected_path)
@@ -1325,6 +1325,27 @@ fn resolve_declaration_selector(
             hit.line == expected_line && symbol_name_matches(&hit.symbol, &declaration.display_name)
         })
         .collect::<Vec<_>>();
+    candidates.extend(
+        search
+            .model_symbols
+            .into_iter()
+            .filter(|model| {
+                model.location.path == expected_path
+                    && model.location.range.start_line == expected_line
+                    && model_kind_matches(&model.kind, &declaration.kind)
+                    && symbol_name_matches(&model.qualified_name, &declaration.display_name)
+            })
+            .map(|model| {
+                (
+                    model.location.path,
+                    SearchSymbolHit {
+                        symbol: model.qualified_name,
+                        is_type_alias: model.kind == "type_alias",
+                        line: model.location.range.start_line,
+                    },
+                )
+            }),
+    );
 
     let selected = match candidates.as_slice() {
         [(path, hit)] => Some((path, hit)),
@@ -1369,6 +1390,41 @@ struct ResolvedSelector {
 struct SearchSymbolsResult {
     #[serde(default)]
     files: Vec<SearchSymbolsFile>,
+    #[serde(default)]
+    model_symbols: Vec<SearchModelSymbol>,
+}
+
+#[derive(Debug, Deserialize)]
+struct SearchModelSymbol {
+    qualified_name: String,
+    kind: String,
+    location: SearchModelLocation,
+}
+
+#[derive(Debug, Deserialize)]
+struct SearchModelLocation {
+    path: String,
+    range: SearchModelRange,
+}
+
+#[derive(Debug, Deserialize)]
+struct SearchModelRange {
+    start_line: usize,
+}
+
+fn model_kind_matches(kind: &str, expected: &SymbolKind) -> bool {
+    match expected {
+        SymbolKind::Class | SymbolKind::Interface | SymbolKind::Type => matches!(
+            kind,
+            "class" | "interface" | "trait" | "struct" | "enum" | "record" | "type_alias"
+        ),
+        SymbolKind::Constructor => kind == "constructor",
+        SymbolKind::Method | SymbolKind::Function => matches!(kind, "method" | "function"),
+        SymbolKind::Field | SymbolKind::Variable | SymbolKind::Constant | SymbolKind::Property => {
+            matches!(kind, "field" | "property" | "constant" | "static")
+        }
+        SymbolKind::Module | SymbolKind::Package => kind == "module",
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -1421,7 +1477,7 @@ fn parse_search_symbols(value: &Value) -> Result<SearchSymbolsResult> {
 fn count_symbol_occurrences(value: &Value, symbol: &str) -> usize {
     parse_search_symbols(value)
         .map(|search| {
-            search
+            let authored = search
                 .files
                 .into_iter()
                 .flat_map(|file| {
@@ -1433,7 +1489,13 @@ fn count_symbol_occurrences(value: &Value, symbol: &str) -> usize {
                         .chain(file.macros)
                 })
                 .filter(|hit| hit.symbol == symbol)
-                .count()
+                .count();
+            authored
+                + search
+                    .model_symbols
+                    .iter()
+                    .filter(|model| model.qualified_name == symbol)
+                    .count()
         })
         .unwrap_or(1)
 }
@@ -3869,6 +3931,48 @@ mod tests {
         );
 
         assert_eq!(report.status, CaseStatus::Passed);
+    }
+
+    #[test]
+    fn generated_declarations_resolve_from_model_symbols() {
+        let case = benchmark_case();
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                json!({
+                    "files": [],
+                    "model_symbols": [{
+                        "qualified_name": "example.build_service",
+                        "kind": "function",
+                        "location": {
+                            "kind": "authored",
+                            "path": "src/service.rs",
+                            "range": {"start_line": 30}
+                        }
+                    }]
+                }),
+            ),
+            tool(
+                "scan_usages_by_location",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+        ]);
+
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(
+            report.declaration_to_usages.unwrap().selector.as_deref(),
+            Some("example.build_service")
+        );
     }
 
     #[test]
