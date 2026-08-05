@@ -195,6 +195,16 @@
           "type": "string",
           "minLength": 1
         },
+        "workspaceSemanticModels": {
+          "description": "Explicit workspace semantic-model names required by this case.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "uniqueItems": true,
+          "default": []
+        },
         "declaration": {
           "$ref": "#/$defs/symbolLocation"
         },

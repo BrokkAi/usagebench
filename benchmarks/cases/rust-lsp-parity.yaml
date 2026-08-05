@@ -166,8 +166,8 @@ cases:
         Upstream reference: crates/ide/src/references.rs function-reference tests.
         Server profile: rust-analyzer 2026-07-13; measured as 0.3.2971-standalone (ffcdbbd906 2026-07-13).
   - id: rust-parity-macro-generated-function-reference
-    expectedFailure:
-      reason: Bifrost does not expand define_job_maker!, so it cannot index the generated function declaration at the macro invocation.
+    workspaceSemanticModels:
+      - define-job-maker
     declaration:
       location:
         uri: benchmark://source/src/lib.rs
