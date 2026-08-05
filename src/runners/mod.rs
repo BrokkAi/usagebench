@@ -4,7 +4,7 @@
 //! translating that tool's public query surface into UsageBench locations.
 
 use crate::{
-    benchmark_source_path, BenchmarkCase, CorpusPartition, CorpusSelection,
+    benchmark_source_path, BenchmarkCase, BenchmarkDocument, CorpusPartition, CorpusSelection,
     GroundTruthReviewStatus, NavigationOperation, ReferencePolicy, SymbolKind, SymbolLocation,
 };
 use anyhow::{bail, Context, Result};
@@ -84,6 +84,10 @@ pub struct RunReport {
     /// subset completed in an interruption-safe checkpoint.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub requested_case_files: Vec<String>,
+    /// Full authored and planned scope selected before analyzer execution.
+    /// Unlike `totals`, these counts do not shrink in an incomplete checkpoint.
+    #[serde(default, skip_serializing_if = "RequestedRunTotals::is_empty")]
+    pub requested_totals: RequestedRunTotals,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub semantic_pack_runs: Vec<SemanticPackRunEvidence>,
     pub environment: ExecutionEnvironment,
@@ -99,6 +103,22 @@ pub struct RunReport {
     pub case_files: Vec<String>,
     pub totals: RunTotals,
     pub documents: Vec<DocumentRunReport>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct RequestedRunTotals {
+    pub documents: usize,
+    pub authored_cases: usize,
+    pub planned_cases: usize,
+    pub development_planned_cases: usize,
+    pub evaluation_planned_cases: usize,
+}
+
+impl RequestedRunTotals {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
 }
 
 fn default_true() -> bool {
@@ -761,6 +781,89 @@ pub struct NormalizedLocation {
 pub struct RunDiagnostic {
     pub kind: String,
     pub message: String,
+}
+
+pub(crate) fn requested_run_totals<'a>(
+    documents: impl IntoIterator<Item = &'a BenchmarkDocument>,
+    include_unsupported: bool,
+    case_id: Option<&str>,
+) -> RequestedRunTotals {
+    let mut totals = RequestedRunTotals::default();
+    for document in documents {
+        totals.documents += 1;
+        for case in document
+            .cases
+            .iter()
+            .filter(|case| case_id.is_none_or(|case_id| case.id == case_id))
+        {
+            totals.authored_cases += 1;
+            if case.not_planned.is_some() || (case.unsupported.is_some() && !include_unsupported) {
+                continue;
+            }
+            totals.planned_cases += 1;
+            match document.corpus.partition {
+                CorpusPartition::Development => totals.development_planned_cases += 1,
+                CorpusPartition::Evaluation => totals.evaluation_planned_cases += 1,
+            }
+        }
+    }
+    totals
+}
+
+pub(crate) fn runner_failure_case(
+    case: &BenchmarkCase,
+    include_unsupported: bool,
+    kind: &str,
+    message: &str,
+) -> CaseRunReport {
+    if case.unsupported.is_some() && !include_unsupported {
+        return excluded_case(case, CaseStatus::Unsupported);
+    }
+    CaseRunReport {
+        id: case.id.clone(),
+        status: CaseStatus::Error,
+        expected_failure_reason: case
+            .expected_failure
+            .as_ref()
+            .map(|item| item.reason.clone()),
+        not_planned_reason: case.not_planned.as_ref().map(|item| item.reason.clone()),
+        unsupported_reason: case.unsupported.as_ref().map(|item| item.reason.clone()),
+        declaration_to_usages: None,
+        usage_to_declaration: Vec::new(),
+        compatible_usage_to_declaration: Vec::new(),
+        required_destination_status: Some(RequiredDestinationStatus::Error),
+        location_metrics: Some(LocationMetrics::default()),
+        type_lookups: Vec::new(),
+        diagnostics: vec![RunDiagnostic {
+            kind: kind.to_string(),
+            message: message.to_string(),
+        }],
+    }
+}
+
+pub(crate) fn excluded_case(case: &BenchmarkCase, status: CaseStatus) -> CaseRunReport {
+    let required_destination_status = match status {
+        CaseStatus::Unsupported => RequiredDestinationStatus::Unsupported,
+        CaseStatus::NotPlanned => RequiredDestinationStatus::NotPlanned,
+        _ => unreachable!("only authored scoring exclusions use excluded_case"),
+    };
+    CaseRunReport {
+        id: case.id.clone(),
+        status,
+        expected_failure_reason: case
+            .expected_failure
+            .as_ref()
+            .map(|item| item.reason.clone()),
+        not_planned_reason: case.not_planned.as_ref().map(|item| item.reason.clone()),
+        unsupported_reason: case.unsupported.as_ref().map(|item| item.reason.clone()),
+        declaration_to_usages: None,
+        usage_to_declaration: Vec::new(),
+        compatible_usage_to_declaration: Vec::new(),
+        required_destination_status: Some(required_destination_status),
+        location_metrics: Some(LocationMetrics::default()),
+        type_lookups: Vec::new(),
+        diagnostics: Vec::new(),
+    }
 }
 
 pub fn generated_report_schema_json() -> Result<String> {
@@ -1651,10 +1754,12 @@ pub(crate) fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
     };
     for document in documents {
         for case in &document.cases {
-            if !matches!(
-                case.status,
-                CaseStatus::NotPlanned | CaseStatus::Unsupported | CaseStatus::Skipped
-            ) {
+            if case.not_planned_reason.is_none()
+                && !matches!(
+                    case.status,
+                    CaseStatus::NotPlanned | CaseStatus::Unsupported | CaseStatus::Skipped
+                )
+            {
                 totals.cases += 1;
                 match document.corpus_partition {
                     CorpusPartition::Development => totals.development_cases += 1,

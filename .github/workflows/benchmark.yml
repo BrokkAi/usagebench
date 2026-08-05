@@ -103,7 +103,7 @@ jobs:
           report_complete="true"
           partial_path="benchmark-output/run-${GITHUB_RUN_ID}.partial.json"
           if [ -f "$report_path" ]; then
-            report_complete="$(jq -r '.completed // true' "$report_path")"
+            report_complete="$(jq -r 'if has("completed") then .completed else true end' "$report_path")"
           elif [ -f "$partial_path" ] && jq -e '.completed == false' "$partial_path" >/dev/null; then
             report_path="$partial_path"
             report_complete="false"
@@ -180,56 +180,7 @@ jobs:
             if [ -n "$REPORT_PATH" ]; then
               echo "- Report: \`$REPORT_PATH\`"
               echo
-              echo "## Totals"
-              echo
-              jq -r '
-                .totals
-                | "- Documents: \(.documents)\n- Planned cases: \(.cases)\n- Development cases: \(.developmentCases // 0)\n- Evaluation cases: \(.evaluationCases // 0)\n- Passed: \(.passed)\n- Near misses: \(.nearMisses // 0)\n- Position-unverified cases: \(.positionUnverified // 0)\n- Improved: \(.improved // 0)\n- Failed: \(.failed)\n- Expected failures: \(.expectedFailures)\n- Not planned: \(.notPlanned // 0)\n- Unsupported cases: \(.unsupported // 0)\n- Skipped: \(.skipped)\n- Errors: \(.errors)"
-              ' "$REPORT_PATH"
-              unsupported_navigation_lookups="$(
-                jq '[.documents[]?.cases[]?.usageToDeclaration[]? | select(.status == "unsupported")] | length' "$REPORT_PATH"
-              )"
-              echo "- Unsupported navigation lookups: $unsupported_navigation_lookups"
-              failing_cases="$(
-                jq -r '
-                  [
-                    .documents[]? as $document
-                    | $document.cases[]?
-                    | select(.status == "failed" or .status == "error")
-                    | "- \(.status): \(.id) (\($document.caseFile))"
-                      + (
-                        if .declarationToUsages then
-                          " references=\(.declarationToUsages.status):\(.declarationToUsages.rawStatuses | join(",")) missing=\(.declarationToUsages.missing | length), extra=\(.declarationToUsages.unexpected | length)"
-                        else
-                          ""
-                        end
-                      )
-                      + (
-                        ((.usageToDeclaration // [])
-                          | map(select(.status == "failed" or .status == "error" or .status == "unsupported"))
-                          | map("\(.operation // "profile_default")=\(.status):\(.rawStatus),targets=\(.actualDeclarations | length)")
-                          | join("; ")) as $navigation_issues
-                        | if ($navigation_issues | length) > 0 then
-                            " navigation=[\($navigation_issues)]"
-                          else
-                            ""
-                          end
-                      )
-                  ] as $items
-                  | if ($items | length) > 0 then
-                      ($items[0:10][]),
-                      (if ($items | length) > 10 then "- ... \(($items | length) - 10) more failing case(s)" else empty end)
-                    else
-                      empty
-                    end
-                ' "$REPORT_PATH"
-              )"
-              if [ -n "$failing_cases" ]; then
-                echo
-                echo "## Failing Cases"
-                echo
-                echo "$failing_cases"
-              fi
+              scripts/render-benchmark-summary.sh "$REPORT_PATH"
             else
               echo "- Report: none written"
             fi
@@ -243,6 +194,7 @@ jobs:
         env:
           RUN_OUTCOME: ${{ steps.run_usagebench.outcome }}
           REPORT_PATH: ${{ steps.paths.outputs.report_path }}
+          REPORT_COMPLETE: ${{ steps.paths.outputs.report_complete }}
           WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           USAGEBENCH_REVISION: ${{ steps.usagebench_provenance.outputs.revision }}
           USAGEBENCH_RELEASE: ${{ steps.usagebench_provenance.outputs.release }}
@@ -251,11 +203,17 @@ jobs:
 
           run_outcome="$RUN_OUTCOME"
           report_path="$REPORT_PATH"
+          report_complete="$REPORT_COMPLETE"
           head_sha_short="$(git rev-parse --short "$GITHUB_SHA")"
 
           bifrost_resolved_commit=""
           bifrost_sha_short=""
           cases_count="0"
+          processed_documents_count="0"
+          requested_documents_count="0"
+          processed_cases_count="0"
+          requested_authored_cases_count="0"
+          requested_planned_cases_count="0"
           passed_count="0"
           near_misses_count="0"
           position_unverified_count="0"
@@ -272,7 +230,14 @@ jobs:
           if [ -n "$report_path" ] && [ -f "$report_path" ]; then
             bifrost_resolved_commit="$(jq -r '.bifrostResolvedCommit // ""' "$report_path")"
             bifrost_sha_short="$(printf '%s' "$bifrost_resolved_commit" | cut -c1-7)"
-            cases_count="$(jq -r '.totals.cases // 0' "$report_path")"
+            report_counts="$(scripts/render-benchmark-summary.sh --counts "$report_path")"
+            report_complete="$(jq -r '.report_complete' <<< "$report_counts")"
+            processed_documents_count="$(jq -r '.processed_documents_count' <<< "$report_counts")"
+            requested_documents_count="$(jq -r '.requested_documents_count' <<< "$report_counts")"
+            processed_cases_count="$(jq -r '.processed_cases_count' <<< "$report_counts")"
+            requested_authored_cases_count="$(jq -r '.requested_authored_cases_count' <<< "$report_counts")"
+            requested_planned_cases_count="$(jq -r '.requested_planned_cases_count' <<< "$report_counts")"
+            cases_count="$requested_planned_cases_count"
             passed_count="$(jq -r '.totals.passed // 0' "$report_path")"
             near_misses_count="$(jq -r '.totals.nearMisses // 0' "$report_path")"
             position_unverified_count="$(jq -r '.totals.positionUnverified // 0' "$report_path")"
@@ -288,44 +253,23 @@ jobs:
             skipped_count="$(jq -r '.totals.skipped // 0' "$report_path")"
             errors_count="$(jq -r '.totals.errors // 0' "$report_path")"
             failing_cases="$(
-              jq -r '
-                [
-                  .documents[]? as $document
-                  | $document.cases[]?
-                  | select(.status == "failed" or .status == "error")
-                  | "- \(.status): \(.id) (\($document.caseFile))"
-                    + (
-                      if .declarationToUsages then
-                        " references=\(.declarationToUsages.status):\(.declarationToUsages.rawStatuses | join(",")) missing=\(.declarationToUsages.missing | length), extra=\(.declarationToUsages.unexpected | length)"
-                      else
-                        ""
-                      end
-                    )
-                    + (
-                      ((.usageToDeclaration // [])
-                        | map(select(.status == "failed" or .status == "error" or .status == "unsupported"))
-                        | map("\(.operation // "profile_default")=\(.status):\(.rawStatus),targets=\(.actualDeclarations | length)")
-                        | join("; ")) as $navigation_issues
-                      | if ($navigation_issues | length) > 0 then
-                          " navigation=[\($navigation_issues)]"
-                        else
-                          ""
-                        end
-                    )
-                ] as $items
-                | if ($items | length) > 0 then
-                    ($items[0:10][]),
-                    (if ($items | length) > 10 then "- ... \(($items | length) - 10) more failing case(s)" else empty end)
-                  else
-                    empty
-                  end
-              ' "$report_path"
+              scripts/render-benchmark-summary.sh --failing-cases "$report_path"
             )"
           fi
 
           ok="true"
           error_text=""
-          if [ "$run_outcome" != "success" ]; then
+          if [ -z "$report_path" ] || [ ! -f "$report_path" ]; then
+            ok="false"
+            error_text="usage benchmark run did not write a report"
+          elif [ "$report_complete" != "true" ]; then
+            ok="false"
+            requested_planned_display="$requested_planned_cases_count"
+            if [ "$requested_planned_display" = "null" ]; then
+              requested_planned_display="unknown"
+            fi
+            error_text="usage benchmark report is INCOMPLETE: processed ${processed_documents_count}/${requested_documents_count} documents and ${processed_cases_count}/${requested_planned_display} planned cases"
+          elif [ "$run_outcome" != "success" ]; then
             ok="false"
             if [ -n "$failing_cases" ]; then
               error_text="$(printf 'Usage benchmark run failed:\n%s' "$failing_cases")"
@@ -353,8 +297,14 @@ jobs:
               --arg bifrost_ref "$BIFROST_REF" \
               --arg bifrost_sha_short "$bifrost_sha_short" \
               --arg run_outcome "$run_outcome" \
+              --argjson report_complete "$report_complete" \
               --argjson ok "$ok" \
               --argjson cases_count "$cases_count" \
+              --argjson processed_documents_count "$processed_documents_count" \
+              --argjson requested_documents_count "$requested_documents_count" \
+              --argjson processed_cases_count "$processed_cases_count" \
+              --argjson requested_authored_cases_count "$requested_authored_cases_count" \
+              --argjson requested_planned_cases_count "$requested_planned_cases_count" \
               --argjson passed_count "$passed_count" \
               --argjson near_misses_count "$near_misses_count" \
               --argjson position_unverified_count "$position_unverified_count" \
@@ -377,7 +327,13 @@ jobs:
                 bifrost_ref: $bifrost_ref,
                 bifrost_sha_short: $bifrost_sha_short,
                 run_outcome: $run_outcome,
+                report_complete: $report_complete,
                 cases_count: $cases_count,
+                processed_documents_count: $processed_documents_count,
+                requested_documents_count: $requested_documents_count,
+                processed_cases_count: $processed_cases_count,
+                requested_authored_cases_count: $requested_authored_cases_count,
+                requested_planned_cases_count: $requested_planned_cases_count,
                 passed_count: $passed_count,
                 near_misses_count: $near_misses_count,
                 position_unverified_count: $position_unverified_count,
@@ -404,10 +360,20 @@ jobs:
         shell: bash
         env:
           RUN_OUTCOME: ${{ steps.run_usagebench.outcome }}
+          REPORT_PATH: ${{ steps.paths.outputs.report_path }}
+          REPORT_COMPLETE: ${{ steps.paths.outputs.report_complete }}
         run: |
           set -euo pipefail
+          if [ -z "$REPORT_PATH" ] || [ ! -f "$REPORT_PATH" ]; then
+            echo "usage benchmark run did not write a report" >&2
+            exit 1
+          fi
           if [ "$RUN_OUTCOME" != "success" ]; then
             echo "usage benchmark run failed" >&2
+            exit 1
+          fi
+          if [ "$REPORT_COMPLETE" != "true" ]; then
+            echo "usage benchmark report is incomplete" >&2
             exit 1
           fi
 

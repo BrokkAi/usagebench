@@ -1,10 +1,10 @@
-use super::mcp::{McpSession, ToolClient as SearchToolsClient};
+use super::mcp::{is_snapshot_not_ready_error, McpSession, ToolClient as SearchToolsClient};
 use super::{
-    case_location_metrics, combine_case_status, compute_totals, location_match,
-    normalize_symbol_location, path_to_slash, required_destination_status,
-    resolve_usagebench_provenance, score_declaration_locations, score_navigation_response,
-    symbol_kind_name, CapabilitySupport, LocationMatch, RunInvocation, RunReport, RunnerCapability,
-    RunnerMetadata, RunnerOperation,
+    case_location_metrics, combine_case_status, compute_totals, excluded_case, location_match,
+    normalize_symbol_location, path_to_slash, requested_run_totals, required_destination_status,
+    resolve_usagebench_provenance, runner_failure_case, score_declaration_locations,
+    score_navigation_response, symbol_kind_name, CapabilitySupport, LocationMatch, RunInvocation,
+    RunReport, RunnerCapability, RunnerMetadata, RunnerOperation,
 };
 pub use super::{
     CaseRunReport, CaseStatus, CompatibleUsageDefinitionReport, DeclarationUsageReport,
@@ -102,6 +102,21 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     let repo_root = find_repo_root_for_path(&options.case_path)?;
     let usagebench_provenance = resolve_usagebench_provenance(&repo_root)?;
     let case_files = crate::validate_path(&options.case_path)?;
+    let benchmark_documents = case_files
+        .iter()
+        .map(|case_file| {
+            let yaml = fs::read_to_string(case_file)
+                .with_context(|| format!("read benchmark cases {}", case_file.display()))?;
+            let document = serde_yaml::from_str::<BenchmarkDocument>(&yaml)
+                .with_context(|| format!("deserialize benchmark cases {}", case_file.display()))?;
+            Ok((case_file.clone(), document))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    let requested_totals = requested_run_totals(
+        benchmark_documents.iter().map(|(_, document)| document),
+        options.include_unsupported,
+        options.case_id.as_deref(),
+    );
     let output = options.output.as_ref().map(|output| {
         if output.is_absolute() {
             output.clone()
@@ -194,6 +209,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         },
         completed: false,
         requested_case_files,
+        requested_totals,
         semantic_pack_runs: Vec::new(),
         environment,
         bifrost_repo: Some(bifrost_source),
@@ -205,13 +221,12 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         totals: RunTotals::default(),
         documents: Vec::new(),
     };
-    for case_file in &case_files {
-        let yaml = fs::read_to_string(case_file)
-            .with_context(|| format!("read benchmark cases {}", case_file.display()))?;
-        let document: BenchmarkDocument = serde_yaml::from_str(&yaml)
-            .with_context(|| format!("deserialize benchmark cases {}", case_file.display()))?;
+    if let Some(output) = &output {
+        write_report_atomic(&partial_report_path(output), &report)?;
+    }
+    for (case_file, document) in &benchmark_documents {
         let source_root =
-            match crate::evaluation::materialized_source_root(&document, &repo_root, &work_dir)? {
+            match crate::evaluation::materialized_source_root(document, &repo_root, &work_dir)? {
                 Some(source_root) => source_root,
                 None => prepare_source_root(&document.source, &repo_root, &work_dir)?,
             };
@@ -227,8 +242,8 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
                 )
             })
             .transpose()?;
-        let cases = run_document_cases(
-            &document,
+        let cases = match run_document_cases(
+            document,
             &source_root,
             &bifrost_binary,
             options.include_unsupported,
@@ -236,11 +251,37 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             options.scan_usages_max_duration_secs,
             options.case_id.as_deref(),
             semantic_pack.as_ref(),
-        )
-        .with_context(|| format!("run benchmark cases {}", case_file.display()))?;
+        ) {
+            Ok(cases) => cases,
+            Err(error) if is_snapshot_not_ready_error(&error) => {
+                let message = format!("{error:#}");
+                document
+                    .cases
+                    .iter()
+                    .filter(|case| {
+                        options
+                            .case_id
+                            .as_deref()
+                            .is_none_or(|case_id| case.id == case_id)
+                    })
+                    .map(|case| {
+                        runner_failure_case(
+                            case,
+                            options.include_unsupported,
+                            "workspace_snapshot_not_ready",
+                            &message,
+                        )
+                    })
+                    .collect()
+            }
+            Err(error) => {
+                return Err(error)
+                    .with_context(|| format!("run benchmark cases {}", case_file.display()));
+            }
+        };
         report.documents.push(DocumentRunReport {
             case_file: display_path(case_file),
-            language: document.language,
+            language: document.language.clone(),
             source_root: display_path(&source_root),
             corpus_partition: document.corpus.partition,
             corpus_selection: document.corpus.selection,
@@ -423,6 +464,9 @@ fn run_document_cases(
             include_definition_lookups,
             scan_usages_max_duration_secs,
         ));
+        if let Some(error) = session.take_snapshot_not_ready_error() {
+            return Err(error).context("Bifrost workspace readiness retries were exhausted");
+        }
     }
     Ok(reports)
 }
@@ -650,29 +694,8 @@ fn run_case_with_scan_duration(
     include_definition_lookups: bool,
     scan_usages_max_duration_secs: u64,
 ) -> CaseRunReport {
-    if let Some(unsupported) = &case.unsupported {
-        if !include_unsupported {
-            return CaseRunReport {
-                id: case.id.clone(),
-                status: CaseStatus::Unsupported,
-                expected_failure_reason: case
-                    .expected_failure
-                    .as_ref()
-                    .map(|expected_failure| expected_failure.reason.clone()),
-                not_planned_reason: case
-                    .not_planned
-                    .as_ref()
-                    .map(|not_planned| not_planned.reason.clone()),
-                unsupported_reason: Some(unsupported.reason.clone()),
-                declaration_to_usages: None,
-                usage_to_declaration: Vec::new(),
-                compatible_usage_to_declaration: Vec::new(),
-                required_destination_status: Some(RequiredDestinationStatus::Unsupported),
-                location_metrics: Some(LocationMetrics::default()),
-                type_lookups: Vec::new(),
-                diagnostics: Vec::new(),
-            };
-        }
+    if case.unsupported.is_some() && !include_unsupported {
+        return excluded_case(case, CaseStatus::Unsupported);
     }
 
     let mut diagnostics = Vec::new();
@@ -858,12 +881,22 @@ fn run_declaration_to_usages(
     let selector = match resolve_declaration_selector(session, declaration) {
         Ok(selector) => selector,
         Err(error) => {
+            let readiness_error = is_snapshot_not_ready_error(&error);
             diagnostics.push(RunDiagnostic {
-                kind: "symbol_resolution_failed".to_string(),
+                kind: if readiness_error {
+                    "workspace_snapshot_not_ready"
+                } else {
+                    "symbol_resolution_failed"
+                }
+                .to_string(),
                 message: format!("{error:#}"),
             });
             return DeclarationUsageReport {
-                status: CaseStatus::Failed,
+                status: if readiness_error {
+                    CaseStatus::Error
+                } else {
+                    CaseStatus::Failed
+                },
                 selector: None,
                 expected: expected.clone(),
                 expected_unproven: expected_unproven.clone(),
@@ -878,7 +911,12 @@ fn run_declaration_to_usages(
                 position_unverified: Vec::new(),
                 extra_usages: Vec::new(),
                 partial: false,
-                raw_statuses: vec!["symbol_resolution_failed".to_string()],
+                raw_statuses: vec![if readiness_error {
+                    "workspace_snapshot_not_ready"
+                } else {
+                    "symbol_resolution_failed"
+                }
+                .to_string()],
             };
         }
     };
@@ -2428,6 +2466,178 @@ mod tests {
     }
 
     #[test]
+    fn requested_totals_cover_the_full_authored_corpus() {
+        let mut case_files = Vec::new();
+        crate::collect_case_files(Path::new("benchmarks/cases"), &mut case_files).unwrap();
+        case_files.sort();
+        let documents = case_files
+            .into_iter()
+            .map(|path| {
+                let yaml = fs::read_to_string(&path).unwrap();
+                let document = serde_yaml::from_str::<BenchmarkDocument>(&yaml).unwrap();
+                (path, document)
+            })
+            .collect::<Vec<_>>();
+
+        let totals =
+            requested_run_totals(documents.iter().map(|(_, document)| document), false, None);
+
+        assert_eq!(totals.documents, 49);
+        assert_eq!(totals.authored_cases, 196);
+        assert_eq!(totals.planned_cases, 190);
+        assert_eq!(
+            totals.development_planned_cases + totals.evaluation_planned_cases,
+            totals.planned_cases
+        );
+    }
+
+    #[test]
+    fn exhausted_document_readiness_becomes_an_explicit_case_error() {
+        let case = benchmark_case();
+
+        let report = runner_failure_case(
+            &case,
+            false,
+            "workspace_snapshot_not_ready",
+            "readiness retries exhausted",
+        );
+
+        assert_eq!(report.id, case.id);
+        assert_eq!(report.status, CaseStatus::Error);
+        assert_eq!(
+            report.required_destination_status,
+            Some(RequiredDestinationStatus::Error)
+        );
+        assert_eq!(report.diagnostics[0].kind, "workspace_snapshot_not_ready");
+        assert!(report.diagnostics[0].message.contains("retries exhausted"));
+    }
+
+    #[test]
+    fn document_failure_preserves_cases_excluded_from_planned_totals() {
+        let planned = benchmark_case();
+        let mut not_planned = benchmark_case();
+        not_planned.id = "not-planned".to_string();
+        not_planned.not_planned = Some(crate::NotPlannedReason {
+            reason: "future work".to_string(),
+        });
+        let mut unsupported = benchmark_case();
+        unsupported.id = "unsupported".to_string();
+        unsupported.unsupported = Some(crate::UnsupportedReason {
+            reason: "not supported".to_string(),
+        });
+
+        let reports = [&planned, &not_planned, &unsupported]
+            .into_iter()
+            .map(|case| {
+                runner_failure_case(
+                    case,
+                    false,
+                    "workspace_snapshot_not_ready",
+                    "readiness retries exhausted",
+                )
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(reports[0].status, CaseStatus::Error);
+        assert_eq!(reports[1].status, CaseStatus::Error);
+        assert_eq!(reports[2].status, CaseStatus::Unsupported);
+        let totals = compute_totals(&[DocumentRunReport {
+            case_file: "mixed.yaml".to_string(),
+            language: "rust".to_string(),
+            source_root: "fixtures/rust".to_string(),
+            corpus_partition: crate::CorpusPartition::Development,
+            corpus_selection: crate::CorpusSelection::AnalyzerInformed,
+            ground_truth_status: crate::GroundTruthReviewStatus::LegacyUnattributed,
+            reference_policy: ReferencePolicy::BindingsOptional,
+            cases: reports,
+        }]);
+        assert_eq!(totals.cases, 1);
+        assert_eq!(totals.errors, 2);
+        assert_eq!(totals.not_planned, 0);
+        assert_eq!(totals.unsupported, 1);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn exhausted_readiness_checkpoints_failed_document_and_continues() {
+        use std::os::unix::fs::PermissionsExt;
+
+        fs::create_dir_all("target").unwrap();
+        let tempdir = tempfile::Builder::new()
+            .prefix("readiness-continuation-")
+            .tempdir_in("target")
+            .unwrap();
+        let cases = tempdir.path().join("cases");
+        fs::create_dir(&cases).unwrap();
+        fs::copy(
+            "benchmarks/cases/rust-baseline.yaml",
+            cases.join("01-rust.yaml"),
+        )
+        .unwrap();
+        fs::copy(
+            "benchmarks/cases/cpp-lsp-parity.yaml",
+            cases.join("02-cpp.yaml"),
+        )
+        .unwrap();
+        let fake_bifrost = tempdir.path().join("fake-bifrost.py");
+        fs::write(
+            &fake_bifrost,
+            format!(
+                r#"#!/usr/bin/env python3
+import json
+import sys
+
+root = sys.argv[sys.argv.index("--root") + 1]
+cold = root.endswith("fixtures/rust/baseline")
+for line in sys.stdin:
+    request = json.loads(line)
+    if "id" not in request:
+        continue
+    if request.get("method") == "initialize":
+        response = {{"jsonrpc": "2.0", "id": request["id"], "result": {{}}}}
+    elif cold:
+        response = {{"jsonrpc": "2.0", "id": request["id"], "error": {{"code": -32603, "message": {message:?}}}}}
+    else:
+        response = {{"jsonrpc": "2.0", "id": request["id"], "result": {{"structuredContent": {{}}}}}}
+    print(json.dumps(response), flush=True)
+"#,
+                message = "workspace snapshot was not ready within the request-wide time budget; retry after workspace initialization completes",
+            ),
+        )
+        .unwrap();
+        let mut permissions = fs::metadata(&fake_bifrost).unwrap().permissions();
+        permissions.set_mode(0o755);
+        fs::set_permissions(&fake_bifrost, permissions).unwrap();
+        let output = tempdir.path().join("run.json");
+        let mut options = RunBifrostOptions::with_defaults(cases.clone());
+        options.bifrost_binary = Some(fake_bifrost);
+        options.bifrost_resolved_commit = Some("a".repeat(40));
+        options.work_dir = tempdir.path().join("work");
+        options.output = Some(output.clone());
+
+        let report = run_bifrost(options).unwrap();
+
+        assert!(report.completed);
+        assert_eq!(report.case_files.len(), 2);
+        assert_eq!(report.documents.len(), 2);
+        assert!(report.documents[0]
+            .cases
+            .iter()
+            .all(|case| case.status == CaseStatus::Error));
+        assert_eq!(report.totals.errors, report.documents[0].cases.len());
+        assert_eq!(
+            report.documents[1].case_file,
+            display_path(&cases.join("02-cpp.yaml"))
+        );
+        let checkpoint: BifrostRunReport =
+            serde_json::from_slice(&fs::read(partial_report_path(&output)).unwrap()).unwrap();
+        assert!(!checkpoint.completed);
+        assert_eq!(checkpoint.case_files, report.case_files);
+        assert_eq!(checkpoint.documents.len(), 2);
+        assert_eq!(checkpoint.totals, report.totals);
+    }
+
+    #[test]
     fn serializes_report_with_stable_camel_case_fields() {
         let report = BifrostRunReport {
             usagebench_version: "0.1.0".to_string(),
@@ -2451,6 +2661,13 @@ mod tests {
             },
             completed: true,
             requested_case_files: vec!["benchmarks/cases/rust.yaml".to_string()],
+            requested_totals: crate::runners::RequestedRunTotals {
+                documents: 1,
+                authored_cases: 1,
+                planned_cases: 1,
+                development_planned_cases: 1,
+                evaluation_planned_cases: 0,
+            },
             semantic_pack_runs: Vec::new(),
             environment: super::super::ExecutionEnvironment {
                 operating_system: "linux".to_string(),
@@ -2567,6 +2784,9 @@ mod tests {
             "c".repeat(64)
         );
         assert_eq!(json["totals"]["passed"], 1);
+        assert_eq!(json["requestedTotals"]["documents"], 1);
+        assert_eq!(json["requestedTotals"]["authoredCases"], 1);
+        assert_eq!(json["requestedTotals"]["plannedCases"], 1);
         assert_eq!(json["totals"]["requiredDestinations"]["found"], 1);
         assert_eq!(
             json["documents"][0]["cases"][0]["requiredDestinationStatus"],
@@ -2576,6 +2796,17 @@ mod tests {
             json["documents"][0]["cases"][0]["declarationToUsages"]["unexpected"][0]["path"],
             "src/extra.rs"
         );
+        let mut legacy_json = json.clone();
+        legacy_json
+            .as_object_mut()
+            .unwrap()
+            .remove("requestedTotals");
+        let legacy_report: BifrostRunReport = serde_json::from_value(legacy_json).unwrap();
+        assert_eq!(
+            legacy_report.requested_totals,
+            crate::runners::RequestedRunTotals::default()
+        );
+        assert!(serde_json::to_value(&legacy_report).unwrap()["requestedTotals"].is_null());
 
         let tempdir = tempfile::tempdir().unwrap();
         let final_output = tempdir.path().join("run.json");

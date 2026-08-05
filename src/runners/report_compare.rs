@@ -517,6 +517,13 @@ mod tests {
             },
             completed: true,
             requested_case_files: vec!["benchmarks/cases/rust-baseline.yaml".to_string()],
+            requested_totals: super::super::RequestedRunTotals {
+                documents: 1,
+                authored_cases: 1,
+                planned_cases: 1,
+                development_planned_cases: 1,
+                evaluation_planned_cases: 0,
+            },
             semantic_pack_runs: Vec::new(),
             environment: super::super::ExecutionEnvironment {
                 operating_system: "linux".to_string(),

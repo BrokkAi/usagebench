@@ -2,13 +2,13 @@ use super::bifrost::{command_output_with_timeout, prepare_source_root};
 use super::lsp_protocol::{InitializeResult, LspSession};
 use super::{
     case_location_metrics, combine_case_status, compute_totals, location_match,
-    navigation_response_status, normalize_symbol_location, path_to_slash,
-    required_destination_status, score_declaration_locations, score_navigation_response,
-    symbol_kind_name, CapabilitySupport, CaseRunReport, CaseStatus, ClassifiedExtraUsage,
-    CompatibleUsageDefinitionReport, DeclarationUsageReport, DocumentRunReport,
-    ExtraUsageClassification, ExtraUsageDisposition, LocationMatch, LocationMetrics,
-    NormalizedLocation, RequiredDestinationStatus, RunDiagnostic, RunInvocation, RunReport,
-    RunTotals, RunnerCapability, RunnerMetadata, RunnerOperation, TypeLookupReport,
+    navigation_response_status, normalize_symbol_location, path_to_slash, requested_run_totals,
+    required_destination_status, runner_failure_case, score_declaration_locations,
+    score_navigation_response, symbol_kind_name, CapabilitySupport, CaseRunReport, CaseStatus,
+    ClassifiedExtraUsage, CompatibleUsageDefinitionReport, DeclarationUsageReport,
+    DocumentRunReport, ExtraUsageClassification, ExtraUsageDisposition, LocationMatch,
+    LocationMetrics, NormalizedLocation, RequiredDestinationStatus, RunDiagnostic, RunInvocation,
+    RunReport, RunnerCapability, RunnerMetadata, RunnerOperation, TypeLookupReport,
     UsageDefinitionReport,
 };
 use crate::{
@@ -132,6 +132,24 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
     let profile_sha256 = format!("{:x}", Sha256::digest(fs::read(&profile_path)?));
     validate_profile(&profile)?;
     let case_files = crate::validate_path(&options.case_path)?;
+    let benchmark_documents = case_files
+        .iter()
+        .map(|case_file| {
+            let yaml = fs::read_to_string(case_file)
+                .with_context(|| format!("read benchmark cases {}", case_file.display()))?;
+            let document = serde_yaml::from_str::<BenchmarkDocument>(&yaml)
+                .with_context(|| format!("deserialize benchmark cases {}", case_file.display()))?;
+            Ok((case_file.clone(), document))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    let requested_totals = requested_run_totals(
+        benchmark_documents
+            .iter()
+            .filter(|(_, document)| profile.languages.contains(&document.language))
+            .map(|(_, document)| document),
+        options.include_unsupported,
+        options.case_id.as_deref(),
+    );
     let work_dir = if options.work_dir.is_absolute() {
         options.work_dir.clone()
     } else {
@@ -150,18 +168,14 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
     let mut observed_capabilities = None;
     let mut observed_executable = None;
     let mut executed_case_files = Vec::new();
-    for (index, case_file) in case_files.iter().enumerate() {
-        let yaml = fs::read_to_string(case_file)
-            .with_context(|| format!("read benchmark cases {}", case_file.display()))?;
-        let document: BenchmarkDocument = serde_yaml::from_str(&yaml)
-            .with_context(|| format!("deserialize benchmark cases {}", case_file.display()))?;
+    for (index, (case_file, document)) in benchmark_documents.iter().enumerate() {
         if !profile.languages.contains(&document.language) {
             continue;
         }
         executed_case_files.push(display_path(case_file));
 
         let source =
-            match crate::evaluation::materialized_source_root(&document, &repo_root, &run_dir)? {
+            match crate::evaluation::materialized_source_root(document, &repo_root, &run_dir)? {
                 Some(source) => source,
                 None => prepare_source_root(&document.source, &repo_root, &run_dir)?,
             };
@@ -171,7 +185,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         match run_document(
             &options,
             &profile,
-            &document,
+            document,
             &source_root,
             &run_dir,
             &mut observed_executable,
@@ -188,7 +202,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
                     .get_or_insert_with(|| capabilities_from_initialize(&initialize.capabilities));
                 documents.push(DocumentRunReport {
                     case_file: display_path(case_file),
-                    language: document.language,
+                    language: document.language.clone(),
                     source_root: display_path(&source_root),
                     corpus_partition: document.corpus.partition,
                     corpus_selection: document.corpus.selection,
@@ -201,7 +215,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
                 let message = format!("{error:#}");
                 documents.push(DocumentRunReport {
                     case_file: display_path(case_file),
-                    language: document.language,
+                    language: document.language.clone(),
                     source_root: display_path(&source_root),
                     corpus_partition: document.corpus.partition,
                     corpus_selection: document.corpus.selection,
@@ -210,7 +224,20 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
                     cases: document
                         .cases
                         .iter()
-                        .map(|case| error_case(case, "lsp_session_failed", &message))
+                        .filter(|case| {
+                            options
+                                .case_id
+                                .as_deref()
+                                .is_none_or(|case_id| case.id == case_id)
+                        })
+                        .map(|case| {
+                            runner_failure_case(
+                                case,
+                                options.include_unsupported,
+                                "lsp_session_failed",
+                                &message,
+                            )
+                        })
                         .collect(),
                 });
             }
@@ -237,7 +264,8 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         usagebench_provenance.release.as_deref(),
     )?;
     let requested_case_files = executed_case_files.clone();
-    let mut report = RunReport {
+    let totals = compute_totals(&documents);
+    let report = RunReport {
         usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
         usagebench_revision: usagebench_provenance.revision,
         usagebench_release: usagebench_provenance.release,
@@ -280,6 +308,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         },
         completed: true,
         requested_case_files,
+        requested_totals,
         semantic_pack_runs: Vec::new(),
         environment,
         bifrost_repo: None,
@@ -288,10 +317,9 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         started_at_unix_seconds: started_at,
         finished_at_unix_seconds: unix_seconds_now()?,
         case_files: executed_case_files,
-        totals: RunTotals::default(),
+        totals,
         documents,
     };
-    report.totals = compute_totals(&report.documents);
     if let Some(output) = &options.output {
         let output = if output.is_absolute() {
             output.clone()
@@ -1405,26 +1433,6 @@ fn copy_source_tree(source: &Path, destination: &Path) -> Result<()> {
         }
     }
     Ok(())
-}
-
-fn error_case(case: &BenchmarkCase, kind: &str, message: &str) -> CaseRunReport {
-    CaseRunReport {
-        id: case.id.clone(),
-        status: CaseStatus::Error,
-        expected_failure_reason: None,
-        not_planned_reason: case.not_planned.as_ref().map(|item| item.reason.clone()),
-        unsupported_reason: case.unsupported.as_ref().map(|item| item.reason.clone()),
-        declaration_to_usages: None,
-        usage_to_declaration: Vec::new(),
-        compatible_usage_to_declaration: Vec::new(),
-        required_destination_status: Some(RequiredDestinationStatus::Error),
-        location_metrics: Some(LocationMetrics::default()),
-        type_lookups: Vec::new(),
-        diagnostics: vec![RunDiagnostic {
-            kind: kind.to_string(),
-            message: message.to_string(),
-        }],
-    }
 }
 
 fn unsupported_definition_report(lookup: &UsageLookup, raw_status: &str) -> UsageDefinitionReport {
