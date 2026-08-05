@@ -1359,7 +1359,12 @@ struct SearchSymbolsFile {
 impl SearchSymbolsFile {
     fn hits_for_kind(&self, kind: &SymbolKind) -> Vec<SearchSymbolHit> {
         match kind {
-            SymbolKind::Class | SymbolKind::Interface | SymbolKind::Type => self.classes.clone(),
+            SymbolKind::Class | SymbolKind::Interface => self.classes.clone(),
+            SymbolKind::Type => {
+                let mut hits = self.classes.clone();
+                hits.extend(self.fields.iter().filter(|hit| hit.is_type_alias).cloned());
+                hits
+            }
             SymbolKind::Constructor => self.functions.clone(),
             SymbolKind::Method | SymbolKind::Function => self.functions.clone(),
             SymbolKind::Field
@@ -1374,6 +1379,8 @@ impl SearchSymbolsFile {
 #[derive(Debug, Clone, Deserialize)]
 struct SearchSymbolHit {
     symbol: String,
+    #[serde(default)]
+    is_type_alias: bool,
     line: usize,
 }
 
@@ -3835,6 +3842,125 @@ mod tests {
     }
 
     #[test]
+    fn typescript_type_alias_resolves_from_fields_bucket() {
+        let (report, client) = run_typescript_type_case(
+            json!([{
+                "symbol": "events.ts.EventValue",
+                "signature": "export type EventValue<T> = Promise<T>;",
+                "line": 30,
+                "is_type_alias": true
+            }]),
+            vec![tool(
+                "scan_usages_by_location",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            )],
+        );
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(
+            report.declaration_to_usages.unwrap().selector.as_deref(),
+            Some("events.ts.EventValue")
+        );
+        assert_eq!(client.calls[1].0, "scan_usages_by_location");
+    }
+
+    #[test]
+    fn ordinary_and_legacy_fields_are_not_resolved_as_types() {
+        let (report, client) = run_typescript_type_case(
+            json!([
+                {
+                    "symbol": "events.ts.EventValue",
+                    "signature": "export const EventValue = Promise.resolve();",
+                    "line": 30,
+                    "is_type_alias": false
+                },
+                {
+                    "symbol": "legacy.EventValue",
+                    "signature": "const EventValue = Promise.resolve();",
+                    "line": 30
+                }
+            ]),
+            Vec::new(),
+        );
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(report.diagnostics[0].kind, "symbol_resolution_failed");
+        assert_eq!(client.calls.len(), 1);
+    }
+
+    #[test]
+    fn ambiguous_typescript_type_alias_fields_fail_resolution() {
+        let (report, client) = run_typescript_type_case(
+            json!([
+                {
+                    "symbol": "a.EventValue",
+                    "signature": "type EventValue = string;",
+                    "line": 30,
+                    "is_type_alias": true
+                },
+                {
+                    "symbol": "b.EventValue",
+                    "signature": "declare type EventValue = number;",
+                    "line": 30,
+                    "is_type_alias": true
+                }
+            ]),
+            Vec::new(),
+        );
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(report.diagnostics[0].kind, "symbol_resolution_failed");
+        assert_eq!(client.calls.len(), 1);
+    }
+
+    #[test]
+    fn class_interface_and_type_alias_buckets_remain_compatible() {
+        let file = SearchSymbolsFile {
+            path: "src/events.ts".to_string(),
+            classes: vec![SearchSymbolHit {
+                symbol: "events.EventValue".to_string(),
+                is_type_alias: false,
+                line: 30,
+            }],
+            functions: Vec::new(),
+            fields: vec![SearchSymbolHit {
+                symbol: "events.EventAlias".to_string(),
+                is_type_alias: true,
+                line: 31,
+            }],
+            modules: Vec::new(),
+            macros: Vec::new(),
+        };
+
+        for kind in [SymbolKind::Class, SymbolKind::Interface] {
+            let symbols = file
+                .hits_for_kind(&kind)
+                .into_iter()
+                .map(|hit| hit.symbol)
+                .collect::<Vec<_>>();
+            assert_eq!(symbols, vec!["events.EventValue"]);
+        }
+
+        let type_symbols = file
+            .hits_for_kind(&SymbolKind::Type)
+            .into_iter()
+            .map(|hit| hit.symbol)
+            .collect::<Vec<_>>();
+        assert_eq!(type_symbols, vec!["events.EventValue", "events.EventAlias"]);
+
+        let non_typescript = SearchSymbolsFile {
+            path: "src/events.rs".to_string(),
+            ..file
+        };
+        let symbols = non_typescript
+            .hits_for_kind(&SymbolKind::Type)
+            .into_iter()
+            .map(|hit| hit.symbol)
+            .collect::<Vec<_>>();
+        assert_eq!(symbols, vec!["events.EventValue", "events.EventAlias"]);
+    }
+
+    #[test]
     fn declaration_resolution_accepts_dollar_namespace_separator() {
         let mut case = benchmark_case();
         case.declaration = Some(symbol_location(
@@ -4101,6 +4227,46 @@ mod tests {
             unsupported: None,
             verification: None,
         }
+    }
+
+    fn run_typescript_type_case(
+        fields: Value,
+        additional_responses: Vec<(String, Value)>,
+    ) -> (CaseRunReport, MockClient) {
+        let mut case = benchmark_case();
+        case.declaration = Some(symbol_location(
+            "src/events.ts",
+            29,
+            7,
+            "EventValue",
+            SymbolKind::Type,
+        ));
+        let mut responses = vec![tool(
+            "search_symbols",
+            json!({
+                "files": [{
+                    "path": "src/events.ts",
+                    "loc": 40,
+                    "classes": [],
+                    "functions": [],
+                    "fields": fields,
+                    "modules": [],
+                    "macros": []
+                }]
+            }),
+        )];
+        responses.extend(additional_responses);
+        let mut client = MockClient::new(responses);
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
+        (report, client)
     }
 
     fn symbol_location(
