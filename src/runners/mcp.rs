@@ -1,6 +1,8 @@
 use anyhow::{anyhow, bail, Context, Result};
 use serde_json::{json, Value};
 use std::{
+    error::Error as StdError,
+    fmt,
     io::{BufRead, BufReader, Read, Write},
     process::{Child, ChildStdin, Command, Stdio},
     sync::{
@@ -16,6 +18,53 @@ use std::{
 // runner's ten-minute process envelope so cold-workspace cleanup cannot turn
 // structured incomplete evidence into a client-side timeout.
 const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(10 * 60);
+const SNAPSHOT_NOT_READY_CODE: i64 = -32603;
+const SNAPSHOT_NOT_READY_MESSAGE: &str =
+    "workspace snapshot was not ready within the request-wide time budget; retry after workspace initialization completes";
+const SNAPSHOT_NOT_READY_RETRY_DELAYS: [Duration; 3] = [
+    Duration::from_secs(1),
+    Duration::from_secs(2),
+    Duration::from_secs(4),
+];
+
+#[derive(Debug, Clone)]
+struct McpResponseError {
+    label: String,
+    tool: String,
+    code: i64,
+    message: String,
+    data: Option<Value>,
+}
+
+impl McpResponseError {
+    fn is_snapshot_not_ready(&self) -> bool {
+        self.code == SNAPSHOT_NOT_READY_CODE && self.message == SNAPSHOT_NOT_READY_MESSAGE
+    }
+}
+
+impl fmt::Display for McpResponseError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            formatter,
+            "{} MCP request failed for `{}`: code {}: {}",
+            self.label, self.tool, self.code, self.message
+        )?;
+        if let Some(data) = &self.data {
+            write!(formatter, "; data: {data}")?;
+        }
+        Ok(())
+    }
+}
+
+impl StdError for McpResponseError {}
+
+pub(crate) fn is_snapshot_not_ready_error(error: &anyhow::Error) -> bool {
+    error.chain().any(|cause| {
+        cause
+            .downcast_ref::<McpResponseError>()
+            .is_some_and(McpResponseError::is_snapshot_not_ready)
+    })
+}
 
 pub(crate) trait ToolClient {
     fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value>;
@@ -27,6 +76,7 @@ pub(crate) struct McpSession {
     stdin: ChildStdin,
     stdout_lines: Receiver<Result<String, String>>,
     next_id: u64,
+    snapshot_not_ready: Option<McpResponseError>,
 }
 
 impl McpSession {
@@ -91,6 +141,7 @@ impl McpSession {
             stdin,
             stdout_lines,
             next_id: 1,
+            snapshot_not_ready: None,
         })
     }
 
@@ -162,6 +213,31 @@ fn read_json_rpc_response(
 
 impl ToolClient for McpSession {
     fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value> {
+        if let Some(error) = &self.snapshot_not_ready {
+            return Err(error.clone().into());
+        }
+        let result = retry_snapshot_not_ready(
+            || self.call_tool_once(name, arguments.clone()),
+            thread::sleep,
+        );
+        if let Err(error) = &result {
+            self.snapshot_not_ready = error.chain().find_map(|cause| {
+                cause
+                    .downcast_ref::<McpResponseError>()
+                    .filter(|error| error.is_snapshot_not_ready())
+                    .cloned()
+            });
+        }
+        result
+    }
+}
+
+impl McpSession {
+    pub(crate) fn take_snapshot_not_ready_error(&mut self) -> Option<anyhow::Error> {
+        self.snapshot_not_ready.take().map(Into::into)
+    }
+
+    fn call_tool_once(&mut self, name: &str, arguments: Value) -> Result<Value> {
         let id = self.next_id;
         self.next_id += 1;
         let response = self.request(json!({
@@ -174,6 +250,18 @@ impl ToolClient for McpSession {
             }
         }))?;
         if let Some(error) = response.get("error") {
+            let code = error.get("code").and_then(Value::as_i64);
+            let message = error.get("message").and_then(Value::as_str);
+            if let (Some(code), Some(message)) = (code, message) {
+                return Err(McpResponseError {
+                    label: self.label.clone(),
+                    tool: name.to_string(),
+                    code,
+                    message: message.to_string(),
+                    data: error.get("data").cloned(),
+                }
+                .into());
+            }
             bail!("{} MCP request failed for `{name}`: {error}", self.label);
         }
         let result = response
@@ -199,6 +287,27 @@ impl ToolClient for McpSession {
                 self.label
             )
         })
+    }
+}
+
+fn retry_snapshot_not_ready<T>(
+    mut operation: impl FnMut() -> Result<T>,
+    mut sleep: impl FnMut(Duration),
+) -> Result<T> {
+    for delay in SNAPSHOT_NOT_READY_RETRY_DELAYS {
+        match operation() {
+            Err(error) if is_snapshot_not_ready_error(&error) => sleep(delay),
+            result => return result,
+        }
+    }
+    match operation() {
+        Err(error) if is_snapshot_not_ready_error(&error) => Err(error).with_context(|| {
+            format!(
+                "workspace readiness retries exhausted after {} attempts",
+                SNAPSHOT_NOT_READY_RETRY_DELAYS.len() + 1
+            )
+        }),
+        result => result,
     }
 }
 
@@ -244,5 +353,129 @@ mod tests {
         let response = read_json_rpc_response(&receiver, json!(7), "test").unwrap();
 
         assert_eq!(response["result"]["ok"], true);
+    }
+
+    fn snapshot_not_ready_error() -> anyhow::Error {
+        McpResponseError {
+            label: "Bifrost".to_string(),
+            tool: "search_symbols".to_string(),
+            code: SNAPSHOT_NOT_READY_CODE,
+            message: SNAPSHOT_NOT_READY_MESSAGE.to_string(),
+            data: None,
+        }
+        .into()
+    }
+
+    #[test]
+    fn retries_snapshot_not_ready_then_succeeds() {
+        let mut attempts = 0;
+        let mut delays = Vec::new();
+
+        let value = retry_snapshot_not_ready(
+            || {
+                attempts += 1;
+                if attempts < 3 {
+                    Err(snapshot_not_ready_error())
+                } else {
+                    Ok("ready")
+                }
+            },
+            |delay| delays.push(delay),
+        )
+        .unwrap();
+
+        assert_eq!(value, "ready");
+        assert_eq!(attempts, 3);
+        assert_eq!(delays, SNAPSHOT_NOT_READY_RETRY_DELAYS[..2]);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn retried_tool_calls_use_fresh_request_ids() {
+        let mut child = Command::new("sh")
+            .arg("-c")
+            .arg("cat >/dev/null")
+            .stdin(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let stdin = child.stdin.take().unwrap();
+        let (sender, receiver) = mpsc::channel();
+        sender
+            .send(Ok(format!(
+                r#"{{"jsonrpc":"2.0","id":1,"error":{{"code":{SNAPSHOT_NOT_READY_CODE},"message":"{SNAPSHOT_NOT_READY_MESSAGE}"}}}}"#
+            )))
+            .unwrap();
+        sender
+            .send(Ok(
+                r#"{"jsonrpc":"2.0","id":2,"result":{"structuredContent":{"ready":true}}}"#
+                    .to_string(),
+            ))
+            .unwrap();
+        let mut session = McpSession {
+            label: "Bifrost".to_string(),
+            child,
+            stdin,
+            stdout_lines: receiver,
+            next_id: 1,
+            snapshot_not_ready: None,
+        };
+
+        let result = retry_snapshot_not_ready(
+            || session.call_tool_once("search_symbols", json!({})),
+            |_| {},
+        )
+        .unwrap();
+
+        assert_eq!(result["ready"], true);
+        assert_eq!(session.next_id, 3);
+    }
+
+    #[test]
+    fn exhausts_bounded_snapshot_not_ready_retries() {
+        let mut attempts = 0;
+
+        let error = retry_snapshot_not_ready(
+            || {
+                attempts += 1;
+                Err::<(), _>(snapshot_not_ready_error())
+            },
+            |_| {},
+        )
+        .unwrap_err();
+
+        assert!(is_snapshot_not_ready_error(&error));
+        assert_eq!(attempts, SNAPSHOT_NOT_READY_RETRY_DELAYS.len() + 1);
+        assert!(format!("{error:#}").contains("retries exhausted after 4 attempts"));
+    }
+
+    #[test]
+    fn does_not_retry_other_internal_errors_or_similar_messages() {
+        for error in [
+            McpResponseError {
+                label: "Bifrost".to_string(),
+                tool: "search_symbols".to_string(),
+                code: SNAPSHOT_NOT_READY_CODE,
+                message: "different internal error".to_string(),
+                data: None,
+            },
+            McpResponseError {
+                label: "Bifrost".to_string(),
+                tool: "search_symbols".to_string(),
+                code: -32000,
+                message: SNAPSHOT_NOT_READY_MESSAGE.to_string(),
+                data: None,
+            },
+        ] {
+            let mut attempts = 0;
+            let result = retry_snapshot_not_ready(
+                || {
+                    attempts += 1;
+                    Err::<(), _>(error.clone().into())
+                },
+                |_| panic!("non-readiness errors must not sleep"),
+            );
+            assert!(result.is_err());
+            assert_eq!(attempts, 1);
+        }
     }
 }

@@ -2037,6 +2037,13 @@ mod tests {
             },
             completed: true,
             requested_case_files: vec!["benchmarks/cases/sample.yaml".to_string()],
+            requested_totals: crate::runners::RequestedRunTotals {
+                documents: 1,
+                authored_cases: cases.len(),
+                planned_cases: cases.len(),
+                development_planned_cases: cases.len(),
+                evaluation_planned_cases: 0,
+            },
             semantic_pack_runs: Vec::new(),
             environment: ExecutionEnvironment {
                 operating_system: "linux".to_string(),
