@@ -30,10 +30,16 @@ not satisfy the second-reviewer, preregistration, and freeze requirements for
 evaluation promotion.
 
 Expected locations should still be verified by reading the checked-in fixture
-source and recorded with `verification.method: manual_inspection`. Promotion to
-`evaluation` additionally requires `selection: pre_registered`, a non-empty
-`freezeId`, `groundTruth.status: independently_reviewed`, and at least two named
-reviewers. Validation enforces those requirements.
+source and recorded with `verification.method: manual_inspection`. Evaluation
+authoring additionally requires `selection: pre_registered`, a non-empty
+`freezeId`, and linked review evidence. Publication requires either genuinely
+independent human review or `human_adjudicated_agent_panel`: one accountable
+human plus blinded agents from at least two providers. `agent_reviewed` material
+is valid for authoring and diagnosis but rejected by the freeze path.
+
+The reusable blind prompt, response schema, consensus rules, and pilots live in
+`benchmarks/review-protocol/`. Agent judgments disclose provider and model and
+remain distinct from human evidence.
 
 Evaluation cases also bind their assertions to four repository-relative,
 content-addressed records. This prevents post-hoc repository choice, source
@@ -52,8 +58,8 @@ corpus:
 
 - The selection manifest hashes the protocol that defines the eligible
   population, sampling rule, target language/profile strata, and claim scope.
-- The review manifest hashes the selection and the two independent reviewer
-  records plus their adjudication.
+- The review manifest hashes the selection, typed reviewer records, prompt and
+  response-schema inputs, raw responses, and accountable adjudication.
 - The source lock hashes a `git archive` materialization for each selected,
   exact 40-character commit. Validation checks both the archive digest and its
   embedded Git commit; canonical execution consumes that checked source

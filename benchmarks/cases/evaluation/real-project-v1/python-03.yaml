@@ -7,7 +7,7 @@ corpus:
   reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
   sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
 groundTruth:
-  status: "independently_reviewed"
+  status: "agent_reviewed"
   reviewers:
     - "codex-source-reviewer-a"
     - "codex-source-reviewer-b"

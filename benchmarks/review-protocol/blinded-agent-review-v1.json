@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "prompt": {
+    "file": "benchmarks/review-protocol/blinded-agent-prompt-v1.md",
+    "sha256": "0cdc944e5aeae22e7548dcae88718b161755e944df581b88e053f6a193d5516c"
+  },
+  "responseSchema": {
+    "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+    "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+  }
+}

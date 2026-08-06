@@ -138,7 +138,7 @@
       "properties": {
         "status": {
           "type": "string",
-          "enum": ["legacy_unattributed", "author_reviewed", "independently_reviewed"]
+          "enum": ["legacy_unattributed", "author_reviewed", "agent_reviewed", "human_adjudicated_agent_panel", "independently_reviewed"]
         },
         "reviewers": {
           "type": "array",

@@ -40,9 +40,11 @@ from the commit alone.
 
 Only documents marked `corpus.partition: evaluation` belong in a published
 accuracy aggregate. Validation requires those documents to be pre-registered,
-independently reviewed by at least two named reviewers, and assigned a
-`freezeId`. Any assertion change after review creates a new freeze and at least
-a minor corpus release; the prior report and freeze remain available.
+assigned a `freezeId`, and supported either by independent human review or by
+one accountable human adjudicating a blinded panel spanning at least two model
+providers. Agent-only review is never publication-qualifying. Any assertion
+change after review creates a new freeze and at least a minor corpus release;
+the prior report and freeze remain available.
 
 ## Release contents
 

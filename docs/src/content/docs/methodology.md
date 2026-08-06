@@ -6,8 +6,10 @@ description: Classify observed differences without overclaiming analyzer defects
 UsageBench reports required-destination recall first, strict contract agreement
 second, and causal interpretation third. The fixture-backed development corpus
 has completed one human source review. The separate 36-case `real-project-v1`
-slice is preregistered, source-locked, independently reviewed, and adjudicated
-evaluation ground truth; analyzer results for it have not yet been published.
+slice is preregistered, source-locked, agent-reviewed, and adjudicated source
+evidence; it is not publication-eligible until a cross-provider panel and
+accountable human adjudication are recorded. Analyzer results for it have not
+yet been published.
 An analyzer may also expose a different public grouping policy without
 containing an implementation bug.
 
@@ -190,13 +192,18 @@ not change their `development`, `analyzer_informed`, or
 [human ground-truth audit](../ground-truth-review/) for coverage, procedure, and
 the precise trust boundary.
 
-An evaluation document is accepted only when all of these are true:
+An evaluation document may be authored with agent-only evidence, but a public
+evaluation freeze is accepted only when all of these are true:
 
 1. case selection was pre-registered before running the compared analyzers;
 2. the document has an immutable `freezeId`;
-3. at least two named reviewers independently checked source locations; and
-4. disagreements were adjudicated before the freeze; and
-5. the selection, reviews, and exact public Git source are bound by hashed
+3. either at least two humans independently checked source locations, or one
+   accountable human adjudicated blinded agents from at least two providers;
+4. agent reviewers disclose provider, model, prompt/schema hashes, and raw
+   responses and are never represented as human reviewers;
+5. disagreements, abstentions, ambiguity, replacements, and non-high confidence
+   were adjudicated before the freeze; and
+6. the selection, reviews, and exact public Git source are bound by hashed
    manifests, including a source-lock entry for the offline materialization.
 
 The protocol comes first: it records the target language/profile strata,
@@ -215,8 +222,11 @@ and three declarations for each of the gopls, Pyright, and TypeScript LS
 profiles: 12 repositories and 36 cases in total. Published evaluation pages
 must show those per-profile denominators, the recorded population exclusions
 and source-review replacements, the freeze ID and claim scope, and the hashed
-protocol, selection, review, and source-lock provenance. Evaluation tables are
-descriptive only: they exclude language-wide or ecosystem-wide estimates,
+protocol, selection, review, and source-lock provenance. Its historical review
+used two same-provider Codex agents and is classified as `agent_reviewed`; it
+cannot be publicly frozen until a qualifying cross-provider panel and
+accountable human adjudication are recorded. Evaluation tables are descriptive
+only: they exclude language-wide or ecosystem-wide estimates,
 cross-language ranking, causal defect attribution, and latency, memory, or
 cold-start claims.
 

@@ -62,9 +62,11 @@ belongs in the immutable population commit.
    with portable `benchmark://source/...` locations. Each document must point
    at `selection.json`, `review.json`, and `sources.json` through its corpus
    metadata.
-5. Have two reviewers independently derive the expected locations from the
-   source archive, record their signed review artifacts, adjudicate differences,
-   and hash those records in `review.json`.
+5. Have two Codex agents independently derive the expected locations from the
+   source archive, preserve their review artifacts, adjudicate differences,
+   and hash those records in `review.json`. This historical review predates the
+   typed agent-panel protocol and is `agent_reviewed`, not independent human
+   review.
 6. Run `cargo run -- validate-evaluation benchmarks/cases/evaluation/real-project-v1`
    before any Bifrost or reference-LSP execution.
 
@@ -77,10 +79,13 @@ analyzer. The release order is:
    independent review records, and adjudication evidence.
 2. Run
    `cargo run -- validate-evaluation benchmarks/cases/evaluation/real-project-v1`.
-3. Run **Native two-host reproduction** at the exact release revision for only
+3. Complete a schema-v2 review with one accountable human adjudicator and
+   blinded agents from at least two providers. The historical same-provider
+   Codex evidence is useful review material but cannot qualify a public freeze.
+4. Run **Native two-host reproduction** at the exact release revision for only
    `pyright` and `typescript-language-server`, and retain its accepted evidence
    artifact.
-4. Run **Freeze benchmark snapshot** with snapshot kind `evaluation`, corpus
+5. Run **Freeze benchmark snapshot** with snapshot kind `evaluation`, corpus
    `benchmarks/cases/evaluation/real-project-v1`, candidates
    `bifrost,gopls,pyright,typescript-language-server`, and the native-evidence
    workflow run ID.
@@ -95,8 +100,10 @@ these 12 source-only sampled repositories, 36 declarations, and the References
 and Definition operations. It does not support language-wide or ecosystem-wide
 estimates, cross-language rankings, causal defect claims, or latency, memory,
 and cold-start claims. It does not turn the development fixture corpus into a
-sampled evaluation set. The corpus and audit evidence are checked in; analyzer
-results have not yet been published.
+sampled evaluation set. The corpus and historical agent-review evidence are
+checked in; analyzer results have not yet been published. Freeze validation
+rejects this slice until qualifying human-adjudicated, cross-provider evidence
+exists.
 
 ## Declaration draw
 
