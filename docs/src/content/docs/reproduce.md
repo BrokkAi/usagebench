@@ -223,7 +223,7 @@ The candidate contract also requires the server-reported version to begin with
 For `real-project-v1`, keep the evidence boundary and execution order explicit:
 
 1. materialize Git LFS, then verify the source lock, preregistered selection,
-   independent review records, and adjudication evidence;
+   typed review records, and adjudication evidence;
 2. run
    `cargo run -- validate-evaluation benchmarks/cases/evaluation/real-project-v1`;
 3. collect accepted two-host evidence for Pyright and TypeScript LS at the exact
@@ -242,8 +242,10 @@ latency, memory, and cold-start claims.
 The checked-in fixture cases remain a development and diagnosis corpus. All 158
 have completed a first human review, but retain `legacy_unattributed`
 ground-truth metadata. The separate `real-project-v1` evaluation partition has
-36 preregistered, independently reviewed, adjudicated, source-locked cases.
-Its analyzer results have not yet been published. Container reproducibility
+36 preregistered, historically agent-reviewed, adjudicated, source-locked cases.
+It still requires a qualifying cross-provider panel and accountable human
+adjudication before publication. Its analyzer results have not yet been
+published. Container reproducibility
 makes execution repeatable; it does not by itself upgrade review status.
 
 See the [human ground-truth audit](../ground-truth-review/) for the review

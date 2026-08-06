@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "pilotId": "real-project-v1-agent-panel-pilot-v1",
+  "freezeId": "real-project-v1",
+  "prompt": "benchmarks/review-protocol/blinded-agent-prompt-v1.md",
+  "responseSchema": "benchmarks/review-protocol/agent-response-v1.schema.json",
+  "minimumProviders": 2,
+  "requiredProviders": ["openai", "anthropic"],
+  "humanAdjudicator": "DavidBakerEffendi",
+  "selectionBasis": "Two cases per profile, with one prior exact-agreement case and one case that previously required source-only adjudication.",
+  "cases": [
+    { "caseId": "real-project-v1-go-01-1", "stratum": "prior_exact_agreement" },
+    { "caseId": "real-project-v1-go-01-2", "stratum": "prior_adjudication" },
+    { "caseId": "real-project-v1-python-01-3", "stratum": "prior_exact_agreement" },
+    { "caseId": "real-project-v1-python-01-1", "stratum": "prior_adjudication" },
+    { "caseId": "real-project-v1-typescript-01-1", "stratum": "prior_exact_agreement" },
+    { "caseId": "real-project-v1-typescript-01-2", "stratum": "prior_adjudication" }
+  ],
+  "escalation": {
+    "automaticConsensusRequires": "Exact normalized agreement, high confidence, no abstention, no ambiguity, and no replacement proposal from every agent.",
+    "humanCaseAdjudicationRequiredFor": ["disagreement", "abstention", "ambiguity", "replacement", "medium_or_low_confidence", "missing_or_additional_location"],
+    "humanSignoffRequiredForAllCases": true
+  },
+  "measurements": ["exactAgreementRate", "escalationRate", "confidenceCalibration", "humanMinutes", "agentCost", "protocolDefects"]
+}

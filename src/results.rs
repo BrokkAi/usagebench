@@ -1153,6 +1153,7 @@ mod tests {
         evaluation::{
             EvaluationArtifactLink, EvaluationAuditArtifacts, EvaluationReleaseAudit,
             EvaluationReviewArtifact, EvaluationSelectionAudit, EvaluationTargetProfile,
+            ReviewTierAudit,
         },
         freeze::{
             FreezeManifest, ManifestCandidate, ManifestDocument, ManifestReport, ScoringContract,
@@ -1921,15 +1922,30 @@ mod tests {
                 review: artifact.clone(),
                 source_lock: artifact,
             },
+            review_tier: ReviewTierAudit::HumanAdjudicatedAgentPanel,
+            review_protocol: EvaluationArtifactLink {
+                file: "benchmarks/review-protocol/blinded-agent-review-v1.json".to_string(),
+                sha256: "d".repeat(64),
+            },
             reviewers: vec![EvaluationReviewArtifact {
                 id: "reviewer-a".to_string(),
                 file: "benchmarks/evaluation/reviewer-a.json".to_string(),
                 sha256: "b".repeat(64),
+                participant_kind: Some("agent".to_string()),
+                provider: Some("openai".to_string()),
+                model: Some("model".to_string()),
+                execution_id: Some("run-a".to_string()),
+                executed_at: Some("2026-08-06T00:00:00Z".to_string()),
             }],
             adjudication: EvaluationReviewArtifact {
                 id: "adjudication".to_string(),
                 file: "benchmarks/evaluation/adjudication.json".to_string(),
                 sha256: "c".repeat(64),
+                participant_kind: Some("human".to_string()),
+                provider: None,
+                model: None,
+                execution_id: None,
+                executed_at: None,
             },
             source_count: 1,
             case_files: vec!["benchmarks/cases/evaluation/sample.yaml".to_string()],

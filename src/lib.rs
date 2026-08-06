@@ -132,6 +132,8 @@ pub struct GroundTruthReview {
 pub enum GroundTruthReviewStatus {
     LegacyUnattributed,
     AuthorReviewed,
+    AgentReviewed,
+    HumanAdjudicatedAgentPanel,
     IndependentlyReviewed,
 }
 
@@ -526,17 +528,29 @@ impl BenchmarkDocument {
         if unique_reviewers.len() != self.ground_truth.reviewers.len() {
             bail!("groundTruth reviewers must be non-empty and unique");
         }
-        if self.ground_truth.status == GroundTruthReviewStatus::IndependentlyReviewed
-            && unique_reviewers.len() < 2
-        {
-            bail!("independently_reviewed ground truth requires at least two reviewers");
+        match self.ground_truth.status {
+            GroundTruthReviewStatus::AgentReviewed if unique_reviewers.is_empty() => {
+                bail!("agent_reviewed ground truth requires at least one reviewer");
+            }
+            GroundTruthReviewStatus::HumanAdjudicatedAgentPanel
+            | GroundTruthReviewStatus::IndependentlyReviewed
+                if unique_reviewers.len() < 2 =>
+            {
+                bail!("promoted ground truth requires at least two reviewers");
+            }
+            _ => {}
         }
         if self.corpus.partition == CorpusPartition::Evaluation {
             if self.corpus.selection != CorpusSelection::PreRegistered {
                 bail!("evaluation corpus documents must use pre_registered selection");
             }
-            if self.ground_truth.status != GroundTruthReviewStatus::IndependentlyReviewed {
-                bail!("evaluation corpus documents must be independently_reviewed");
+            if !matches!(
+                self.ground_truth.status,
+                GroundTruthReviewStatus::AgentReviewed
+                    | GroundTruthReviewStatus::HumanAdjudicatedAgentPanel
+                    | GroundTruthReviewStatus::IndependentlyReviewed
+            ) {
+                bail!("evaluation corpus documents require review evidence");
             }
             if self
                 .corpus
@@ -1629,6 +1643,34 @@ cases:
         );
 
         document.validate_methodology_metadata().unwrap();
+    }
+
+    #[test]
+    fn accepts_agent_reviewed_evaluation_for_authoring() {
+        let document = methodology_document(
+            "evaluation",
+            "pre_registered",
+            "agent_reviewed",
+            "  freezeId: eval-v1\n",
+            "  reviewers: [openai-reviewer, anthropic-reviewer]",
+        );
+
+        document.validate_methodology_metadata().unwrap();
+    }
+
+    #[test]
+    fn human_adjudicated_agent_panel_requires_two_reviewers() {
+        let document = methodology_document(
+            "evaluation",
+            "pre_registered",
+            "human_adjudicated_agent_panel",
+            "  freezeId: eval-v1\n",
+            "  reviewers: [openai-reviewer]",
+        );
+
+        let error = document.validate_methodology_metadata().unwrap_err();
+
+        assert!(format!("{error:#}").contains("at least two reviewers"));
     }
 
     #[test]

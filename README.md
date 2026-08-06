@@ -119,12 +119,14 @@ preregistered selection, and a freeze ID.
 
 ## Evaluation Corpus
 
-`benchmarks/cases/evaluation/real-project-v1` is a separate, preregistered and
-independently reviewed slice: four repositories and three declarations for each
+`benchmarks/cases/evaluation/real-project-v1` is a separate, preregistered,
+source-locked slice with historical agent review: four repositories and three declarations for each
 of Go/gopls, Python/Pyright, and TypeScript/TypeScript LS, for 12 repositories
 and 36 cases. Its source archives, selection, review, adjudication, and source
-lock are checked in and hash-bound. Its analyzer results have not yet been
-published. Any eventual aggregate is evaluation-only and limited to the
+lock are checked in and hash-bound. The two historical reviewers were
+same-provider Codex agents, so publication still requires a cross-provider
+panel and accountable human adjudication. Its analyzer results have not yet
+been published. Any eventual aggregate is evaluation-only and limited to the
 protocol's descriptive per-profile claim; it is not pooled with development
 fixtures or presented as language-wide, ecosystem-wide, causal, or performance
 evidence.

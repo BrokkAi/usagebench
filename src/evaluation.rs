@@ -101,7 +101,7 @@ struct TargetProfile {
     profile: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 struct ArtifactLink {
     file: String,
@@ -215,8 +215,56 @@ struct EvaluationReview {
     schema_version: u32,
     freeze_id: String,
     selection: ArtifactLink,
+    #[serde(default)]
+    review_tier: Option<ReviewTier>,
+    #[serde(default)]
+    review_protocol: Option<ArtifactLink>,
     reviewers: Vec<ReviewArtifact>,
     adjudication: ReviewArtifact,
+}
+
+const CANONICAL_AGENT_REVIEW_PROTOCOL: &str =
+    "benchmarks/review-protocol/blinded-agent-review-v1.json";
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AgentReviewProtocol {
+    schema_version: u32,
+    prompt: ArtifactLink,
+    response_schema: ArtifactLink,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum ReviewTier {
+    AgentReviewed,
+    HumanAdjudicatedAgentPanel,
+    IndependentlyHumanReviewed,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum ParticipantKind {
+    Agent,
+    Human,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ReviewParticipant {
+    kind: ParticipantKind,
+    #[serde(default)]
+    provider: Option<String>,
+    #[serde(default)]
+    model: Option<String>,
+    #[serde(default)]
+    execution_id: Option<String>,
+    #[serde(default)]
+    executed_at: Option<String>,
+    #[serde(default)]
+    identity: Option<String>,
+    #[serde(default)]
+    attestation: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -225,6 +273,14 @@ struct ReviewArtifact {
     id: String,
     file: String,
     sha256: String,
+    #[serde(default)]
+    participant: Option<ReviewParticipant>,
+    #[serde(default)]
+    prompt: Option<ArtifactLink>,
+    #[serde(default)]
+    response_schema: Option<ArtifactLink>,
+    #[serde(default)]
+    raw_response: Option<ArtifactLink>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -254,6 +310,42 @@ struct EvidenceRecord {
     declaration: EvidenceDeclaration,
     expected_usages: Vec<SymbolLocation>,
     definition_usage: Option<SymbolLocation>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AgentResponse {
+    schema_version: u32,
+    reviewer: AgentResponseReviewer,
+    records: Vec<AgentResponseRecord>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AgentResponseReviewer {
+    provider: String,
+    model: String,
+    execution_id: String,
+    executed_at: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AgentResponseRecord {
+    case_id: String,
+    decision: String,
+    confidence: String,
+    declaration: Location,
+    locations: Vec<AgentReviewedLocation>,
+    definition_usage: Option<Location>,
+    ambiguities: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AgentReviewedLocation {
+    location: Location,
+    classification: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -332,6 +424,11 @@ pub struct EvaluationReviewArtifact {
     pub id: String,
     pub file: String,
     pub sha256: String,
+    pub participant_kind: Option<String>,
+    pub provider: Option<String>,
+    pub model: Option<String>,
+    pub execution_id: Option<String>,
+    pub executed_at: Option<String>,
 }
 
 /// The evidence manifests bound into an evaluation release.
@@ -374,6 +471,8 @@ pub struct EvaluationReleaseAudit {
     pub claim_scope: String,
     pub target_profiles: Vec<EvaluationTargetProfile>,
     pub artifacts: EvaluationAuditArtifacts,
+    pub review_tier: ReviewTierAudit,
+    pub review_protocol: EvaluationArtifactLink,
     pub reviewers: Vec<EvaluationReviewArtifact>,
     pub adjudication: EvaluationReviewArtifact,
     pub source_count: usize,
@@ -381,6 +480,13 @@ pub struct EvaluationReleaseAudit {
     pub case_ids_by_file: BTreeMap<String, Vec<String>>,
     pub case_count: usize,
     pub selection: Vec<EvaluationSelectionAudit>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ReviewTierAudit {
+    HumanAdjudicatedAgentPanel,
+    IndependentlyHumanReviewed,
 }
 
 pub(crate) fn validate_report_against_release_audit(
@@ -522,7 +628,7 @@ pub fn validate_document_evidence(
         EVALUATION_REVIEW_SCHEMA,
         "evaluation review manifest",
     )?;
-    validate_schema_version(review.schema_version, "evaluation review manifest")?;
+    validate_protocol_schema_version(review.schema_version, "evaluation review manifest")?;
     require_same("review freezeId", &review.freeze_id, freeze_id)?;
     require_same(
         "evaluation review selection file",
@@ -711,6 +817,24 @@ pub fn build_release_audit(path: impl AsRef<Path>) -> Result<EvaluationReleaseAu
         EVALUATION_REVIEW_SCHEMA,
         "evaluation review manifest",
     )?;
+    if review.schema_version != 2 {
+        bail!("evaluation publication requires schema-v2 review evidence");
+    }
+    let review_tier = match review.review_tier {
+        Some(ReviewTier::HumanAdjudicatedAgentPanel) => {
+            ReviewTierAudit::HumanAdjudicatedAgentPanel
+        }
+        Some(ReviewTier::IndependentlyHumanReviewed) => {
+            ReviewTierAudit::IndependentlyHumanReviewed
+        }
+        _ => bail!(
+            "evaluation publication requires human_adjudicated_agent_panel or independently_human_reviewed evidence"
+        ),
+    };
+    let review_protocol = review
+        .review_protocol
+        .clone()
+        .context("evaluation publication requires canonical review protocol evidence")?;
     let source_lock_file = source_lock_file.context("evaluation corpus has no source lock")?;
     let source_lock_path = evidence_path(&repo_root, &source_lock_file)?;
     let (source_lock, source_lock_bytes) = load_checked::<SourceMaterialization>(
@@ -781,6 +905,11 @@ pub fn build_release_audit(path: impl AsRef<Path>) -> Result<EvaluationReleaseAu
             review: artifact_link(review_file, &review_bytes),
             source_lock: artifact_link(source_lock_file, &source_lock_bytes),
         },
+        review_tier,
+        review_protocol: EvaluationArtifactLink {
+            file: review_protocol.file,
+            sha256: review_protocol.sha256,
+        },
         reviewers: review.reviewers.into_iter().map(review_artifact).collect(),
         adjudication: review_artifact(review.adjudication),
         source_count: source_lock.sources.len(),
@@ -808,10 +937,29 @@ fn artifact_link(file: String, bytes: &[u8]) -> EvaluationArtifactLink {
 }
 
 fn review_artifact(artifact: ReviewArtifact) -> EvaluationReviewArtifact {
+    let participant = artifact.participant;
     EvaluationReviewArtifact {
         id: artifact.id,
         file: artifact.file,
         sha256: artifact.sha256,
+        participant_kind: participant
+            .as_ref()
+            .map(|participant| match participant.kind {
+                ParticipantKind::Agent => "agent".to_string(),
+                ParticipantKind::Human => "human".to_string(),
+            }),
+        provider: participant
+            .as_ref()
+            .and_then(|participant| participant.provider.clone()),
+        model: participant
+            .as_ref()
+            .and_then(|participant| participant.model.clone()),
+        execution_id: participant
+            .as_ref()
+            .and_then(|participant| participant.execution_id.clone()),
+        executed_at: participant
+            .as_ref()
+            .and_then(|participant| participant.executed_at.clone()),
     }
 }
 
@@ -1294,9 +1442,7 @@ fn validate_reviewers(
     review: &EvaluationReview,
     repo_root: &Path,
 ) -> Result<()> {
-    if document.ground_truth.status != GroundTruthReviewStatus::IndependentlyReviewed {
-        bail!("evaluation review evidence requires independently_reviewed ground truth");
-    }
+    validate_review_contract(document, review, repo_root)?;
     let expected = document
         .ground_truth
         .reviewers
@@ -1317,6 +1463,7 @@ fn validate_reviewers(
         .flat_map(|document| document.case_ids.iter().cloned())
         .collect::<BTreeSet<_>>();
     let mut reviewer_records = Vec::new();
+    let mut agent_responses = Vec::new();
     for reviewer in &review.reviewers {
         let evidence =
             load_review_artifact::<ReviewerEvidence>(reviewer, repo_root, "reviewer evidence")?;
@@ -1339,6 +1486,25 @@ fn validate_reviewers(
         validate_evidence_records(&evidence.records, &selected_case_ids, "reviewer evidence")?;
         for record in &evidence.records {
             validate_evidence_identity(record, selection, "reviewer evidence")?;
+        }
+        if review.schema_version == 2 {
+            let raw = validate_agent_response(
+                reviewer
+                    .response_schema
+                    .as_ref()
+                    .context("missing response schema")?,
+                reviewer
+                    .raw_response
+                    .as_ref()
+                    .context("missing raw response")?,
+                reviewer
+                    .participant
+                    .as_ref()
+                    .context("missing participant")?,
+                repo_root,
+            )?;
+            validate_raw_response_matches_evidence(&raw, &evidence, &selected_case_ids)?;
+            agent_responses.push(raw);
         }
         reviewer_records.push(evidence.records);
     }
@@ -1365,6 +1531,9 @@ fn validate_reviewers(
     )?;
     for record in &adjudication.records {
         validate_evidence_identity(record, selection, "adjudication evidence")?;
+    }
+    if review.schema_version == 2 {
+        validate_panel_escalations(&agent_responses, &adjudication.records, &selected_case_ids)?;
     }
 
     for case in &document.cases {
@@ -1411,6 +1580,361 @@ fn validate_reviewers(
                     case.id
                 );
             }
+        }
+    }
+    Ok(())
+}
+
+fn validate_review_contract(
+    document: &BenchmarkDocument,
+    review: &EvaluationReview,
+    repo_root: &Path,
+) -> Result<()> {
+    match review.schema_version {
+        1 => {
+            if !matches!(
+                document.ground_truth.status,
+                GroundTruthReviewStatus::AgentReviewed
+                    | GroundTruthReviewStatus::IndependentlyReviewed
+            ) {
+                bail!("legacy schema-v1 review evidence requires a compatible review status");
+            }
+        }
+        2 => {
+            let tier = review
+                .review_tier
+                .context("schema-v2 review evidence requires reviewTier")?;
+            let expected_status = match tier {
+                ReviewTier::AgentReviewed => GroundTruthReviewStatus::AgentReviewed,
+                ReviewTier::HumanAdjudicatedAgentPanel => {
+                    GroundTruthReviewStatus::HumanAdjudicatedAgentPanel
+                }
+                ReviewTier::IndependentlyHumanReviewed => {
+                    GroundTruthReviewStatus::IndependentlyReviewed
+                }
+            };
+            if document.ground_truth.status != expected_status {
+                bail!("reviewTier does not match groundTruth status");
+            }
+
+            let review_protocol_link = review
+                .review_protocol
+                .as_ref()
+                .context("schema-v2 review evidence requires reviewProtocol")?;
+            validate_linked_artifact(review_protocol_link, repo_root, "review protocol")?;
+            let canonical_agent_protocol = if matches!(
+                tier,
+                ReviewTier::AgentReviewed | ReviewTier::HumanAdjudicatedAgentPanel
+            ) {
+                require_same(
+                    "canonical agent review protocol path",
+                    &review_protocol_link.file,
+                    CANONICAL_AGENT_REVIEW_PROTOCOL,
+                )?;
+                let protocol_path = evidence_path(repo_root, &review_protocol_link.file)?;
+                let protocol: AgentReviewProtocol =
+                    serde_json::from_slice(&fs::read(&protocol_path).with_context(|| {
+                        format!("read review protocol {}", protocol_path.display())
+                    })?)
+                    .with_context(|| {
+                        format!("parse review protocol {}", protocol_path.display())
+                    })?;
+                if protocol.schema_version != 1 {
+                    bail!("unsupported canonical agent review protocol schema version");
+                }
+                validate_linked_artifact(&protocol.prompt, repo_root, "canonical agent prompt")?;
+                validate_linked_artifact(
+                    &protocol.response_schema,
+                    repo_root,
+                    "canonical agent response schema",
+                )?;
+                Some(protocol)
+            } else {
+                None
+            };
+
+            let mut providers = BTreeSet::new();
+            let mut shared_agent_protocol: Option<(String, String, String, String)> = None;
+            for reviewer in &review.reviewers {
+                let participant = reviewer
+                    .participant
+                    .as_ref()
+                    .context("schema-v2 reviewer requires participant provenance")?;
+                match tier {
+                    ReviewTier::AgentReviewed | ReviewTier::HumanAdjudicatedAgentPanel => {
+                        if participant.kind != ParticipantKind::Agent {
+                            bail!("agent review tiers require agent reviewers");
+                        }
+                        let provider =
+                            nonempty(participant.provider.as_deref(), "agent reviewer provider")?
+                                .trim();
+                        nonempty(participant.model.as_deref(), "agent reviewer model")?;
+                        nonempty(
+                            participant.execution_id.as_deref(),
+                            "agent reviewer executionId",
+                        )?;
+                        nonempty(
+                            participant.executed_at.as_deref(),
+                            "agent reviewer executedAt",
+                        )?;
+                        providers.insert(provider.to_ascii_lowercase());
+                        let prompt = reviewer
+                            .prompt
+                            .as_ref()
+                            .context("schema-v2 reviewer requires agent prompt")?;
+                        let response_schema = reviewer
+                            .response_schema
+                            .as_ref()
+                            .context("schema-v2 reviewer requires agent response schema")?;
+                        let raw_response = reviewer
+                            .raw_response
+                            .as_ref()
+                            .context("schema-v2 reviewer requires raw agent response")?;
+                        let canonical = canonical_agent_protocol
+                            .as_ref()
+                            .expect("agent review tiers loaded the canonical protocol");
+                        if prompt != &canonical.prompt
+                            || response_schema != &canonical.response_schema
+                        {
+                            bail!(
+                                "agent reviewers must use the canonical prompt and response schema"
+                            );
+                        }
+                        let protocol = (
+                            prompt.file.clone(),
+                            prompt.sha256.clone(),
+                            response_schema.file.clone(),
+                            response_schema.sha256.clone(),
+                        );
+                        if let Some(expected) = &shared_agent_protocol {
+                            if expected != &protocol {
+                                bail!(
+                                    "agent reviewers must use the same prompt and response schema"
+                                );
+                            }
+                        } else {
+                            shared_agent_protocol = Some(protocol);
+                        }
+                        for (link, kind) in [
+                            (prompt, "agent prompt"),
+                            (response_schema, "agent response schema"),
+                            (raw_response, "raw agent response"),
+                        ] {
+                            validate_linked_artifact(link, repo_root, kind)?;
+                        }
+                        validate_agent_response(
+                            response_schema,
+                            raw_response,
+                            participant,
+                            repo_root,
+                        )?;
+                    }
+                    ReviewTier::IndependentlyHumanReviewed => {
+                        if participant.kind != ParticipantKind::Human {
+                            bail!("independently human-reviewed evidence requires human reviewers");
+                        }
+                    }
+                }
+            }
+
+            let adjudicator = review
+                .adjudication
+                .participant
+                .as_ref()
+                .context("schema-v2 adjudication requires participant provenance")?;
+            if adjudicator.kind != ParticipantKind::Human {
+                bail!("adjudication must identify an accountable human");
+            }
+            nonempty(
+                adjudicator.identity.as_deref(),
+                "human adjudicator identity",
+            )?;
+            nonempty(
+                adjudicator.attestation.as_deref(),
+                "human adjudicator attestation",
+            )?;
+            if tier == ReviewTier::HumanAdjudicatedAgentPanel && providers.len() < 2 {
+                bail!("human-adjudicated agent panels require at least two agent providers");
+            }
+        }
+        version => bail!("unsupported evaluation review schema version {version}"),
+    }
+    Ok(())
+}
+
+fn nonempty<'a>(value: Option<&'a str>, kind: &str) -> Result<&'a str> {
+    value
+        .filter(|value| !value.trim().is_empty())
+        .with_context(|| format!("{kind} must be non-empty"))
+}
+
+fn validate_linked_artifact(link: &ArtifactLink, repo_root: &Path, kind: &str) -> Result<()> {
+    let path = evidence_path(repo_root, &link.file)?;
+    let bytes = fs::read(&path).with_context(|| format!("read {kind} {}", path.display()))?;
+    validate_link(link, &path, &bytes, kind)
+}
+
+fn validate_agent_response(
+    schema_link: &ArtifactLink,
+    response_link: &ArtifactLink,
+    participant: &ReviewParticipant,
+    repo_root: &Path,
+) -> Result<AgentResponse> {
+    let schema_path = evidence_path(repo_root, &schema_link.file)?;
+    let response_path = evidence_path(repo_root, &response_link.file)?;
+    let schema: serde_json::Value = serde_json::from_slice(
+        &fs::read(&schema_path)
+            .with_context(|| format!("read agent response schema {}", schema_path.display()))?,
+    )
+    .with_context(|| format!("parse agent response schema {}", schema_path.display()))?;
+    let response: serde_json::Value = serde_json::from_slice(
+        &fs::read(&response_path)
+            .with_context(|| format!("read raw agent response {}", response_path.display()))?,
+    )
+    .with_context(|| format!("parse raw agent response {}", response_path.display()))?;
+    let compiled = jsonschema::JSONSchema::compile(&schema).map_err(|error| {
+        anyhow!(
+            "compile agent response schema {}: {error}",
+            schema_path.display()
+        )
+    })?;
+    if let Err(errors) = compiled.validate(&response) {
+        let details = errors
+            .map(|error| error.to_string())
+            .collect::<Vec<_>>()
+            .join("; ");
+        bail!("raw agent response failed schema validation: {details}");
+    }
+    let typed: AgentResponse =
+        serde_json::from_value(response).context("deserialize validated raw agent response")?;
+    if typed.schema_version != 1 {
+        bail!("unsupported raw agent response schema version");
+    }
+    require_same(
+        "raw agent response provider",
+        typed.reviewer.provider.trim(),
+        participant.provider.as_deref().unwrap_or_default().trim(),
+    )?;
+    require_same(
+        "raw agent response model",
+        typed.reviewer.model.trim(),
+        participant.model.as_deref().unwrap_or_default().trim(),
+    )?;
+    require_same(
+        "raw agent response executionId",
+        typed.reviewer.execution_id.trim(),
+        participant
+            .execution_id
+            .as_deref()
+            .unwrap_or_default()
+            .trim(),
+    )?;
+    require_same(
+        "raw agent response executedAt",
+        typed.reviewer.executed_at.trim(),
+        participant
+            .executed_at
+            .as_deref()
+            .unwrap_or_default()
+            .trim(),
+    )?;
+    Ok(typed)
+}
+
+fn validate_raw_response_matches_evidence(
+    raw: &AgentResponse,
+    evidence: &ReviewerEvidence,
+    selected_case_ids: &BTreeSet<String>,
+) -> Result<()> {
+    let raw_case_ids = raw
+        .records
+        .iter()
+        .map(|record| record.case_id.clone())
+        .collect::<BTreeSet<_>>();
+    if raw_case_ids.len() != raw.records.len() || &raw_case_ids != selected_case_ids {
+        bail!("raw agent response must contain each selected case exactly once");
+    }
+    for normalized in &evidence.records {
+        let raw_record = raw
+            .records
+            .iter()
+            .find(|record| record.case_id == normalized.case_id)
+            .expect("raw response coverage was validated");
+        if raw_record.decision != normalized.decision
+            || raw_record.declaration != normalized.declaration.location
+            || raw_record.definition_usage
+                != normalized
+                    .definition_usage
+                    .as_ref()
+                    .map(|usage| usage.location.clone())
+        {
+            bail!(
+                "raw agent response does not match normalized evidence for case {}",
+                normalized.case_id
+            );
+        }
+        let raw_required = raw_record
+            .locations
+            .iter()
+            .filter(|location| location.classification == "required")
+            .map(|location| location.location.clone())
+            .collect::<Vec<_>>();
+        let normalized_required = normalized
+            .expected_usages
+            .iter()
+            .map(|usage| usage.location.clone())
+            .collect::<Vec<_>>();
+        if raw_required.len() != normalized_required.len()
+            || !raw_required
+                .iter()
+                .all(|location| normalized_required.contains(location))
+        {
+            bail!(
+                "raw agent response required locations do not match normalized evidence for case {}",
+                normalized.case_id
+            );
+        }
+    }
+    Ok(())
+}
+
+fn validate_panel_escalations(
+    responses: &[AgentResponse],
+    adjudication: &[EvidenceRecord],
+    selected_case_ids: &BTreeSet<String>,
+) -> Result<()> {
+    for case_id in selected_case_ids {
+        let records = responses
+            .iter()
+            .filter_map(|response| {
+                response
+                    .records
+                    .iter()
+                    .find(|record| &record.case_id == case_id)
+            })
+            .collect::<Vec<_>>();
+        let first = records.first().context("agent panel has no responses")?;
+        let exact_agreement = records.iter().all(|record| {
+            record.decision == first.decision
+                && record.declaration == first.declaration
+                && record.locations.len() == first.locations.len()
+                && record.locations.iter().all(|item| {
+                    first.locations.iter().any(|expected| {
+                        item.location == expected.location
+                            && item.classification == expected.classification
+                    })
+                })
+                && record.definition_usage == first.definition_usage
+        });
+        let requires_escalation = !exact_agreement
+            || records.iter().any(|record| {
+                record.decision != "accept"
+                    || record.confidence != "high"
+                    || !record.ambiguities.is_empty()
+            });
+        let human_recorded = adjudication.iter().any(|record| &record.case_id == case_id);
+        if (requires_escalation || !responses.is_empty()) && !human_recorded {
+            bail!("case {case_id} requires accountable human adjudication");
         }
     }
     Ok(())
@@ -1848,29 +2372,11 @@ mod tests {
     }
 
     #[test]
-    fn checked_in_real_project_release_audit_is_complete() {
+    fn legacy_real_project_review_cannot_be_published() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-        let audit =
-            build_release_audit(root.join("benchmarks/cases/evaluation/real-project-v1")).unwrap();
-
-        assert_eq!(audit.freeze_id, "real-project-v1");
-        assert_eq!(audit.target_profiles.len(), 3);
-        assert_eq!(audit.source_count, 12);
-        assert_eq!(audit.case_files.len(), 12);
-        assert_eq!(audit.case_count, 36);
-        assert_eq!(audit.selection.len(), 3);
-        assert!(audit
-            .selection
-            .iter()
-            .all(|profile| profile.selected_repositories == 4));
-        assert!(audit
-            .selection
-            .iter()
-            .all(|profile| profile.excluded_repositories > 0));
-        assert!(audit
-            .selection
-            .iter()
-            .any(|profile| profile.replacements > 0));
+        let error = build_release_audit(root.join("benchmarks/cases/evaluation/real-project-v1"))
+            .unwrap_err();
+        assert!(format!("{error:#}").contains("requires schema-v2 review evidence"));
     }
 
     #[test]
@@ -2080,6 +2586,128 @@ mod tests {
             fs::read_to_string(extracted.join("source.txt")).unwrap(),
             "archived archived"
         );
+    }
+
+    #[test]
+    fn human_adjudicated_agent_panel_requires_cross_provider_evidence() {
+        let temp = tempdir().unwrap();
+        let root = temp.path();
+        let protocol_dir = root.join("benchmarks/review-protocol");
+        fs::create_dir_all(&protocol_dir).unwrap();
+        fs::write(protocol_dir.join("blinded-agent-prompt-v1.md"), "prompt").unwrap();
+        write_json(
+            &protocol_dir.join("agent-response-v1.schema.json"),
+            json!({
+                "type": "object",
+                "required": ["reviewer", "records"],
+                "properties": {
+                    "reviewer": {
+                        "type": "object",
+                        "required": ["provider", "model", "executionId", "executedAt"],
+                        "properties": {
+                            "provider": {"type": "string"},
+                            "model": {"type": "string"},
+                            "executionId": {"type": "string"},
+                            "executedAt": {"type": "string"}
+                        }
+                    },
+                    "records": {"type": "array"}
+                }
+            }),
+        );
+        let prompt_link = ArtifactLink {
+            file: "benchmarks/review-protocol/blinded-agent-prompt-v1.md".to_string(),
+            sha256: sha256(&fs::read(protocol_dir.join("blinded-agent-prompt-v1.md")).unwrap()),
+        };
+        let response_schema_link = ArtifactLink {
+            file: "benchmarks/review-protocol/agent-response-v1.schema.json".to_string(),
+            sha256: sha256(&fs::read(protocol_dir.join("agent-response-v1.schema.json")).unwrap()),
+        };
+        write_json(
+            &protocol_dir.join("blinded-agent-review-v1.json"),
+            json!({"schemaVersion": 1, "prompt": prompt_link, "responseSchema": response_schema_link}),
+        );
+        write_json(
+            &root.join("openai.json"),
+            json!({"schemaVersion": 1, "reviewer": {"provider": "openai", "model": "openai-model", "executionId": "run-agent-a", "executedAt": "2026-08-06T00:00:00Z"}, "records": []}),
+        );
+        write_json(
+            &root.join("second.json"),
+            json!({"schemaVersion": 1, "reviewer": {"provider": "openai", "model": "openai-model", "executionId": "run-agent-b", "executedAt": "2026-08-06T00:00:00Z"}, "records": []}),
+        );
+        let linked = |file: &str| ArtifactLink {
+            file: file.to_string(),
+            sha256: sha256(&fs::read(root.join(file)).unwrap()),
+        };
+        let reviewer = |id: &str, provider: &str, raw: &str| ReviewArtifact {
+            id: id.to_string(),
+            file: raw.to_string(),
+            sha256: sha256(&fs::read(root.join(raw)).unwrap()),
+            participant: Some(ReviewParticipant {
+                kind: ParticipantKind::Agent,
+                provider: Some(provider.to_string()),
+                model: Some(format!("{provider}-model")),
+                execution_id: Some(format!("run-{id}")),
+                executed_at: Some("2026-08-06T00:00:00Z".to_string()),
+                identity: None,
+                attestation: None,
+            }),
+            prompt: Some(prompt_link.clone()),
+            response_schema: Some(response_schema_link.clone()),
+            raw_response: Some(linked(raw)),
+        };
+        let adjudication = ReviewArtifact {
+            id: "human-adjudication".to_string(),
+            file: "openai.json".to_string(),
+            sha256: sha256(&fs::read(root.join("openai.json")).unwrap()),
+            participant: Some(ReviewParticipant {
+                kind: ParticipantKind::Human,
+                provider: None,
+                model: None,
+                execution_id: None,
+                executed_at: None,
+                identity: Some("human@example.test".to_string()),
+                attestation: Some("I reviewed and accept every adjudicated case.".to_string()),
+            }),
+            prompt: None,
+            response_schema: None,
+            raw_response: None,
+        };
+        let mut document = document(&"a".repeat(40));
+        document.ground_truth.status = GroundTruthReviewStatus::HumanAdjudicatedAgentPanel;
+        document.ground_truth.reviewers = vec!["agent-a".to_string(), "agent-b".to_string()];
+        let mut review = EvaluationReview {
+            schema_version: 2,
+            freeze_id: "real-project-v1".to_string(),
+            selection: response_schema_link.clone(),
+            review_tier: Some(ReviewTier::HumanAdjudicatedAgentPanel),
+            review_protocol: Some(ArtifactLink {
+                file: CANONICAL_AGENT_REVIEW_PROTOCOL.to_string(),
+                sha256: sha256(
+                    &fs::read(protocol_dir.join("blinded-agent-review-v1.json")).unwrap(),
+                ),
+            }),
+            reviewers: vec![
+                reviewer("agent-a", "openai", "openai.json"),
+                reviewer("agent-b", "openai", "second.json"),
+            ],
+            adjudication,
+        };
+
+        let error = validate_review_contract(&document, &review, root).unwrap_err();
+        assert!(format!("{error:#}").contains("at least two agent providers"));
+
+        write_json(
+            &root.join("second.json"),
+            json!({"schemaVersion": 1, "reviewer": {"provider": "anthropic", "model": "anthropic-model", "executionId": "run-agent-b", "executedAt": "2026-08-06T00:00:00Z"}, "records": []}),
+        );
+        review.reviewers[1].participant.as_mut().unwrap().provider = Some("anthropic".to_string());
+        review.reviewers[1].participant.as_mut().unwrap().model =
+            Some("anthropic-model".to_string());
+        review.reviewers[1].sha256 = sha256(&fs::read(root.join("second.json")).unwrap());
+        review.reviewers[1].raw_response.as_mut().unwrap().sha256 =
+            sha256(&fs::read(root.join("second.json")).unwrap());
+        validate_review_contract(&document, &review, root).unwrap();
     }
 
     #[test]

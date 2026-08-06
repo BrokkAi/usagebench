@@ -560,7 +560,11 @@ fn validate_evaluation_corpus(corpus: &[ManifestDocument]) -> Result<()> {
     for document in corpus {
         if document.partition != CorpusPartition::Evaluation
             || document.selection != CorpusSelection::PreRegistered
-            || document.ground_truth_status != GroundTruthReviewStatus::IndependentlyReviewed
+            || !matches!(
+                document.ground_truth_status,
+                GroundTruthReviewStatus::HumanAdjudicatedAgentPanel
+                    | GroundTruthReviewStatus::IndependentlyReviewed
+            )
         {
             bail!(
                 "evaluation snapshot requires promoted evaluation metadata; {} is not eligible",
