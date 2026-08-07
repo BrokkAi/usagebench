@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 3,
+  "methodology": {
+    "file": "benchmarks/review-protocol/per-case-methodology-v3.md",
+    "sha256": "9118710fdccc4f6d12aa546b03d8985adf8e04d42fe4c0ad4e46e4ebbd1b6ed3"
+  },
+  "prompt": {
+    "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+    "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+  },
+  "responseSchema": {
+    "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+    "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+  }
+}

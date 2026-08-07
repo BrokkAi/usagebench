@@ -1,0 +1,119 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-01-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/excalidraw/components/AppStateObserver.ts",
+        "range": {
+          "start": {
+            "line": 61,
+            "character": 13
+          },
+          "end": {
+            "line": 61,
+            "character": 29
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+            "range": {
+              "start": {
+                "line": 680,
+                "character": 33
+              },
+              "end": {
+                "line": 680,
+                "character": 49
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor call `new AppStateObserver(() => this.state)` initializing the private `appStateObserver` field of the App class; resolves to the class declaration via the import on line 453."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+            "range": {
+              "start": {
+                "line": 453,
+                "character": 9
+              },
+              "end": {
+                "line": 453,
+                "character": 25
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Named import binding token in `import { AppStateObserver, type OnStateChange } from \"./AppStateObserver\"`; classified optional under the bindings_optional reference policy."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/tests/appStateHooks.test.tsx",
+            "range": {
+              "start": {
+                "line": 23,
+                "character": 23
+              },
+              "end": {
+                "line": 23,
+                "character": 39
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor call `new AppStateObserver(() => state)` inside createMockAPI in the test file; resolves to the class declaration via the import on line 5."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/tests/appStateHooks.test.tsx",
+            "range": {
+              "start": {
+                "line": 5,
+                "character": 9
+              },
+              "end": {
+                "line": 5,
+                "character": 25
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Named import binding token in `import { AppStateObserver } from \"../components/AppStateObserver\"`; classified optional under the bindings_optional reference policy."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+        "range": {
+          "start": {
+            "line": 680,
+            "character": 33
+          },
+          "end": {
+            "line": 680,
+            "character": 49
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/packages/excalidraw/components/AppStateObserver.ts",
+        "source/packages/excalidraw/components/App.tsx",
+        "source/packages/excalidraw/tests/appStateHooks.test.tsx"
+      ],
+      "rationale": "A whole-snapshot ripgrep for the exact identifier `AppStateObserver` under source/ returned exactly five identifier-bearing lines: the class declaration itself (AppStateObserver.ts line 61, matching the supplied declaration range), two `new AppStateObserver(...)` constructor calls (App.tsx line 680 and appStateHooks.test.tsx line 23), and two named import bindings (App.tsx line 453 and appStateHooks.test.tsx line 5). Both constructor calls unambiguously resolve to this class through their file's direct import from ./AppStateObserver, so they form the required set; the import binding tokens are optional per the bindings_optional policy. Occurrences of the name inside the module-specifier string literals are string content, not identifier tokens, and were omitted. The lowercase `appStateObserver` property identifier and `onStateChange` usages are distinct symbols and not usages of the class. There is no barrel re-export or other alias of the class in the snapshot. Required locations sorted by URI then position give the App.tsx constructor call as the deterministic definitionUsage. The required set is complete with no unresolved ambiguity, so confidence is high."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "befdd500-1e27-47c6-992b-962c0e13ee02",
+    "executedAt": "2026-08-07T06:08:26Z"
+  },
+  "schemaVersion": 1
+}

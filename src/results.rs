@@ -1924,7 +1924,7 @@ mod tests {
             },
             review_tier: ReviewTierAudit::HumanAdjudicatedAgentPanel,
             review_protocol: EvaluationArtifactLink {
-                file: "benchmarks/review-protocol/blinded-agent-review-v1.json".to_string(),
+                file: "benchmarks/review-protocol/blinded-agent-review-v3.json".to_string(),
                 sha256: "d".repeat(64),
             },
             reviewers: vec![EvaluationReviewArtifact {

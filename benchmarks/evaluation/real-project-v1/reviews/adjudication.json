@@ -7,7 +7,8 @@
   "sourceArtifacts": [
     "selection.issue90.final-candidates.json",
     "real-project-v1-reviewer-a-complete.json",
-    "real-project-v1-reviewer-b-complete.json"
+    "real-project-v1-reviewer-b-complete.json",
+    "benchmarks/review-protocol/runs/real-project-v1-agent-panel-pilot-v3/human-adjudication.json"
   ],
   "summary": {
     "caseCount": 36,
@@ -132,6 +133,23 @@
         "displayName": "ComponentPath"
       },
       "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 323,
+                "character": 8
+              },
+              "end": {
+                "line": 323,
+                "character": 21
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ComponentPath"
+        },
         {
           "location": {
             "uri": "benchmark://source/hugofs/rootmapping_fs.go",
@@ -308,31 +326,31 @@
           "uri": "benchmark://source/hugofs/rootmapping_fs.go",
           "range": {
             "start": {
-              "line": 370,
-              "character": 20
+              "line": 323,
+              "character": 8
             },
             "end": {
-              "line": 370,
-              "character": 33
+              "line": 323,
+              "character": 21
             }
           }
         },
         "kind": "class",
         "displayName": "ComponentPath"
       },
-      "notes": "Accepted after source-only adjudication. Excluded the extra ComponentPath occurrence in the receiver clause `func (c ComponentPath)`: it is a receiver binding/type attachment, so it is optional and excluded under bindings_optional. Both proposed definition usages are valid ordinary references; retained reviewer A's struct-literal usage as definitionUsage.",
+      "notes": "Corrected on 2026-08-07 after fresh blinded full-project reviews by OpenAI GPT-5.6 Sol and Anthropic Claude Fable 5 independently classified the receiver-clause type reference as required. DavidBakerEffendi approved the six-case v3 consensus panel, including this correction and its deterministic definition target.",
       "disagreementResolution": {
         "hadDisagreement": true,
         "differingFields": [
           "expectedUsages",
           "definitionUsage"
         ],
-        "resolution": "Excluded the extra ComponentPath occurrence in the receiver clause `func (c ComponentPath)`: it is a receiver binding/type attachment, so it is optional and excluded under bindings_optional. Both proposed definition usages are valid ordinary references; retained reviewer A's struct-literal usage as definitionUsage."
+        "resolution": "The original reviewers disagreed: reviewer B included the receiver-clause type reference and reviewer A excluded it. Two fresh cross-provider v3 reviews independently included it; accountable human adjudication accepted that consensus and selected it as the deterministic definition target."
       },
       "rangeValidation": {
         "positionEncoding": "utf-16",
         "validated": true,
-        "locationsChecked": 11,
+        "locationsChecked": 12,
         "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },

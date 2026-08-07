@@ -1,0 +1,1195 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-python-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/manimlib/utils/bezier.py",
+        "range": {
+          "start": {
+            "line": 96,
+            "character": 4
+          },
+          "end": {
+            "line": 96,
+            "character": 15
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 73
+              },
+              "end": {
+                "line": 121,
+                "character": 84
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Default argument value for interp_func in set_array_by_interpolation; bare name resolves to the module-level function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 147,
+                "character": 16
+              },
+              "end": {
+                "line": 147,
+                "character": 27
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside integer_interpolate in the same module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 167,
+                "character": 11
+              },
+              "end": {
+                "line": 167,
+                "character": 22
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside match_interpolate in the same module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 9,
+                "character": 34
+              },
+              "end": {
+                "line": 9,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token: from manimlib.utils.bezier import interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 103,
+                "character": 24
+              },
+              "end": {
+                "line": 103,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in AnimationGroup.build_animations_with_timings; class scope is skipped in Python name resolution, so this resolves to the module-level import of the bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/fading.py",
+            "range": {
+              "start": {
+                "line": 9,
+                "character": 34
+              },
+              "end": {
+                "line": 9,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/fading.py",
+            "range": {
+              "start": {
+                "line": 167,
+                "character": 20
+              },
+              "end": {
+                "line": 167,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in FadeInFromPoint stroke-opacity computation resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/fading.py",
+            "range": {
+              "start": {
+                "line": 170,
+                "character": 20
+              },
+              "end": {
+                "line": 170,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in fill-opacity computation resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": {
+                "line": 26,
+                "character": 34
+              },
+              "end": {
+                "line": 26,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": {
+                "line": 181,
+                "character": 16
+              },
+              "end": {
+                "line": 181,
+                "character": 27
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in get_bounds resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": {
+                "line": 238,
+                "character": 13
+              },
+              "end": {
+                "line": 238,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call computing gaussian mean resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": {
+                "line": 387,
+                "character": 12
+              },
+              "end": {
+                "line": 387,
+                "character": 23
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in submobject scale computation resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/numbers.py",
+            "range": {
+              "start": {
+                "line": 4,
+                "character": 34
+              },
+              "end": {
+                "line": 4,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/numbers.py",
+            "range": {
+              "start": {
+                "line": 46,
+                "character": 22
+              },
+              "end": {
+                "line": 46,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call inside lambda in ChangeDecimalToValue resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/numbers.py",
+            "range": {
+              "start": {
+                "line": 61,
+                "character": 22
+              },
+              "end": {
+                "line": 61,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call inside lambda in CountInFrom resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject.py",
+            "range": {
+              "start": {
+                "line": 39,
+                "character": 34
+              },
+              "end": {
+                "line": 39,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject.py",
+            "range": {
+              "start": {
+                "line": 1620,
+                "character": 15
+              },
+              "end": {
+                "line": 1620,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in Mobject.point_from_proportion; class scope is skipped, so it resolves to the module-level import, not the Mobject.interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/number_line.py",
+            "range": {
+              "start": {
+                "line": 13,
+                "character": 34
+              },
+              "end": {
+                "line": 13,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/number_line.py",
+            "range": {
+              "start": {
+                "line": 147,
+                "character": 15
+              },
+              "end": {
+                "line": 147,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in NumberLine.point_to_number resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": {
+                "line": 11,
+                "character": 34
+              },
+              "end": {
+                "line": 11,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": {
+                "line": 159,
+                "character": 29
+              },
+              "end": {
+                "line": 159,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call inside DecimalNumber.interpolate body; function scope skips the class scope, so it resolves to the module-level import of the bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": {
+                "line": 63,
+                "character": 34
+              },
+              "end": {
+                "line": 63,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": {
+                "line": 484,
+                "character": 12
+              },
+              "end": {
+                "line": 484,
+                "character": 23
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call building SpeechBubble stem triangle resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": {
+                "line": 485,
+                "character": 12
+              },
+              "end": {
+                "line": 485,
+                "character": 23
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call building SpeechBubble stem triangle resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": {
+                "line": 525,
+                "character": 30
+              },
+              "end": {
+                "line": 525,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in ThoughtBubble.get_body resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/three_dimensions.py",
+            "range": {
+              "start": {
+                "line": 16,
+                "character": 34
+              },
+              "end": {
+                "line": 16,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/three_dimensions.py",
+            "range": {
+              "start": {
+                "line": 74,
+                "character": 37
+              },
+              "end": {
+                "line": 74,
+                "character": 48
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call argument to set_points_smoothly resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/three_dimensions.py",
+            "range": {
+              "start": {
+                "line": 82,
+                "character": 37
+              },
+              "end": {
+                "line": 82,
+                "character": 48
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call argument to set_points_smoothly resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 34
+              },
+              "end": {
+                "line": 14,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 15
+              },
+              "end": {
+                "line": 137,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in uv-to-point bilinear interpolation resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 138,
+                "character": 12
+              },
+              "end": {
+                "line": 138,
+                "character": 23
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Nested bare-name call resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 139,
+                "character": 12
+              },
+              "end": {
+                "line": 139,
+                "character": 23
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Nested bare-name call resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 213,
+                "character": 35
+              },
+              "end": {
+                "line": 213,
+                "character": 46
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in get_partial_points_array (axis 0, lower) resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 218,
+                "character": 39
+              },
+              "end": {
+                "line": 218,
+                "character": 50
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in get_partial_points_array (axis 0, upper) resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 225,
+                "character": 38
+              },
+              "end": {
+                "line": 225,
+                "character": 49
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in get_partial_points_array (axis 1, lower) resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 230,
+                "character": 42
+              },
+              "end": {
+                "line": 230,
+                "character": 53
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in get_partial_points_array (axis 1, upper) resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+            "range": {
+              "start": {
+                "line": 21,
+                "character": 34
+              },
+              "end": {
+                "line": 21,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+            "range": {
+              "start": {
+                "line": 895,
+                "character": 15
+              },
+              "end": {
+                "line": 895,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in get_arc_length resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/vector_field.py",
+            "range": {
+              "start": {
+                "line": 12,
+                "character": 34
+              },
+              "end": {
+                "line": 12,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/vector_field.py",
+            "range": {
+              "start": {
+                "line": 50,
+                "character": 17
+              },
+              "end": {
+                "line": 50,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in rgb colormap function resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 11,
+                "character": 34
+              },
+              "end": {
+                "line": 11,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 112,
+                "character": 25
+              },
+              "end": {
+                "line": 112,
+                "character": 36
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in interpolate_color (hsl branch) resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 114,
+                "character": 22
+              },
+              "end": {
+                "line": 114,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in interpolate_color (rgb branch) resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 141,
+                "character": 8
+              },
+              "end": {
+                "line": 141,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in random_bright_color (hue) resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 142,
+                "character": 8
+              },
+              "end": {
+                "line": 142,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in random_bright_color (saturation) resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 143,
+                "character": 8
+              },
+              "end": {
+                "line": 143,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in random_bright_color (luminance) resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 161,
+                "character": 17
+              },
+              "end": {
+                "line": 161,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in rgba colormap function resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/paths.py",
+            "range": {
+              "start": {
+                "line": 7,
+                "character": 34
+              },
+              "end": {
+                "line": 7,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/paths.py",
+            "range": {
+              "start": {
+                "line": 32,
+                "character": 11
+              },
+              "end": {
+                "line": 32,
+                "character": 22
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare-name call in straight_path resolving to the imported bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject.py",
+            "range": {
+              "start": {
+                "line": 1809,
+                "character": 8
+              },
+              "end": {
+                "line": 1809,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Declaration of the distinct Mobject.interpolate method; a different symbol."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 107,
+                "character": 8
+              },
+              "end": {
+                "line": 107,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Declaration of AnimationGroup.interpolate, overriding Animation.interpolate; a different symbol."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 120,
+                "character": 17
+              },
+              "end": {
+                "line": 120,
+                "character": 28
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute call anim.interpolate on an Animation instance; resolves to Animation.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 143,
+                "character": 8
+              },
+              "end": {
+                "line": 143,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Declaration of Succession.interpolate; a different symbol."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 152,
+                "character": 18
+              },
+              "end": {
+                "line": 152,
+                "character": 29
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute call animation.interpolate on an Animation instance; resolves to the Animation method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": {
+                "line": 76,
+                "character": 13
+              },
+              "end": {
+                "line": 76,
+                "character": 24
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute call self.interpolate in Animation.begin; resolves to Animation.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": {
+                "line": 79,
+                "character": 13
+              },
+              "end": {
+                "line": 79,
+                "character": 24
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute call self.interpolate in Animation.finish; resolves to Animation.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 8
+              },
+              "end": {
+                "line": 137,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Declaration of Animation.interpolate; a different symbol."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": {
+                "line": 145,
+                "character": 13
+              },
+              "end": {
+                "line": 145,
+                "character": 24
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute call self.interpolate in Animation.update; resolves to Animation.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/creation.py",
+            "range": {
+              "start": {
+                "line": 140,
+                "character": 19
+              },
+              "end": {
+                "line": 140,
+                "character": 30
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute call submob.interpolate on a VMobject; resolves to Mobject.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/transform.py",
+            "range": {
+              "start": {
+                "line": 127,
+                "character": 15
+              },
+              "end": {
+                "line": 127,
+                "character": 26
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute call submob.interpolate on a Mobject; resolves to Mobject.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/camera/camera_frame.py",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 8
+              },
+              "end": {
+                "line": 121,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Declaration of CameraFrame.interpolate override; a different symbol."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/camera/camera_frame.py",
+            "range": {
+              "start": {
+                "line": 122,
+                "character": 16
+              },
+              "end": {
+                "line": 122,
+                "character": 27
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "super().interpolate call; resolves to Mobject.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject_update_utils.py",
+            "range": {
+              "start": {
+                "line": 111,
+                "character": 18
+              },
+              "end": {
+                "line": 111,
+                "character": 29
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute call animation.interpolate on an Animation instance; resolves to Animation.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": {
+                "line": 150,
+                "character": 8
+              },
+              "end": {
+                "line": 150,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Declaration of DecimalNumber.interpolate override; a different symbol."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": {
+                "line": 157,
+                "character": 16
+              },
+              "end": {
+                "line": 157,
+                "character": 27
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "super().interpolate call; resolves to Mobject.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/scene/scene.py",
+            "range": {
+              "start": {
+                "line": 562,
+                "character": 26
+              },
+              "end": {
+                "line": 562,
+                "character": 37
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute call animation.interpolate on an Animation instance; resolves to Animation.interpolate."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/manimlib/animation/composition.py",
+        "range": {
+          "start": {
+            "line": 103,
+            "character": 24
+          },
+          "end": {
+            "line": 103,
+            "character": 35
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/manimlib/utils/bezier.py",
+        "source/manimlib/animation/fading.py",
+        "source/manimlib/mobject/vector_field.py",
+        "source/manimlib/mobject/mobject.py",
+        "source/manimlib/animation/numbers.py",
+        "source/manimlib/mobject/three_dimensions.py",
+        "source/manimlib/animation/composition.py",
+        "source/manimlib/mobject/number_line.py",
+        "source/manimlib/animation/indication.py",
+        "source/manimlib/utils/paths.py",
+        "source/manimlib/mobject/types/surface.py",
+        "source/manimlib/utils/color.py",
+        "source/manimlib/mobject/numbers.py",
+        "source/manimlib/mobject/types/vectorized_mobject.py",
+        "source/manimlib/mobject/svg/drawings.py",
+        "source/manimlib/animation/animation.py",
+        "source/manimlib/camera/camera_frame.py",
+        "source/manimlib/animation/creation.py",
+        "source/manimlib/animation/transform.py",
+        "source/manimlib/mobject/mobject_update_utils.py",
+        "source/manimlib/scene/scene.py",
+        "source/manimlib/__init__.py",
+        "source/example_scenes.py",
+        "source/docs/source/getting_started/example_scenes.rst",
+        "source/docs/source/development/changelog.rst"
+      ],
+      "rationale": "The declaration is the module-level function interpolate in manimlib/utils/bezier.py (line 96, chars 4-15). A whole-tree exact-token search (including ignored/hidden files) found every candidate. Required usages are all bare-name references that resolve via Python scoping to this function: three in bezier.py itself (including the default-argument reference in set_array_by_interpolation) and 32 call sites in modules that explicitly import it; bare names inside method bodies (mobject.py:1621, numbers.py:160) skip class scope and resolve to the module-level import even though the enclosing classes define interpolate methods. The 14 explicit 'from manimlib.utils.bezier import interpolate' binding tokens are optional under bindings_optional. Tokens spelled interpolate that are method declarations or attribute/super calls on Animation, Mobject, DecimalNumber, AnimationGroup, Succession, and CameraFrame were inspected and excluded as resolving to those distinct methods. The wildcard 'from manimlib.utils.bezier import *' in manimlib/__init__.py has no identifier token, so no binding location is invented, and no bare-name usages depend on it. Comment, docstring, and reStructuredText mentions were omitted. definitionUsage is the first required location after sorting by URI then position: composition.py line 103."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "b460fd4f-a6b0-4e61-b1dc-fc4cab8fb87d",
+    "executedAt": "2026-08-07T06:08:26Z"
+  },
+  "schemaVersion": 1
+}

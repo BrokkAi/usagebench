@@ -1,0 +1,135 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+        "range": {
+          "start": {
+            "line": 27,
+            "character": 5
+          },
+          "end": {
+            "line": 27,
+            "character": 25
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 52,
+                "character": 5
+              },
+              "end": {
+                "line": 52,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type annotation of the private method toPromiseValue; resolves to the module-level type alias AppEventPromiseValue declared at line 27."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 53,
+                "character": 51
+              },
+              "end": {
+                "line": 53,
+                "character": 71
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type used in an `as` assertion inside toPromiseValue; resolves to the same module-level type alias."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 62,
+                "character": 13
+              },
+              "end": {
+                "line": 62,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type argument to Promise in the return type of the awaitable `on` overload signature; resolves to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 66,
+                "character": 35
+              },
+              "end": {
+                "line": 66,
+                "character": 55
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type argument to Promise in the union return type of the `on` implementation signature; resolves to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 93,
+                "character": 23
+              },
+              "end": {
+                "line": 93,
+                "character": 43
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Explicit type argument in the `new Promise<AppEventPromiseValue<Events[K]>>` expression; resolves to the declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+        "range": {
+          "start": {
+            "line": 52,
+            "character": 5
+          },
+          "end": {
+            "line": 52,
+            "character": 25
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/packages/common/src/appEventBus.ts",
+        "source/"
+      ],
+      "rationale": "AppEventPromiseValue is a non-exported, module-private type alias declared at packages/common/src/appEventBus.ts line 27 (0-indexed). A ripgrep search of the entire pinned source tree for the exact token found occurrences only within this file: the declaration plus five reference tokens. Because the alias is not exported, no import, re-export, or cross-file usage can exist, so there are no optional binding tokens. All five in-file tokens are type positions (two in toPromiseValue's signature/body cast, two in the return types of the `on` overload and implementation, one as a Promise constructor type argument) and each unambiguously resolves to the module-level declaration with no shadowing scope. Character offsets were verified against the file text (ASCII, so UTF-16 offsets match). definitionUsage is the sort-first required location at line 52, character 5. The required set is complete with no unresolved ambiguity, so confidence is high."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "d564e02f-ba86-4a14-bfe3-c7da406bee3a",
+    "executedAt": "2026-08-07T06:08:26Z"
+  },
+  "schemaVersion": 1
+}

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "pilotId": "real-project-v1-agent-panel-pilot-v3",
+  "adjudicator": {
+    "kind": "human",
+    "identity": "DavidBakerEffendi",
+    "executedAt": "2026-08-07T00:00:00+02:00",
+    "attestation": "I approve the six v3 consensus contracts, including adding ComponentPath at rootmapping_fs.go:324 as a required receiver usage and using it as the deterministic definition target."
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-go-01-1",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v1-go-01-2",
+      "decision": "accept_consensus_contract_with_corpus_correction",
+      "correction": {
+        "addRequiredUsage": {
+          "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+          "range": {
+            "start": {"line": 323, "character": 8},
+            "end": {"line": 323, "character": 21}
+          }
+        },
+        "definitionUsage": {
+          "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+          "range": {
+            "start": {"line": 323, "character": 8},
+            "end": {"line": 323, "character": 21}
+          }
+        }
+      }
+    },
+    {
+      "caseId": "real-project-v1-python-01-1",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v1-python-01-3",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-01-1",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-01-2",
+      "decision": "accept_consensus_contract"
+    }
+  ]
+}

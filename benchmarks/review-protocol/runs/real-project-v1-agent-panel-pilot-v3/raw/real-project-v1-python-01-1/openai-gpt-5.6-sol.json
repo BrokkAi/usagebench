@@ -1,0 +1,786 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/sol_v3_python_01_1",
+    "executedAt": "2026-08-07T06:08:26Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-python-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/manimlib/utils/bezier.py",
+        "range": {
+          "start": { "line": 96, "character": 4 },
+          "end": { "line": 96, "character": 15 }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": { "line": 76, "character": 13 },
+              "end": { "line": 76, "character": 24 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute access on self resolves to the Animation.interpolate method, not the queried module function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": { "line": 79, "character": 13 },
+              "end": { "line": 79, "character": 24 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute access on self resolves to the Animation.interpolate method, not the queried module function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": { "line": 137, "character": 8 },
+              "end": { "line": 137, "character": 19 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the distinct Animation.interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": { "line": 145, "character": 13 },
+              "end": { "line": 145, "character": 24 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute access on self resolves to the Animation.interpolate method, not the queried module function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": { "line": 9, "character": 34 },
+              "end": { "line": 9, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": { "line": 103, "character": 24 },
+              "end": { "line": 103, "character": 35 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": { "line": 107, "character": 8 },
+              "end": { "line": 107, "character": 19 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the distinct AnimationGroup.interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": { "line": 120, "character": 17 },
+              "end": { "line": 120, "character": 28 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute access on anim resolves to an animation object's interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": { "line": 143, "character": 8 },
+              "end": { "line": 143, "character": 19 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the distinct Succession.interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": { "line": 152, "character": 18 },
+              "end": { "line": 152, "character": 29 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute access on animation resolves to an animation object's interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/creation.py",
+            "range": {
+              "start": { "line": 140, "character": 19 },
+              "end": { "line": 140, "character": 30 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute access on submob resolves to a mobject interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/fading.py",
+            "range": {
+              "start": { "line": 9, "character": 34 },
+              "end": { "line": 9, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/fading.py",
+            "range": {
+              "start": { "line": 167, "character": 20 },
+              "end": { "line": 167, "character": 31 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/fading.py",
+            "range": {
+              "start": { "line": 170, "character": 20 },
+              "end": { "line": 170, "character": 31 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": { "line": 26, "character": 34 },
+              "end": { "line": 26, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": { "line": 181, "character": 16 },
+              "end": { "line": 181, "character": 27 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": { "line": 238, "character": 13 },
+              "end": { "line": 238, "character": 24 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": { "line": 387, "character": 12 },
+              "end": { "line": 387, "character": 23 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/numbers.py",
+            "range": {
+              "start": { "line": 4, "character": 34 },
+              "end": { "line": 4, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/numbers.py",
+            "range": {
+              "start": { "line": 46, "character": 22 },
+              "end": { "line": 46, "character": 33 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call in the lambda resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/numbers.py",
+            "range": {
+              "start": { "line": 61, "character": 22 },
+              "end": { "line": 61, "character": 33 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call in the lambda resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/transform.py",
+            "range": {
+              "start": { "line": 127, "character": 15 },
+              "end": { "line": 127, "character": 26 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute access on submob resolves to a mobject interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/camera/camera_frame.py",
+            "range": {
+              "start": { "line": 121, "character": 8 },
+              "end": { "line": 121, "character": 19 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the distinct CameraFrame.interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/camera/camera_frame.py",
+            "range": {
+              "start": { "line": 122, "character": 16 },
+              "end": { "line": 122, "character": 27 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute access on super resolves to an inherited mobject interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject.py",
+            "range": {
+              "start": { "line": 39, "character": 34 },
+              "end": { "line": 39, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject.py",
+            "range": {
+              "start": { "line": 1620, "character": 15 },
+              "end": { "line": 1620, "character": 26 }
+            }
+          },
+          "classification": "required",
+          "rationale": "The unqualified name resolves to the module-global interpolate import; a class method of the same name does not enter method lexical scope."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject.py",
+            "range": {
+              "start": { "line": 1809, "character": 8 },
+              "end": { "line": 1809, "character": 19 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the distinct Mobject.interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject_update_utils.py",
+            "range": {
+              "start": { "line": 111, "character": 18 },
+              "end": { "line": 111, "character": 29 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute access on animation resolves to an animation object's interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/number_line.py",
+            "range": {
+              "start": { "line": 13, "character": 34 },
+              "end": { "line": 13, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/number_line.py",
+            "range": {
+              "start": { "line": 147, "character": 15 },
+              "end": { "line": 147, "character": 26 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": { "line": 11, "character": 34 },
+              "end": { "line": 11, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": { "line": 150, "character": 8 },
+              "end": { "line": 150, "character": 19 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the distinct DecimalNumber.interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": { "line": 157, "character": 16 },
+              "end": { "line": 157, "character": 27 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute access on super resolves to the inherited Mobject.interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": { "line": 159, "character": 29 },
+              "end": { "line": 159, "character": 40 }
+            }
+          },
+          "classification": "required",
+          "rationale": "The unqualified name resolves to the module-global interpolate import, distinct from class methods."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": { "line": 63, "character": 34 },
+              "end": { "line": 63, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": { "line": 484, "character": 12 },
+              "end": { "line": 484, "character": 23 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": { "line": 485, "character": 12 },
+              "end": { "line": 485, "character": 23 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": { "line": 525, "character": 30 },
+              "end": { "line": 525, "character": 41 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/three_dimensions.py",
+            "range": {
+              "start": { "line": 16, "character": 34 },
+              "end": { "line": 16, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/three_dimensions.py",
+            "range": {
+              "start": { "line": 74, "character": 37 },
+              "end": { "line": 74, "character": 48 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/three_dimensions.py",
+            "range": {
+              "start": { "line": 82, "character": 37 },
+              "end": { "line": 82, "character": 48 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": { "line": 14, "character": 34 },
+              "end": { "line": 14, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": { "line": 137, "character": 15 },
+              "end": { "line": 137, "character": 26 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": { "line": 138, "character": 12 },
+              "end": { "line": 138, "character": 23 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Nested unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": { "line": 139, "character": 12 },
+              "end": { "line": 139, "character": 23 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Nested unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": { "line": 213, "character": 35 },
+              "end": { "line": 213, "character": 46 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": { "line": 218, "character": 39 },
+              "end": { "line": 218, "character": 50 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": { "line": 225, "character": 38 },
+              "end": { "line": 225, "character": 49 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": { "line": 230, "character": 42 },
+              "end": { "line": 230, "character": 53 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+            "range": {
+              "start": { "line": 21, "character": 34 },
+              "end": { "line": 21, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+            "range": {
+              "start": { "line": 895, "character": 15 },
+              "end": { "line": 895, "character": 26 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/vector_field.py",
+            "range": {
+              "start": { "line": 12, "character": 34 },
+              "end": { "line": 12, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/vector_field.py",
+            "range": {
+              "start": { "line": 50, "character": 17 },
+              "end": { "line": 50, "character": 28 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/scene/scene.py",
+            "range": {
+              "start": { "line": 562, "character": 26 },
+              "end": { "line": 562, "character": 37 }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Attribute access on animation resolves to an animation object's interpolate method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": { "line": 121, "character": 73 },
+              "end": { "line": 121, "character": 84 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Module-local default argument reference resolves directly to the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": { "line": 147, "character": 16 },
+              "end": { "line": 147, "character": 27 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Module-local call resolves directly to the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": { "line": 167, "character": 11 },
+              "end": { "line": 167, "character": 22 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Module-local call resolves directly to the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": { "line": 11, "character": 34 },
+              "end": { "line": 11, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": { "line": 112, "character": 25 },
+              "end": { "line": 112, "character": 36 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": { "line": 114, "character": 22 },
+              "end": { "line": 114, "character": 33 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": { "line": 141, "character": 8 },
+              "end": { "line": 141, "character": 19 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": { "line": 142, "character": 8 },
+              "end": { "line": 142, "character": 19 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": { "line": 143, "character": 8 },
+              "end": { "line": 143, "character": 19 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": { "line": 161, "character": 17 },
+              "end": { "line": 161, "character": 28 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/paths.py",
+            "range": {
+              "start": { "line": 7, "character": 34 },
+              "end": { "line": 7, "character": 45 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried declaration is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/paths.py",
+            "range": {
+              "start": { "line": 32, "character": 11 },
+              "end": { "line": 32, "character": 22 }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call resolves to the interpolate binding imported from the queried declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/manimlib/animation/composition.py",
+        "range": {
+          "start": { "line": 103, "character": 24 },
+          "end": { "line": 103, "character": 35 }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "docs/source/development/changelog.rst",
+        "docs/source/getting_started/example_scenes.rst",
+        "example_scenes.py",
+        "manimlib/animation/animation.py",
+        "manimlib/animation/composition.py",
+        "manimlib/animation/creation.py",
+        "manimlib/animation/fading.py",
+        "manimlib/animation/indication.py",
+        "manimlib/animation/numbers.py",
+        "manimlib/animation/transform.py",
+        "manimlib/camera/camera_frame.py",
+        "manimlib/mobject/mobject.py",
+        "manimlib/mobject/mobject_update_utils.py",
+        "manimlib/mobject/number_line.py",
+        "manimlib/mobject/numbers.py",
+        "manimlib/mobject/svg/drawings.py",
+        "manimlib/mobject/three_dimensions.py",
+        "manimlib/mobject/types/surface.py",
+        "manimlib/mobject/types/vectorized_mobject.py",
+        "manimlib/mobject/vector_field.py",
+        "manimlib/scene/scene.py",
+        "manimlib/utils/bezier.py",
+        "manimlib/utils/color.py",
+        "manimlib/utils/paths.py"
+      ],
+      "rationale": "The queried symbol is a module-level function. All unqualified references in its defining module and in modules that explicitly import it are required, while the explicit import binding tokens are optional under bindings_optional. Same-spelling method declarations and receiver-qualified method calls resolve to distinct class members and are excluded. Comment and docstring mentions were omitted. The required set is complete with no remaining semantic ambiguity."
+    }
+  ]
+}

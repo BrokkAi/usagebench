@@ -224,12 +224,13 @@ struct EvaluationReview {
 }
 
 const CANONICAL_AGENT_REVIEW_PROTOCOL: &str =
-    "benchmarks/review-protocol/blinded-agent-review-v1.json";
+    "benchmarks/review-protocol/blinded-agent-review-v3.json";
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct AgentReviewProtocol {
     schema_version: u32,
+    methodology: ArtifactLink,
     prompt: ArtifactLink,
     response_schema: ArtifactLink,
 }
@@ -1639,9 +1640,14 @@ fn validate_review_contract(
                     .with_context(|| {
                         format!("parse review protocol {}", protocol_path.display())
                     })?;
-                if protocol.schema_version != 1 {
+                if protocol.schema_version != 3 {
                     bail!("unsupported canonical agent review protocol schema version");
                 }
+                validate_linked_artifact(
+                    &protocol.methodology,
+                    repo_root,
+                    "canonical agent methodology",
+                )?;
                 validate_linked_artifact(&protocol.prompt, repo_root, "canonical agent prompt")?;
                 validate_linked_artifact(
                     &protocol.response_schema,
@@ -1894,6 +1900,35 @@ fn validate_raw_response_matches_evidence(
                 normalized.case_id
             );
         }
+        if raw_required.contains(&raw_record.declaration) {
+            bail!(
+                "raw agent response includes the selected declaration as a usage for case {}",
+                normalized.case_id
+            );
+        }
+        if raw_required
+            .iter()
+            .enumerate()
+            .any(|(index, location)| raw_required[index + 1..].contains(location))
+        {
+            bail!(
+                "raw agent response contains duplicate required locations for case {}",
+                normalized.case_id
+            );
+        }
+        let deterministic_definition = raw_required.iter().min_by_key(|location| {
+            (
+                location.uri.as_str(),
+                location.range.start.line,
+                location.range.start.character,
+            )
+        });
+        if raw_record.definition_usage.as_ref() != deterministic_definition {
+            bail!(
+                "raw agent response does not use the deterministic definition target for case {}",
+                normalized.case_id
+            );
+        }
     }
     Ok(())
 }
@@ -1914,16 +1949,23 @@ fn validate_panel_escalations(
             })
             .collect::<Vec<_>>();
         let first = records.first().context("agent panel has no responses")?;
+        let required = |record: &AgentResponseRecord| {
+            record
+                .locations
+                .iter()
+                .filter(|location| location.classification == "required")
+                .map(|location| location.location.clone())
+                .collect::<Vec<_>>()
+        };
+        let first_required = required(first);
         let exact_agreement = records.iter().all(|record| {
+            let record_required = required(record);
             record.decision == first.decision
                 && record.declaration == first.declaration
-                && record.locations.len() == first.locations.len()
-                && record.locations.iter().all(|item| {
-                    first.locations.iter().any(|expected| {
-                        item.location == expected.location
-                            && item.classification == expected.classification
-                    })
-                })
+                && record_required.len() == first_required.len()
+                && record_required
+                    .iter()
+                    .all(|location| first_required.contains(location))
                 && record.definition_usage == first.definition_usage
         });
         let requires_escalation = !exact_agreement
@@ -2372,6 +2414,60 @@ mod tests {
     }
 
     #[test]
+    fn retained_v3_agent_panel_artifacts_are_hash_bound_and_schema_valid() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let protocol_path = root.join(CANONICAL_AGENT_REVIEW_PROTOCOL);
+        let protocol: AgentReviewProtocol =
+            serde_json::from_slice(&fs::read(protocol_path).unwrap()).unwrap();
+        assert_eq!(protocol.schema_version, 3);
+        validate_linked_artifact(&protocol.methodology, root, "canonical methodology").unwrap();
+        validate_linked_artifact(&protocol.prompt, root, "canonical prompt").unwrap();
+        validate_linked_artifact(&protocol.response_schema, root, "canonical schema").unwrap();
+
+        let schema: serde_json::Value =
+            serde_json::from_slice(&fs::read(root.join(&protocol.response_schema.file)).unwrap())
+                .unwrap();
+        let compiled = jsonschema::JSONSchema::compile(&schema).unwrap();
+        let run_path = root
+            .join("benchmarks/review-protocol/runs/real-project-v1-agent-panel-pilot-v3/run.json");
+        let run: serde_json::Value = serde_json::from_slice(&fs::read(run_path).unwrap()).unwrap();
+
+        let packets = run["packets"].as_array().unwrap();
+        assert_eq!(packets.len(), 6);
+        for packet in packets {
+            let link: ArtifactLink = serde_json::from_value(packet.clone()).unwrap();
+            validate_linked_artifact(&link, root, "retained case packet").unwrap();
+        }
+
+        let adjudication: ArtifactLink =
+            serde_json::from_value(run["adjudication"].clone()).unwrap();
+        validate_linked_artifact(&adjudication, root, "retained human adjudication").unwrap();
+
+        let sessions = run["sessions"].as_array().unwrap();
+        assert_eq!(sessions.len(), 12);
+        let mut coverage = BTreeMap::<String, usize>::new();
+        for session in sessions {
+            let link: ArtifactLink =
+                serde_json::from_value(session["rawResponse"].clone()).unwrap();
+            validate_linked_artifact(&link, root, "retained raw response").unwrap();
+            let response: serde_json::Value =
+                serde_json::from_slice(&fs::read(root.join(&link.file)).unwrap()).unwrap();
+            assert!(compiled.is_valid(&response));
+            let typed: AgentResponse = serde_json::from_value(response).unwrap();
+            assert_eq!(typed.records.len(), 1);
+            assert_eq!(typed.reviewer.provider, session["provider"]);
+            assert_eq!(typed.reviewer.model, session["model"]);
+            assert_eq!(typed.reviewer.execution_id, session["executionId"]);
+            assert_eq!(typed.records[0].case_id, session["caseId"]);
+            *coverage
+                .entry(typed.records[0].case_id.clone())
+                .or_default() += 1;
+        }
+        assert_eq!(coverage.len(), 6);
+        assert!(coverage.values().all(|count| *count == 2));
+    }
+
+    #[test]
     fn legacy_real_project_review_cannot_be_published() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let error = build_release_audit(root.join("benchmarks/cases/evaluation/real-project-v1"))
@@ -2594,6 +2690,11 @@ mod tests {
         let root = temp.path();
         let protocol_dir = root.join("benchmarks/review-protocol");
         fs::create_dir_all(&protocol_dir).unwrap();
+        fs::write(
+            protocol_dir.join("per-case-methodology-v3.md"),
+            "methodology",
+        )
+        .unwrap();
         fs::write(protocol_dir.join("blinded-agent-prompt-v1.md"), "prompt").unwrap();
         write_json(
             &protocol_dir.join("agent-response-v1.schema.json"),
@@ -2619,13 +2720,17 @@ mod tests {
             file: "benchmarks/review-protocol/blinded-agent-prompt-v1.md".to_string(),
             sha256: sha256(&fs::read(protocol_dir.join("blinded-agent-prompt-v1.md")).unwrap()),
         };
+        let methodology_link = ArtifactLink {
+            file: "benchmarks/review-protocol/per-case-methodology-v3.md".to_string(),
+            sha256: sha256(&fs::read(protocol_dir.join("per-case-methodology-v3.md")).unwrap()),
+        };
         let response_schema_link = ArtifactLink {
             file: "benchmarks/review-protocol/agent-response-v1.schema.json".to_string(),
             sha256: sha256(&fs::read(protocol_dir.join("agent-response-v1.schema.json")).unwrap()),
         };
         write_json(
-            &protocol_dir.join("blinded-agent-review-v1.json"),
-            json!({"schemaVersion": 1, "prompt": prompt_link, "responseSchema": response_schema_link}),
+            &protocol_dir.join("blinded-agent-review-v3.json"),
+            json!({"schemaVersion": 3, "methodology": methodology_link, "prompt": prompt_link, "responseSchema": response_schema_link}),
         );
         write_json(
             &root.join("openai.json"),
@@ -2684,7 +2789,7 @@ mod tests {
             review_protocol: Some(ArtifactLink {
                 file: CANONICAL_AGENT_REVIEW_PROTOCOL.to_string(),
                 sha256: sha256(
-                    &fs::read(protocol_dir.join("blinded-agent-review-v1.json")).unwrap(),
+                    &fs::read(protocol_dir.join("blinded-agent-review-v3.json")).unwrap(),
                 ),
             }),
             reviewers: vec![

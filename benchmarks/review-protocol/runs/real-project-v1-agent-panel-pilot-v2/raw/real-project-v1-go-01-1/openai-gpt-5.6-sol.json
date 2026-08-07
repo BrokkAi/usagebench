@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/sol_v2_go_01_1",
+    "executedAt": "2026-08-07T06:02:12Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-go-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/hugolib/shortcode.go",
+        "range": {
+          "start": {
+            "line": 295,
+            "character": 29
+          },
+          "end": {
+            "line": 295,
+            "character": 36
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/page__content.go",
+            "range": {
+              "start": {
+                "line": 347,
+                "character": 6
+              },
+              "end": {
+                "line": 347,
+                "character": 13
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Method call on s, which is assigned from pi.shortcodeParseInfo and therefore has type *shortcodeParseInfo."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/shortcode.go",
+            "range": {
+              "start": {
+                "line": 612,
+                "character": 7
+              },
+              "end": {
+                "line": 612,
+                "character": 14
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call on the *shortcodeParseInfo receiver s inside extractShortcode."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/hugolib/page__content.go",
+        "range": {
+          "start": {
+            "line": 347,
+            "character": 6
+          },
+          "end": {
+            "line": 347,
+            "character": 13
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/hugolib/page__content.go",
+        "source/hugolib/shortcode.go"
+      ],
+      "rationale": "The complete source-wide exact-name search found only the declaration and two method calls. Both calls resolve to shortcodeParseInfo.addName; there are no import, export, or re-export binding tokens and no required-contract ambiguity."
+    }
+  ]
+}

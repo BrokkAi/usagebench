@@ -1,0 +1,84 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-go-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/hugolib/shortcode.go",
+        "range": {
+          "start": {
+            "line": 295,
+            "character": 29
+          },
+          "end": {
+            "line": 295,
+            "character": 36
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/page__content.go",
+            "range": {
+              "start": {
+                "line": 347,
+                "character": 6
+              },
+              "end": {
+                "line": 347,
+                "character": 13
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Method call s.addName(currShortcode.name) in (*contentParseInfo).parseSource; s is assigned from pi.shortcodeParseInfo (line 277), a field declared as *shortcodeParseInfo (line 184), so the call resolves to the declared method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/shortcode.go",
+            "range": {
+              "start": {
+                "line": 612,
+                "character": 7
+              },
+              "end": {
+                "line": 612,
+                "character": 14
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Method call s.addName(nested.name) inside (*shortcodeParseInfo).extractShortcode, whose receiver s is *shortcodeParseInfo, resolving to the declared method."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/hugolib/page__content.go",
+        "range": {
+          "start": {
+            "line": 347,
+            "character": 6
+          },
+          "end": {
+            "line": 347,
+            "character": 13
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/hugolib/shortcode.go",
+        "source/hugolib/page__content.go"
+      ],
+      "rationale": "The selected declaration is the unexported method addName on *shortcodeParseInfo (hugolib/shortcode.go, 0-based line 295, chars 29-36). A project-wide case-insensitive search for addName found exactly three tokens: the declaration and two method calls. Both calls were verified to resolve to this method via receiver types (*shortcodeParseInfo receiver in extractShortcode; local s assigned from the *shortcodeParseInfo field in contentParseInfo.parseSource). Go methods have no import/re-export binding tokens, so no optional locations exist under bindings_optional. No same-name candidates required exclusion. Both usage lines are ASCII, so UTF-16 columns match byte offsets. definitionUsage is the first required location after sorting by URI then position."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "e55496b0-fd66-49a9-996d-951028ad1cf4",
+    "executedAt": "2026-08-07T06:08:26Z"
+  },
+  "schemaVersion": 1
+}

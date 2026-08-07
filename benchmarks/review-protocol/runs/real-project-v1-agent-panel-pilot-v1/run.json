@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "pilotId": "real-project-v1-agent-panel-pilot-v1",
+  "sourceRevision": "e813500c2ae693def85642e0caa6850b446d81f8",
+  "startedAt": "2026-08-06T13:16:00Z",
+  "protocol": {
+    "file": "benchmarks/review-protocol/blinded-agent-review-v1.json",
+    "sha256": "56b35f79f4b5d9f12b7b25a7f89ec85f632b31c860a8f596c1ab14bf70338447"
+  },
+  "pilot": {
+    "file": "benchmarks/review-protocol/pilots/real-project-v1-six-case.json",
+    "sha256": "ad9f08cf5db9bb72203d7d477f83452963b71e6c54edee996ec6da1eb54486bf"
+  },
+  "reviewers": [
+    {
+      "provider": "openai",
+      "model": "gpt-5.6-sol",
+      "executionId": "codex-task:/root/sol_blinded_reviewer",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-pilot-v1/raw/openai-gpt-5.6-sol.json",
+        "sha256": "1a4ee9fedf806f12c92a4c8b4192ed78589fbefea4c7f8b5be4c81f627e1a11f"
+      },
+      "costUsd": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-fable-5",
+      "executionId": "db91422e-ed9d-45b5-8f98-837100f7f2a7",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-pilot-v1/raw/anthropic-claude-fable-5.json",
+        "sha256": "e3fb326fa532dde35c67d4cfadbfa2a29a8742062f0eb8bb242791eace305d38"
+      },
+      "durationMs": 461151,
+      "costUsd": 3.630669
+    }
+  ]
+}

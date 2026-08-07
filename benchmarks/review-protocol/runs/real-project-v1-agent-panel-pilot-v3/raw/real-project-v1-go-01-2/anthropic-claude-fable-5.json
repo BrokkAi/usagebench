@@ -1,0 +1,238 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-go-01-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+        "range": {
+          "start": {
+            "line": 317,
+            "character": 5
+          },
+          "end": {
+            "line": 317,
+            "character": 18
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 323,
+                "character": 8
+              },
+              "end": {
+                "line": 323,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver type in method declaration `func (c ComponentPath) ComponentPathJoined()`; resolves to the struct type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 328,
+                "character": 35
+              },
+              "end": {
+                "line": 328,
+                "character": 48
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Slice element type in ReverseLookup signature of the ReverseLookupProvder interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 329,
+                "character": 55
+              },
+              "end": {
+                "line": 329,
+                "character": 68
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Slice element type in ReverseLookupComponent signature of the ReverseLookupProvder interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 333,
+                "character": 59
+              },
+              "end": {
+                "line": 333,
+                "character": 72
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Slice element return type in (*RootMappingFs).ReverseLookup method signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 337,
+                "character": 79
+              },
+              "end": {
+                "line": 337,
+                "character": 92
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Slice element return type in (*RootMappingFs).ReverseLookupComponent method signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 347,
+                "character": 11
+              },
+              "end": {
+                "line": 347,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Slice element type in local variable declaration `var cps []ComponentPath`."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 370,
+                "character": 20
+              },
+              "end": {
+                "line": 370,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Composite literal type `ComponentPath{...}` appended to cps."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 328,
+                "character": 67
+              },
+              "end": {
+                "line": 328,
+                "character": 80
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified reference hugofs.ComponentPath as slice element return type of (*SourceFilesystems).ResolvePaths."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 329,
+                "character": 19
+              },
+              "end": {
+                "line": 329,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified reference hugofs.ComponentPath in local variable declaration `var cpss []hugofs.ComponentPath`."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 366,
+                "character": 86
+              },
+              "end": {
+                "line": 366,
+                "character": 99
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified reference hugofs.ComponentPath as slice element return type of (*SourceFilesystem).ReverseLookup."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 367,
+                "character": 18
+              },
+              "end": {
+                "line": 367,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified reference hugofs.ComponentPath in local variable declaration `var cps []hugofs.ComponentPath`."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+        "range": {
+          "start": {
+            "line": 323,
+            "character": 8
+          },
+          "end": {
+            "line": 323,
+            "character": 21
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "CASE.json",
+        "source/hugofs/rootmapping_fs.go",
+        "source/hugolib/filesystems/basefs.go"
+      ],
+      "rationale": "The declaration is the exported struct type ComponentPath in package hugofs (hugofs/rootmapping_fs.go, 0-based line 317). A whole-project search found exactly 12 exact-identifier occurrences of ComponentPath in 2 files; excluding the declaration token itself, all 11 remaining tokens semantically resolve to this type: 7 in-package references in rootmapping_fs.go (receiver clause, interface method signatures, method return types, a var declaration, and a composite literal) and 4 package-qualified hugofs.ComponentPath references in hugolib/filesystems/basefs.go. No other declaration named ComponentPath exists in the snapshot, so no exact-name token resolves elsewhere. ComponentPathJoined is a distinct identifier (substring match) and is omitted per rule 3. Go type references are qualified via the package identifier, so there are no explicit import/re-export binding tokens for the type under the bindings_optional policy. All lines are ASCII, so UTF-16 columns equal byte columns. definitionUsage is the first required location after sorting by URI, then line, then character: the receiver-clause reference at rootmapping_fs.go 0-based line 323, character 8."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "eaf78cb0-d320-4547-b11e-34f172af2306",
+    "executedAt": "2026-08-07T06:08:26Z"
+  },
+  "schemaVersion": 1
+}
