@@ -364,8 +364,9 @@ pub fn validate_path(path: impl AsRef<Path>) -> Result<Vec<PathBuf>> {
         );
     }
 
+    let mut evaluation_cache = evaluation::EvaluationEvidenceCache::default();
     for file in &files {
-        validate_file(file, &compiled_schema, &repo_root)?;
+        validate_file(file, &compiled_schema, &repo_root, &mut evaluation_cache)?;
     }
 
     Ok(files)
@@ -430,6 +431,7 @@ fn validate_file(
     file: &Path,
     compiled_schema: &jsonschema::JSONSchema,
     repo_root: &Path,
+    evaluation_cache: &mut evaluation::EvaluationEvidenceCache,
 ) -> Result<()> {
     let yaml = fs::read_to_string(file).with_context(|| format!("read {}", file.display()))?;
     let document: serde_yaml::Value =
@@ -454,7 +456,7 @@ fn validate_file(
     benchmark
         .validate_with_base(repo_root)
         .with_context(|| format!("validate benchmark semantics {}", file.display()))?;
-    evaluation::validate_document_evidence(&benchmark, file, repo_root)
+    evaluation::validate_document_evidence_cached(&benchmark, file, repo_root, evaluation_cache)
         .with_context(|| format!("validate evaluation evidence {}", file.display()))?;
     Ok(())
 }

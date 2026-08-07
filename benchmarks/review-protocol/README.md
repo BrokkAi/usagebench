@@ -9,8 +9,14 @@ judgments are never described as independent human reviews.
 manifest. Every qualifying agent review must link that manifest and its exact
 methodology, prompt, and response-schema digests. Each participant records the
 provider, exact model, provider-native execution ID, execution timestamp, and
-a hash-bound raw response. The validator requires the raw response to cover
-every selected case exactly once and to match the normalized reviewer evidence.
+a hash-bound raw response. V3 publication records those values in one per-case
+session, together with the exact case-packet digest. The packet embeds the
+pinned source-archive digest. For each logical reviewer, the validator requires
+one provider/model cohort across all sessions, exact coverage of every selected
+case, and agreement with the normalized reviewer evidence. It also requires at
+least two providers for every case and rejects reused provider/execution-ID
+pairs. Legacy schema-v2 singleton evidence remains readable, but a panel cannot
+mix singleton and per-case representations.
 
 V3 uses one fresh session and one complete pinned project snapshot per case.
 Primary consensus compares required semantic locations and the deterministic
