@@ -1,0 +1,1855 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "db91422e-ed9d-45b5-8f98-837100f7f2a7",
+    "executedAt": "2026-08-06T13:16:00Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-go-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/hugolib/shortcode.go",
+        "range": {
+          "start": {
+            "line": 295,
+            "character": 29
+          },
+          "end": {
+            "line": 295,
+            "character": 36
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/shortcode.go",
+            "range": {
+              "start": {
+                "line": 612,
+                "character": 7
+              },
+              "end": {
+                "line": 612,
+                "character": 14
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call s.addName(nested.name) inside (s *shortcodeParseInfo).extractShortcode (declared line 572, 1-based); receiver is the declaring type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/page__content.go",
+            "range": {
+              "start": {
+                "line": 347,
+                "character": 6
+              },
+              "end": {
+                "line": 347,
+                "character": 13
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call s.addName(currShortcode.name) in (pi *contentParseInfo).parseSource where s := pi.shortcodeParseInfo (line 276, 1-based), so it resolves to the declared method."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/hugolib/shortcode.go",
+        "range": {
+          "start": {
+            "line": 612,
+            "character": 7
+          },
+          "end": {
+            "line": 612,
+            "character": 14
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "hugolib/shortcode.go",
+        "hugolib/page__content.go"
+      ],
+      "rationale": "addName is an unexported method on *shortcodeParseInfo, so usages are confined to package hugolib. A package-wide search finds exactly two call sites, both on receivers of the declaring type; no shadowing or same-name declarations exist elsewhere in the package."
+    },
+    {
+      "caseId": "real-project-v1-go-01-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+        "range": {
+          "start": {
+            "line": 317,
+            "character": 5
+          },
+          "end": {
+            "line": 317,
+            "character": 18
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 323,
+                "character": 8
+              },
+              "end": {
+                "line": 323,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver type of method ComponentPathJoined."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 328,
+                "character": 35
+              },
+              "end": {
+                "line": 328,
+                "character": 48
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type []ComponentPath in ReverseLookup signature of interface ReverseLookupProvder."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 329,
+                "character": 55
+              },
+              "end": {
+                "line": 329,
+                "character": 68
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type []ComponentPath in ReverseLookupComponent signature of interface ReverseLookupProvder."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 333,
+                "character": 59
+              },
+              "end": {
+                "line": 333,
+                "character": 72
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type in (fs *RootMappingFs).ReverseLookup signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 337,
+                "character": 79
+              },
+              "end": {
+                "line": 337,
+                "character": 92
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type in (fs *RootMappingFs).ReverseLookupComponent signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 347,
+                "character": 11
+              },
+              "end": {
+                "line": 347,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "var cps []ComponentPath declaration inside ReverseLookupComponent."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 370,
+                "character": 20
+              },
+              "end": {
+                "line": 370,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Composite literal ComponentPath{...} appended to cps."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 328,
+                "character": 67
+              },
+              "end": {
+                "line": 328,
+                "character": 80
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified return type []hugofs.ComponentPath in SourceFilesystems.ResolvePaths signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 329,
+                "character": 19
+              },
+              "end": {
+                "line": 329,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "var cpss []hugofs.ComponentPath inside ResolvePaths."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 366,
+                "character": 86
+              },
+              "end": {
+                "line": 366,
+                "character": 99
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified return type []hugofs.ComponentPath in SourceFilesystem.ReverseLookup signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+            "range": {
+              "start": {
+                "line": 367,
+                "character": 18
+              },
+              "end": {
+                "line": 367,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "var cps []hugofs.ComponentPath inside SourceFilesystem.ReverseLookup."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+            "range": {
+              "start": {
+                "line": 323,
+                "character": 22
+              },
+              "end": {
+                "line": 323,
+                "character": 41
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Method name ComponentPathJoined merely contains the type name as a substring; it is a distinct identifier, not a usage of the type."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/hugolib/filesystems/basefs.go",
+        "range": {
+          "start": {
+            "line": 328,
+            "character": 67
+          },
+          "end": {
+            "line": 328,
+            "character": 80
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "hugofs/rootmapping_fs.go",
+        "hugolib/filesystems/basefs.go"
+      ],
+      "rationale": "ComponentPath is an exported struct in package hugofs. A whole-repository word-boundary search finds type references only in hugofs/rootmapping_fs.go (receiver, interface and method signatures, var decl, composite literal) and qualified hugofs.ComponentPath references in hugolib/filesystems/basefs.go. Go has no import-name binding for a type identifier itself, so all found references are direct semantic usages."
+    },
+    {
+      "caseId": "real-project-v1-python-01-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/manimlib/utils/iterables.py",
+        "range": {
+          "start": {
+            "line": 122,
+            "character": 4
+          },
+          "end": {
+            "line": 122,
+            "character": 13
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+            "range": {
+              "start": {
+                "line": 284,
+                "character": 33
+              },
+              "end": {
+                "line": 284,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call zip(*make_even(submobs1, submobs2)) resolves through the module-level import of make_even from manimlib.utils.iterables."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+            "range": {
+              "start": {
+                "line": 30,
+                "character": 37
+              },
+              "end": {
+                "line": 30,
+                "character": 46
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding: from manimlib.utils.iterables import make_even; optional under bindings_optional policy."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/__init__.py",
+            "range": {
+              "start": {
+                "line": 77,
+                "character": 0
+              },
+              "end": {
+                "line": 77,
+                "character": 38
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Wildcard re-export binding: from manimlib.utils.iterables import * implicitly binds make_even; the identifier token does not appear, so the full statement range is given. Optional under bindings_optional."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+        "range": {
+          "start": {
+            "line": 284,
+            "character": 33
+          },
+          "end": {
+            "line": 284,
+            "character": 42
+          }
+        }
+      },
+      "ambiguities": [
+        "The wildcard import in manimlib/__init__.py binds make_even without naming it; no explicit token exists for that binding."
+      ],
+      "inspectedPaths": [
+        "manimlib/utils/iterables.py",
+        "manimlib/mobject/types/vectorized_mobject.py",
+        "manimlib/__init__.py"
+      ],
+      "rationale": "make_even is defined once in manimlib/utils/iterables.py. Repository-wide search finds one explicit import binding and one call site in vectorized_mobject.py, plus an implicit wildcard re-export in manimlib/__init__.py. No same-name declarations or shadowing exist."
+    },
+    {
+      "caseId": "real-project-v1-python-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/manimlib/utils/bezier.py",
+        "range": {
+          "start": {
+            "line": 96,
+            "character": 4
+          },
+          "end": {
+            "line": 96,
+            "character": 15
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 73
+              },
+              "end": {
+                "line": 121,
+                "character": 84
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare reference as default value of interp_func parameter in set_array_by_interpolation; same module scope."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 147,
+                "character": 16
+              },
+              "end": {
+                "line": 147,
+                "character": 27
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside integer_interpolate; same module scope."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 167,
+                "character": 11
+              },
+              "end": {
+                "line": 167,
+                "character": 22
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside match_interpolate; same module scope."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/fading.py",
+            "range": {
+              "start": {
+                "line": 167,
+                "character": 20
+              },
+              "end": {
+                "line": 167,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call; module imports interpolate from manimlib.utils.bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/fading.py",
+            "range": {
+              "start": {
+                "line": 170,
+                "character": 20
+              },
+              "end": {
+                "line": 170,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject.py",
+            "range": {
+              "start": {
+                "line": 1620,
+                "character": 15
+              },
+              "end": {
+                "line": 1620,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call inside a Mobject method resolves to the module-level import from bezier, not to the Mobject.interpolate method (methods are not in lexical scope)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 103,
+                "character": 24
+              },
+              "end": {
+                "line": 103,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/numbers.py",
+            "range": {
+              "start": {
+                "line": 46,
+                "character": 22
+              },
+              "end": {
+                "line": 46,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call in lambda via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/numbers.py",
+            "range": {
+              "start": {
+                "line": 61,
+                "character": 22
+              },
+              "end": {
+                "line": 61,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call in lambda via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": {
+                "line": 181,
+                "character": 16
+              },
+              "end": {
+                "line": 181,
+                "character": 27
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": {
+                "line": 238,
+                "character": 13
+              },
+              "end": {
+                "line": 238,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": {
+                "line": 387,
+                "character": 12
+              },
+              "end": {
+                "line": 387,
+                "character": 23
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/number_line.py",
+            "range": {
+              "start": {
+                "line": 147,
+                "character": 15
+              },
+              "end": {
+                "line": 147,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/paths.py",
+            "range": {
+              "start": {
+                "line": 32,
+                "character": 11
+              },
+              "end": {
+                "line": 32,
+                "character": 22
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call in straight_path via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 112,
+                "character": 25
+              },
+              "end": {
+                "line": 112,
+                "character": 36
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 114,
+                "character": 22
+              },
+              "end": {
+                "line": 114,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 141,
+                "character": 8
+              },
+              "end": {
+                "line": 141,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 142,
+                "character": 8
+              },
+              "end": {
+                "line": 142,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 143,
+                "character": 8
+              },
+              "end": {
+                "line": 143,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 161,
+                "character": 17
+              },
+              "end": {
+                "line": 161,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": {
+                "line": 159,
+                "character": 29
+              },
+              "end": {
+                "line": 159,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call inside DecimalNumber.interpolate method body; resolves to the module-level import from bezier, not to the enclosing method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/vector_field.py",
+            "range": {
+              "start": {
+                "line": 50,
+                "character": 17
+              },
+              "end": {
+                "line": 50,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/three_dimensions.py",
+            "range": {
+              "start": {
+                "line": 74,
+                "character": 37
+              },
+              "end": {
+                "line": 74,
+                "character": 48
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/three_dimensions.py",
+            "range": {
+              "start": {
+                "line": 82,
+                "character": 37
+              },
+              "end": {
+                "line": 82,
+                "character": 48
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 15
+              },
+              "end": {
+                "line": 137,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 138,
+                "character": 12
+              },
+              "end": {
+                "line": 138,
+                "character": 23
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 139,
+                "character": 12
+              },
+              "end": {
+                "line": 139,
+                "character": 23
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 213,
+                "character": 35
+              },
+              "end": {
+                "line": 213,
+                "character": 46
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 218,
+                "character": 39
+              },
+              "end": {
+                "line": 218,
+                "character": 50
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 225,
+                "character": 38
+              },
+              "end": {
+                "line": 225,
+                "character": 49
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 230,
+                "character": 42
+              },
+              "end": {
+                "line": 230,
+                "character": 53
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+            "range": {
+              "start": {
+                "line": 895,
+                "character": 15
+              },
+              "end": {
+                "line": 895,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": {
+                "line": 484,
+                "character": 12
+              },
+              "end": {
+                "line": 484,
+                "character": 23
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": {
+                "line": 485,
+                "character": 12
+              },
+              "end": {
+                "line": 485,
+                "character": 23
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": {
+                "line": 525,
+                "character": 30
+              },
+              "end": {
+                "line": 525,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Bare call via module import from bezier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/fading.py",
+            "range": {
+              "start": {
+                "line": 9,
+                "character": 34
+              },
+              "end": {
+                "line": 9,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject.py",
+            "range": {
+              "start": {
+                "line": 39,
+                "character": 34
+              },
+              "end": {
+                "line": 39,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/numbers.py",
+            "range": {
+              "start": {
+                "line": 4,
+                "character": 34
+              },
+              "end": {
+                "line": 4,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 9,
+                "character": 34
+              },
+              "end": {
+                "line": 9,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/number_line.py",
+            "range": {
+              "start": {
+                "line": 13,
+                "character": 34
+              },
+              "end": {
+                "line": 13,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/indication.py",
+            "range": {
+              "start": {
+                "line": 26,
+                "character": 34
+              },
+              "end": {
+                "line": 26,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": {
+                "line": 11,
+                "character": 34
+              },
+              "end": {
+                "line": 11,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/vector_field.py",
+            "range": {
+              "start": {
+                "line": 12,
+                "character": 34
+              },
+              "end": {
+                "line": 12,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/three_dimensions.py",
+            "range": {
+              "start": {
+                "line": 16,
+                "character": 34
+              },
+              "end": {
+                "line": 16,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/surface.py",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 34
+              },
+              "end": {
+                "line": 14,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/types/vectorized_mobject.py",
+            "range": {
+              "start": {
+                "line": 21,
+                "character": 34
+              },
+              "end": {
+                "line": 21,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/svg/drawings.py",
+            "range": {
+              "start": {
+                "line": 63,
+                "character": 34
+              },
+              "end": {
+                "line": 63,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/color.py",
+            "range": {
+              "start": {
+                "line": 11,
+                "character": 34
+              },
+              "end": {
+                "line": 11,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/paths.py",
+            "range": {
+              "start": {
+                "line": 7,
+                "character": 34
+              },
+              "end": {
+                "line": 7,
+                "character": 45
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/__init__.py",
+            "range": {
+              "start": {
+                "line": 69,
+                "character": 0
+              },
+              "end": {
+                "line": 69,
+                "character": 35
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Wildcard re-export binding from manimlib.utils.bezier import *; binds interpolate without an explicit token. Optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject.py",
+            "range": {
+              "start": {
+                "line": 1809,
+                "character": 8
+              },
+              "end": {
+                "line": 1809,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Distinct declaration: Mobject.interpolate method definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 8
+              },
+              "end": {
+                "line": 137,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Distinct declaration: Animation.interpolate method definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 107,
+                "character": 8
+              },
+              "end": {
+                "line": 107,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Distinct declaration: AnimationGroup-family interpolate method definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 143,
+                "character": 8
+              },
+              "end": {
+                "line": 143,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Distinct declaration: interpolate method definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": {
+                "line": 150,
+                "character": 8
+              },
+              "end": {
+                "line": 150,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Distinct declaration: DecimalNumber.interpolate method definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/camera/camera_frame.py",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 8
+              },
+              "end": {
+                "line": 121,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Distinct declaration: CameraFrame.interpolate method definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/camera/camera_frame.py",
+            "range": {
+              "start": {
+                "line": 122,
+                "character": 16
+              },
+              "end": {
+                "line": 122,
+                "character": 27
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "super().interpolate attribute call; resolves to a method, not the bezier function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/numbers.py",
+            "range": {
+              "start": {
+                "line": 157,
+                "character": 16
+              },
+              "end": {
+                "line": 157,
+                "character": 27
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "super().interpolate attribute call; resolves to Mobject.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": {
+                "line": 76,
+                "character": 13
+              },
+              "end": {
+                "line": 76,
+                "character": 24
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "self.interpolate attribute call; resolves to Animation.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": {
+                "line": 79,
+                "character": 13
+              },
+              "end": {
+                "line": 79,
+                "character": 24
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "self.interpolate attribute call; resolves to Animation.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/animation.py",
+            "range": {
+              "start": {
+                "line": 145,
+                "character": 13
+              },
+              "end": {
+                "line": 145,
+                "character": 24
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "self.interpolate attribute call; resolves to Animation.interpolate."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 120,
+                "character": 17
+              },
+              "end": {
+                "line": 120,
+                "character": 28
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "anim.interpolate attribute call on an Animation instance."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/composition.py",
+            "range": {
+              "start": {
+                "line": 152,
+                "character": 18
+              },
+              "end": {
+                "line": 152,
+                "character": 29
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "animation.interpolate attribute call on an Animation instance."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/scene/scene.py",
+            "range": {
+              "start": {
+                "line": 562,
+                "character": 26
+              },
+              "end": {
+                "line": 562,
+                "character": 37
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "animation.interpolate attribute call on an Animation instance."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/mobject/mobject_update_utils.py",
+            "range": {
+              "start": {
+                "line": 111,
+                "character": 18
+              },
+              "end": {
+                "line": 111,
+                "character": 29
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "animation.interpolate attribute call on an Animation instance."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/creation.py",
+            "range": {
+              "start": {
+                "line": 140,
+                "character": 19
+              },
+              "end": {
+                "line": 140,
+                "character": 30
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "submob.interpolate attribute call on a Mobject instance."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/animation/transform.py",
+            "range": {
+              "start": {
+                "line": 127,
+                "character": 15
+              },
+              "end": {
+                "line": 127,
+                "character": 26
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "submob.interpolate attribute call on a Mobject instance."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/manimlib/utils/paths.py",
+        "range": {
+          "start": {
+            "line": 32,
+            "character": 11
+          },
+          "end": {
+            "line": 32,
+            "character": 22
+          }
+        }
+      },
+      "ambiguities": [
+        "Several classes declare same-name interpolate methods (Mobject, Animation, composition classes, DecimalNumber, CameraFrame); all attribute-style X.interpolate(...) calls resolve to those methods and are excluded.",
+        "Occurrences of the word interpolate in comments and docs (manimlib/utils/paths.py line 28, manimlib/mobject/mobject.py line 1857, example_scenes.py, docs/*.rst) are non-semantic and excluded without individual listings.",
+        "The wildcard re-export in manimlib/__init__.py binds interpolate implicitly with no explicit identifier token; no downstream code uses that binding as an expression in this repository."
+      ],
+      "inspectedPaths": [
+        "manimlib/utils/bezier.py",
+        "manimlib/utils/paths.py",
+        "manimlib/utils/color.py",
+        "manimlib/animation/fading.py",
+        "manimlib/animation/composition.py",
+        "manimlib/animation/numbers.py",
+        "manimlib/animation/indication.py",
+        "manimlib/animation/animation.py",
+        "manimlib/animation/creation.py",
+        "manimlib/animation/transform.py",
+        "manimlib/mobject/mobject.py",
+        "manimlib/mobject/numbers.py",
+        "manimlib/mobject/number_line.py",
+        "manimlib/mobject/vector_field.py",
+        "manimlib/mobject/three_dimensions.py",
+        "manimlib/mobject/mobject_update_utils.py",
+        "manimlib/mobject/types/surface.py",
+        "manimlib/mobject/types/vectorized_mobject.py",
+        "manimlib/mobject/svg/drawings.py",
+        "manimlib/camera/camera_frame.py",
+        "manimlib/scene/scene.py",
+        "manimlib/__init__.py"
+      ],
+      "rationale": "The module-level function interpolate in manimlib/utils/bezier.py is used via three same-module references (including a default-argument bare reference at line 122, 1-based) and bare-name calls in fourteen modules that each import it directly from manimlib.utils.bezier. Same-name methods on Mobject, Animation, and related classes, plus all attribute-style calls to them, are distinct declarations and excluded. Bare calls inside bodies of those methods (mobject.py:1621, numbers.py:160, both 1-based) still resolve to the module import because Python class methods are not in lexical scope."
+    },
+    {
+      "caseId": "real-project-v1-typescript-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+        "range": {
+          "start": {
+            "line": 27,
+            "character": 5
+          },
+          "end": {
+            "line": 27,
+            "character": 25
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 52,
+                "character": 5
+              },
+              "end": {
+                "line": 52,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type annotation of private method toPromiseValue."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 53,
+                "character": 51
+              },
+              "end": {
+                "line": 53,
+                "character": 71
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type assertion `as AppEventPromiseValue<Args>` in toPromiseValue body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 62,
+                "character": 13
+              },
+              "end": {
+                "line": 62,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Promise<AppEventPromiseValue<Events[K]>> return type in the awaitable `on` overload signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 66,
+                "character": 35
+              },
+              "end": {
+                "line": 66,
+                "character": 55
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of the `on` implementation signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+            "range": {
+              "start": {
+                "line": 93,
+                "character": 23
+              },
+              "end": {
+                "line": 93,
+                "character": 43
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type argument in `new Promise<AppEventPromiseValue<Events[K]>>`."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/packages/common/src/appEventBus.ts",
+        "range": {
+          "start": {
+            "line": 52,
+            "character": 5
+          },
+          "end": {
+            "line": 52,
+            "character": 25
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "packages/common/src/appEventBus.ts"
+      ],
+      "rationale": "AppEventPromiseValue is a non-exported type alias, so its scope is limited to appEventBus.ts. A repository-wide search confirms the identifier appears nowhere else; the five in-file type references (method return type, assertion, two overload return types, and a Promise type argument) are the complete usage set."
+    },
+    {
+      "caseId": "real-project-v1-typescript-01-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/excalidraw/components/AppStateObserver.ts",
+        "range": {
+          "start": {
+            "line": 61,
+            "character": 13
+          },
+          "end": {
+            "line": 61,
+            "character": 29
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+            "range": {
+              "start": {
+                "line": 680,
+                "character": 33
+              },
+              "end": {
+                "line": 680,
+                "character": 49
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor call `new AppStateObserver(() => this.state)` initializing the App class field appStateObserver."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/tests/appStateHooks.test.tsx",
+            "range": {
+              "start": {
+                "line": 23,
+                "character": 23
+              },
+              "end": {
+                "line": 23,
+                "character": 39
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor call `new AppStateObserver(() => state)` in the test helper."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+            "range": {
+              "start": {
+                "line": 453,
+                "character": 9
+              },
+              "end": {
+                "line": 453,
+                "character": 25
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Named import binding; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/tests/appStateHooks.test.tsx",
+            "range": {
+              "start": {
+                "line": 5,
+                "character": 9
+              },
+              "end": {
+                "line": 5,
+                "character": 25
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Named import binding; optional under bindings_optional."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+        "range": {
+          "start": {
+            "line": 680,
+            "character": 33
+          },
+          "end": {
+            "line": 680,
+            "character": 49
+          }
+        }
+      },
+      "ambiguities": [
+        "The module specifier strings \"./AppStateObserver\" and \"../components/AppStateObserver\" contain the name but are string literals, not identifier usages."
+      ],
+      "inspectedPaths": [
+        "packages/excalidraw/components/AppStateObserver.ts",
+        "packages/excalidraw/components/App.tsx",
+        "packages/excalidraw/tests/appStateHooks.test.tsx"
+      ],
+      "rationale": "The exported class AppStateObserver is referenced outside its declaring file only in App.tsx and appStateHooks.test.tsx, each with one import binding and one `new` expression; a repository-wide identifier search finds no other references, re-exports, or type-position usages. Lower-camel identifiers like appStateObserver are distinct symbols."
+    }
+  ]
+}

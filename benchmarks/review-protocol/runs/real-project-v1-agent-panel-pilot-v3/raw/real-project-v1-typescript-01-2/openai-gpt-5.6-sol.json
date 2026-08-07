@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/sol_v3_typescript_01_2",
+    "executedAt": "2026-08-07T06:08:26Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-01-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/excalidraw/components/AppStateObserver.ts",
+        "range": {
+          "start": {
+            "line": 61,
+            "character": 13
+          },
+          "end": {
+            "line": 61,
+            "character": 29
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+            "range": {
+              "start": {
+                "line": 453,
+                "character": 9
+              },
+              "end": {
+                "line": 453,
+                "character": 25
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried class under the bindings_optional policy."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+            "range": {
+              "start": {
+                "line": 680,
+                "character": 33
+              },
+              "end": {
+                "line": 680,
+                "character": 49
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor expression resolves through the local import to the queried AppStateObserver class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/tests/appStateHooks.test.tsx",
+            "range": {
+              "start": {
+                "line": 5,
+                "character": 9
+              },
+              "end": {
+                "line": 5,
+                "character": 25
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the queried class under the bindings_optional policy."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/excalidraw/tests/appStateHooks.test.tsx",
+            "range": {
+              "start": {
+                "line": 23,
+                "character": 23
+              },
+              "end": {
+                "line": 23,
+                "character": 39
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor expression resolves through the local import to the queried AppStateObserver class."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+        "range": {
+          "start": {
+            "line": 680,
+            "character": 33
+          },
+          "end": {
+            "line": 680,
+            "character": 49
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "packages/excalidraw/components/AppStateObserver.ts",
+        "packages/excalidraw/components/App.tsx",
+        "packages/excalidraw/tests/appStateHooks.test.tsx"
+      ],
+      "rationale": "The exported class has two semantic constructor usages in the pinned source. Its two explicit import bindings are optional under bindings_optional. An exact-name scan of the complete source tree found no further candidates, and the selected declaration token is not counted as a usage."
+    }
+  ]
+}

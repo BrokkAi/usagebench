@@ -102,6 +102,17 @@ cases:
           uri: "benchmark://source/hugofs/rootmapping_fs.go"
           range:
             start:
+              line: 323
+              character: 8
+            end:
+              line: 323
+              character: 21
+        kind: "class"
+        displayName: "ComponentPath"
+      - location:
+          uri: "benchmark://source/hugofs/rootmapping_fs.go"
+          range:
+            start:
               line: 328
               character: 35
             end:
@@ -215,11 +226,11 @@ cases:
             uri: "benchmark://source/hugofs/rootmapping_fs.go"
             range:
               start:
-                line: 370
-                character: 20
+                line: 323
+                character: 8
               end:
-                line: 370
-                character: 33
+                line: 323
+                character: 21
           kind: "class"
           displayName: "ComponentPath"
         expectedDeclaration:
@@ -236,7 +247,7 @@ cases:
           displayName: "ComponentPath"
     verification:
       method: "manual_inspection"
-      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Excluded the extra ComponentPath occurrence in the receiver clause `func (c ComponentPath)`: it is a receiver binding/type attachment, so it is optional and excluded under bindings_optional. Both proposed definition usages are valid ordinary references; retained reviewer A's struct-literal usage as definitionUsage. Excluded the extra ComponentPath occurrence in the receiver clause `func (c ComponentPath)`: it is a receiver binding/type attachment, so it is optional and excluded under bindings_optional. Both proposed definition usages are valid ordinary references; retained reviewer A's struct-literal usage as definitionUsage."
+      notes: "The original 2026-07-31 source-only adjudication excluded the ComponentPath receiver-clause type reference. Corrected on 2026-08-07 after fresh blinded full-project reviews by OpenAI GPT-5.6 Sol and Anthropic Claude Fable 5 independently classified it as required, followed by accountable human approval from DavidBakerEffendi. The v3 deterministic definition rule selects this lexicographically first required location."
   - id: "real-project-v1-go-01-3"
     declaration:
       location:

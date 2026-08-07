@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "pilotId": "real-project-v1-agent-panel-pilot-v1",
+  "status": "awaiting_human_adjudication",
+  "summary": {
+    "caseCount": 6,
+    "requiredLocationAgreementCount": 6,
+    "automaticConsensusCount": 2,
+    "humanEscalationCount": 4,
+    "authoredRequiredLocationMatchCount": 5
+  },
+  "cases": [
+    {
+      "caseId": "real-project-v1-go-01-1",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-go-01-2",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": false,
+      "definitionUsageAgrees": false,
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "requiredLocationsMatchAuthored": false,
+      "agentOnlyRequiredLocations": [
+        {
+          "uri": "benchmark://source/hugofs/rootmapping_fs.go",
+          "range": {
+            "start": {"line": 323, "character": 8},
+            "end": {"line": 323, "character": 21}
+          }
+        }
+      ],
+      "recommendedAdjudication": "add_receiver_type_usage_and_retain_authored_definition_usage"
+    },
+    {
+      "caseId": "real-project-v1-python-01-3",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": false,
+      "definitionUsageAgrees": true,
+      "hasAmbiguity": true,
+      "automaticConsensus": false,
+      "requiredLocationsMatchAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-python-01-1",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": false,
+      "definitionUsageAgrees": false,
+      "hasAmbiguity": true,
+      "automaticConsensus": false,
+      "requiredLocationsMatchAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-01-1",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-01-2",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "hasAmbiguity": true,
+      "automaticConsensus": false,
+      "requiredLocationsMatchAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-typescript-01-2",
+  "language": "typescript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/excalidraw/excalidraw",
+    "commit": "786ab266ff3a9cfffaed16804cf9132b44bc08ae",
+    "archiveSha256": "b23db479caa57872f95b6d35024bca1ece771d51049bb025c28248a769960e1c"
+  },
+  "declaration": {
+    "uri": "benchmark://source/packages/excalidraw/components/AppStateObserver.ts",
+    "range": {
+      "start": {
+        "line": 61,
+        "character": 13
+      },
+      "end": {
+        "line": 61,
+        "character": 29
+      }
+    }
+  },
+  "displayName": "AppStateObserver"
+}
