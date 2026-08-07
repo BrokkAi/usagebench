@@ -1936,6 +1936,7 @@ mod tests {
                 model: Some("model".to_string()),
                 execution_id: Some("run-a".to_string()),
                 executed_at: Some("2026-08-06T00:00:00Z".to_string()),
+                sessions: Vec::new(),
             }],
             adjudication: EvaluationReviewArtifact {
                 id: "adjudication".to_string(),
@@ -1946,6 +1947,7 @@ mod tests {
                 model: None,
                 execution_id: None,
                 executed_at: None,
+                sessions: Vec::new(),
             },
             source_count: 1,
             case_files: vec!["benchmarks/cases/evaluation/sample.yaml".to_string()],
