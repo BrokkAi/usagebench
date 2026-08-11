@@ -1,0 +1,67 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-go-04-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/config/deviceconfiguration.go",
+        "range": {
+          "start": {
+            "line": 99,
+            "character": 5
+          },
+          "end": {
+            "line": 99,
+            "character": 30
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/config/deviceconfiguration.go",
+            "range": {
+              "start": {
+                "line": 63,
+                "character": 22
+              },
+              "end": {
+                "line": 63,
+                "character": 47
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call expression in (*DeviceConfiguration).prepare: `cfg.IgnoredFolders = sortedObservedFolderSlice(ignoredFolders)`. Same package (config), resolves directly to the package-level unexported function declared at line 100."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/config/deviceconfiguration.go",
+        "range": {
+          "start": {
+            "line": 63,
+            "character": 22
+          },
+          "end": {
+            "line": 63,
+            "character": 47
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/lib/config/deviceconfiguration.go",
+        "source/"
+      ],
+      "rationale": "sortedObservedFolderSlice is an unexported package-level function in package config, so it is referable only from within that package. A ripgrep search over the entire pinned source tree for the exact identifier returned exactly two occurrences: the declaration token at lib/config/deviceconfiguration.go line 100 (0-based line 99) and one call at line 64 (0-based line 63, characters 22-47), which semantically resolves to the declaration. No other exact-name tokens exist anywhere (including tests, comments, or strings), so there are no excluded candidates and no optional binding tokens (unexported Go identifiers have no import/export bindings). The required set contains that single call; definitionUsage is deterministically that location. No required-contract ambiguity remains."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "92d34288-0997-49ab-a468-7cfe6d820080",
+    "executedAt": "2026-08-11T10:45:29Z"
+  },
+  "schemaVersion": 1
+}

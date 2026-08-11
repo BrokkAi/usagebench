@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m5_sol_typescript_04_2",
+    "executedAt": "2026-08-11T10:48:00Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-04-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/ui/src/lib/inbox.ts",
+        "range": {
+          "start": {
+            "line": 331,
+            "character": 16
+          },
+          "end": {
+            "line": 331,
+            "character": 45
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/components/IssuesList.tsx",
+            "range": {
+              "start": {
+                "line": 42,
+                "character": 2
+              },
+              "end": {
+                "line": 42,
+                "character": 31
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit named import binding from ../lib/inbox; bindings are optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/components/IssuesList.tsx",
+            "range": {
+              "start": {
+                "line": 1039,
+                "character": 10
+              },
+              "end": {
+                "line": 1039,
+                "character": 39
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Runtime call through the imported binding that resolves to the selected exported function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/lib/inbox.test.ts",
+            "range": {
+              "start": {
+                "line": 22,
+                "character": 2
+              },
+              "end": {
+                "line": 22,
+                "character": 31
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit named import binding from ./inbox; bindings are optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/lib/inbox.test.ts",
+            "range": {
+              "start": {
+                "line": 1198,
+                "character": 11
+              },
+              "end": {
+                "line": 1198,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Test call through the imported binding with false, resolving to the selected function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/lib/inbox.test.ts",
+            "range": {
+              "start": {
+                "line": 1208,
+                "character": 11
+              },
+              "end": {
+                "line": 1208,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Test call through the imported binding with true, resolving to the selected function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/pages/Inbox.tsx",
+            "range": {
+              "start": {
+                "line": 133,
+                "character": 2
+              },
+              "end": {
+                "line": 133,
+                "character": 31
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit named import binding from ../lib/inbox; bindings are optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/pages/Inbox.tsx",
+            "range": {
+              "start": {
+                "line": 1177,
+                "character": 10
+              },
+              "end": {
+                "line": 1177,
+                "character": 39
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Runtime call through the imported binding that resolves to the selected exported function."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/ui/src/components/IssuesList.tsx",
+        "range": {
+          "start": {
+            "line": 1039,
+            "character": 10
+          },
+          "end": {
+            "line": 1039,
+            "character": 39
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/ui/src/lib/inbox.ts",
+        "source/ui/src/lib/inbox.test.ts",
+        "source/ui/src/pages/Inbox.tsx",
+        "source/ui/src/components/IssuesList.tsx"
+      ],
+      "rationale": "The declaration is an exported function in inbox.ts. A project-wide exact-identifier scan found three named import bindings and four calls. Each import resolves directly to inbox.ts and is optional by policy; all four calls resolve through those imports and are required. No other exact-name source token exists outside the supplied declaration, so the required set is complete."
+    }
+  ]
+}

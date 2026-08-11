@@ -1,0 +1,67 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-04-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/ui/src/api/routines.ts",
+        "range": {
+          "start": {
+            "line": 24,
+            "character": 17
+          },
+          "end": {
+            "line": 24,
+            "character": 53
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/api/routines.ts",
+            "range": {
+              "start": {
+                "line": 33,
+                "character": 19
+              },
+              "end": {
+                "line": 33,
+                "character": 55
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type reference in the `secretMaterials: RestoreRoutineRevisionSecretMaterial[];` field of the sibling interface RestoreRoutineRevisionResponse in the same module; it resolves directly to the queried interface declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/ui/src/api/routines.ts",
+        "range": {
+          "start": {
+            "line": 33,
+            "character": 19
+          },
+          "end": {
+            "line": 33,
+            "character": 55
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/ui/src/api/routines.ts",
+        "source/"
+      ],
+      "rationale": "The declaration is `export interface RestoreRoutineRevisionSecretMaterial` at ui/src/api/routines.ts line 25 (1-based). A case-sensitive ripgrep of the entire source/ tree for the exact identifier returned only two occurrences: the declaration token itself and one type reference at line 34 (0-based line 33) inside RestoreRoutineRevisionResponse. The interface is exported but never imported, re-exported, or otherwise referenced elsewhere, so there are no optional binding tokens under the bindings_optional policy and no excluded candidates to inventory. The line is ASCII-only, so UTF-16 columns equal byte columns: token starts at character 19 (after two-space indent plus `secretMaterials: `) and ends at 55. The required set contains exactly one location, which is deterministically the definitionUsage. No unresolved uncertainty affects the required contract."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "3cc910d7-7519-4567-8bef-25019f034433",
+    "executedAt": "2026-08-11T10:45:29Z"
+  },
+  "schemaVersion": 1
+}

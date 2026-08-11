@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v1-agent-panel-milestone-5-v3",
+  "status": "human_adjudicated",
+  "summary": {
+    "caseCount": 6,
+    "requiredLocationAgreementCount": 5,
+    "automaticConsensusCount": 4,
+    "decisionDisagreementCount": 1,
+    "requiredRangeDisagreementCount": 1,
+    "highConfidenceNoAmbiguityCount": 6,
+    "authoredRequiredLocationMatchCount": 6,
+    "authoredDefinitionTargetMatchCount": 6,
+    "humanEscalationCount": 6,
+    "humanAdjudicatedCount": 6,
+    "unresolvedEscalationCount": 0
+  },
+  "cases": [
+    {
+      "caseId": "real-project-v1-go-04-2",
+      "requiredLocationsAgree": false,
+      "requiredLocationCount": 1,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "solRequiredLocation": { "uri": "benchmark://source/lib/ignore/ignore.go", "range": { "start": { "line": 374, "character": 35 }, "end": { "line": 374, "character": 48 } } },
+      "fableRequiredLocation": { "uri": "benchmark://source/lib/ignore/ignore.go", "range": { "start": { "line": 374, "character": 34 }, "end": { "line": 374, "character": 47 } } },
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "sourceValidation": "The source line begins with three tab characters; ToggleIgnored starts at UTF-16 character 35 and ends at 48. Sol and the authored corpus are exact; Fable is one character early.",
+      "recommendedAdjudication": "accept_sol_and_authored_exact_range_reject_fable_off_by_one"
+    },
+    {
+      "caseId": "real-project-v1-go-04-3",
+      "requiredLocationsAgree": true, "requiredLocationCount": 1, "decisionAgrees": true, "solDecision": "accept", "fableDecision": "accept", "hasAmbiguity": false, "automaticConsensus": true, "requiredLocationsMatchAuthored": true, "definitionUsageMatchesAuthored": true, "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-python-04-2",
+      "requiredLocationsAgree": true, "requiredLocationCount": 9, "decisionAgrees": true, "solDecision": "accept", "fableDecision": "accept", "hasAmbiguity": false, "automaticConsensus": true, "requiredLocationsMatchAuthored": true, "definitionUsageMatchesAuthored": true, "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-python-04-3",
+      "requiredLocationsAgree": true, "requiredLocationCount": 1, "decisionAgrees": true, "solDecision": "accept", "fableDecision": "accept", "hasAmbiguity": false, "automaticConsensus": true, "requiredLocationsMatchAuthored": true, "definitionUsageMatchesAuthored": true, "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-04-2",
+      "requiredLocationsAgree": true, "requiredLocationCount": 4, "decisionAgrees": false, "solDecision": "accept", "fableDecision": "replace", "hasAmbiguity": false, "automaticConsensus": false, "requiredLocationsMatchAuthored": true, "definitionUsageMatchesAuthored": true, "recommendedAdjudication": "accept_consensus_contract_and_resolve_fable_replace"
+    },
+    {
+      "caseId": "real-project-v1-typescript-04-3",
+      "requiredLocationsAgree": true, "requiredLocationCount": 1, "decisionAgrees": true, "solDecision": "accept", "fableDecision": "accept", "hasAmbiguity": false, "automaticConsensus": true, "requiredLocationsMatchAuthored": true, "definitionUsageMatchesAuthored": true, "recommendedAdjudication": "accept_authored_contract"
+    }
+  ]
+}

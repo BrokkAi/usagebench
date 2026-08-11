@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-go-04-3",
+  "language": "go",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/syncthing/syncthing",
+    "commit": "bcef5c5bc68dddfb68a3d341f41fad44c11fb52e",
+    "archiveSha256": "1623beb608c6b0971a42b45f9c045e6d259bed3a22d31d3df1422703505ad439"
+  },
+  "declaration": {
+    "uri": "benchmark://source/lib/config/deviceconfiguration.go",
+    "range": {
+      "start": {
+        "line": 99,
+        "character": 5
+      },
+      "end": {
+        "line": 99,
+        "character": 30
+      }
+    }
+  },
+  "displayName": "sortedObservedFolderSlice"
+}
