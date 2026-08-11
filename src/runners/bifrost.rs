@@ -241,43 +241,50 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
                     &bifrost_resolved_commit,
                 )
             })
-            .transpose()?;
-        let cases = match run_document_cases(
-            document,
-            &source_root,
-            &bifrost_binary,
-            options.include_unsupported,
-            options.include_definition_lookups,
-            options.scan_usages_max_duration_secs,
-            options.case_id.as_deref(),
-            semantic_pack.as_ref(),
-        ) {
-            Ok(cases) => cases,
-            Err(error) if is_snapshot_not_ready_error(&error) => {
-                let message = format!("{error:#}");
-                document
-                    .cases
-                    .iter()
-                    .filter(|case| {
-                        options
-                            .case_id
-                            .as_deref()
-                            .is_none_or(|case_id| case.id == case_id)
-                    })
-                    .map(|case| {
-                        runner_failure_case(
-                            case,
+            .transpose();
+        let (cases, semantic_pack) = match semantic_pack {
+            Ok(semantic_pack) => {
+                let cases = match run_document_cases(
+                    document,
+                    &source_root,
+                    &bifrost_binary,
+                    options.include_unsupported,
+                    options.include_definition_lookups,
+                    options.scan_usages_max_duration_secs,
+                    options.case_id.as_deref(),
+                    semantic_pack.as_ref(),
+                ) {
+                    Ok(cases) => cases,
+                    Err(error) => {
+                        let kind = if is_snapshot_not_ready_error(&error) {
+                            "workspace_snapshot_not_ready"
+                        } else {
+                            "document_runner_failed"
+                        };
+                        document_failure_cases(
+                            document,
                             options.include_unsupported,
-                            "workspace_snapshot_not_ready",
-                            &message,
+                            options.case_id.as_deref(),
+                            kind,
+                            &format!("run benchmark cases {}: {error:#}", case_file.display()),
                         )
-                    })
-                    .collect()
+                    }
+                };
+                (cases, semantic_pack)
             }
-            Err(error) => {
-                return Err(error)
-                    .with_context(|| format!("run benchmark cases {}", case_file.display()));
-            }
+            Err(error) => (
+                document_failure_cases(
+                    document,
+                    options.include_unsupported,
+                    options.case_id.as_deref(),
+                    "semantic_pack_setup_failed",
+                    &format!(
+                        "prepare semantic packs for {}: {error:#}",
+                        case_file.display()
+                    ),
+                ),
+                None,
+            ),
         };
         report.documents.push(DocumentRunReport {
             case_file: display_path(case_file),
@@ -315,6 +322,21 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     }
 
     Ok(report)
+}
+
+fn document_failure_cases(
+    document: &BenchmarkDocument,
+    include_unsupported: bool,
+    case_id: Option<&str>,
+    kind: &str,
+    message: &str,
+) -> Vec<CaseRunReport> {
+    document
+        .cases
+        .iter()
+        .filter(|case| case_id.is_none_or(|case_id| case.id == case_id))
+        .map(|case| runner_failure_case(case, include_unsupported, kind, message))
+        .collect()
 }
 
 fn bifrost_runner_metadata(
@@ -2510,6 +2532,33 @@ mod tests {
         );
         assert_eq!(report.diagnostics[0].kind, "workspace_snapshot_not_ready");
         assert!(report.diagnostics[0].message.contains("retries exhausted"));
+    }
+
+    #[test]
+    fn document_setup_failure_becomes_an_explicit_case_error() {
+        let document: BenchmarkDocument = serde_yaml::from_str(
+            &fs::read_to_string("benchmarks/cases/rust-baseline.yaml").unwrap(),
+        )
+        .unwrap();
+
+        let reports = document_failure_cases(
+            &document,
+            false,
+            None,
+            "semantic_pack_setup_failed",
+            "release bundle is incompatible",
+        );
+
+        assert_eq!(reports.len(), document.cases.len());
+        assert!(reports
+            .iter()
+            .all(|report| report.status == CaseStatus::Error));
+        assert!(reports.iter().all(|report| {
+            report.diagnostics[0].kind == "semantic_pack_setup_failed"
+                && report.diagnostics[0]
+                    .message
+                    .contains("release bundle is incompatible")
+        }));
     }
 
     #[test]
