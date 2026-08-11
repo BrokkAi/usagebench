@@ -81,13 +81,10 @@ analyzer. The release order is:
 3. Verify the completed schema-v2 review with one accountable human adjudicator
    and blinded agents from OpenAI and Anthropic. The historical same-provider
    Codex evidence remains provenance, but is not the qualifying panel.
-4. Run **Native two-host reproduction** at the exact release revision for only
-   `pyright` and `typescript-language-server`, and retain its accepted evidence
-   artifact.
-5. Run **Freeze benchmark snapshot** with snapshot kind `evaluation`, corpus
+4. Run **Freeze benchmark snapshot** with snapshot kind `evaluation`, corpus
    `benchmarks/cases/evaluation/real-project-v1`, candidates
-   `bifrost,gopls,pyright,typescript-language-server`, and the native-evidence
-   workflow run ID.
+   `bifrost,gopls,pyright,typescript-language-server`. The freeze runs Pyright
+   and TypeScript LS once from their pinned profiles.
 
 The freeze manifest binds `protocol.json`, `selection.json`, `review.json`, and
 `sources.json` by digest and records repository and case denominators,

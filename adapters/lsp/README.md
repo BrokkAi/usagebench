@@ -159,11 +159,12 @@ report does not measure warm-start or request latency. See
 [`docs/runner-adapters.md`](../../docs/runner-adapters.md) for the measured
 correctness table and the exact scoring semantics.
 
-## Reproduction classes
+## Publication registry
 
 `adapters/candidates.json` is the publication registry. An `advertised`
-candidate declares either a canonical reference runner or native two-host
-evidence, together with its runtime-network and project-hydration requirements.
+candidate declares its runtime-network and project-hydration requirements.
+Candidates with `referenceRunner` execute in a canonical container; other
+advertised LSP candidates contribute one pinned, identity-checked native report.
 Profiles present in this directory are not automatically part of the public
 aggregate.
 

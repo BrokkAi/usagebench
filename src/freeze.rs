@@ -7,8 +7,7 @@
 
 use crate::{
     evaluation::{validate_report_against_release_audit, EvaluationReleaseAudit},
-    reproduction::{parse_evidence, validate_evidence, CandidateEvidenceLink, ReproductionClass},
-    runners::{DocumentRunReport, RunReport, RunnerMetadata},
+    runners::{DocumentRunReport, ExecutionMode, PlatformScope, RunReport, RunnerMetadata},
     CorpusPartition, CorpusSelection, GroundTruthReviewStatus,
 };
 use anyhow::{bail, Context, Result};
@@ -21,7 +20,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub const FREEZE_MANIFEST_SCHEMA_VERSION: u32 = 3;
+pub const FREEZE_MANIFEST_SCHEMA_VERSION: u32 = 4;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ValueEnum)]
 #[serde(rename_all = "snake_case")]
@@ -68,8 +67,6 @@ struct Candidate {
     reference_runner: Option<String>,
     advertised: bool,
     #[serde(default)]
-    reproduction_class: Option<ReproductionClass>,
-    #[serde(default)]
     runtime_networking: Option<String>,
     #[serde(default)]
     project_hydration: Option<String>,
@@ -92,7 +89,6 @@ pub struct FreezeManifestOptions {
     pub candidates_file: PathBuf,
     pub candidate_ids: Vec<String>,
     pub report_paths: Vec<PathBuf>,
-    pub evidence_paths: Vec<PathBuf>,
     pub evaluation_corpus: Option<PathBuf>,
 }
 
@@ -106,7 +102,6 @@ pub struct FreezeManifest {
     pub scoring_contract: ScoringContract,
     pub candidates: Vec<ManifestCandidate>,
     pub reports: Vec<ManifestReport>,
-    pub candidate_evidence: Vec<CandidateEvidenceLink>,
     pub corpus: Vec<ManifestDocument>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub evaluation_audit: Option<EvaluationReleaseAudit>,
@@ -142,7 +137,6 @@ pub struct ManifestCandidate {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reference_runner: Option<String>,
     pub advertised: bool,
-    pub reproduction_class: ReproductionClass,
     pub runtime_networking: String,
     pub project_hydration: String,
 }
@@ -191,30 +185,6 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
             options.report_paths.len()
         );
     }
-    if options.candidate_ids.len() != options.evidence_paths.len() {
-        bail!(
-            "expected one --evidence for each selected candidate: {} candidate(s), {} evidence file(s)",
-            options.candidate_ids.len(),
-            options.evidence_paths.len()
-        );
-    }
-
-    let mut evidence_by_candidate = HashMap::new();
-    for evidence_path in &options.evidence_paths {
-        let evidence_bytes = fs::read(evidence_path)
-            .with_context(|| format!("read reproduction evidence {}", evidence_path.display()))?;
-        let evidence = parse_evidence(&evidence_bytes, evidence_path)?;
-        if evidence_by_candidate
-            .insert(evidence.candidate_id.clone(), evidence_path.clone())
-            .is_some()
-        {
-            bail!(
-                "candidate {} has duplicate reproduction evidence",
-                evidence.candidate_id
-            );
-        }
-    }
-
     let registry = load_registry(&options.candidates_file)?;
     let mut known_candidates = HashMap::new();
     for candidate in registry.candidates {
@@ -229,7 +199,6 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
     let mut selected_ids = BTreeSet::new();
     let mut candidates = Vec::new();
     let mut reports = Vec::new();
-    let mut candidate_evidence = Vec::new();
     let mut documents = Vec::new();
     let mut contract: Option<ScoringContract> = None;
 
@@ -260,27 +229,6 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
         if let Some(audit) = &evaluation_audit {
             validate_report_against_release_audit(&report, audit, &candidate.id)?;
         }
-        let reproduction_class = candidate
-            .reproduction_class
-            .context("advertised candidate lacks a reproduction class")?;
-        let evidence_path = evidence_by_candidate
-            .get(candidate_id)
-            .with_context(|| format!("candidate {candidate_id} lacks reproduction evidence"))?;
-        let validated = validate_evidence(
-            evidence_path,
-            candidate_id,
-            reproduction_class,
-            candidate.reference_runner.as_deref(),
-            &candidate.requested_version,
-            candidate.profile_sha256.as_deref(),
-            report_path,
-            &report,
-        )?;
-        if !validated.accepted {
-            bail!("candidate {candidate_id} reproduction evidence is not semantically equivalent");
-        }
-        candidate_evidence.push(validated.link);
-
         let report_contract = ScoringContract {
             benchmark_case_schema_version: 2,
             report_schema_version: crate::runners::RUN_REPORT_SCHEMA_VERSION,
@@ -352,7 +300,6 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
             .context("selected reports did not provide a scoring contract")?,
         candidates,
         reports,
-        candidate_evidence,
         corpus,
         evaluation_audit,
     })
@@ -390,7 +337,7 @@ fn load_registry(path: &Path) -> Result<CandidateRegistry> {
     }
     let registry: CandidateRegistry = serde_json::from_value(value)
         .with_context(|| format!("decode candidate registry {}", path.display()))?;
-    if registry.schema_version != 2 {
+    if registry.schema_version != 3 {
         bail!(
             "unsupported candidate registry schema version {}",
             registry.schema_version
@@ -416,12 +363,11 @@ fn load_registry(path: &Path) -> Result<CandidateRegistry> {
             );
         }
         if candidate.advertised
-            && (candidate.reproduction_class.is_none()
-                || candidate
-                    .runtime_networking
-                    .as_deref()
-                    .unwrap_or("")
-                    .is_empty()
+            && (candidate
+                .runtime_networking
+                .as_deref()
+                .unwrap_or("")
+                .is_empty()
                 || candidate
                     .project_hydration
                     .as_deref()
@@ -429,34 +375,17 @@ fn load_registry(path: &Path) -> Result<CandidateRegistry> {
                     .is_empty())
         {
             bail!(
-                "advertised candidate {} requires reproductionClass, runtimeNetworking, and projectHydration",
+                "advertised candidate {} requires runtimeNetworking and projectHydration",
                 candidate.id
             );
-        }
-        if candidate.reproduction_class == Some(ReproductionClass::Canonical)
-            && candidate
-                .reference_runner
-                .as_deref()
-                .unwrap_or("")
-                .is_empty()
-        {
-            bail!(
-                "canonical candidate {} requires a reference runner",
-                candidate.id
-            );
-        }
-        if candidate.reproduction_class != Some(ReproductionClass::Canonical)
-            && candidate.reference_runner.is_some()
-        {
-            bail!("only canonical candidates may name a reference runner");
         }
         if !candidate.advertised
-            && (candidate.reproduction_class.is_some()
-                || candidate.runtime_networking.is_some()
-                || candidate.project_hydration.is_some())
+            && (candidate.runtime_networking.is_some()
+                || candidate.project_hydration.is_some()
+                || candidate.reference_runner.is_some())
         {
             bail!(
-                "unadvertised candidate {} cannot declare reproduction evidence",
+                "unadvertised candidate {} cannot declare release execution metadata",
                 candidate.id
             );
         }
@@ -484,6 +413,18 @@ fn validate_report(
     version: &str,
 ) -> Result<()> {
     report.ensure_complete()?;
+    if report.totals.documents == 0 || report.totals.cases == 0 {
+        bail!(
+            "candidate {} report did not execute any cases",
+            candidate.id
+        );
+    }
+    if report.totals.errors > 0 {
+        bail!(
+            "candidate {} report contains execution errors",
+            candidate.id
+        );
+    }
     if report.usagebench_revision != revision {
         bail!(
             "candidate {} report was produced by UsageBench {}, expected {}",
@@ -553,7 +494,79 @@ fn validate_report(
             }
         }
     }
+    if candidate.reference_runner.is_some() {
+        validate_canonical_environment(&candidate.id, report)?;
+    }
     Ok(())
+}
+
+pub(crate) fn validate_canonical_environment(candidate_id: &str, report: &RunReport) -> Result<()> {
+    let environment = &report.environment;
+    if environment.execution_mode != ExecutionMode::Container
+        || environment.platform_scope != PlatformScope::CanonicalReference
+        || environment.operating_system != "linux"
+        || environment.architecture != "x86_64"
+    {
+        bail!(
+            "candidate {} reference report must use the canonical linux/amd64 container",
+            candidate_id
+        );
+    }
+    let reference = environment
+        .reference_environment
+        .as_ref()
+        .context("canonical reference report lacks reference-environment provenance")?;
+    if reference.version.trim().is_empty()
+        || reference.canonical_platform != "linux/amd64"
+        || !is_prefixed_sha256(&reference.definition_digest)
+    {
+        bail!(
+            "candidate {} reference-environment provenance is incomplete",
+            candidate_id
+        );
+    }
+    let container = environment
+        .container
+        .as_ref()
+        .context("canonical reference report lacks container provenance")?;
+    if container.image_reference.trim().is_empty() || !is_prefixed_sha256(&container.image_digest) {
+        bail!(
+            "candidate {} container provenance is incomplete",
+            candidate_id
+        );
+    }
+    if environment.analyzer_executable.command.trim().is_empty()
+        || !environment
+            .analyzer_executable
+            .sha256
+            .as_deref()
+            .is_some_and(is_raw_sha256)
+    {
+        bail!(
+            "candidate {} analyzer executable provenance is incomplete",
+            candidate_id
+        );
+    }
+    if environment.toolchains.is_empty()
+        || environment
+            .toolchains
+            .iter()
+            .any(|(name, version)| name.trim().is_empty() || version.trim().is_empty())
+    {
+        bail!(
+            "candidate {} toolchain provenance is incomplete",
+            candidate_id
+        );
+    }
+    Ok(())
+}
+
+fn is_prefixed_sha256(value: &str) -> bool {
+    value.strip_prefix("sha256:").is_some_and(is_raw_sha256)
+}
+
+fn is_raw_sha256(value: &str) -> bool {
+    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 fn validate_evaluation_corpus(corpus: &[ManifestDocument]) -> Result<()> {
@@ -605,9 +618,6 @@ fn manifest_candidate(candidate: &Candidate) -> ManifestCandidate {
         resolved_version_prefix: candidate.resolved_version_prefix.clone(),
         reference_runner: candidate.reference_runner.clone(),
         advertised: candidate.advertised,
-        reproduction_class: candidate
-            .reproduction_class
-            .expect("advertised candidates were validated"),
         runtime_networking: candidate
             .runtime_networking
             .clone()
@@ -712,7 +722,6 @@ mod tests {
             resolved_version_prefix: Some("Apple clangd 21.0.0".to_string()),
             reference_runner: None,
             advertised: true,
-            reproduction_class: Some(ReproductionClass::NativeTwoHost),
             runtime_networking: Some("disabled".to_string()),
             project_hydration: Some("fixture".to_string()),
             ineligible_reason: None,
@@ -738,13 +747,75 @@ mod tests {
     }
 
     #[test]
+    fn accepts_one_identity_checked_native_lsp_report() {
+        let candidate = Candidate {
+            id: "pyright".to_string(),
+            runner: CandidateRunner::Lsp,
+            name: "Pyright".to_string(),
+            requested_version: "1.1.411".to_string(),
+            source: "https://github.com/microsoft/pyright/releases/tag/1.1.411".to_string(),
+            revision: None,
+            module_checksum: None,
+            profile: Some("adapters/lsp/pyright.json".to_string()),
+            profile_sha256: Some("f".repeat(64)),
+            resolved_version_prefix: None,
+            reference_runner: None,
+            advertised: true,
+            runtime_networking: Some("required by npx".to_string()),
+            project_hydration: Some("npx resolves Pyright".to_string()),
+            ineligible_reason: None,
+        };
+        let mut report: RunReport = serde_json::from_value(sample_report()).unwrap();
+        report.runner.name = "pyright".to_string();
+        report.runner.requested_version = candidate.requested_version.clone();
+        report.runner.resolved_version = "pyright 1.1.411".to_string();
+        report.runner.source = candidate.source.clone();
+        report.invocation.profile = Some("pyright".to_string());
+        report.invocation.profile_sha256 = candidate.profile_sha256.clone();
+        report.environment.execution_mode = ExecutionMode::Native;
+        report.environment.platform_scope = PlatformScope::HostSpecific;
+        report.environment.reference_environment = None;
+        report.environment.container = None;
+
+        validate_report(
+            &candidate,
+            &report,
+            "0123456789abcdef0123456789abcdef01234567",
+            "v0.2.0",
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn canonical_candidate_still_requires_reference_environment_provenance() {
+        let candidate = sample_bifrost_candidate();
+        let mut report: RunReport = serde_json::from_value(sample_report()).unwrap();
+        report.environment.execution_mode = ExecutionMode::Native;
+        report.environment.platform_scope = PlatformScope::HostSpecific;
+        report.environment.reference_environment = None;
+        report.environment.container = None;
+
+        let error = validate_report(
+            &candidate,
+            &report,
+            "0123456789abcdef0123456789abcdef01234567",
+            "v0.2.0",
+        )
+        .unwrap_err();
+
+        assert!(error
+            .to_string()
+            .contains("must use the canonical linux/amd64 container"));
+    }
+
+    #[test]
     fn development_manifest_freezes_report_identity_and_digest() {
         let tempdir = tempdir().unwrap();
         let registry = tempdir.path().join("candidates.json");
         std::fs::write(
             &registry,
             r#"{
-              "schemaVersion": 2,
+              "schemaVersion": 3,
               "candidates": [{
                 "id": "bifrost",
                 "runner": "bifrost",
@@ -753,7 +824,6 @@ mod tests {
                 "source": "https://github.com/BrokkAi/bifrost",
                 "revision": "0123456789abcdef0123456789abcdef01234567",
                 "advertised": true,
-                "reproductionClass": "canonical",
                 "referenceRunner": "bifrost",
                 "runtimeNetworking": "disabled",
                 "projectHydration": "fixture"
@@ -763,8 +833,6 @@ mod tests {
         .unwrap();
         let report = tempdir.path().join("bifrost.json");
         std::fs::write(&report, serde_json::to_vec(&sample_report()).unwrap()).unwrap();
-        let evidence = write_canonical_evidence(tempdir.path(), &report);
-
         let manifest = create_manifest(FreezeManifestOptions {
             snapshot_kind: SnapshotKind::Development,
             version: "v0.2.0".to_string(),
@@ -772,7 +840,6 @@ mod tests {
             candidates_file: registry,
             candidate_ids: vec!["bifrost".to_string()],
             report_paths: vec![report],
-            evidence_paths: vec![evidence],
             evaluation_corpus: None,
         })
         .unwrap();
@@ -791,7 +858,7 @@ mod tests {
         std::fs::write(
             &registry,
             r#"{
-              "schemaVersion": 2,
+              "schemaVersion": 3,
               "candidates": [{
                 "id": "bifrost",
                 "runner": "bifrost",
@@ -800,7 +867,6 @@ mod tests {
                 "source": "https://github.com/BrokkAi/bifrost",
                 "revision": "0123456789abcdef0123456789abcdef01234567",
                 "advertised": true,
-                "reproductionClass": "canonical",
                 "referenceRunner": "bifrost",
                 "runtimeNetworking": "disabled",
                 "projectHydration": "fixture"
@@ -810,8 +876,6 @@ mod tests {
         .unwrap();
         let report = tempdir.path().join("bifrost.json");
         std::fs::write(&report, serde_json::to_vec(&sample_report()).unwrap()).unwrap();
-        let evidence = write_canonical_evidence(tempdir.path(), &report);
-
         let error = create_manifest(FreezeManifestOptions {
             snapshot_kind: SnapshotKind::Evaluation,
             version: "v0.2.0".to_string(),
@@ -819,7 +883,6 @@ mod tests {
             candidates_file: registry,
             candidate_ids: vec!["bifrost".to_string()],
             report_paths: vec![report],
-            evidence_paths: vec![evidence],
             evaluation_corpus: None,
         })
         .unwrap_err();
@@ -1007,33 +1070,9 @@ mod tests {
             resolved_version_prefix: None,
             reference_runner: Some("bifrost".to_string()),
             advertised: true,
-            reproduction_class: Some(ReproductionClass::Canonical),
             runtime_networking: Some("disabled".to_string()),
             project_hydration: Some("fixture".to_string()),
             ineligible_reason: None,
         }
-    }
-
-    fn write_canonical_evidence(directory: &Path, report: &Path) -> PathBuf {
-        let report_bytes = std::fs::read(report).unwrap();
-        let evidence = directory.join("bifrost-evidence.json");
-        std::fs::write(
-            &evidence,
-            serde_json::to_vec_pretty(&json!({
-                "schemaVersion": 1,
-                "candidateId": "bifrost",
-                "primaryReport": {
-                    "file": "bifrost.json",
-                    "sha256": hex_digest(&report_bytes)
-                },
-                "class": "canonical",
-                "referenceRunner": "bifrost",
-                "environmentVersion": "1",
-                "definitionDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
-            }))
-            .unwrap(),
-        )
-        .unwrap();
-        evidence
     }
 }

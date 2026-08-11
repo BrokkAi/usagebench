@@ -25,14 +25,8 @@ on:
         required: true
         default: 'bifrost,gopls'
         type: string
-      native_evidence_run_id:
-        description: 'Workflow run ID containing the approved native-reproduction-evidence artifact'
-        required: false
-        type: string
-
 permissions:
   contents: read
-  actions: read
 
 concurrency:
   group: usagebench-freeze-${{ inputs.version }}
@@ -112,7 +106,7 @@ jobs:
           if [[ "$SNAPSHOT_KIND" == "development" ]]; then
             release_name="$SNAPSHOT_VERSION development snapshot"
           else
-            scope="$(bash scripts/resolve-freeze-scope.sh evaluation all)"
+            scope="$(bash scripts/resolve-freeze-scope.sh evaluation)"
             case_path="$(jq -er '.casePath' <<< "$scope")"
             candidates="$(jq -er '.candidates | join(",")' <<< "$scope")"
             [[ "$REQUESTED_CANDIDATES" == "$candidates" ]] || {
@@ -148,40 +142,6 @@ jobs:
         with:
           args: '--validate'
 
-      - name: Stage approved native reproduction evidence
-        if: inputs.native_evidence_run_id != ''
-        shell: bash
-        env:
-          NATIVE_EVIDENCE_RUN_ID: ${{ inputs.native_evidence_run_id }}
-          EXPECTED_REVISION: ${{ steps.identity.outputs.revision }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          [[ "$NATIVE_EVIDENCE_RUN_ID" =~ ^[0-9]+$ ]] || {
-            echo "native evidence run ID must be numeric" >&2
-            exit 1
-          }
-          run="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$NATIVE_EVIDENCE_RUN_ID")"
-          jq -e \
-            --arg revision "$EXPECTED_REVISION" \
-            '.path == ".github/workflows/native-reproduction.yml"
-              and .event == "workflow_dispatch"
-              and .head_sha == $revision
-              and .conclusion == "success"' \
-            <<< "$run" >/dev/null || {
-              echo "native evidence must come from a successful native-reproduction workflow at $EXPECTED_REVISION" >&2
-              exit 1
-            }
-
-      - name: Download approved native reproduction evidence
-        if: inputs.native_evidence_run_id != ''
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: native-reproduction-evidence
-          path: ${{ runner.temp }}/native-evidence
-          run-id: ${{ inputs.native_evidence_run_id }}
-          github-token: ${{ github.token }}
-
       - name: Run selected candidates and freeze manifest
         shell: bash
         env:
@@ -209,8 +169,7 @@ jobs:
             "$RUNNER_TEMP/freeze-corpus" \
             "$CASE_PATH" \
             "$RUNNER_TEMP/freeze-evidence" \
-            "$REVISION" \
-            "$RUNNER_TEMP/native-evidence"
+            "$REVISION"
 
       - name: Generate public result fragments from frozen reports
         shell: bash

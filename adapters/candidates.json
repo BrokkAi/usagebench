@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "candidates": [
     {
       "id": "bifrost",
@@ -9,7 +9,6 @@
       "source": "https://github.com/BrokkAi/bifrost",
       "revision": "a54be9be9b08b9d9ddbab1c471e26d7f8bd932df",
       "advertised": true,
-      "reproductionClass": "canonical",
       "referenceRunner": "bifrost",
       "runtimeNetworking": "disabled",
       "projectHydration": "fixture sources are staged in the released corpus"
@@ -24,7 +23,6 @@
       "profile": "adapters/lsp/gopls.json",
       "profileSha256": "668ce339ccbefe01f48f23336e77466adde89be80d7ba04e752eb352bbc138e1",
       "advertised": true,
-      "reproductionClass": "canonical",
       "referenceRunner": "gopls",
       "runtimeNetworking": "disabled",
       "projectHydration": "Go toolchain and module inputs are installed while building the reference image"
@@ -38,7 +36,6 @@
       "profile": "adapters/lsp/metals.json",
       "profileSha256": "6c4ed615cdbd5e3b324b65bfbac16d8aa0fdeacc5bf54c6f7bd0b816cf88a39a",
       "advertised": true,
-      "reproductionClass": "native_two_host",
       "runtimeNetworking": "required during Coursier launch and SBT workspace import",
       "projectHydration": "Coursier resolves Metals and SBT imports the generated fixture project"
     },
@@ -62,7 +59,6 @@
       "profileSha256": "3798aba07ce2581cbd9e688f8ba496a7725ed14200be1d68000fd62ddae9b6d5",
       "resolvedVersionPrefix": "Apple clangd 21.0.0",
       "advertised": true,
-      "reproductionClass": "native_two_host",
       "runtimeNetworking": "not required by clangd; fixture hydration is local",
       "projectHydration": "UsageBench writes compile_commands.json for each isolated fixture workspace"
     },
@@ -85,7 +81,6 @@
       "profile": "adapters/lsp/roslyn.json",
       "profileSha256": "b4bcf45ad7bf1cb054c9ed1773af5e42685d42149b1f935613fb48b320c14115",
       "advertised": true,
-      "reproductionClass": "native_two_host",
       "runtimeNetworking": "required for dotnet restore during project hydration",
       "projectHydration": "the official server starts an MSBuild build host and loads the generated project"
     },
@@ -108,7 +103,6 @@
       "profile": "adapters/lsp/eclipse-jdtls.json",
       "profileSha256": "a04864d9c9c03fda591e1929766a8cc698417da2b4495dce8285024b9766743e",
       "advertised": true,
-      "reproductionClass": "native_two_host",
       "runtimeNetworking": "not required after the JDT LS distribution is installed",
       "projectHydration": "JDT LS imports each generated fixture project into isolated workspace data"
     },
@@ -121,7 +115,6 @@
       "profile": "adapters/lsp/typescript-language-server.json",
       "profileSha256": "fe0b72a884946348faaf7b6098637fae66f922438da0bad5265d27795b9fe14b",
       "advertised": true,
-      "reproductionClass": "native_two_host",
       "runtimeNetworking": "required by npx unless the exact packages are already cached",
       "projectHydration": "npx resolves TypeScript LS 5.3.0 and TypeScript 5.9.3 before opening fixtures"
     },
@@ -134,7 +127,6 @@
       "profile": "adapters/lsp/pyright.json",
       "profileSha256": "4342fec610df9ba6dffd63f3da23959459ee40282065c76522a865084b9681ff",
       "advertised": true,
-      "reproductionClass": "native_two_host",
       "runtimeNetworking": "required by npx unless Pyright 1.1.411 is already cached",
       "projectHydration": "npx resolves the requested Pyright package before opening fixtures"
     },
@@ -147,7 +139,6 @@
       "profile": "adapters/lsp/ruby-lsp.json",
       "profileSha256": "66bbb7da9c8dfc2cd788718ca0d928066d25e1cc0ab748921aaad026b33ceafd",
       "advertised": true,
-      "reproductionClass": "native_two_host",
       "runtimeNetworking": "may be required by Bundler while preparing the isolated workspace",
       "projectHydration": "Ruby LSP launcher uses an isolated HOME and bundle directory per fixture"
     },
@@ -170,7 +161,6 @@
       "profile": "adapters/lsp/intelephense.json",
       "profileSha256": "9a7e4110c3537dcea09cb545706230545606a092bb5cce61be14df981c62e963",
       "advertised": true,
-      "reproductionClass": "native_two_host",
       "runtimeNetworking": "required by npx unless Intelephense 1.18.5 is already cached",
       "projectHydration": "npx resolves the requested Intelephense package before opening fixtures"
     },
@@ -193,7 +183,6 @@
       "profile": "adapters/lsp/rust-analyzer.json",
       "profileSha256": "6306d3997fb7d5b573e9f45a80a5a60c4e8783982ab5b4c78ecc98916814ad97",
       "advertised": true,
-      "reproductionClass": "native_two_host",
       "runtimeNetworking": "not required after the requested rust-analyzer binary and Rust toolchain are installed",
       "projectHydration": "rust-analyzer loads the generated Cargo fixture workspace"
     }

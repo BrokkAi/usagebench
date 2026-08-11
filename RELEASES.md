@@ -93,11 +93,11 @@ the registry when adding or advancing a candidate; do not put a release ref in
 the workflow input. A candidate becomes executable by assigning its
 `referenceRunner` to a corresponding versioned reference environment.
 
-Registry schema version 2 separates public advertisement from reproduction
-class. An advertised candidate is either `canonical`, with a protected
-`referenceRunner`, or `native_two_host`, with an independently produced
-evidence manifest. Non-primary alternatives remain registered but cannot be
-selected for generated public results.
+Registry schema version 3 separates public advertisement from execution mode.
+An advertised candidate may name a protected `referenceRunner`; otherwise its
+checked-in LSP profile is run once natively during the freeze. Non-primary
+alternatives remain registered but cannot be selected for generated public
+results.
 
 The reference-environment manifest retains the candidate values needed for a
 self-contained release bundle, but its build scripts reject any mismatch with
@@ -123,38 +123,29 @@ workflow never moves or replaces a release tag. The curated release archive
 contains the source bundle plus `evidence/freeze-manifest.json`, the selected
 reports, and `evidence/SHA256SUMS`.
 
-Each selected candidate also has one reproduction-evidence manifest. Canonical
-evidence binds the primary report to its reference-environment definition.
-Native evidence binds the primary report to a corroborating report from a
-second documented host and to the complete comparison result. Result
-generation validates these links and checksums before rendering any row.
-
-Before selecting native candidates, dispatch **Native two-host reproduction**
-at the exact release revision with two distinct pre-provisioned runner label
-sets. Supply its successful run ID as `native_evidence_run_id`. The freeze job
-accepts only the named producer workflow at the frozen revision and then binds
-each selected report to evidence for the same release tag. The collection
-workflow is manual/release-only; it is not part of pull-request CI.
-Both self-hosted runners require administrator-provisioned physical host IDs
-and per-candidate version, profile, and executable checksums. A native pair is
-accepted only on the same platform with matching analyzer identity and zero
-runner/session errors.
+The manifest binds exactly one report to each selected candidate. Canonical
+reports must contain the protected reference-environment and container
+provenance. Native LSP reports must match the pinned candidate and profile
+identity, cover the selected cases, and contain no runner errors. Result
+generation verifies every report checksum and the copied manifest metadata
+before rendering a row.
 
 For `real-project-v1`, first materialize and verify Git LFS plus the source,
-selection, and review evidence; then run `validate-evaluation`; then collect
-native evaluation evidence for only Pyright and TypeScript LS; finally freeze
+selection, and review evidence; then run `validate-evaluation`; finally freeze
 the evaluation directory with exactly Bifrost, gopls, Pyright, and TypeScript
-LS. Development freezes retain the full development-corpus/full-matrix behavior
+LS. The freeze runs Pyright and TypeScript LS once from their pinned profiles.
+Development freezes retain the full development-corpus/full-matrix behavior
 while excluding the separately governed evaluation partition. Generated
 evaluation pages remain partition-labeled and limited to descriptive
 per-profile comparisons; they exclude language-wide or ecosystem-wide
 estimates, cross-language ranking, causal defect claims, and latency, memory,
 or cold-start claims.
 
-This workflow trusts both native-host administrators to provision the requested
-payload behind each recorded launcher. Profile and executable hashes are
-verified, but full package and dependency closures are not. Release notes must
-not describe native evidence as cryptographic payload attestation.
+This workflow trusts the native execution environment to provision the
+requested payload behind each recorded launcher. Profile and executable hashes
+are verified, but full package and dependency closures are not. Release notes
+must not describe native rows as cryptographic payload attestation or
+cross-host reproduction.
 
 Repository administrators should protect the `v*` tag namespace with a ruleset
 that limits tag creation and updates to release maintainers. The workflow's
