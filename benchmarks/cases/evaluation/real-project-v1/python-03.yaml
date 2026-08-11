@@ -247,11 +247,11 @@ cases:
             uri: "benchmark://source/youtube_dl/extractor/pornhub.py"
             range:
               start:
-                line: 120
-                character: 16
+                line: 36
+                character: 25
               end:
-                line: 120
-                character: 29
+                line: 36
+                character: 38
           kind: "class"
           displayName: "PornHubBaseIE"
         expectedDeclaration:
@@ -268,4 +268,4 @@ cases:
           displayName: "PornHubBaseIE"
     verification:
       method: "manual_inspection"
-      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. The expected usage sets agree. Both the subclass base and super() class argument are semantic references; retained reviewer A's subclass-base usage as definitionUsage. The expected usage sets agree. Both the subclass base and super() class argument are semantic references; retained reviewer A's subclass-base usage as definitionUsage."
+      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Fresh blinded OpenAI and Anthropic reviews on 2026-08-11 confirmed all seven usages and selected the super() reference as the deterministic first definitionUsage under the v3 ordering rule."

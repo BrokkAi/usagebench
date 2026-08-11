@@ -3440,25 +3440,25 @@
           "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
           "range": {
             "start": {
-              "line": 120,
-              "character": 16
+              "line": 36,
+              "character": 25
             },
             "end": {
-              "line": 120,
-              "character": 29
+              "line": 36,
+              "character": 38
             }
           }
         },
         "kind": "class",
         "displayName": "PornHubBaseIE"
       },
-      "notes": "Accepted after source-only adjudication. The expected usage sets agree. Both the subclass base and super() class argument are semantic references; retained reviewer A's subclass-base usage as definitionUsage.",
+      "notes": "Accepted after source-only adjudication and confirmed by fresh blinded OpenAI and Anthropic reviews on 2026-08-11. All seven usages remain required; the super() reference is now the deterministic first definitionUsage under the v3 ordering rule.",
       "disagreementResolution": {
         "hadDisagreement": true,
         "differingFields": [
           "definitionUsage"
         ],
-        "resolution": "The expected usage sets agree. Both the subclass base and super() class argument are semantic references; retained reviewer A's subclass-base usage as definitionUsage."
+        "resolution": "The fresh cross-provider panel agreed on the usage set and selected the earliest required location by URI, line, and character, replacing the prior valid but non-canonical subclass-base target."
       },
       "rangeValidation": {
         "positionEncoding": "utf-16",
@@ -3542,6 +3542,23 @@
           },
           "kind": "function",
           "displayName": "setup_contacts_routes"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_contacts_routes_shim.py",
+            "range": {
+              "start": {
+                "line": 43,
+                "character": 21
+              },
+              "end": {
+                "line": 43,
+                "character": 42
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "setup_contacts_routes"
         }
       ],
       "definitionUsage": {
@@ -3561,18 +3578,18 @@
         "kind": "function",
         "displayName": "setup_contacts_routes"
       },
-      "notes": "Accepted after source-only adjudication. Included both setup_contacts_routes calls in contact tests. They are ordinary calls, not bindings or same-name text.",
+      "notes": "Accepted after source-only adjudication and corrected after fresh blinded OpenAI and Anthropic reviews on 2026-08-11. The canonical-module attribute in test_contacts_routes_shim.py is a required semantic reference through the legacy-module identity shim.",
       "disagreementResolution": {
         "hadDisagreement": true,
         "differingFields": [
           "expectedUsages"
         ],
-        "resolution": "Included both setup_contacts_routes calls in contact tests. They are ordinary calls, not bindings or same-name text."
+        "resolution": "Retained the existing calls and added the independently confirmed canonical-module attribute reference exercised by the shim identity test."
       },
       "rangeValidation": {
         "positionEncoding": "utf-16",
         "validated": true,
-        "locationsChecked": 4,
+        "locationsChecked": 5,
         "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },

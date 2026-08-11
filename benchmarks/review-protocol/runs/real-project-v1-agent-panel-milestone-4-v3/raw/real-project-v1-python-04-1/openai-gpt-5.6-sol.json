@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m4_sol_python_04_1",
+    "executedAt": "2026-08-11T10:30:14Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-python-04-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/routes/contacts/contacts_routes.py",
+        "range": {
+          "start": {
+            "line": 737,
+            "character": 4
+          },
+          "end": {
+            "line": 737,
+            "character": 25
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/app.py",
+            "range": {
+              "start": {
+                "line": 858,
+                "character": 44
+              },
+              "end": {
+                "line": 858,
+                "character": 65
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "This token explicitly imports the selected function from its canonical module, so it is an optional binding under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/app.py",
+            "range": {
+              "start": {
+                "line": 859,
+                "character": 19
+              },
+              "end": {
+                "line": 859,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This call uses the function imported from routes.contacts.contacts_routes on the immediately preceding line."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_contacts_add_null_name.py",
+            "range": {
+              "start": {
+                "line": 15,
+                "character": 16
+              },
+              "end": {
+                "line": 15,
+                "character": 37
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The cr module alias names routes.contacts_routes, whose sys.modules shim resolves to the canonical contacts_routes module containing the selected function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_contacts_import_nonstring.py",
+            "range": {
+              "start": {
+                "line": 8,
+                "character": 35
+              },
+              "end": {
+                "line": 8,
+                "character": 56
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "This is an explicit import binding from the backward-compatible module path, which aliases the canonical module and is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_contacts_import_nonstring.py",
+            "range": {
+              "start": {
+                "line": 12,
+                "character": 13
+              },
+              "end": {
+                "line": 12,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This call resolves through the local import binding to the selected function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_contacts_routes_shim.py",
+            "range": {
+              "start": {
+                "line": 43,
+                "character": 21
+              },
+              "end": {
+                "line": 43,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "canonical is the module returned by importing routes.contacts.contacts_routes, so this attribute token resolves to the selected function binding."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/app.py",
+        "range": {
+          "start": {
+            "line": 859,
+            "character": 19
+          },
+          "end": {
+            "line": 859,
+            "character": 40
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/app.py",
+        "source/routes/__init__.py",
+        "source/routes/contacts/__init__.py",
+        "source/routes/contacts/contacts_routes.py",
+        "source/routes/contacts_routes.py",
+        "source/tests/test_contacts_add_null_name.py",
+        "source/tests/test_contacts_import_nonstring.py",
+        "source/tests/test_contacts_routes_shim.py"
+      ],
+      "rationale": "The supplied declaration is the canonical setup_contacts_routes function. A project-wide exact-identifier scan found all occurrences outside the declaration. The canonical application call, two test calls through the backward-compatible module alias, and the canonical-module attribute access are required. The two explicit import tokens are optional under bindings_optional. The remaining exact-name occurrence is inside a string passed to monkeypatch.setattr, not an identifier token, and is therefore omitted. The required set is complete, and the lexicographically first required location is the call in app.py."
+    }
+  ]
+}

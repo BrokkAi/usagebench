@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v1-agent-panel-milestone-4-v3",
+  "status": "human_adjudicated",
+  "summary": {
+    "caseCount": 6,
+    "requiredLocationAgreementCount": 6,
+    "automaticConsensusCount": 2,
+    "decisionDisagreementCount": 4,
+    "advisoryClassificationDifferenceCount": 0,
+    "highConfidenceNoAmbiguityCount": 6,
+    "authoredRequiredLocationMatchCount": 5,
+    "authoredDefinitionTargetMatchCount": 5,
+    "humanEscalationCount": 6,
+    "humanAdjudicatedCount": 6,
+    "unresolvedEscalationCount": 0
+  },
+  "cases": [
+    {
+      "caseId": "real-project-v1-go-03-3",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 6,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": false,
+      "solDecision": "accept",
+      "fableDecision": "replace",
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_consensus_contract_and_resolve_fable_replace"
+    },
+    {
+      "caseId": "real-project-v1-go-04-1",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 3,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-python-03-3",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 7,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": false,
+      "solDecision": "accept",
+      "fableDecision": "replace",
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": false,
+      "authoredDefinitionUsage": {
+        "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+        "range": {
+          "start": { "line": 120, "character": 16 },
+          "end": { "line": 120, "character": 29 }
+        }
+      },
+      "consensusDefinitionUsage": {
+        "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+        "range": {
+          "start": { "line": 36, "character": 25 },
+          "end": { "line": 36, "character": 38 }
+        }
+      },
+      "recommendedAdjudication": "accept_consensus_contract_correct_definition_target_and_resolve_fable_replace"
+    },
+    {
+      "caseId": "real-project-v1-python-04-1",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 4,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": false,
+      "solDecision": "accept",
+      "fableDecision": "replace",
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "requiredLocationsMatchAuthored": false,
+      "definitionUsageMatchesAuthored": true,
+      "agentOnlyRequiredLocations": [
+        {
+          "uri": "benchmark://source/tests/test_contacts_routes_shim.py",
+          "range": {
+            "start": { "line": 43, "character": 21 },
+            "end": { "line": 43, "character": 42 }
+          }
+        }
+      ],
+      "recommendedAdjudication": "accept_consensus_contract_add_shim_reference_and_resolve_fable_replace"
+    },
+    {
+      "caseId": "real-project-v1-typescript-03-3",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 2,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-04-1",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 3,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": false,
+      "solDecision": "accept",
+      "fableDecision": "replace",
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_consensus_contract_and_resolve_fable_replace"
+    }
+  ]
+}

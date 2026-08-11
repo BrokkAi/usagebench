@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m4_sol_go_03_3",
+    "executedAt": "2026-08-11T10:27:35Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-go-03-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/pkg/naming/names.go",
+        "range": {
+          "start": {
+            "line": 5,
+            "character": 5
+          },
+          "end": {
+            "line": 5,
+            "character": 18
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/client/proxy/proxy_wrapper.go",
+            "range": {
+              "start": {
+                "line": 119,
+                "character": 25
+              },
+              "end": {
+                "line": 119,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified call through the imported pkg/naming package resolves to the selected AddUserPrefix function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/client/proxy/xtcp.go",
+            "range": {
+              "start": {
+                "line": 87,
+                "character": 24
+              },
+              "end": {
+                "line": 87,
+                "character": 37
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified call through the imported pkg/naming package resolves to the selected AddUserPrefix function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/naming/names.go",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 9
+              },
+              "end": {
+                "line": 28,
+                "character": 22
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct same-package call from BuildTargetServerProxyName resolves to the selected function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/naming/names.go",
+            "range": {
+              "start": {
+                "line": 30,
+                "character": 8
+              },
+              "end": {
+                "line": 30,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct same-package call from BuildTargetServerProxyName resolves to the selected function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/naming/names_test.go",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 23
+              },
+              "end": {
+                "line": 10,
+                "character": 36
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call in the same naming package test resolves to the selected function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/naming/names_test.go",
+            "range": {
+              "start": {
+                "line": 11,
+                "character": 29
+              },
+              "end": {
+                "line": 11,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call in the same naming package test resolves to the selected function."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/client/proxy/proxy_wrapper.go",
+        "range": {
+          "start": {
+            "line": 119,
+            "character": 25
+          },
+          "end": {
+            "line": 119,
+            "character": 38
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source",
+        "source/client/proxy/proxy_wrapper.go",
+        "source/client/proxy/xtcp.go",
+        "source/pkg/naming/names.go",
+        "source/pkg/naming/names_test.go"
+      ],
+      "rationale": "The selected token declares pkg/naming.AddUserPrefix. An exhaustive exact-identifier scan of the supplied source tree found only the declaration, a documentation-comment mention, and the six required call tokens listed here. The same-package calls and tests resolve directly; both qualified calls resolve through imports of github.com/fatedier/frp/pkg/naming. There are no explicit import, re-export, or export binding tokens for this function and no plausible exact-name tokens resolving elsewhere. The first required location by URI and range ordering is the proxy_wrapper.go call."
+    }
+  ]
+}

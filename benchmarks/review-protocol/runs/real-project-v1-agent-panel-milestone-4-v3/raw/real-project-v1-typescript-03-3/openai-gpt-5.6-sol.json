@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m4_sol_typescript_03_3",
+    "executedAt": "2026-08-11T10:30:14Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-03-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/node/wrapper.ts",
+        "range": {
+          "start": {
+            "line": 17,
+            "character": 16
+          },
+          "end": {
+            "line": 17,
+            "character": 25
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 26,
+                "character": 26
+              },
+              "end": {
+                "line": 26,
+                "character": 35
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token resolves to the function-local callback declared later in the same lexical scope, not the exported onMessage declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 10
+              },
+              "end": {
+                "line": 45,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This is the declaration token of a distinct function-local callback that shadows the exported onMessage function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 54,
+                "character": 23
+              },
+              "end": {
+                "line": 54,
+                "character": 32
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token resolves to the function-local callback, not the exported onMessage declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 180,
+                "character": 26
+              },
+              "end": {
+                "line": 180,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This direct call resolves to the exported module-level onMessage function while ChildProcess waits for the parent handshake."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 353,
+                "character": 26
+              },
+              "end": {
+                "line": 353,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This direct call resolves to the exported module-level onMessage function while ParentProcess waits for the child handshake."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/node/wrapper.ts",
+        "range": {
+          "start": {
+            "line": 180,
+            "character": 26
+          },
+          "end": {
+            "line": 180,
+            "character": 35
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/",
+        "source/src/node/wrapper.ts",
+        "source/src/node/entry.ts",
+        "source/src/node/main.ts",
+        "source/test/unit/node/wrapper.test.ts"
+      ],
+      "rationale": "A complete-project exact-identifier search found onMessage only in wrapper.ts. Lexical binding analysis shows two calls to the selected exported function and three tokens belonging to a distinct nested callback. No import, re-export, or export binding token exists outside the supplied declaration range, so there are no optional locations."
+    }
+  ]
+}

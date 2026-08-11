@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-typescript-04-1",
+  "language": "typescript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/paperclipai/paperclip",
+    "commit": "d5b9f6c8c9d9edb0c9796df86c61826b11400b5b",
+    "archiveSha256": "5f4d04e92d8b3efcb3ed3ad60f78d9dcff99fe400c923ab110ff5bf6233e391a"
+  },
+  "declaration": {
+    "uri": "benchmark://source/packages/plugins/sdk/src/worker-rpc-host.ts",
+    "range": {
+      "start": {
+        "line": 229,
+        "character": 16
+      },
+      "end": {
+        "line": 229,
+        "character": 34
+      }
+    }
+  },
+  "displayName": "isWorkerEntrypoint"
+}

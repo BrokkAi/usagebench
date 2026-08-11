@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-typescript-03-3",
+  "language": "typescript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/coder/code-server",
+    "commit": "14bdb36f9217671bff9e9389f812c9ac9de575c0",
+    "archiveSha256": "e02ae6c8d63c0a7bfcb7958a74c153d384e91629452515b0358cdad7fb942c0b"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/node/wrapper.ts",
+    "range": {
+      "start": {
+        "line": 17,
+        "character": 16
+      },
+      "end": {
+        "line": 17,
+        "character": 25
+      }
+    }
+  },
+  "displayName": "onMessage"
+}

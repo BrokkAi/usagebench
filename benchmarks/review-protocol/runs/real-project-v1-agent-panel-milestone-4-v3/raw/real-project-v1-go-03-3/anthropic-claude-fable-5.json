@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "c032673e-0f30-479f-889a-40fb59da6e7f",
+    "executedAt": "2026-08-11T10:27:35Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-go-03-3",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/pkg/naming/names.go",
+        "range": {
+          "start": {
+            "line": 5,
+            "character": 5
+          },
+          "end": {
+            "line": 5,
+            "character": 18
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/client/proxy/proxy_wrapper.go",
+            "range": {
+              "start": {
+                "line": 119,
+                "character": 25
+              },
+              "end": {
+                "line": 119,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified call naming.AddUserPrefix(clientCfg.User, baseInfo.Name) computing Wrapper.wireName; the file imports github.com/fatedier/frp/pkg/naming, so the selector resolves to the declared function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/client/proxy/xtcp.go",
+            "range": {
+              "start": {
+                "line": 87,
+                "character": 24
+              },
+              "end": {
+                "line": 87,
+                "character": 37
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified call naming.AddUserPrefix(pxy.clientCfg.User, pxy.cfg.Name) building msg.NatHoleClient.ProxyName; resolves to the declared function via the pkg/naming import."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/naming/names.go",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 9
+              },
+              "end": {
+                "line": 28,
+                "character": 22
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Same-package call inside BuildTargetServerProxyName (serverUser branch); unqualified identifier resolves to the package-level function declared in this file."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/naming/names.go",
+            "range": {
+              "start": {
+                "line": 30,
+                "character": 8
+              },
+              "end": {
+                "line": 30,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Same-package call inside BuildTargetServerProxyName (localUser fallback branch); unqualified identifier resolves to the package-level function declared in this file."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/naming/names_test.go",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 23
+              },
+              "end": {
+                "line": 10,
+                "character": 36
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call AddUserPrefix(\"\", \"test\") in TestAddUserPrefix; the test file is in the same package naming, so the unqualified identifier resolves to the declared function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/naming/names_test.go",
+            "range": {
+              "start": {
+                "line": 11,
+                "character": 29
+              },
+              "end": {
+                "line": 11,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call AddUserPrefix(\"alice\", \"test\") in TestAddUserPrefix; same-package unqualified reference to the declared function."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/client/proxy/proxy_wrapper.go",
+        "range": {
+          "start": {
+            "line": 119,
+            "character": 25
+          },
+          "end": {
+            "line": 119,
+            "character": 38
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/pkg/naming/names.go",
+        "source/pkg/naming/names_test.go",
+        "source/client/proxy/proxy_wrapper.go",
+        "source/client/proxy/xtcp.go"
+      ],
+      "rationale": "A project-wide search for the exact token AddUserPrefix over the pinned snapshot yielded nine textual hits. Excluding the declaration token itself (names.go line 5, 0-based, func signature), the doc-comment mention (non-semantic comment text), and the distinct identifier TestAddUserPrefix (substring, a different declaration), six identifier tokens remain and all semantically resolve to the declared function: two same-package calls inside BuildTargetServerProxyName in names.go, two same-package calls in names_test.go, and two selector calls qualified by the imported naming package in client/proxy/proxy_wrapper.go and client/proxy/xtcp.go. Go imports bind package names, not individual symbols, so under bindings_optional there are no optional per-symbol binding tokens to report. All lines are pure ASCII, so UTF-16 columns equal byte columns; tabs count as single units. definitionUsage is the first required location after sorting by URI, then start line, then start character. The required set is complete with no unresolved ambiguity, supporting high confidence."
+    }
+  ]
+}
