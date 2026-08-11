@@ -6,9 +6,9 @@ positionEncoding: utf-16
 source: { kind: fixture, path: fixtures/java/semantic-packs }
 language: java
 semanticPacks:
-  releaseVersion: 0.8.19
-  bundleUrl: https://github.com/BrokkAi/bifrost/releases/download/v0.8.19/bifrost-semantic-packs-v0.8.19.tar.gz
-  bundleSha256: 6f28e083f8be1a5d27465d8aeb0d2de1146b490bfac3e32949481b4478e24568
+  releaseVersion: 0.9.1
+  bundleUrl: https://github.com/BrokkAi/bifrost/releases/download/v0.9.1/bifrost-semantic-packs-v0.9.1.tar.gz
+  bundleSha256: a01cb3d7651ec95ad65c157647db243464f7fd10d14cde9e5262b626fc372f9b
   evidence:
     - language: java
       ecosystem: jdk
@@ -19,7 +19,7 @@ semanticPacks:
   expectedPacks:
     - packId: bifrost.jdk
       packVersion: 21.0.8
-      semanticSha256: 90573a5e418654598b49903d0fa11cc753f6b989f079e84484fdc874db4e39eb
+      semanticSha256: f8fe5aa74028ad2c274c32c963a63137ae40b5a041ce47130e4f627bd998c504
       completeness: partial
   probes:
     - symbol: java.util.ArrayList
@@ -35,9 +35,9 @@ cases:
           kind: class
           displayName: ArrayList
         expectedDeclaration:
-          location: { uri: bifrost-model://v1/90573a5e418654598b49903d0fa11cc753f6b989f079e84484fdc874db4e39eb/type/type.7085c38223effc81cafbf18bb7c08e2c08004f151a9a78b87c25e3e65e3664b4, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } }
+          location: { uri: bifrost-model://v1/f8fe5aa74028ad2c274c32c963a63137ae40b5a041ce47130e4f627bd998c504/type/type.7085c38223effc81cafbf18bb7c08e2c08004f151a9a78b87c25e3e65e3664b4, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } }
           kind: class
           displayName: java.util.ArrayList
     verification:
       method: manual_inspection
-      notes: Exact v0.8.19 release artifact, digest, coordinate, pack version, and semantic digest reviewed on 2026-08-03.
+      notes: Exact v0.9.1 release artifact, digest, coordinate, pack version, semantic digest, and stable ArrayList record identity reviewed on 2026-08-11.

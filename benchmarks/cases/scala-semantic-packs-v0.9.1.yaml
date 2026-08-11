@@ -6,9 +6,9 @@ positionEncoding: utf-16
 source: { kind: fixture, path: fixtures/scala/semantic-packs }
 language: scala
 semanticPacks:
-  releaseVersion: 0.8.19
-  bundleUrl: https://github.com/BrokkAi/bifrost/releases/download/v0.8.19/bifrost-semantic-packs-v0.8.19.tar.gz
-  bundleSha256: 6f28e083f8be1a5d27465d8aeb0d2de1146b490bfac3e32949481b4478e24568
+  releaseVersion: 0.9.1
+  bundleUrl: https://github.com/BrokkAi/bifrost/releases/download/v0.9.1/bifrost-semantic-packs-v0.9.1.tar.gz
+  bundleSha256: a01cb3d7651ec95ad65c157647db243464f7fd10d14cde9e5262b626fc372f9b
   evidence:
     - language: scala
       ecosystem: maven
@@ -19,7 +19,7 @@ semanticPacks:
   expectedPacks:
     - packId: bifrost.scala-library
       packVersion: 2.13.16
-      semanticSha256: fca1e3f6491b57b47e16e61d519f84f8c9379612c4deaa48ab2013a733be71c0
+      semanticSha256: 87053e06f21f3bda4652f4391978c7839e58c9ec28172a5ee65e654b82b37e94
       completeness: complete
   probes:
     - symbol: scala.collection.immutable.List
@@ -35,9 +35,9 @@ cases:
           kind: type
           displayName: List
         expectedDeclaration:
-          location: { uri: bifrost-model://v1/fca1e3f6491b57b47e16e61d519f84f8c9379612c4deaa48ab2013a733be71c0/type/type.265e98b629a501e7c6db842e4eb77821f0e3bc373faa3ceabb6aae21620a537f, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } }
+          location: { uri: bifrost-model://v1/87053e06f21f3bda4652f4391978c7839e58c9ec28172a5ee65e654b82b37e94/type/type.265e98b629a501e7c6db842e4eb77821f0e3bc373faa3ceabb6aae21620a537f, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } }
           kind: type
           displayName: scala.collection.immutable.List
     verification:
       method: manual_inspection
-      notes: Exact v0.8.19 release artifact, digest, coordinate, pack version, and semantic digest reviewed on 2026-08-03.
+      notes: Exact v0.9.1 release artifact, digest, coordinate, pack version, semantic digest, and stable List record identity reviewed on 2026-08-11.
