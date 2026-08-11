@@ -15,6 +15,11 @@ on:
         required: false
         default: false
         type: boolean
+      notify_slack:
+        description: 'Post the benchmark summary to Slack'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -399,7 +404,10 @@ jobs:
   notify:
     name: notify Slack
     needs: benchmark
-    if: always() && needs.benchmark.outputs.slack_payload != ''
+    if: >-
+      always() &&
+      needs.benchmark.outputs.slack_payload != '' &&
+      (github.event_name == 'schedule' || inputs.notify_slack)
     runs-on: ubuntu-latest
     permissions: {}
     steps:

@@ -1872,7 +1872,12 @@ fn semantic_model_destination_path(definition: &Value, raw_path: &str) -> String
     let Some(provenance) = definition.get("semantic_model") else {
         return raw_path.to_string();
     };
-    if provenance.get("origin").and_then(Value::as_str) != Some("dependency_source") {
+    if provenance
+        .get("activation")
+        .and_then(|activation| activation.get("source_kind"))
+        .and_then(Value::as_str)
+        != Some("installed")
+    {
         return raw_path.to_string();
     }
     let Some(pack_digest) = provenance.get("pack_digest").and_then(Value::as_str) else {
@@ -2444,7 +2449,9 @@ mod tests {
                     "kind": "class",
                     "semantic_model": {
                         "pack_digest": "abc123",
-                        "origin": "dependency_source"
+                        "activation": {
+                            "source_kind": "installed"
+                        }
                     }
                 }]
             }]
@@ -2465,7 +2472,9 @@ mod tests {
             "path": "src/lib.rs",
             "semantic_model": {
                 "pack_digest": "abc123",
-                "origin": "exact_generated_output"
+                "activation": {
+                    "source_kind": "ephemeral_workspace"
+                }
             }
         });
 
