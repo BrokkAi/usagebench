@@ -553,6 +553,8 @@ pub struct EvaluationReleaseAudit {
     pub adjudication: EvaluationReviewArtifact,
     pub source_count: usize,
     pub case_files: Vec<String>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub case_languages: BTreeMap<String, String>,
     pub case_ids_by_file: BTreeMap<String, Vec<String>>,
     pub case_count: usize,
     pub selection: Vec<EvaluationSelectionAudit>,
@@ -570,11 +572,12 @@ pub(crate) fn validate_report_against_release_audit(
     audit: &EvaluationReleaseAudit,
     candidate_id: &str,
 ) -> Result<()> {
-    let expected_files = audit.case_files.iter().cloned().collect::<BTreeSet<_>>();
+    let expected_case_ids = expected_report_case_ids(audit, candidate_id)?;
+    let expected_files = expected_case_ids.keys().cloned().collect::<BTreeSet<_>>();
     let report_files = report.case_files.iter().cloned().collect::<BTreeSet<_>>();
-    if report.case_files.len() != audit.case_files.len() || report_files != expected_files {
+    if report.case_files.len() != expected_files.len() || report_files != expected_files {
         bail!(
-            "evaluation report for {candidate_id} must exactly cover the explicit evaluation corpus"
+            "evaluation report for {candidate_id} must exactly cover its explicit evaluation scope"
         );
     }
 
@@ -602,10 +605,11 @@ pub(crate) fn validate_report_against_release_audit(
         .iter()
         .map(|document| document.cases.len())
         .sum::<usize>();
-    if report.documents.len() != audit.case_files.len()
+    let expected_case_count = expected_case_ids.values().map(Vec::len).sum::<usize>();
+    if report.documents.len() != expected_files.len()
         || document_files != expected_files
-        || case_ids_by_file != audit.case_ids_by_file
-        || case_count != audit.case_count
+        || case_ids_by_file != expected_case_ids
+        || case_count != expected_case_count
         || report
             .documents
             .iter()
@@ -616,6 +620,49 @@ pub(crate) fn validate_report_against_release_audit(
         );
     }
     Ok(())
+}
+
+fn expected_report_case_ids(
+    audit: &EvaluationReleaseAudit,
+    candidate_id: &str,
+) -> Result<BTreeMap<String, Vec<String>>> {
+    if audit.case_languages.len() != audit.case_ids_by_file.len()
+        || audit
+            .case_ids_by_file
+            .keys()
+            .any(|case_file| !audit.case_languages.contains_key(case_file))
+    {
+        bail!("evaluation audit case-language index does not cover every case file");
+    }
+    if candidate_id == "bifrost" {
+        return Ok(audit.case_ids_by_file.clone());
+    }
+
+    let target_languages = audit
+        .target_profiles
+        .iter()
+        .filter(|profile| profile.candidate_id == candidate_id)
+        .map(|profile| profile.language.as_str())
+        .collect::<BTreeSet<_>>();
+    if target_languages.is_empty() {
+        bail!("evaluation audit has no target profile for candidate {candidate_id}");
+    }
+
+    let expected = audit
+        .case_ids_by_file
+        .iter()
+        .filter(|(case_file, _)| {
+            audit
+                .case_languages
+                .get(*case_file)
+                .is_some_and(|language| target_languages.contains(language.as_str()))
+        })
+        .map(|(case_file, case_ids)| (case_file.clone(), case_ids.clone()))
+        .collect::<BTreeMap<_, _>>();
+    if expected.is_empty() {
+        bail!("evaluation audit has no case files for candidate {candidate_id}");
+    }
+    Ok(expected)
 }
 
 /// Validate the evidence linked from one evaluation document.
@@ -866,6 +913,7 @@ pub fn build_release_audit(path: impl AsRef<Path>) -> Result<EvaluationReleaseAu
     let files = validate_path(path).context("validate evaluation release corpus")?;
     let repo_root = crate::find_repo_root_for_path(path)?;
     let mut case_files = Vec::with_capacity(files.len());
+    let mut case_languages = BTreeMap::new();
     let mut case_ids_by_file = BTreeMap::new();
     let mut case_count = 0;
     let mut selection_file = None::<String>;
@@ -902,6 +950,7 @@ pub fn build_release_audit(path: impl AsRef<Path>) -> Result<EvaluationReleaseAu
         {
             bail!("evaluation corpus contains duplicate case file {case_file}");
         }
+        case_languages.insert(case_file.clone(), document.language);
         case_files.push(case_file);
         case_count += document.cases.len();
     }
@@ -1035,6 +1084,7 @@ pub fn build_release_audit(path: impl AsRef<Path>) -> Result<EvaluationReleaseAu
         adjudication: review_artifact(review.adjudication)?,
         source_count: source_lock.sources.len(),
         case_files,
+        case_languages,
         case_ids_by_file,
         case_count,
         selection: selection_audit,
@@ -3030,6 +3080,21 @@ mod tests {
             ReviewTierAudit::HumanAdjudicatedAgentPanel
         );
         assert_eq!(audit.case_count, 36);
+        assert_eq!(audit.case_languages.len(), 12);
+        assert_eq!(
+            expected_report_case_ids(&audit, "bifrost").unwrap().len(),
+            12
+        );
+        for candidate_id in ["gopls", "pyright", "typescript-language-server"] {
+            let scoped_cases = expected_report_case_ids(&audit, candidate_id).unwrap();
+            assert_eq!(scoped_cases.len(), 4);
+            assert_eq!(scoped_cases.values().map(Vec::len).sum::<usize>(), 12);
+        }
+        assert!(expected_report_case_ids(&audit, "unknown").is_err());
+        let mut incomplete_languages = audit.clone();
+        let first_case = incomplete_languages.case_files[0].clone();
+        incomplete_languages.case_languages.remove(&first_case);
+        assert!(expected_report_case_ids(&incomplete_languages, "bifrost").is_err());
         assert_eq!(audit.reviewers.len(), 2);
         assert!(audit
             .reviewers

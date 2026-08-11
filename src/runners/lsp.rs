@@ -2,13 +2,13 @@ use super::bifrost::{command_output_with_timeout, prepare_source_root};
 use super::lsp_protocol::{InitializeResult, LspSession};
 use super::{
     case_location_metrics, combine_case_status, compute_totals, location_match,
-    navigation_response_status, normalize_symbol_location, path_to_slash, requested_run_totals,
-    required_destination_status, runner_failure_case, score_declaration_locations,
-    score_navigation_response, symbol_kind_name, CapabilitySupport, CaseRunReport, CaseStatus,
-    ClassifiedExtraUsage, CompatibleUsageDefinitionReport, DeclarationUsageReport,
-    DocumentRunReport, ExtraUsageClassification, ExtraUsageDisposition, LocationMatch,
-    LocationMetrics, NormalizedLocation, RequiredDestinationStatus, RunDiagnostic, RunInvocation,
-    RunReport, RunnerCapability, RunnerMetadata, RunnerOperation, TypeLookupReport,
+    navigation_response_status, normalize_symbol_location, path_to_slash, report_case_path,
+    requested_run_totals, required_destination_status, runner_failure_case,
+    score_declaration_locations, score_navigation_response, symbol_kind_name, CapabilitySupport,
+    CaseRunReport, CaseStatus, ClassifiedExtraUsage, CompatibleUsageDefinitionReport,
+    DeclarationUsageReport, DocumentRunReport, ExtraUsageClassification, ExtraUsageDisposition,
+    LocationMatch, LocationMetrics, NormalizedLocation, RequiredDestinationStatus, RunDiagnostic,
+    RunInvocation, RunReport, RunnerCapability, RunnerMetadata, RunnerOperation, TypeLookupReport,
     UsageDefinitionReport,
 };
 use crate::{
@@ -172,7 +172,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
         if !profile.languages.contains(&document.language) {
             continue;
         }
-        executed_case_files.push(display_path(case_file));
+        executed_case_files.push(report_case_path(case_file, &repo_root));
 
         let source =
             match crate::evaluation::materialized_source_root(document, &repo_root, &run_dir)? {
@@ -201,7 +201,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
                 observed_capabilities
                     .get_or_insert_with(|| capabilities_from_initialize(&initialize.capabilities));
                 documents.push(DocumentRunReport {
-                    case_file: display_path(case_file),
+                    case_file: report_case_path(case_file, &repo_root),
                     language: document.language.clone(),
                     source_root: display_path(&source_root),
                     corpus_partition: document.corpus.partition,
@@ -214,7 +214,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
             Err(error) => {
                 let message = format!("{error:#}");
                 documents.push(DocumentRunReport {
-                    case_file: display_path(case_file),
+                    case_file: report_case_path(case_file, &repo_root),
                     language: document.language.clone(),
                     source_root: display_path(&source_root),
                     corpus_partition: document.corpus.partition,

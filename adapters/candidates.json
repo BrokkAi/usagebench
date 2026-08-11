@@ -21,7 +21,7 @@
       "source": "https://go.googlesource.com/tools",
       "moduleChecksum": "h1:Dn6mf9WXu9iLnTftDDMb9wV0c6Se7PjzEMqP0LEe08Y=",
       "profile": "adapters/lsp/gopls.json",
-      "profileSha256": "668ce339ccbefe01f48f23336e77466adde89be80d7ba04e752eb352bbc138e1",
+      "profileSha256": "44d345b2d0a8183a8f2dbbd20b25604ee1c1908acc057752f5a9a52e5857f526",
       "advertised": true,
       "referenceRunner": "gopls",
       "runtimeNetworking": "disabled",
@@ -113,7 +113,7 @@
       "requestedVersion": "5.3.0 (TypeScript 5.9.3)",
       "source": "https://github.com/typescript-language-server/typescript-language-server",
       "profile": "adapters/lsp/typescript-language-server.json",
-      "profileSha256": "fe0b72a884946348faaf7b6098637fae66f922438da0bad5265d27795b9fe14b",
+      "profileSha256": "3c1078bae6bd585deb13c4ed434fed1cb0c04a63b3278e0ab51dfe587beb2146",
       "advertised": true,
       "runtimeNetworking": "required by npx unless the exact packages are already cached",
       "projectHydration": "npx resolves TypeScript LS 5.3.0 and TypeScript 5.9.3 before opening fixtures"

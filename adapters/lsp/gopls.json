@@ -14,5 +14,5 @@
   },
   "workspaceFiles": {"go.mod": "module usagebench.fixture\n\ngo 1.23\n"},
   "settleMilliseconds": 5000,
-  "requestTimeoutMilliseconds": 30000
+  "requestTimeoutMilliseconds": 120000
 }
