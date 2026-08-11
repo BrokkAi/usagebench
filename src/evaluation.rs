@@ -2950,6 +2950,7 @@ mod tests {
         for run_file in [
             "benchmarks/review-protocol/runs/real-project-v1-agent-panel-pilot-v3/run.json",
             "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-1-v3/run.json",
+            "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-2-v3/run.json",
         ] {
             let run: serde_json::Value =
                 serde_json::from_slice(&fs::read(root.join(run_file)).unwrap()).unwrap();

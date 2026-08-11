@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-go-02-2",
+  "language": "go",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/gin-gonic/gin",
+    "commit": "34dac209ffb6ef85cc78c5d217bbb7ad001d68fd",
+    "archiveSha256": "9f6679490fb52b9d8adb4f95157ef6e01ad8248825ff7b3cdf4deca4fb54cf1f"
+  },
+  "declaration": {
+    "uri": "benchmark://source/binding/bson.go",
+    "range": { "start": { "line": 13, "character": 5 }, "end": { "line": 13, "character": 16 } }
+  },
+  "displayName": "bsonBinding"
+}

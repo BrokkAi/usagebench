@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v1-agent-panel-milestone-2-v3",
+  "adjudicator": {
+    "kind": "human",
+    "identity": "DavidBakerEffendi",
+    "executedAt": "2026-08-11T12:01:03+02:00",
+    "attestation": "I approve all six M2 semantic contracts, adding the three bsonBinding receiver-type usages, resolving the DoWhileStep decision-label mismatch as accepted, and retaining the additional error exclusions as advisory evidence only."
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-go-02-2",
+      "decision": "accept_consensus_contract_with_corpus_correction",
+      "correction": {
+        "addRequiredUsages": [
+          {
+            "uri": "benchmark://source/binding/bson.go",
+            "range": {
+              "start": { "line": 15, "character": 6 },
+              "end": { "line": 15, "character": 17 }
+            }
+          },
+          {
+            "uri": "benchmark://source/binding/bson.go",
+            "range": {
+              "start": { "line": 19, "character": 8 },
+              "end": { "line": 19, "character": 19 }
+            }
+          },
+          {
+            "uri": "benchmark://source/binding/bson.go",
+            "range": {
+              "start": { "line": 27, "character": 6 },
+              "end": { "line": 27, "character": 17 }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "real-project-v1-go-02-3",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v1-python-02-2",
+      "decision": "accept_consensus_contract_with_decision_label_resolution",
+      "decisionLabelResolution": {
+        "openai": "accept",
+        "anthropic": "replace",
+        "adjudicated": "accept",
+        "rationale": "The reviewers agreed exactly on the declaration, required and optional locations, deterministic definition usage, high confidence, and absence of ambiguities. The replace label proposed no substantive replacement."
+      }
+    },
+    {
+      "caseId": "real-project-v1-python-02-3",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-02-2",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-02-3",
+      "decision": "accept_consensus_contract",
+      "advisoryResolution": "Retain Fable's five proven exclusions as advisory evidence. The reviewers agreed exactly on required and optional locations, so no corpus correction is needed."
+    }
+  ]
+}

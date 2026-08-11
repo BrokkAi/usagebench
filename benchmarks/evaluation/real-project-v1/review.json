@@ -20,6 +20,6 @@
   "adjudication": {
     "id": "source-only-adjudication",
     "file": "benchmarks/evaluation/real-project-v1/reviews/adjudication.json",
-    "sha256": "a50def3372ab3286a0fe43646e78caac51b44b8d34afd33f8d1d86af455c3c5b"
+    "sha256": "fdbaef5ceba3022505a0d65f623d2fc8d512ada4c8193b080418cdf787a3b3ad"
   }
 }

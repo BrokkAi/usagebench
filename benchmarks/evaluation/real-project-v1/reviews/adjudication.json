@@ -575,6 +575,57 @@
           },
           "kind": "class",
           "displayName": "bsonBinding"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/binding/bson.go",
+            "range": {
+              "start": {
+                "line": 15,
+                "character": 6
+              },
+              "end": {
+                "line": 15,
+                "character": 17
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "bsonBinding"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/binding/bson.go",
+            "range": {
+              "start": {
+                "line": 19,
+                "character": 8
+              },
+              "end": {
+                "line": 19,
+                "character": 19
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "bsonBinding"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/binding/bson.go",
+            "range": {
+              "start": {
+                "line": 27,
+                "character": 6
+              },
+              "end": {
+                "line": 27,
+                "character": 17
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "bsonBinding"
         }
       ],
       "definitionUsage": {
@@ -594,18 +645,18 @@
         "kind": "class",
         "displayName": "bsonBinding"
       },
-      "notes": "Accepted after source-only adjudication. Excluded the three extra bsonBinding occurrences because they are receiver-clause bindings on method declarations, not ordinary semantic source references.",
+      "notes": "Accepted after source-only adjudication and corrected after fresh blinded OpenAI and Anthropic reviews on 2026-08-11. The two composite-literal references and three receiver-clause type references are required semantic usages under the v3 contract.",
       "disagreementResolution": {
         "hadDisagreement": true,
         "differingFields": [
           "expectedUsages"
         ],
-        "resolution": "Excluded the three extra bsonBinding occurrences because they are receiver-clause bindings on method declarations, not ordinary semantic source references."
+        "resolution": "The original adjudication excluded receiver-clause type references. The fresh cross-provider panel independently included all three, and accountable human adjudication accepted that consensus under the explicit v3 receiver-usage rule."
       },
       "rangeValidation": {
         "positionEncoding": "utf-16",
         "validated": true,
-        "locationsChecked": 3,
+        "locationsChecked": 6,
         "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },

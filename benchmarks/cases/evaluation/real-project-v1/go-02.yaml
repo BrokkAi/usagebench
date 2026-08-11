@@ -120,6 +120,39 @@ cases:
               character: 40
         kind: "class"
         displayName: "bsonBinding"
+      - location:
+          uri: "benchmark://source/binding/bson.go"
+          range:
+            start:
+              line: 15
+              character: 6
+            end:
+              line: 15
+              character: 17
+        kind: "class"
+        displayName: "bsonBinding"
+      - location:
+          uri: "benchmark://source/binding/bson.go"
+          range:
+            start:
+              line: 19
+              character: 8
+            end:
+              line: 19
+              character: 19
+        kind: "class"
+        displayName: "bsonBinding"
+      - location:
+          uri: "benchmark://source/binding/bson.go"
+          range:
+            start:
+              line: 27
+              character: 6
+            end:
+              line: 27
+              character: 17
+        kind: "class"
+        displayName: "bsonBinding"
     usageLookups:
       - operation: "definition"
         usage:
@@ -148,7 +181,7 @@ cases:
           displayName: "bsonBinding"
     verification:
       method: "manual_inspection"
-      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Excluded the three extra bsonBinding occurrences because they are receiver-clause bindings on method declarations, not ordinary semantic source references. Excluded the three extra bsonBinding occurrences because they are receiver-clause bindings on method declarations, not ordinary semantic source references."
+      notes: "Fresh blinded OpenAI and Anthropic reviews against the complete pinned source archive independently confirmed the two composite-literal references and the three receiver-clause type references, followed by human adjudication on 2026-08-11. Receiver-clause type references are required semantic usages under the v3 contract."
   - id: "real-project-v1-go-02-3"
     declaration:
       location:
