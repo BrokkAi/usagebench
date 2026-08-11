@@ -1869,11 +1869,13 @@ fn semantic_model_destination_path(definition: &Value, raw_path: &str) -> String
     if raw_path.starts_with("bifrost-model://v1/") {
         return raw_path.to_string();
     }
-    let Some(pack_digest) = definition
-        .get("semantic_model")
-        .and_then(|provenance| provenance.get("pack_digest"))
-        .and_then(Value::as_str)
-    else {
+    let Some(provenance) = definition.get("semantic_model") else {
+        return raw_path.to_string();
+    };
+    if provenance.get("origin").and_then(Value::as_str) != Some("dependency_source") {
+        return raw_path.to_string();
+    }
+    let Some(pack_digest) = provenance.get("pack_digest").and_then(Value::as_str) else {
         return raw_path.to_string();
     };
     let Ok(mut uri) = Url::parse("bifrost-model://v1/") else {
@@ -2441,7 +2443,8 @@ mod tests {
                     "fqn": "java.util.ArrayList",
                     "kind": "class",
                     "semantic_model": {
-                        "pack_digest": "abc123"
+                        "pack_digest": "abc123",
+                        "origin": "dependency_source"
                     }
                 }]
             }]
@@ -2453,6 +2456,22 @@ mod tests {
         assert_eq!(
             parsed.actual_declarations[0].path,
             "bifrost-model://v1/abc123/source/java.base%2Fjava%2Futil%2FArrayList.java"
+        );
+    }
+
+    #[test]
+    fn navigation_keeps_workspace_semantic_destination_as_workspace_source() {
+        let definition = serde_json::json!({
+            "path": "src/lib.rs",
+            "semantic_model": {
+                "pack_digest": "abc123",
+                "origin": "exact_generated_output"
+            }
+        });
+
+        assert_eq!(
+            semantic_model_destination_path(&definition, "src/lib.rs"),
+            "src/lib.rs"
         );
     }
 
