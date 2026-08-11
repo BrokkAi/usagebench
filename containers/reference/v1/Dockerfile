@@ -38,6 +38,9 @@ RUN mkdir -p /out \
 
 FROM ${RUNTIME_BASE} AS runtime-base
 COPY --from=usagebench-builder /src/usagebench/target/release/usagebench /usr/local/bin/usagebench
+COPY --from=usagebench-builder /usr/bin/git /usr/bin/git
+COPY --from=usagebench-builder /usr/lib/git-core /usr/lib/git-core
+COPY --from=usagebench-builder /usr/share/git-core/templates /usr/share/git-core/templates
 ENV HOME=/tmp \
     RUST_BACKTRACE=1
 WORKDIR /work
