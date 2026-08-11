@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-go-02-1",
+  "language": "go",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/gin-gonic/gin",
+    "commit": "34dac209ffb6ef85cc78c5d217bbb7ad001d68fd",
+    "archiveSha256": "9f6679490fb52b9d8adb4f95157ef6e01ad8248825ff7b3cdf4deca4fb54cf1f"
+  },
+  "declaration": {
+    "uri": "benchmark://source/routergroup.go",
+    "range": {
+      "start": { "line": 180, "character": 26 },
+      "end": { "line": 180, "character": 43 }
+    }
+  },
+  "displayName": "staticFileHandler"
+}

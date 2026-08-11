@@ -2947,43 +2947,73 @@ mod tests {
             serde_json::from_slice(&fs::read(root.join(&protocol.response_schema.file)).unwrap())
                 .unwrap();
         let compiled = jsonschema::JSONSchema::compile(&schema).unwrap();
-        let run_path = root
-            .join("benchmarks/review-protocol/runs/real-project-v1-agent-panel-pilot-v3/run.json");
-        let run: serde_json::Value = serde_json::from_slice(&fs::read(run_path).unwrap()).unwrap();
+        for run_file in [
+            "benchmarks/review-protocol/runs/real-project-v1-agent-panel-pilot-v3/run.json",
+            "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-1-v3/run.json",
+        ] {
+            let run: serde_json::Value =
+                serde_json::from_slice(&fs::read(root.join(run_file)).unwrap()).unwrap();
 
-        let packets = run["packets"].as_array().unwrap();
-        assert_eq!(packets.len(), 6);
-        for packet in packets {
-            let link: ArtifactLink = serde_json::from_value(packet.clone()).unwrap();
-            validate_linked_artifact(&link, root, "retained case packet").unwrap();
+            for field in ["protocol", "methodology", "prompt", "responseSchema"] {
+                let link: ArtifactLink = serde_json::from_value(run[field].clone()).unwrap();
+                validate_linked_artifact(&link, root, "retained protocol artifact").unwrap();
+            }
+            if !run["comparison"].is_null() {
+                let comparison: ArtifactLink =
+                    serde_json::from_value(run["comparison"].clone()).unwrap();
+                validate_linked_artifact(&comparison, root, "retained comparison").unwrap();
+            }
+
+            if let Some(sources) = run["sources"].as_array() {
+                for source in sources {
+                    let link = ArtifactLink {
+                        file: source["archive"].as_str().unwrap().to_string(),
+                        sha256: source["sha256"].as_str().unwrap().to_string(),
+                    };
+                    validate_linked_artifact(&link, root, "retained source archive").unwrap();
+                }
+            }
+
+            let packets = run["packets"].as_array().unwrap();
+            assert_eq!(packets.len(), 6);
+            for packet in packets {
+                let link: ArtifactLink = serde_json::from_value(packet.clone()).unwrap();
+                validate_linked_artifact(&link, root, "retained case packet").unwrap();
+            }
+
+            if !run["adjudication"].is_null() {
+                let adjudication: ArtifactLink =
+                    serde_json::from_value(run["adjudication"].clone()).unwrap();
+                validate_linked_artifact(&adjudication, root, "retained human adjudication")
+                    .unwrap();
+            }
+
+            let sessions = run["sessions"].as_array().unwrap();
+            assert_eq!(sessions.len(), 12);
+            let mut coverage = BTreeMap::<String, usize>::new();
+            for session in sessions {
+                let link: ArtifactLink =
+                    serde_json::from_value(session["rawResponse"].clone()).unwrap();
+                validate_linked_artifact(&link, root, "retained raw response").unwrap();
+                let response: serde_json::Value =
+                    serde_json::from_slice(&fs::read(root.join(&link.file)).unwrap()).unwrap();
+                assert!(compiled.is_valid(&response));
+                let typed: AgentResponse = serde_json::from_value(response).unwrap();
+                assert_eq!(typed.records.len(), 1);
+                assert_eq!(typed.reviewer.provider, session["provider"]);
+                assert_eq!(typed.reviewer.model, session["model"]);
+                assert_eq!(typed.reviewer.execution_id, session["executionId"]);
+                if let Some(executed_at) = session["executedAt"].as_str() {
+                    assert_eq!(typed.reviewer.executed_at, executed_at);
+                }
+                assert_eq!(typed.records[0].case_id, session["caseId"]);
+                *coverage
+                    .entry(typed.records[0].case_id.clone())
+                    .or_default() += 1;
+            }
+            assert_eq!(coverage.len(), 6);
+            assert!(coverage.values().all(|count| *count == 2));
         }
-
-        let adjudication: ArtifactLink =
-            serde_json::from_value(run["adjudication"].clone()).unwrap();
-        validate_linked_artifact(&adjudication, root, "retained human adjudication").unwrap();
-
-        let sessions = run["sessions"].as_array().unwrap();
-        assert_eq!(sessions.len(), 12);
-        let mut coverage = BTreeMap::<String, usize>::new();
-        for session in sessions {
-            let link: ArtifactLink =
-                serde_json::from_value(session["rawResponse"].clone()).unwrap();
-            validate_linked_artifact(&link, root, "retained raw response").unwrap();
-            let response: serde_json::Value =
-                serde_json::from_slice(&fs::read(root.join(&link.file)).unwrap()).unwrap();
-            assert!(compiled.is_valid(&response));
-            let typed: AgentResponse = serde_json::from_value(response).unwrap();
-            assert_eq!(typed.records.len(), 1);
-            assert_eq!(typed.reviewer.provider, session["provider"]);
-            assert_eq!(typed.reviewer.model, session["model"]);
-            assert_eq!(typed.reviewer.execution_id, session["executionId"]);
-            assert_eq!(typed.records[0].case_id, session["caseId"]);
-            *coverage
-                .entry(typed.records[0].case_id.clone())
-                .or_default() += 1;
-        }
-        assert_eq!(coverage.len(), 6);
-        assert!(coverage.values().all(|count| *count == 2));
     }
 
     #[test]

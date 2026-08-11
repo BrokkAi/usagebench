@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v1-agent-panel-milestone-1-v3",
+  "adjudicator": {
+    "kind": "human",
+    "identity": "DavidBakerEffendi",
+    "executedAt": "2026-08-11T11:31:44+02:00",
+    "attestation": "I approve the six M1 agreements and agree with the recommendations for the two decision-only candidates: accept the shared semantic contracts, resolve their labels as accepted, and apply the agreed deterministic definition targets."
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-go-01-3",
+      "decision": "accept_consensus_contract_with_decision_label_resolution",
+      "decisionLabelResolution": {
+        "openai": "accept",
+        "anthropic": "replace",
+        "adjudicated": "accept",
+        "rationale": "The reviewers agreed exactly on the declaration, required locations, deterministic definition usage, high confidence, and absence of ambiguities. The replace label proposed no substantive replacement."
+      }
+    },
+    {
+      "caseId": "real-project-v1-go-02-1",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v1-python-01-2",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v1-python-02-1",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-01-3",
+      "decision": "accept_consensus_contract_with_decision_label_resolution_and_corpus_correction",
+      "decisionLabelResolution": {
+        "openai": "accept",
+        "anthropic": "replace",
+        "adjudicated": "accept",
+        "rationale": "The reviewers agreed exactly on the semantic contract. The replace label proposed no different declaration or required location set."
+      },
+      "correction": {
+        "definitionUsage": {
+          "uri": "benchmark://source/packages/excalidraw/components/App.tsx",
+          "range": {
+            "start": {
+              "line": 687,
+              "character": 19
+            },
+            "end": {
+              "line": 687,
+              "character": 30
+            }
+          }
+        }
+      }
+    },
+    {
+      "caseId": "real-project-v1-typescript-02-1",
+      "decision": "accept_consensus_contract_with_corpus_correction",
+      "correction": {
+        "definitionUsage": {
+          "uri": "benchmark://source/packages/tailwindcss/src/utilities.test.ts",
+          "range": {
+            "start": {
+              "line": 29638,
+              "character": 11
+            },
+            "end": {
+              "line": 29638,
+              "character": 35
+            }
+          }
+        }
+      }
+    }
+  ]
+}
