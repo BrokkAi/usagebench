@@ -1,0 +1,83 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-03-1",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/node/cli.ts",
+        "range": {
+          "start": {
+            "line": 690,
+            "character": 16
+          },
+          "end": {
+            "line": 690,
+            "character": 40
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/cli.ts",
+            "range": {
+              "start": {
+                "line": 681,
+                "character": 11
+              },
+              "end": {
+                "line": 681,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call expression `args._ = getResolvedPathsFromArgs(args)` inside setDefaults in the same module; resolves to the top-level exported function declaration with no intervening shadowing binding."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/cli.ts",
+            "range": {
+              "start": {
+                "line": 855,
+                "character": 16
+              },
+              "end": {
+                "line": 855,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call expression `const paths = getResolvedPathsFromArgs(args)` inside shouldOpenInExistingInstance in the same module; resolves to the top-level exported function declaration with no intervening shadowing binding."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/node/cli.ts",
+        "range": {
+          "start": {
+            "line": 681,
+            "character": 11
+          },
+          "end": {
+            "line": 681,
+            "character": 35
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/node/cli.ts"
+      ],
+      "rationale": "The declaration is the exported function `getResolvedPathsFromArgs` at src/node/cli.ts line 691 (1-based). A case-sensitive exact-token search across the entire source/ tree (src, test, ci, lib) returned exactly three occurrences: the declaration itself plus two same-file call sites at 1-based lines 683 and 857. Both call sites occur inside functions in the same module with no local redeclaration or import shadowing the name, so both semantically resolve to the declaration and are required. Although the function is exported, no other module imports or re-exports it, so under bindings_optional there are no optional binding tokens to record. definitionUsage is the first required location after sorting by URI, then start line, then start character (line 681, character 11, 0-based)."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "6c35e3aa-8c57-48de-98ff-33faa034d2a2",
+    "executedAt": "2026-08-11T10:10:53Z"
+  },
+  "schemaVersion": 1
+}

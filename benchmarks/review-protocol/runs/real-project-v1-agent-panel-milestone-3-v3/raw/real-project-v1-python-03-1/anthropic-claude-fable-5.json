@@ -1,0 +1,85 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-python-03-1",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/youtube_dl/extractor/curiositystream.py",
+        "range": {
+          "start": {
+            "line": 49,
+            "character": 6
+          },
+          "end": {
+            "line": 49,
+            "character": 23
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/curiositystream.py",
+            "range": {
+              "start": {
+                "line": 173,
+                "character": 16
+              },
+              "end": {
+                "line": 173,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "CuriosityStreamIE.ie_key() call inside CuriosityStreamCollectionIE._real_extract; the token resolves to the class declared at line 49 of the same module via module-level scope."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/extractors.py",
+            "range": {
+              "start": {
+                "line": 279,
+                "character": 4
+              },
+              "end": {
+                "line": 279,
+                "character": 21
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token in 'from .curiositystream import (CuriosityStreamIE, ...)'; classified optional under the bindings_optional reference policy."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/youtube_dl/extractor/curiositystream.py",
+        "range": {
+          "start": {
+            "line": 173,
+            "character": 16
+          },
+          "end": {
+            "line": 173,
+            "character": 33
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/youtube_dl/extractor/curiositystream.py",
+        "source/youtube_dl/extractor/extractors.py",
+        "source/youtube_dl/extractor/__init__.py"
+      ],
+      "rationale": "A project-wide exact-name search for 'CuriosityStreamIE' yields exactly three tokens: the declaration (curiositystream.py line 49, chars 6-23, matching the query), one semantic usage at curiositystream.py line 173 chars 16-33 (CuriosityStreamIE.ie_key() in CuriosityStreamCollectionIE._real_extract), and one explicit import binding in extractors.py line 279 chars 4-21, which is optional under bindings_optional. youtube_dl/extractor/__init__.py re-exposes names only via 'from .extractors import *', a wildcard with no identifier token, so no binding location is invented for it. The required set therefore contains the single ie_key() reference, which is deterministically selected as definitionUsage. All relevant lines are ASCII, so UTF-16 code-unit offsets equal column offsets. No required-contract ambiguity remains."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "b30e4343-52c7-4c3b-b75e-e97c159b3e7d",
+    "executedAt": "2026-08-11T10:10:53Z"
+  },
+  "schemaVersion": 1
+}
