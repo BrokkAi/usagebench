@@ -1,10 +1,10 @@
 use super::mcp::{is_snapshot_not_ready_error, McpSession, ToolClient as SearchToolsClient};
 use super::{
     case_location_metrics, combine_case_status, compute_totals, excluded_case, location_match,
-    normalize_symbol_location, path_to_slash, requested_run_totals, required_destination_status,
-    resolve_usagebench_provenance, runner_failure_case, score_declaration_locations,
-    score_navigation_response, symbol_kind_name, CapabilitySupport, LocationMatch, RunInvocation,
-    RunReport, RunnerCapability, RunnerMetadata, RunnerOperation,
+    normalize_symbol_location, path_to_slash, report_case_path, requested_run_totals,
+    required_destination_status, resolve_usagebench_provenance, runner_failure_case,
+    score_declaration_locations, score_navigation_response, symbol_kind_name, CapabilitySupport,
+    LocationMatch, RunInvocation, RunReport, RunnerCapability, RunnerMetadata, RunnerOperation,
 };
 pub use super::{
     CaseRunReport, CaseStatus, CompatibleUsageDefinitionReport, DeclarationUsageReport,
@@ -192,7 +192,10 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         bifrost_resolved_commit.clone(),
         bifrost_source.clone(),
     );
-    let requested_case_files = case_files.iter().map(|path| display_path(path)).collect();
+    let requested_case_files = case_files
+        .iter()
+        .map(|path| report_case_path(path, &repo_root))
+        .collect();
 
     let mut report = BifrostRunReport {
         usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
@@ -287,7 +290,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             ),
         };
         report.documents.push(DocumentRunReport {
-            case_file: display_path(case_file),
+            case_file: report_case_path(case_file, &repo_root),
             language: document.language.clone(),
             source_root: display_path(&source_root),
             corpus_partition: document.corpus.partition,
@@ -308,7 +311,9 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
                 };
             report.semantic_pack_runs.push(semantic_pack.evidence);
         }
-        report.case_files.push(display_path(case_file));
+        report
+            .case_files
+            .push(report_case_path(case_file, &repo_root));
         report.finished_at_unix_seconds = unix_seconds_now()?;
         report.totals = compute_totals(&report.documents);
         if let Some(output) = &output {
@@ -2676,7 +2681,10 @@ for line in sys.stdin:
         assert_eq!(report.totals.errors, report.documents[0].cases.len());
         assert_eq!(
             report.documents[1].case_file,
-            display_path(&cases.join("02-cpp.yaml"))
+            report_case_path(
+                &cases.join("02-cpp.yaml"),
+                &find_repo_root_for_path(&cases).unwrap()
+            )
         );
         let checkpoint: BifrostRunReport =
             serde_json::from_slice(&fs::read(partial_report_path(&output)).unwrap()).unwrap();

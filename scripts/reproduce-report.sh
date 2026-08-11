@@ -75,15 +75,25 @@ done < <(jq -er '.caseFiles[] | select(type == "string")' "$published_report")
 
 relative_case_files=()
 for case_file in "${reported_case_files[@]}"; do
-  [[ "$case_file" == /corpus/* ]] || {
+  if [[ "$case_file" == /corpus/* ]]; then
+    relative_case="${case_file#/corpus/}"
+  elif [[ "$case_file" == /* ]]; then
     echo "published container case path is outside /corpus: $case_file" >&2
     exit 1
-  }
-  relative_case="${case_file#/corpus/}"
-  [[ "$relative_case" != /* && "$relative_case" != *..* ]] || {
+  else
+    relative_case="$case_file"
+  fi
+  [[ -n "$relative_case" && "$relative_case" != /* && "$relative_case" != *\\* ]] || {
     echo "published report contains an unsafe case path: $case_file" >&2
     exit 1
   }
+  IFS='/' read -r -a case_components <<< "$relative_case"
+  for component in "${case_components[@]}"; do
+    [[ -n "$component" && "$component" != "." && "$component" != ".." ]] || {
+      echo "published report contains an unsafe case path: $case_file" >&2
+      exit 1
+    }
+  done
   relative_case_files+=("$relative_case")
 done
 

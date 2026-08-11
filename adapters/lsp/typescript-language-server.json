@@ -26,5 +26,6 @@
   "workspaceFiles": {
     "tsconfig.json": "{\"compilerOptions\":{\"allowJs\":true,\"checkJs\":true,\"moduleResolution\":\"bundler\",\"jsx\":\"preserve\",\"target\":\"ES2022\",\"module\":\"ESNext\"},\"include\":[\"**/*\"]}"
   },
-  "settleMilliseconds": 3000
+  "settleMilliseconds": 3000,
+  "requestTimeoutMilliseconds": 120000
 }

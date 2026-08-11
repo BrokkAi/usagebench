@@ -1857,6 +1857,10 @@ mod tests {
             },
             source_count: 1,
             case_files: vec!["benchmarks/cases/evaluation/sample.yaml".to_string()],
+            case_languages: BTreeMap::from([(
+                "benchmarks/cases/evaluation/sample.yaml".to_string(),
+                "go".to_string(),
+            )]),
             case_ids_by_file: BTreeMap::from([(
                 "benchmarks/cases/evaluation/sample.yaml".to_string(),
                 vec!["case".to_string()],

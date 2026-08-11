@@ -876,6 +876,27 @@ mod invocation_tests {
     use super::*;
 
     #[test]
+    fn report_case_paths_are_stable_relative_to_the_repository() {
+        let repo = tempfile::tempdir().unwrap();
+        let repo_root = repo.path();
+
+        assert_eq!(
+            report_case_path(
+                &repo_root.join("benchmarks/cases/evaluation/go-01.yaml"),
+                repo_root
+            ),
+            "benchmarks/cases/evaluation/go-01.yaml"
+        );
+        assert_eq!(
+            report_case_path(
+                Path::new("benchmarks/cases/evaluation/go-01.yaml"),
+                repo_root
+            ),
+            "benchmarks/cases/evaluation/go-01.yaml"
+        );
+    }
+
+    #[test]
     fn older_invocation_without_scan_budget_remains_readable() {
         let invocation: RunInvocation = serde_json::from_value(serde_json::json!({
             "includeUnsupported": false,
@@ -1744,6 +1765,10 @@ pub(crate) fn path_to_slash(path: &Path) -> String {
         .map(|component| component.as_os_str().to_string_lossy())
         .collect::<Vec<_>>()
         .join("/")
+}
+
+pub(crate) fn report_case_path(path: &Path, repo_root: &Path) -> String {
+    path_to_slash(path.strip_prefix(repo_root).unwrap_or(path))
 }
 
 pub(crate) fn compute_totals(documents: &[DocumentRunReport]) -> RunTotals {
