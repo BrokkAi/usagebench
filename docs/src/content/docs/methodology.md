@@ -8,7 +8,8 @@ second, and causal interpretation third. The fixture-backed development corpus
 has completed one human source review. The separate 36-case `real-project-v1`
 slice is preregistered and source-locked, with blinded OpenAI and Anthropic
 derivations plus accountable human adjudication. It is publication-qualified;
-analyzer results for it have not yet been frozen or published.
+its analyzer results are frozen in immutable release
+[`v0.2.0`](https://github.com/BrokkAi/usagebench/releases/tag/v0.2.0).
 An analyzer may also expose a different public grouping policy without
 containing an implementation bug.
 
@@ -216,7 +217,7 @@ Changing a frozen assertion creates a new freeze and preserves the old report.
 Reports include partition, selection, review status, and reference policy, and
 their totals separate development from evaluation cases.
 
-The initial `real-project-v1` evaluation partition contains four repositories
+The published `real-project-v1` evaluation partition contains four repositories
 and three declarations for each of the gopls, Pyright, and TypeScript LS
 profiles: 12 repositories and 36 cases in total. Published evaluation pages
 must show those per-profile denominators, the recorded population exclusions

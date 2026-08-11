@@ -34,15 +34,15 @@ already available through established language tooling. Bifrost-specific wins
 are reported only where they satisfy the reviewed contract; the benchmark does
 not claim that Bifrost replaces an LSP's complete development-tooling surface.
 
-All 158 current cases have completed a first human review. They remain a
-development corpus—not an independently reviewed evaluation set. The corrected
-24 July result reports required-destination recall as the user-facing metric
-and retains the hardened exact-range scorer as a stricter machine-consumer
-contract. It includes a rerun of Java after its workspace and navigation
-operations were corrected, plus a Scala rerun on Metals 1.6.8 whose case
-outcomes were unchanged. The
-[human ground-truth audit](../ground-truth-review/) explains the remaining
-evaluation boundary.
+UsageBench now publishes two deliberately separate evidence partitions. The
+36-case `real-project-v1` slice is preregistered, independently reviewed,
+source-locked, and published as immutable evaluation release
+[`v0.2.0`](https://github.com/BrokkAi/usagebench/releases/tag/v0.2.0). The 158
+fixture cases have completed one human review but remain an analyzer-informed
+development corpus. Their broader 24 July run is retained as historical
+regression evidence and is never pooled with the evaluation result. The
+[human ground-truth audit](../ground-truth-review/) explains the distinct trust
+boundaries.
 
 The benchmark is analyzer-neutral. Cases do not contain Bifrost symbol IDs or
 LSP-specific response shapes. Runners translate each tool's public interface
@@ -72,6 +72,6 @@ expectations or a tool-specific scoring exception.
 - That every real-world program construct is represented by the current corpus.
 
 The [comparison methodology](../methodology/) defines the evidence threshold for
-stronger claims. The [current result](../results/) reports the synchronized
-Bifrost-versus-LSP run, and each language page explains the reviewed case-level
-deltas.
+stronger claims. The [current result](../results/) reports the frozen v0.2.0
+evaluation, while the language pages explain case-level deltas from the broader
+historical development run.

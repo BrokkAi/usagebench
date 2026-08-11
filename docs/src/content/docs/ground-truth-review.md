@@ -1,7 +1,15 @@
 ---
 title: Human ground-truth audit
-description: Status, procedure, and trust boundary for the first human review of the development corpus.
+description: Trust boundaries for the reviewed development corpus and the independently reviewed evaluation release.
 ---
+
+> **Evaluation promotion is complete for a separate slice.** The 36-case
+> `real-project-v1` partition used a preregistered selection, blinded OpenAI and
+> Anthropic review sessions, accountable human adjudication, and a hash-bound
+> source lock. Its analyzer evidence is published in immutable release
+> [v0.2.0](https://github.com/BrokkAi/usagebench/releases/tag/v0.2.0). The audit
+> below describes the broader 158-case development corpus, whose status did not
+> change when the separate evaluation slice was released.
 
 As of 24 July 2026, every current UsageBench case has completed a first
 independent human review: **158 cases in 35 schema-v2 documents across 11
@@ -97,12 +105,14 @@ Recurring corrections included:
   and imprecise ranges as harness or capability evidence rather than semantic
   failures.
 
-The [case comparison](results/case-comparison/) relates the qualitative
+The [historical development case comparison](../results/development-case-comparison/)
+relates the qualitative
 adjudication notes to the corrected 24 July result.
 
-## Path to an evaluation release
+## Development corpus boundary
 
-Promotion requires a new evidence phase:
+Promoting any development assertion into a future evaluation still requires a
+new evidence phase:
 
 1. preregister the selected cases and assertions;
 2. obtain a second independent review of every frozen assertion;
@@ -111,5 +121,6 @@ Promotion requires a new evidence phase:
 5. rerun all analyzers under the hardened exact-range scorer and versioned
    reference environments.
 
-Until then, the correct public description is: **fully first-reviewed
-development corpus with a synchronized exact-range regression run**.
+The correct public description of these 158 cases remains: **fully
+first-reviewed development corpus with a synchronized exact-range regression
+run**. This does not qualify or weaken the separate v0.2.0 evaluation result.

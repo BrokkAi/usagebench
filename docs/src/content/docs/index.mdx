@@ -1,203 +1,106 @@
 ---
 title: Bifrost LSP parity and regression
-description: Reviewed LSP-parity contracts and recurring regression evidence for Bifrost usage analysis.
+description: Reviewed LSP-parity contracts and immutable evaluation evidence for Bifrost usage analysis.
 tableOfContents: false
 ---
 
-<p class="snapshot-kicker">CORRECTED DEVELOPMENT RESULT · 24 JULY 2026</p>
+<p class="snapshot-kicker">IMMUTABLE EVALUATION · USAGEBENCH v0.2.0</p>
 
-<h2 class="landing-headline">Compare usage analysis against reviewed language-server behavior</h2>
+<h2 class="landing-headline">Compare usage analysis against independently reviewed language-server behavior</h2>
 
 UsageBench is Bifrost's recurring conformance and regression suite for source
-usages and navigation. Its cases are derived from mature language-server tests,
-existing analyzer suites, and difficult real-world edges. Established language
-servers provide comparison evidence and post-review calibration. The reviewed
-source contract remains the authority: Bifrost should match reference-server
-behavior where it satisfies that contract, and may differ when the evidence
-supports another result.
+usages and navigation. Established language servers provide strong comparison
+evidence, but the reviewed source contract remains the authority: Bifrost
+should match a reference server where that behavior satisfies the contract and
+may preserve a narrower or broader result when the source evidence requires it.
 
-Language servers are primarily designed for interactive development: completion,
-diagnostics, refactoring, and cursor-local navigation inside an editor
-workspace. Bifrost is designed as a code-analysis and navigation substrate for
-repository-scale consumers, especially coding agents and static-analysis tool
-developers. For those consumers, reliable symbol identity, source locations,
-and relationships are not supporting editor features; they are the interface
-through which the codebase is understood.
+Language servers primarily support interactive development inside configured
+editor workspaces. Bifrost is a code-analysis and navigation substrate for
+repository-scale consumers, especially coding agents and static-analysis
+tools. UsageBench measures their overlapping References and Definition surface;
+it does not compare completion, diagnostics, refactoring, or either product's
+complete feature set.
 
-UsageBench tests the important overlap between those products. Parity means an
-agent should not lose the navigation quality developers already expect from
-their language tooling. A Bifrost-only exact result matters only when the
-reviewed source contract supports it; it is not evidence that every part of an
-LSP or compiler model has been surpassed.
+The current result is the independently reviewed, source-locked
+`real-project-v1` partition published in immutable release
+[`v0.2.0`](https://github.com/BrokkAi/usagebench/releases/tag/v0.2.0). Its
+bounded claim covers only descriptive, per-profile comparisons for 12 sampled
+public repositories and 36 preregistered cases. It does not estimate
+language-wide accuracy, ecosystem-wide superiority, latency, memory, or
+cold-start performance.
 
-All 158 current cases have completed a
-[first human ground-truth audit](ground-truth-review/). The corpus now preserves
-those decisions as executable regression contracts, and the daily workflow runs
-them against Bifrost `master` so a previously satisfied semantic edge cannot
-quietly disappear.
-
-The current result uses UsageBench parent revision `d01a4aa` and pinned Bifrost
-`782522b2`. Bifrost, gopls, TypeScript LS, and Intelephense were freshly rerun
-after adding the reviewed compatible-operation evidence and report-derived
-destination scorer. The corrected Java and refreshed Metals reports are
-retained, as are the five other synchronized reference reports whose cases and
-operations did not change. Every fresh report records zero runner errors. The
-report shape remains analyzer-neutral: language servers are the first
-comparison set, not a permanent limit, and future analyzers can be added without
-changing the authored ground truth.
+<div class="result-summary" aria-label="UsageBench v0.2.0 evaluation scope">
+  <div class="result-metric">
+    <span>Evaluation cases</span>
+    <strong>36</strong>
+    <p>12 cases in each profile stratum</p>
+  </div>
+  <div class="result-metric">
+    <span>Public repositories</span>
+    <strong>12</strong>
+    <p>source-only sampled and commit-locked</p>
+  </div>
+  <div class="result-metric">
+    <span>Reference profiles</span>
+    <strong>3</strong>
+    <p>gopls · Pyright · TypeScript LS</p>
+  </div>
+  <div class="result-metric">
+    <span>Evidence release</span>
+    <strong>v0.2.0</strong>
+    <p>reports, manifest, audit, and checksums</p>
+  </div>
+</div>
 
 ## Required destinations found
 
-The headline metric asks the question closest to normal editor use: **did the
-operation surface every reviewed destination the user needed?** A case counts
-when all required references are present and every navigation or type lookup
-includes its expected target. A containing range or additional result does not
-turn that into a failure; neither does a line-only location on the expected
-line.
+This measure asks whether every reviewed destination was returned for a case.
+It is useful navigation recall, but does not hide clutter or range imprecision:
+those differences remain visible in the location-level and strict-contract
+views on the [full result page](results/).
 
-This is intentionally recall-forward. It does not say that imprecise ranges,
-unrelated results, or a wrong first choice are harmless; the stricter table
-below measures those differences. The denominator contains the **144 cases
-scoreable by both sides using either the canonical operation or an explicitly
-reviewed compatible operation**. It does not
-silently retry a request: the canonical endpoint remains the source of truth
-in the strict table below.
+| Reference profile | Shared cases | Bifrost found | Reference found |
+|---|---:|---:|---:|
+| gopls 0.23.0 | 12 | 8/12 (66.7%) | 9/12 (75.0%) |
+| Pyright 1.1.411 | 12 | 8/12 (66.7%) | 11/12 (91.7%) |
+| typescript-language-server 5.3.0 (TypeScript 5.9.3) | 12 | 10/12 (83.3%) | 8/12 (66.7%) |
 
-<div class="result-summary" aria-label="Current corrected result summary">
-  <div class="result-metric">
-    <span>Required destinations found</span>
-    <div class="metric-comparison" role="group" aria-label="Bifrost 88.9 percent; reference LSPs 91.0 percent">
-      <div class="metric-side metric-side--bifrost">
-        <span>Bifrost</span>
-        <strong>88.9%</strong>
-      </div>
-      <div class="metric-side metric-side--reference">
-        <span>Reference LSPs</span>
-        <strong>91.0%</strong>
-      </div>
-    </div>
-    <p>128/144 · 131/144 destinations</p>
-  </div>
-  <div class="result-metric">
-    <span>Equal-profile mean</span>
-    <div class="metric-comparison" role="group" aria-label="Bifrost 88.9 percent; reference LSPs 91.6 percent">
-      <div class="metric-side metric-side--bifrost">
-        <span>Bifrost</span>
-        <strong>88.9%</strong>
-      </div>
-      <div class="metric-side metric-side--reference">
-        <span>Reference LSPs</span>
-        <strong>91.6%</strong>
-      </div>
-    </div>
-    <p>equal weight for each of ten profiles</p>
-  </div>
-  <div class="result-metric">
-    <span>Median paired profile gap</span>
-    <strong>−3.1 <small>points</small></strong>
-    <p>the middle profile favors the reference server</p>
-  </div>
-  <div class="result-metric">
-    <span>Profile outcomes</span>
-    <strong>3–2–5</strong>
-    <p>Bifrost leads · ties · trails</p>
-  </div>
-</div>
+## Strict UsageBench contract
 
-| Profile | Shared destination-scoreable | Bifrost destinations | Reference destinations | Gap | Reference unavailable |
+Strict conformance requires the complete reviewed location set, exact token
+ranges, and no unallowed extras. A separating outcome is a contract
+disagreement—not automatically an analyzer defect.
+
+| Reference profile | Shared | Both exact | Bifrost only | Reference only | Neither |
 |---|---:|---:|---:|---:|---:|
-| [C++](languages/cpp/) | 15 | 12/15 (80.0%) | 14/15 (93.3%) | −13.3 pp | 1 |
-| [C#](languages/csharp/) | 16 | 14/16 (87.5%) | 15/16 (93.8%) | −6.3 pp | 0 |
-| [Go](languages/go/) | 11 | 9/11 (81.8%) | 11/11 (100.0%) | −18.2 pp | 1 |
-| [Java](languages/java/) | 11 | 11/11 (100.0%) | 11/11 (100.0%) | 0.0 pp | 0 |
-| [JavaScript, TypeScript](languages/javascript-typescript/) | 21 | 19/21 (90.5%) | 19/21 (90.5%) | 0.0 pp | 1 |
-| [PHP](languages/php/) | 14 | 12/14 (85.7%) | 14/14 (100.0%) | −14.3 pp | 0 |
-| [Python](languages/python/) | 13 | 11/13 (84.6%) | 13/13 (100.0%) | −15.4 pp | 0 |
-| [Ruby](languages/ruby/) | 16 | 15/16 (93.8%) | 11/16 (68.8%) | +25.0 pp | 4 |
-| [Rust](languages/rust/) | 15 | 14/15 (93.3%) | 13/15 (86.7%) | +6.7 pp | 0 |
-| [Scala](languages/scala/) | 12 | 11/12 (91.7%) | 10/12 (83.3%) | +8.3 pp | 3 |
-| **Pooled** | **144** | **128/144 (88.9%)** | **131/144 (91.0%)** | **−2.1 pp** | **10** |
-
-Fresh `requiredDestinationStatus` reports reproduce the three affected profile
-rows exactly. The pinned full-corpus Bifrost report finds 135/152 individually
-scoreable cases; intersecting scoreable case IDs with each reference report
-produces the paired 128/144 total shown here.
-
-The reference servers lead on C++, C#, Go, PHP, and Python; Bifrost leads on
-Ruby, Rust, and Scala. Java and JavaScript/TypeScript tie. On Java
-specifically, JDT LS surfaces every required destination even though only four
-cases satisfy the stricter range-and-identity contract below.
+| gopls 0.23.0 | 12 | 7 | 1 | 2 | 2 |
+| Pyright 1.1.411 | 12 | 6 | 1 | 4 | 1 |
+| typescript-language-server 5.3.0 (TypeScript 5.9.3) | 12 | 5 | 5 | 2 | 0 |
 
 <div class="evidence-note">
-  “Required destinations found” tolerates result clutter. For example, Ruby
-  LSP's factory-return case includes the reviewed destination among many
-  unrelated external targets, so it counts here but remains non-exact below.
-  Read the destination metric as user-facing recall, not as a complete
-  precision or ranking measure.
+  Bifrost's exact-set advantage is concentrated in the TypeScript stratum;
+  Pyright finds more required destinations and more exact sets in the Python
+  stratum, while gopls leads the Go required-destination comparison. Read the
+  profile rows independently rather than turning this small, heterogeneous
+  slice into a cross-language leaderboard.
 </div>
 
-<div class="execution-contrast">
-  <span>EXECUTION MODEL</span>
-  <strong>Static on one side; full build context on the other.</strong>
-  <p>
-    Bifrost never executes the code under analysis or invokes its project build.
-    Language servers may receive configured toolchains, restore dependencies,
-    import projects, and build fixtures when their normal semantic model requires
-    it. The comparison gives each analyzer the environment it needs; Bifrost's
-    results remain build-independent.
-  </p>
-</div>
+## Why this result is publication-qualified
 
-## Strict UsageBench contract conformance
+The cases were selected before analyzer execution, checked through blinded
+OpenAI and Anthropic review sessions, adjudicated by an accountable human, and
+bound to immutable source archives. The release audit hashes the protocol,
+selection, review records, adjudication, source lock, runner profiles, reports,
+and exact UsageBench revision.
 
-The secondary metric requires complete reviewed token ranges, no unallowed
-identity-family extras, and exactly one authored navigation target. This is a
-deliberately stronger machine-consumer contract, not a generic LSP 3.18
-compliance verdict. [LSP 3.18 requires a `Location` to contain a
-`Range`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#location),
-but does not require every references or navigation range to select exactly
-one terminal identifier.
+The broader 158-case fixture suite remains valuable development and regression
+evidence, but it was selected differently and is not pooled with this
+evaluation. Its corrected 24 July comparison remains available as an
+[explicitly historical result](results/development-2026-07-24/).
 
-Bifrost is exact on **116/131 (88.5%)** shared cases and the reference servers
-on **96/131 (73.3%)**. The equal-profile means are 88.6% and 75.0%; the median
-paired profile gap is +9.2 percentage points. Both sides are exact on 85 cases,
-Bifrost alone on 31, the reference server alone on 11, and neither on 4.
-
-| Profile | Shared | Bifrost exact | Reference exact | Gap | Reference unsupported |
-|---|---:|---:|---:|---:|---:|
-| [C++](languages/cpp/) | 15 | 12/15 (80.0%) | 12/15 (80.0%) | 0.0 pp | 1 |
-| [C#](languages/csharp/) | 16 | 14/16 (87.5%) | 13/16 (81.3%) | +6.3 pp | 0 |
-| [Go](languages/go/) | 6 | 5/6 (83.3%) | 6/6 (100.0%) | −16.7 pp | 6 |
-| [Java](languages/java/) | 11 | 11/11 (100.0%) | 4/11 (36.4%) | +63.6 pp | 0 |
-| [JavaScript, TypeScript](languages/javascript-typescript/) | 17 | 15/17 (88.2%) | 13/17 (76.5%) | +11.8 pp | 5 |
-| [PHP](languages/php/) | 10 | 10/10 (100.0%) | 9/10 (90.0%) | +10.0 pp | 4 |
-| [Python](languages/python/) | 13 | 10/13 (76.9%) | 13/13 (100.0%) | −23.1 pp | 0 |
-| [Ruby](languages/ruby/) | 16 | 15/16 (93.8%) | 5/16 (31.3%) | +62.5 pp | 4 |
-| [Rust](languages/rust/) | 15 | 14/15 (93.3%) | 12/15 (80.0%) | +13.3 pp | 0 |
-| [Scala](languages/scala/) | 12 | 10/12 (83.3%) | 9/12 (75.0%) | +8.3 pp | 3 |
-| **Pooled** | **131** | **116/131 (88.5%)** | **96/131 (73.3%)** | **+15.3 pp** | **23** |
-
-Four runtime-driven cases are not planned for either side. Bifrost has two
-unsupported cases, both also unsupported by the corresponding LSP. Outside the
-shared denominator, Bifrost exactly satisfies 17 cases whose authored operation
-the LSP does not advertise.
-
-<div class="evidence-note">
-  The strict gap is concentrated. Ruby contributes 10 of Bifrost's net 20-case
-  advantage and Java contributes another 7. Five Java cases use broader
-  containing ranges and two return additional interface-family calls; none
-  omit a required Java destination. Bifrost leads seven strict profiles, ties
-  one, and trails two, but that precision result should not be substituted for
-  the user-facing destination table above.
-</div>
-
-## Read beyond the aggregate
-
-The [current corrected result](results/) records the version envelope, each
-runner's own denominator, and the shared-case matrix. The
-[case comparison](results/case-comparison/) lists the cases that separate the
-two sides. Language pages discuss the evidence and fairness gaps without turning
-contract differences into unsupported defect claims.
-
-For how cases are scored, see the [comparison methodology](methodology/). To run
-the same corpus, use the [reproduction guide](reproduce/).
+Read the [full current result](results/) for location-level precision and
+recall, versions, exclusions, replacements, and artifact hashes. The
+[case comparison](results/case-comparison/) lists every strict result unique to
+one side. For scoring and claim boundaries, see the
+[methodology](methodology/); for rerunning the evidence, use the
+[reproduction guide](reproduce/).

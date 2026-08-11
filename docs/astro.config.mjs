@@ -37,12 +37,14 @@ export default defineConfig({
         {
           label: 'Results and findings',
           items: [
-            { label: 'Current corrected result', slug: 'results' },
-            { label: 'Case-by-case comparison', slug: 'results/case-comparison' },
+            { label: 'Current evaluation result', slug: 'results' },
+            { label: 'Evaluation case comparison', slug: 'results/case-comparison' },
+            { label: 'Historical development result', slug: 'results/development-2026-07-24' },
+            { label: 'Historical development cases', slug: 'results/development-case-comparison' },
           ],
         },
         {
-          label: 'By language',
+          label: 'Development findings by language',
           items: [
             { label: 'C++ and clangd', slug: 'languages/cpp' },
             { label: 'C# and Roslyn', slug: 'languages/csharp' },
