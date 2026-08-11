@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-go-03-3",
+  "language": "go",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/fatedier/frp",
+    "commit": "9d45a557200fcbc6a4598b5ee0d75c405299c521",
+    "archiveSha256": "d7e4770e6a124dc5ed465f066571594255e895d9ab47c022f4b9f88825cb9f38"
+  },
+  "declaration": {
+    "uri": "benchmark://source/pkg/naming/names.go",
+    "range": {
+      "start": {
+        "line": 5,
+        "character": 5
+      },
+      "end": {
+        "line": 5,
+        "character": 18
+      }
+    }
+  },
+  "displayName": "AddUserPrefix"
+}

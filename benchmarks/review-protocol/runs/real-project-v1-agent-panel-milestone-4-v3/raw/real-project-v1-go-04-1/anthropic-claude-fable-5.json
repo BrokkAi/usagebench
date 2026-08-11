@@ -1,0 +1,100 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-go-04-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/scanner/walk.go",
+        "range": {
+          "start": {
+            "line": 667,
+            "character": 17
+          },
+          "end": {
+            "line": 667,
+            "character": 31
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/scanner/walk.go",
+            "range": {
+              "start": {
+                "line": 468,
+                "character": 7
+              },
+              "end": {
+                "line": 468,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Method call `w.updateFileInfo(f, curFile)` in (*walker).walkRegular; receiver w is *walker, so the selector resolves to the declared method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/scanner/walk.go",
+            "range": {
+              "start": {
+                "line": 518,
+                "character": 7
+              },
+              "end": {
+                "line": 518,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Method call `w.updateFileInfo(f, curFile)` in (*walker).walkDir; receiver w is *walker, so the selector resolves to the declared method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/scanner/walk.go",
+            "range": {
+              "start": {
+                "line": 573,
+                "character": 7
+              },
+              "end": {
+                "line": 573,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Method call `w.updateFileInfo(f, curFile)` in (*walker).walkSymlink; receiver w is *walker, so the selector resolves to the declared method."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/scanner/walk.go",
+        "range": {
+          "start": {
+            "line": 468,
+            "character": 7
+          },
+          "end": {
+            "line": 468,
+            "character": 21
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/lib/scanner/walk.go"
+      ],
+      "rationale": "updateFileInfo is an unexported method on *walker declared at lib/scanner/walk.go line 668 (1-based). A project-wide search for the exact identifier yielded exactly five occurrences, all in lib/scanner/walk.go: the declaration token, one mention in the preceding doc comment (omitted per rule 3), and three call sites at 1-based lines 469, 519, and 574 inside the *walker methods walkRegular, walkDir, and walkSymlink. Each call is via receiver w of type *walker, so all three semantically resolve to the declaration and form the complete required set. Being unexported and package-local, there are no import/export binding tokens, so no optional locations exist. definitionUsage is the first required location after sorting by URI, line, and character."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "1b287ac3-1ea9-4a72-bfea-ce2a735d4a77",
+    "executedAt": "2026-08-11T10:27:35Z"
+  },
+  "schemaVersion": 1
+}

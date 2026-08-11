@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-python-03-3",
+  "language": "python",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/ytdl-org/youtube-dl",
+    "commit": "956b8c585591b401a543e409accb163eeaaa1193",
+    "archiveSha256": "b57e05902806fccac5b8085eab53e5adc4f6c0e6c0cba6bfda878030d957f5f1"
+  },
+  "declaration": {
+    "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+    "range": {
+      "start": {
+        "line": 30,
+        "character": 6
+      },
+      "end": {
+        "line": 30,
+        "character": 19
+      }
+    }
+  },
+  "displayName": "PornHubBaseIE"
+}

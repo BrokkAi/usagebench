@@ -1,0 +1,100 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-python-03-2",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/devscripts/buildserver.py",
+        "range": {
+          "start": {
+            "line": 119,
+            "character": 4
+          },
+          "end": {
+            "line": 119,
+            "character": 28
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/devscripts/buildserver.py",
+            "range": {
+              "start": {
+                "line": 147,
+                "character": 8
+              },
+              "end": {
+                "line": 147,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside win_service_handler's except block; the name is not bound locally or as a parameter, so it resolves to the module-level function win_service_report_event defined at line 119."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/devscripts/buildserver.py",
+            "range": {
+              "start": {
+                "line": 177,
+                "character": 8
+              },
+              "end": {
+                "line": 177,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside win_service_main's except block; no shadowing binding exists in any enclosing scope, so it resolves to the module-level function defined at line 119."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/devscripts/buildserver.py",
+            "range": {
+              "start": {
+                "line": 198,
+                "character": 8
+              },
+              "end": {
+                "line": 198,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside win_service_start's except block; no shadowing binding exists in any enclosing scope, so it resolves to the module-level function defined at line 119."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/devscripts/buildserver.py",
+        "range": {
+          "start": {
+            "line": 147,
+            "character": 8
+          },
+          "end": {
+            "line": 147,
+            "character": 32
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/devscripts/buildserver.py"
+      ],
+      "rationale": "A repository-wide exact-token search for win_service_report_event returned exactly four occurrences, all in devscripts/buildserver.py: the declaration at line 119 and three call expressions at lines 147, 177, and 198 (0-based). Each call occurs in a function whose scope contains no competing binding of that name, so all three semantically resolve to the selected module-level function declaration and are required. The script is standalone (its own comment notes these Windows-service helpers are not exported via compat.py) and no other module imports the name, so there are no optional import/export binding tokens. No occurrences appear in comments or strings, and no substring or shadowed candidates required exclusion. definitionUsage is the first required location after sorting by URI, start line, and start character: line 147, character 8."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "8802aadd-9b8d-4f89-879e-d308e6975d19",
+    "executedAt": "2026-08-11T10:10:53Z"
+  },
+  "schemaVersion": 1
+}

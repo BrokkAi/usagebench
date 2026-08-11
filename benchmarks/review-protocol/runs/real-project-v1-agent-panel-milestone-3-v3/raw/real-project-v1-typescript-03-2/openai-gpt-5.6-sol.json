@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m3_sol_typescript_03_2",
+    "executedAt": "2026-08-11T10:13:25Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-03-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/node/vscodeSocket.ts",
+        "range": {
+          "start": {
+            "line": 30,
+            "character": 10
+          },
+          "end": {
+            "line": 30,
+            "character": 28
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/vscodeSocket.ts",
+            "range": {
+              "start": {
+                "line": 42,
+                "character": 17
+              },
+              "end": {
+                "line": 42,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The GetSessionResponse token is a type argument of router.get and resolves to the file-local interface declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/vscodeSocket.ts",
+            "range": {
+              "start": {
+                "line": 50,
+                "character": 22
+              },
+              "end": {
+                "line": 50,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The GetSessionResponse token is the explicit type annotation of response and resolves to the file-local interface declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/vscodeSocket.ts",
+            "range": {
+              "start": {
+                "line": 154,
+                "character": 39
+              },
+              "end": {
+                "line": 154,
+                "character": 57
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The GetSessionResponse token is the Promise type argument and resolves to the same file-local interface declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/node/vscodeSocket.ts",
+        "range": {
+          "start": {
+            "line": 42,
+            "character": 17
+          },
+          "end": {
+            "line": 42,
+            "character": 35
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/",
+        "source/src/node/vscodeSocket.ts"
+      ],
+      "rationale": "A complete project-wide exact-identifier search found only the declaration and these three references. The interface is file-local, all three references are required semantic type usages, and there are no explicit binding tokens or competing same-name declarations."
+    }
+  ]
+}

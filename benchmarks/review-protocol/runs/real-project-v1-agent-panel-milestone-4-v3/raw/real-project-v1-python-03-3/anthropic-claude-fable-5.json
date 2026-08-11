@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "3ab19ae8-c650-4244-aa3a-a0d08d43eabf",
+    "executedAt": "2026-08-11T10:27:35Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-python-03-3",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+        "range": {
+          "start": {
+            "line": 30,
+            "character": 6
+          },
+          "end": {
+            "line": 30,
+            "character": 19
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 36,
+                "character": 25
+              },
+              "end": {
+                "line": 36,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "First argument of super(PornHubBaseIE, self) inside PornHubBaseIE._download_webpage_handle; resolves to the class declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 120,
+                "character": 16
+              },
+              "end": {
+                "line": 120,
+                "character": 29
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Base-class reference in class PornHubIE(PornHubBaseIE)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 131,
+                "character": 26
+              },
+              "end": {
+                "line": 131,
+                "character": 39
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Attribute access PornHubBaseIE._PORNHUB_HOST_RE used to interpolate the host regex into PornHubIE._VALID_URL."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 504,
+                "character": 28
+              },
+              "end": {
+                "line": 504,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Base-class reference in class PornHubPlaylistBaseIE(PornHubBaseIE)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 528,
+                "character": 132
+              },
+              "end": {
+                "line": 528,
+                "character": 145
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Attribute access PornHubBaseIE._PORNHUB_HOST_RE in PornHubUserIE._VALID_URL string interpolation."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 635,
+                "character": 74
+              },
+              "end": {
+                "line": 635,
+                "character": 87
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Attribute access PornHubBaseIE._PORNHUB_HOST_RE in PornHubPagedVideoListIE._VALID_URL string interpolation."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+            "range": {
+              "start": {
+                "line": 753,
+                "character": 120
+              },
+              "end": {
+                "line": 753,
+                "character": 133
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Attribute access PornHubBaseIE._PORNHUB_HOST_RE in PornHubUserVideosUploadIE._VALID_URL string interpolation."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
+        "range": {
+          "start": {
+            "line": 36,
+            "character": 25
+          },
+          "end": {
+            "line": 36,
+            "character": 38
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/youtube_dl/extractor/pornhub.py",
+        "source/youtube_dl/extractor/extractors.py",
+        "source/youtube_dl/extractor/generic.py",
+        "source/docs/supportedsites.md",
+        "source/ChangeLog"
+      ],
+      "rationale": "PornHubBaseIE is declared at pornhub.py line 30 (0-based) and subclasses InfoExtractor. A project-wide exact-token search found all identifier occurrences only in pornhub.py: one super() call, two subclass base references (PornHubIE, PornHubPlaylistBaseIE), and four class-attribute accesses of _PORNHUB_HOST_RE used to build _VALID_URL patterns. extractors.py imports only PornHubIE, PornHubUserIE, PornHubPagedVideoListIE, and PornHubUserVideosUploadIE, and generic.py imports only PornHubIE, so there are no import/re-export binding tokens for this name and hence no optional locations under bindings_optional. Remaining matches for the name pattern elsewhere are documentation/changelog prose, omitted per rule 3. All affected lines are ASCII, so UTF-16 columns equal character offsets. definitionUsage is the deterministic first required location by URI/line/character ordering."
+    }
+  ]
+}

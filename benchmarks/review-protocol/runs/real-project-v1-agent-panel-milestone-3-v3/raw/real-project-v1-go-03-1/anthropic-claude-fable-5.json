@@ -1,0 +1,359 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "fc981fad-11cf-4cf2-b55c-96287a684c61",
+    "executedAt": "2026-08-11T10:10:53Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-go-03-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/pkg/proto/wire/wire.go",
+        "range": {
+          "start": {
+            "line": 44,
+            "character": 5
+          },
+          "end": {
+            "line": 44,
+            "character": 10
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/udp_binary.go",
+            "range": {
+              "start": {
+                "line": 282,
+                "character": 33
+              },
+              "end": {
+                "line": 282,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Composite literal &wire.Frame{...} passed to WriteFrame in v2BinaryUDPReadWriter write path; wire resolves to the pkg/proto/wire import at udp_binary.go line 24."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/udp_binary.go",
+            "range": {
+              "start": {
+                "line": 285,
+                "character": 46
+              },
+              "end": {
+                "line": 285,
+                "character": 51
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type *wire.Frame in decodeV2BinaryUDPPacketFrame signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/udp_binary.go",
+            "range": {
+              "start": {
+                "line": 298,
+                "character": 33
+              },
+              "end": {
+                "line": 298,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type *wire.Frame in isV2MessageType signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/udp_binary.go",
+            "range": {
+              "start": {
+                "line": 302,
+                "character": 43
+              },
+              "end": {
+                "line": 302,
+                "character": 48
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type *wire.Frame in unexpectedV2UDPPacketType signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/wire_v2.go",
+            "range": {
+              "start": {
+                "line": 122,
+                "character": 34
+              },
+              "end": {
+                "line": 122,
+                "character": 39
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type *wire.Frame in DecodeV2MessageFrame signature; wire resolves to the pkg/proto/wire import at wire_v2.go line 24."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/wire_v2.go",
+            "range": {
+              "start": {
+                "line": 141,
+                "character": 38
+              },
+              "end": {
+                "line": 141,
+                "character": 43
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type *wire.Frame in DecodeV2MessageFrameInto signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/wire_v2.go",
+            "range": {
+              "start": {
+                "line": 169,
+                "character": 44
+              },
+              "end": {
+                "line": 169,
+                "character": 49
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type *wire.Frame in EncodeV2MessageFrame signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/wire_v2.go",
+            "range": {
+              "start": {
+                "line": 188,
+                "character": 14
+              },
+              "end": {
+                "line": 188,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Composite literal &wire.Frame{...} returned by EncodeV2MessageFrame."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/wire_v2_test.go",
+            "range": {
+              "start": {
+                "line": 114,
+                "character": 38
+              },
+              "end": {
+                "line": 114,
+                "character": 43
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Composite literal &wire.Frame{Type: wire.FrameTypeClientHello} in TestDecodeV2MessageFrameRejectsInvalidFrame; wire resolves to the pkg/proto/wire import at wire_v2_test.go line 24."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/wire_v2_test.go",
+            "range": {
+              "start": {
+                "line": 117,
+                "character": 37
+              },
+              "end": {
+                "line": 117,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Composite literal &wire.Frame{Type: wire.FrameTypeMessage, Payload: []byte{0}} in the same test."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/msg/wire_v2_test.go",
+            "range": {
+              "start": {
+                "line": 123,
+                "character": 37
+              },
+              "end": {
+                "line": 123,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Composite literal &wire.Frame{Type: wire.FrameTypeMessage, Payload: payload} in the same test."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 62,
+                "character": 29
+              },
+              "end": {
+                "line": 62,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type *Frame in the ReadFrame method signature, same package as the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 82,
+                "character": 9
+              },
+              "end": {
+                "line": 82,
+                "character": 14
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Composite literal &Frame{...} returned by ReadFrame."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 89,
+                "character": 29
+              },
+              "end": {
+                "line": 89,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type *Frame in the WriteFrame method signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 119,
+                "character": 33
+              },
+              "end": {
+                "line": 119,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type *Frame in the UnmarshalFrame method signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 123,
+                "character": 46
+              },
+              "end": {
+                "line": 123,
+                "character": 51
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type *Frame in the NewJSONFrame function signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/proto/wire/wire.go",
+            "range": {
+              "start": {
+                "line": 128,
+                "character": 9
+              },
+              "end": {
+                "line": 128,
+                "character": 14
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Composite literal &Frame{...} returned by NewJSONFrame."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/server/service.go",
+            "range": {
+              "start": {
+                "line": 644,
+                "character": 96
+              },
+              "end": {
+                "line": 644,
+                "character": 101
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type *wire.Frame in the handleClientHello method signature; wire resolves to the pkg/proto/wire import at service.go line 42."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/pkg/msg/udp_binary.go",
+        "range": {
+          "start": {
+            "line": 282,
+            "character": 33
+          },
+          "end": {
+            "line": 282,
+            "character": 38
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/pkg/proto/wire/wire.go",
+        "source/pkg/msg/wire_v2.go",
+        "source/pkg/msg/wire_v2_test.go",
+        "source/pkg/msg/udp_binary.go",
+        "source/server/service.go"
+      ],
+      "rationale": "The declaration is the exported struct type Frame in package wire (pkg/proto/wire/wire.go line 45, 1-based). A whole-project search for the exact identifier token Frame found 19 occurrences; excluding the declaration token itself, all 18 remaining tokens semantically resolve to this type: 6 in the declaring package (method/function signatures and composite literals in wire.go) and 12 qualified selector uses wire.Frame in pkg/msg/wire_v2.go, pkg/msg/wire_v2_test.go, pkg/msg/udp_binary.go, and server/service.go, each of whose files imports github.com/fatedier/frp/pkg/proto/wire with no alias or shadowing. No other declaration named Frame exists in the project, so no exact-name token resolves elsewhere and no excluded entries are needed. Go imports bind package names, not type identifiers, so there are no optional import/re-export binding tokens for this symbol. Identifiers such as ReadFrame, WriteFrame, and FrameTypeMessage are distinct identifiers containing Frame only as a substring and are omitted per rule 3. All positions are 0-based UTF-16 code-unit offsets in ASCII-only lines. definitionUsage is the first required location after sorting by URI, then line, then character."
+    }
+  ]
+}

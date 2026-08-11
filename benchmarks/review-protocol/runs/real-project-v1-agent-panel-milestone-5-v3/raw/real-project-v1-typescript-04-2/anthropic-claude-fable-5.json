@@ -1,0 +1,175 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-04-2",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/ui/src/lib/inbox.ts",
+        "range": {
+          "start": {
+            "line": 331,
+            "character": 16
+          },
+          "end": {
+            "line": 331,
+            "character": 45
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/components/IssuesList.tsx",
+            "range": {
+              "start": {
+                "line": 42,
+                "character": 2
+              },
+              "end": {
+                "line": 42,
+                "character": 31
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Named import binding token in the import list from \"../lib/inbox\"; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/components/IssuesList.tsx",
+            "range": {
+              "start": {
+                "line": 1039,
+                "character": 10
+              },
+              "end": {
+                "line": 1039,
+                "character": 39
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call expression inside a useMemo computing availableIssueColumns; resolves to the named import from ../lib/inbox, which is the declaration module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/lib/inbox.test.ts",
+            "range": {
+              "start": {
+                "line": 22,
+                "character": 2
+              },
+              "end": {
+                "line": 22,
+                "character": 31
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Named import binding token in the import list from \"./inbox\"; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/lib/inbox.test.ts",
+            "range": {
+              "start": {
+                "line": 1198,
+                "character": 11
+              },
+              "end": {
+                "line": 1198,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call expression getAvailableInboxIssueColumns(false) inside a test expectation; resolves to the named import from ./inbox."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/lib/inbox.test.ts",
+            "range": {
+              "start": {
+                "line": 1208,
+                "character": 11
+              },
+              "end": {
+                "line": 1208,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call expression getAvailableInboxIssueColumns(true) inside a test expectation; resolves to the named import from ./inbox."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/pages/Inbox.tsx",
+            "range": {
+              "start": {
+                "line": 133,
+                "character": 2
+              },
+              "end": {
+                "line": 133,
+                "character": 31
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Named import binding token in the import list from \"../lib/inbox\"; optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/ui/src/pages/Inbox.tsx",
+            "range": {
+              "start": {
+                "line": 1177,
+                "character": 10
+              },
+              "end": {
+                "line": 1177,
+                "character": 39
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call expression inside a useMemo computing availableIssueColumns; resolves to the named import from ../lib/inbox, which is the declaration module."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/ui/src/components/IssuesList.tsx",
+        "range": {
+          "start": {
+            "line": 1039,
+            "character": 10
+          },
+          "end": {
+            "line": 1039,
+            "character": 39
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/ui/src/lib/inbox.ts",
+        "source/ui/src/pages/Inbox.tsx",
+        "source/ui/src/components/IssuesList.tsx",
+        "source/ui/src/lib/inbox.test.ts",
+        "source/ui/src/App.tsx",
+        "source/ui/src/hooks/useInboxBadge.ts",
+        "source/ui/src/components/IssueColumns.tsx",
+        "source/ui/storybook/stories/issue-management.stories.tsx"
+      ],
+      "rationale": "Project-wide exact-identifier search for getAvailableInboxIssueColumns found 8 tokens: the declaration in ui/src/lib/inbox.ts (line 331, chars 16-45) plus 7 candidates, all of which resolve to this declaration. Required set: 4 call sites (IssuesList.tsx line 1039, Inbox.tsx line 1177, inbox.test.ts lines 1198 and 1208), each reached through a named import of the declaration module (../lib/inbox or ./inbox). Optional set: 3 named import binding tokens (IssuesList.tsx line 42, Inbox.tsx line 133, inbox.test.ts line 22) per the bindings_optional policy. All other importers of lib/inbox (App.tsx, useInboxBadge.ts, IssueColumns.tsx, issue-management.stories.tsx) were checked and do not reference this identifier; there are no re-exports, wildcard bindings, or dynamic accesses. definitionUsage is the first required location after sorting by URI, line, character: IssuesList.tsx line 1039, character 10. No shadowing or ambiguity affects the required set."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "00c79925-8b47-424b-9326-c678d4a06b09",
+    "executedAt": "2026-08-11T10:45:29Z"
+  },
+  "schemaVersion": 1
+}

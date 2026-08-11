@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-python-01-2",
+  "language": "python",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/3b1b/manim",
+    "commit": "6199a00d4c1b1127ebe45cb629c3f22538b10e13",
+    "archiveSha256": "5b81a063cbf10f8cd914cccde856fff5717ea2260a70b917bd43d6324a5e8ed3"
+  },
+  "declaration": {
+    "uri": "benchmark://source/manimlib/utils/color.py",
+    "range": {
+      "start": { "line": 30, "character": 4 },
+      "end": { "line": 30, "character": 17 }
+    }
+  },
+  "displayName": "color_to_rgba"
+}

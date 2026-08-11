@@ -59,14 +59,14 @@ cases:
       - operation: "definition"
         usage:
           location:
-            uri: "benchmark://source/packages/tailwindcss/src/utilities.ts"
+            uri: "benchmark://source/packages/tailwindcss/src/utilities.test.ts"
             range:
               start:
-                line: 6428
-                character: 6
+                line: 29638
+                character: 11
               end:
-                line: 6428
-                character: 30
+                line: 29638
+                character: 35
           kind: "function"
           displayName: "isValidStaticUtilityName"
         expectedDeclaration:
@@ -83,7 +83,7 @@ cases:
           displayName: "isValidStaticUtilityName"
     verification:
       method: "manual_inspection"
-      notes: "Independently derived from the pinned source archive by codex-source-reviewer-a and codex-source-reviewer-b on 2026-07-31, then source-only adjudicated without analyzer or language-server output. Accepted after source-only adjudication. Included the isValidStaticUtilityName call in utilities.test.ts because it is an ordinary function reference. Included the isValidStaticUtilityName call in utilities.test.ts because it is an ordinary function reference."
+      notes: "The expected usage set was confirmed by fresh blinded OpenAI and Anthropic reviews against the complete pinned source archive, then human-adjudicated on 2026-08-11. Both calls are required semantic references. The utilities.test.ts call is the deterministic definition usage because its URI sorts before utilities.ts."
   - id: "real-project-v1-typescript-02-2"
     declaration:
       location:

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-typescript-02-3",
+  "language": "typescript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/tailwindlabs/tailwindcss",
+    "commit": "6de87c62c4633007872986339f7b3a11600de923",
+    "archiveSha256": "81e06f7955bbea87a6786f181f9dd048841f93b3a741cadd1442bb07c1d83d3c"
+  },
+  "declaration": {
+    "uri": "benchmark://source/packages/@tailwindcss-upgrade/src/utils/renderer.ts",
+    "range": { "start": { "line": 115, "character": 16 }, "end": { "line": 115, "character": 21 } }
+  },
+  "displayName": "error"
+}

@@ -1,0 +1,119 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-go-03-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/pkg/metrics/mem/server.go",
+        "range": {
+          "start": {
+            "line": 89,
+            "character": 24
+          },
+          "end": {
+            "line": 89,
+            "character": 40
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/metrics/mem/server.go",
+            "range": {
+              "start": {
+                "line": 81,
+                "character": 21
+              },
+              "end": {
+                "line": 81,
+                "character": 37
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Method call m.clearUselessInfo(...) inside (*serverMetrics).runUntil; receiver m is *serverMetrics, so the selector resolves to the declared method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/metrics/mem/server.go",
+            "range": {
+              "start": {
+                "line": 113,
+                "character": 10
+              },
+              "end": {
+                "line": 113,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Method call m.clearUselessInfo(0) inside (*serverMetrics).ClearOfflineProxies; resolves to the declared method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/metrics/mem/server.go",
+            "range": {
+              "start": {
+                "line": 117,
+                "character": 10
+              },
+              "end": {
+                "line": 117,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Method call m.clearUselessInfo(0) inside (*serverMetrics).PruneOfflineProxies; resolves to the declared method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/metrics/mem/server_test.go",
+            "range": {
+              "start": {
+                "line": 44,
+                "character": 25
+              },
+              "end": {
+                "line": 44,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Method call metrics.clearUselessInfo(24 * time.Hour) in TestServerMetricsClearUselessInfoUsesClock; metrics is *serverMetrics returned by newServerMetricsWithClock, and the test file is in the same package mem, so the unexported method resolves to the declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/pkg/metrics/mem/server.go",
+        "range": {
+          "start": {
+            "line": 81,
+            "character": 21
+          },
+          "end": {
+            "line": 81,
+            "character": 37
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/pkg/metrics/mem/server.go",
+        "source/pkg/metrics/mem/server_test.go",
+        "source/pkg/metrics/mem/types.go"
+      ],
+      "rationale": "The declaration is the unexported method clearUselessInfo on *serverMetrics (pkg/metrics/mem/server.go line 90, 1-based). Because the identifier is unexported, Go visibility restricts all references to package mem, which comprises server.go, types.go, and server_test.go. A ripgrep for the exact token across the entire source/ tree returned exactly five occurrences: the declaration plus four call expressions, each on a receiver of static type *serverMetrics, so all four semantically resolve to the declaration and are required. No other file in the project contains the token, so there are no candidates to exclude. As an unexported method there are no import/re-export/export binding tokens, so no optional locations exist under bindings_optional. All relevant lines are ASCII, making UTF-16 columns identical to byte offsets. Sorting required locations by URI ('server.go' precedes 'server_test.go'), then line, then character selects server.go line 81 character 21 (0-based) as definitionUsage. The required set is complete with no unresolved uncertainty, so confidence is high."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "b97636d5-227c-41fa-b4a0-727331038022",
+    "executedAt": "2026-08-11T10:10:53Z"
+  },
+  "schemaVersion": 1
+}

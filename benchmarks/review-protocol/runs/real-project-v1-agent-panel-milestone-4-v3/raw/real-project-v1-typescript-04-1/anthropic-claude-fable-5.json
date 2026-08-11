@@ -1,0 +1,119 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-04-1",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/plugins/sdk/src/worker-rpc-host.ts",
+        "range": {
+          "start": {
+            "line": 229,
+            "character": 16
+          },
+          "end": {
+            "line": 229,
+            "character": 34
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/plugins/sdk/src/worker-rpc-host.ts",
+            "range": {
+              "start": {
+                "line": 283,
+                "character": 6
+              },
+              "end": {
+                "line": 283,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call to isWorkerEntrypoint(entry, moduleUrl) inside runWorker() in the same module; resolves directly to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/plugins/sdk/tests/worker-rpc-host.test.ts",
+            "range": {
+              "start": {
+                "line": 22,
+                "character": 9
+              },
+              "end": {
+                "line": 22,
+                "character": 27
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit named import binding `import { isWorkerEntrypoint, ... } from \"../src/worker-rpc-host.js\"`; classified optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/plugins/sdk/tests/worker-rpc-host.test.ts",
+            "range": {
+              "start": {
+                "line": 50,
+                "character": 6
+              },
+              "end": {
+                "line": 50,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Test call isWorkerEntrypoint(path.join(linkDir, \"worker.js\"), ...) in the symlink test; resolves via the named import to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/plugins/sdk/tests/worker-rpc-host.test.ts",
+            "range": {
+              "start": {
+                "line": 65,
+                "character": 6
+              },
+              "end": {
+                "line": 65,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Test call isWorkerEntrypoint(otherPath, ...) in the non-matching-entrypoint test; resolves via the named import to the declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/packages/plugins/sdk/src/worker-rpc-host.ts",
+        "range": {
+          "start": {
+            "line": 283,
+            "character": 6
+          },
+          "end": {
+            "line": 283,
+            "character": 24
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/packages/plugins/sdk/src/worker-rpc-host.ts",
+        "source/packages/plugins/sdk/tests/worker-rpc-host.test.ts",
+        "source/packages/plugins/sdk/src/index.ts"
+      ],
+      "rationale": "A workspace-wide search for the exact identifier `isWorkerEntrypoint` yields six tokens: the declaration itself (worker-rpc-host.ts line 230, excluded as the query token), the call inside runWorker() at line 284 of the same file, and four occurrences in packages/plugins/sdk/tests/worker-rpc-host.test.ts — a named import binding (line 23), a describe() string literal (line 25, omitted as a string), and two call expressions (lines 51 and 66). The SDK barrel packages/plugins/sdk/src/index.ts re-exports startWorkerRpcHost and runWorker from worker-rpc-host.js but not isWorkerEntrypoint, so no export-binding token exists elsewhere. Required set: the three call sites. The import binding is optional under bindings_optional. definitionUsage is the first required location after sorting by URI/line/character (the src/ URI sorts before tests/). No unresolved ambiguity affecting the required set."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "1c3d08dc-8b84-4588-babd-46010f33900f",
+    "executedAt": "2026-08-11T10:27:35Z"
+  },
+  "schemaVersion": 1
+}

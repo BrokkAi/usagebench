@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-go-01-3",
+  "language": "go",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/gohugoio/hugo",
+    "commit": "8a468df065a75c1c7cf9f6850f32148746590ea5",
+    "archiveSha256": "438435dd1a08fe6cd5116ed2c775e2ecb500fe5755a81f6faf7fd83da99a9713"
+  },
+  "declaration": {
+    "uri": "benchmark://source/resources/page/permalinks.go",
+    "range": {
+      "start": { "line": 330, "character": 27 },
+      "end": { "line": 330, "character": 49 }
+    }
+  },
+  "displayName": "pageToPermalinkSection"
+}

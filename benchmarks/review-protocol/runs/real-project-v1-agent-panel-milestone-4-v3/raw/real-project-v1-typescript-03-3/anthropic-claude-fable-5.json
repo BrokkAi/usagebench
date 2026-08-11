@@ -1,0 +1,138 @@
+{
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-03-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/node/wrapper.ts",
+        "range": {
+          "start": {
+            "line": 17,
+            "character": 16
+          },
+          "end": {
+            "line": 17,
+            "character": 25
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 180,
+                "character": 26
+              },
+              "end": {
+                "line": 180,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call to the exported onMessage function in ChildProcess.handshake(): `await onMessage<ParentMessage, ParentHandshakeMessage>(...)`. This is at module/class scope, outside the function body where the shadowing local const exists, so it resolves to the exported declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 353,
+                "character": 26
+              },
+              "end": {
+                "line": 353,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call to the exported onMessage function in ParentProcess.handshake(): `await onMessage<ChildMessage, ChildHandshakeMessage>(...)`. Resolves to the exported module-level function declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 10
+              },
+              "end": {
+                "line": 45,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Declaration of a distinct local `const onMessage` message-handler inside the Promise executor within the exported function's body. It declares a different symbol that shadows the outer function; it is not a reference to the query declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 26,
+                "character": 26
+              },
+              "end": {
+                "line": 26,
+                "character": 35
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "`proc.off(\"message\", onMessage)` inside cleanup(). This identifier resolves to the shadowing local `const onMessage` declared in the same Promise-executor block scope (line 46, 1-based), not to the exported function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/wrapper.ts",
+            "range": {
+              "start": {
+                "line": 54,
+                "character": 23
+              },
+              "end": {
+                "line": 54,
+                "character": 32
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "`proc.on(\"message\", onMessage)` inside the Promise executor. Resolves to the shadowing local `const onMessage` in the same block scope, not to the exported function."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/node/wrapper.ts",
+        "range": {
+          "start": {
+            "line": 180,
+            "character": 26
+          },
+          "end": {
+            "line": 180,
+            "character": 35
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/node/wrapper.ts",
+        "source/src/node/entry.ts",
+        "source/src/node/main.ts",
+        "source/test/unit/node/wrapper.test.ts",
+        "source/test/e2e/extensions/test-extension/extension.ts"
+      ],
+      "rationale": "The query is the exported generic function `onMessage` in src/node/wrapper.ts (0-based line 17). A project-wide search for the exact identifier `onMessage` found tokens only in wrapper.ts (other matches were substrings like showInformationMessage, which are omitted). Inside the function body a local `const onMessage` (0-based line 45) shadows the exported function within the Promise-executor block scope, so the three body tokens (declaration at line 45 and references at lines 26 and 54) resolve to that local symbol and are excluded. The two remaining tokens, at 0-based lines 180 and 353, are call sites in ChildProcess.handshake() and ParentProcess.handshake() that semantically resolve to the exported declaration; both are required. No file imports, re-exports, or otherwise binds `onMessage` (entry.ts, main.ts, and the wrapper unit test import only wrapper, isChild, ChildProcess, and ParentProcess), so there are no optional binding tokens under the bindings_optional policy. definitionUsage is the deterministic first required location (wrapper.ts line 180 character 26). The required set is complete with no unresolved ambiguity, so confidence is high."
+    }
+  ],
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "444ae3a9-4805-4260-a72d-aec528e14130",
+    "executedAt": "2026-08-11T10:27:35Z"
+  },
+  "schemaVersion": 1
+}

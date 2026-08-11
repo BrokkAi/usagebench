@@ -575,6 +575,57 @@
           },
           "kind": "class",
           "displayName": "bsonBinding"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/binding/bson.go",
+            "range": {
+              "start": {
+                "line": 15,
+                "character": 6
+              },
+              "end": {
+                "line": 15,
+                "character": 17
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "bsonBinding"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/binding/bson.go",
+            "range": {
+              "start": {
+                "line": 19,
+                "character": 8
+              },
+              "end": {
+                "line": 19,
+                "character": 19
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "bsonBinding"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/binding/bson.go",
+            "range": {
+              "start": {
+                "line": 27,
+                "character": 6
+              },
+              "end": {
+                "line": 27,
+                "character": 17
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "bsonBinding"
         }
       ],
       "definitionUsage": {
@@ -594,18 +645,18 @@
         "kind": "class",
         "displayName": "bsonBinding"
       },
-      "notes": "Accepted after source-only adjudication. Excluded the three extra bsonBinding occurrences because they are receiver-clause bindings on method declarations, not ordinary semantic source references.",
+      "notes": "Accepted after source-only adjudication and corrected after fresh blinded OpenAI and Anthropic reviews on 2026-08-11. The two composite-literal references and three receiver-clause type references are required semantic usages under the v3 contract.",
       "disagreementResolution": {
         "hadDisagreement": true,
         "differingFields": [
           "expectedUsages"
         ],
-        "resolution": "Excluded the three extra bsonBinding occurrences because they are receiver-clause bindings on method declarations, not ordinary semantic source references."
+        "resolution": "The original adjudication excluded receiver-clause type references. The fresh cross-provider panel independently included all three, and accountable human adjudication accepted that consensus under the explicit v3 receiver-usage rule."
       },
       "rangeValidation": {
         "positionEncoding": "utf-16",
         "validated": true,
-        "locationsChecked": 3,
+        "locationsChecked": 6,
         "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
@@ -3389,25 +3440,25 @@
           "uri": "benchmark://source/youtube_dl/extractor/pornhub.py",
           "range": {
             "start": {
-              "line": 120,
-              "character": 16
+              "line": 36,
+              "character": 25
             },
             "end": {
-              "line": 120,
-              "character": 29
+              "line": 36,
+              "character": 38
             }
           }
         },
         "kind": "class",
         "displayName": "PornHubBaseIE"
       },
-      "notes": "Accepted after source-only adjudication. The expected usage sets agree. Both the subclass base and super() class argument are semantic references; retained reviewer A's subclass-base usage as definitionUsage.",
+      "notes": "Accepted after source-only adjudication and confirmed by fresh blinded OpenAI and Anthropic reviews on 2026-08-11. All seven usages remain required; the super() reference is now the deterministic first definitionUsage under the v3 ordering rule.",
       "disagreementResolution": {
         "hadDisagreement": true,
         "differingFields": [
           "definitionUsage"
         ],
-        "resolution": "The expected usage sets agree. Both the subclass base and super() class argument are semantic references; retained reviewer A's subclass-base usage as definitionUsage."
+        "resolution": "The fresh cross-provider panel agreed on the usage set and selected the earliest required location by URI, line, and character, replacing the prior valid but non-canonical subclass-base target."
       },
       "rangeValidation": {
         "positionEncoding": "utf-16",
@@ -3491,6 +3542,23 @@
           },
           "kind": "function",
           "displayName": "setup_contacts_routes"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_contacts_routes_shim.py",
+            "range": {
+              "start": {
+                "line": 43,
+                "character": 21
+              },
+              "end": {
+                "line": 43,
+                "character": 42
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "setup_contacts_routes"
         }
       ],
       "definitionUsage": {
@@ -3510,18 +3578,18 @@
         "kind": "function",
         "displayName": "setup_contacts_routes"
       },
-      "notes": "Accepted after source-only adjudication. Included both setup_contacts_routes calls in contact tests. They are ordinary calls, not bindings or same-name text.",
+      "notes": "Accepted after source-only adjudication and corrected after fresh blinded OpenAI and Anthropic reviews on 2026-08-11. The canonical-module attribute in test_contacts_routes_shim.py is a required semantic reference through the legacy-module identity shim.",
       "disagreementResolution": {
         "hadDisagreement": true,
         "differingFields": [
           "expectedUsages"
         ],
-        "resolution": "Included both setup_contacts_routes calls in contact tests. They are ordinary calls, not bindings or same-name text."
+        "resolution": "Retained the existing calls and added the independently confirmed canonical-module attribute reference exercised by the shim identity test."
       },
       "rangeValidation": {
         "positionEncoding": "utf-16",
         "validated": true,
-        "locationsChecked": 4,
+        "locationsChecked": 5,
         "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
@@ -4109,24 +4177,24 @@
           "range": {
             "start": {
               "line": 687,
-              "character": 37
+              "character": 19
             },
             "end": {
               "line": 687,
-              "character": 48
+              "character": 30
             }
           }
         },
         "kind": "class",
         "displayName": "AppViewport"
       },
-      "notes": "Accepted after source-only adjudication. The expected usage sets agree. Both the type annotation and constructor occurrence on App.tsx:688 are semantic references; retained reviewer A's constructor occurrence as definitionUsage.",
+      "notes": "Accepted after source-only adjudication and reconfirmed by fresh blinded OpenAI and Anthropic reviews on 2026-08-11. Both the type annotation and constructor occurrence on App.tsx:688 are semantic references. The type annotation is the deterministic definition usage because it sorts first by URI and source position.",
       "disagreementResolution": {
         "hadDisagreement": true,
         "differingFields": [
           "definitionUsage"
         ],
-        "resolution": "The expected usage sets agree. Both the type annotation and constructor occurrence on App.tsx:688 are semantic references; retained reviewer A's constructor occurrence as definitionUsage."
+        "resolution": "The expected usage sets agree. The fresh blinded panel agreed that both occurrences are required and selected the type annotation under the deterministic URI, line, and character ordering rule."
       },
       "rangeValidation": {
         "positionEncoding": "utf-16",
@@ -4197,28 +4265,28 @@
       ],
       "definitionUsage": {
         "location": {
-          "uri": "benchmark://source/packages/tailwindcss/src/utilities.ts",
+          "uri": "benchmark://source/packages/tailwindcss/src/utilities.test.ts",
           "range": {
             "start": {
-              "line": 6428,
-              "character": 6
+              "line": 29638,
+              "character": 11
             },
             "end": {
-              "line": 6428,
-              "character": 30
+              "line": 29638,
+              "character": 35
             }
           }
         },
         "kind": "function",
         "displayName": "isValidStaticUtilityName"
       },
-      "notes": "Accepted after source-only adjudication. Included the isValidStaticUtilityName call in utilities.test.ts because it is an ordinary function reference.",
+      "notes": "Accepted after source-only adjudication and reconfirmed by fresh blinded OpenAI and Anthropic reviews on 2026-08-11. Both calls are required semantic references. The utilities.test.ts call is the deterministic definition usage because its URI sorts before utilities.ts.",
       "disagreementResolution": {
         "hadDisagreement": true,
         "differingFields": [
           "expectedUsages"
         ],
-        "resolution": "Included the isValidStaticUtilityName call in utilities.test.ts because it is an ordinary function reference."
+        "resolution": "Included the isValidStaticUtilityName call in utilities.test.ts because it is an ordinary function reference. The fresh blinded panel selected that call under the deterministic URI, line, and character ordering rule."
       },
       "rangeValidation": {
         "positionEncoding": "utf-16",

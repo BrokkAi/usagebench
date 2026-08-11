@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v1-agent-panel-milestone-1-v3",
+  "status": "human_adjudicated",
+  "summary": {
+    "caseCount": 6,
+    "requiredLocationAgreementCount": 6,
+    "automaticConsensusCount": 4,
+    "decisionDisagreementCount": 2,
+    "highConfidenceNoAmbiguityCount": 6,
+    "authoredRequiredLocationMatchCount": 6,
+    "authoredDefinitionTargetMatchCount": 4,
+    "humanEscalationCount": 6,
+    "humanAdjudicatedCount": 6,
+    "unresolvedEscalationCount": 0
+  },
+  "cases": [
+    {
+      "caseId": "real-project-v1-go-01-3",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": false,
+      "solDecision": "accept",
+      "fableDecision": "replace",
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_panel_contract_and_resolve_fable_replace"
+    },
+    {
+      "caseId": "real-project-v1-go-02-1",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-python-01-2",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-python-02-1",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-01-3",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": false,
+      "solDecision": "accept",
+      "fableDecision": "replace",
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": false,
+      "recommendedAdjudication": "accept_panel_contract_and_apply_deterministic_definition_target"
+    },
+    {
+      "caseId": "real-project-v1-typescript-02-1",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": false,
+      "recommendedAdjudication": "accept_panel_contract_and_apply_deterministic_definition_target"
+    }
+  ]
+}

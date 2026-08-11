@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v1-python-04-1",
+  "language": "python",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/odysseus-dev/odysseus",
+    "commit": "28c333e64780ae2fbb7f0757d752e8bb5fb74990",
+    "archiveSha256": "9cb9f50f7bb5f35ac9ff3155f9ce46109bf36de5d6b7e6acf6c2a012c2f0c748"
+  },
+  "declaration": {
+    "uri": "benchmark://source/routes/contacts/contacts_routes.py",
+    "range": {
+      "start": {
+        "line": 737,
+        "character": 4
+      },
+      "end": {
+        "line": 737,
+        "character": 25
+      }
+    }
+  },
+  "displayName": "setup_contacts_routes"
+}

@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v1-agent-panel-milestone-2-v3",
+  "status": "human_adjudicated",
+  "summary": {
+    "caseCount": 6,
+    "requiredLocationAgreementCount": 6,
+    "automaticConsensusCount": 5,
+    "decisionDisagreementCount": 1,
+    "advisoryClassificationDifferenceCount": 1,
+    "highConfidenceNoAmbiguityCount": 6,
+    "authoredRequiredLocationMatchCount": 5,
+    "authoredDefinitionTargetMatchCount": 6,
+    "humanEscalationCount": 6,
+    "humanAdjudicatedCount": 6,
+    "unresolvedEscalationCount": 0
+  },
+  "cases": [
+    {
+      "caseId": "real-project-v1-go-02-2",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 5,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": false,
+      "definitionUsageMatchesAuthored": true,
+      "agentOnlyRequiredLocations": [
+        {
+          "uri": "benchmark://source/binding/bson.go",
+          "range": {
+            "start": { "line": 15, "character": 6 },
+            "end": { "line": 15, "character": 17 }
+          }
+        },
+        {
+          "uri": "benchmark://source/binding/bson.go",
+          "range": {
+            "start": { "line": 19, "character": 8 },
+            "end": { "line": 19, "character": 19 }
+          }
+        },
+        {
+          "uri": "benchmark://source/binding/bson.go",
+          "range": {
+            "start": { "line": 27, "character": 6 },
+            "end": { "line": 27, "character": 17 }
+          }
+        }
+      ],
+      "recommendedAdjudication": "accept_consensus_contract_and_add_receiver_type_usages"
+    },
+    {
+      "caseId": "real-project-v1-go-02-3",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 11,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-python-02-2",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 10,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": false,
+      "solDecision": "accept",
+      "fableDecision": "replace",
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_consensus_contract_and_resolve_fable_replace"
+    },
+    {
+      "caseId": "real-project-v1-python-02-3",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 2,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-02-2",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 3,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    },
+    {
+      "caseId": "real-project-v1-typescript-02-3",
+      "requiredLocationsAgree": true,
+      "requiredLocationCount": 13,
+      "optionalLocationsAgree": true,
+      "allClassificationsAgree": false,
+      "advisoryDifference": "Fable retained five proven exclusions that Sol omitted; excluded evidence is advisory and does not alter the required contract.",
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "solDecision": "accept",
+      "fableDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "requiredLocationsMatchAuthored": true,
+      "definitionUsageMatchesAuthored": true,
+      "recommendedAdjudication": "accept_authored_contract"
+    }
+  ]
+}

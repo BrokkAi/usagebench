@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "0557143f-aca6-4c15-83cb-8186366139f3",
+    "executedAt": "2026-08-11T10:45:29Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-go-04-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/ignore/ignoreresult/ignoreresult.go",
+        "range": {
+          "start": {
+            "line": 52,
+            "character": 11
+          },
+          "end": {
+            "line": 52,
+            "character": 24
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/ignore/ignore.go",
+            "range": {
+              "start": {
+                "line": 374,
+                "character": 34
+              },
+              "end": {
+                "line": 374,
+                "character": 47
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Method call `pattern.result.ToggleIgnored()` in parseLine. The receiver `pattern.result` is field `result ignoreresult.R` (ignore.go line 74, 0-indexed 73), so the selector resolves to the (r R) ToggleIgnored method declared in ignoreresult.go. This is the only exact-identifier usage token in the project outside the declaration range."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/ignore/ignore.go",
+        "range": {
+          "start": {
+            "line": 374,
+            "character": 34
+          },
+          "end": {
+            "line": 374,
+            "character": 47
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/lib/ignore/ignoreresult/ignoreresult.go",
+        "source/lib/ignore/ignore.go"
+      ],
+      "rationale": "Project-wide ripgrep for the exact identifier `ToggleIgnored` over the full pinned snapshot produced three token occurrences: the doc-comment mention at ignoreresult.go line 52 (documentation text, omitted per rule 3), the declaration token itself at line 53 (never a usage), and one call site at ignore.go line 375 (1-indexed). The call site's receiver type was verified as ignoreresult.R via the Pattern struct definition, so it semantically resolves to the declared method; no other type in the project defines a ToggleIgnored method, so no exact-name candidates resolve elsewhere. The required set is the single call-site token; sorting by URI/line/character deterministically selects it as definitionUsage. No import or export binding tokens apply because the usage is a method selector rather than a package-level name, and Go has no re-export bindings for methods. No required-contract ambiguity remains, so confidence is high."
+    }
+  ]
+}

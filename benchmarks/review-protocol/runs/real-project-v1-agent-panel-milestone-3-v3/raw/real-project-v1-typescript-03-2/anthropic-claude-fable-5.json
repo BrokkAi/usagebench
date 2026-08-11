@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "b220dc5d-2a7f-45aa-b538-95a62474f787",
+    "executedAt": "2026-08-11T10:10:53Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v1-typescript-03-2",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/node/vscodeSocket.ts",
+        "range": {
+          "start": {
+            "line": 30,
+            "character": 10
+          },
+          "end": {
+            "line": 30,
+            "character": 28
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/vscodeSocket.ts",
+            "range": {
+              "start": {
+                "line": 42,
+                "character": 17
+              },
+              "end": {
+                "line": 42,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type argument in router.get<{}, GetSessionResponse | string | unknown, ...> resolves to the interface declared in the same module scope."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/vscodeSocket.ts",
+            "range": {
+              "start": {
+                "line": 50,
+                "character": 22
+              },
+              "end": {
+                "line": 50,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type annotation on the local `response` constant inside the /session GET handler resolves to the interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/node/vscodeSocket.ts",
+            "range": {
+              "start": {
+                "line": 154,
+                "character": 39
+              },
+              "end": {
+                "line": 154,
+                "character": 57
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type argument of new Promise<GetSessionResponse> in EditorSessionManagerClient.getConnectedSocketPath resolves to the interface."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/node/vscodeSocket.ts",
+        "range": {
+          "start": {
+            "line": 42,
+            "character": 17
+          },
+          "end": {
+            "line": 42,
+            "character": 35
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "CASE.json",
+        "PROMPT.md",
+        "RESPONSE.schema.json",
+        "source/src/node/vscodeSocket.ts",
+        "source/test/unit/node/vscodeSocket.test.ts"
+      ],
+      "rationale": "GetSessionResponse is a non-exported interface declared at src/node/vscodeSocket.ts line 30 (0-based). A project-wide exact-identifier search over the pinned snapshot found tokens only in this file: the declaration itself plus three type references (route generic parameter at line 42, const annotation at line 50, Promise type argument at line 154, 0-based). Because the interface is not exported, no import or re-export bindings can exist; the test file references the module but cannot and does not name this interface. All three references are required usages. Deterministic definitionUsage is the first required location by URI/line/character ordering."
+    }
+  ]
+}

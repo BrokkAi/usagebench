@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v1-agent-panel-milestone-4-v3",
+  "sourceRevision": "22e6e318191d20abdd70a5c2b765f969a1e1a88b",
+  "startedAt": "2026-08-11T10:27:35Z",
+  "reviewCompletedAt": "2026-08-11T10:35:02Z",
+  "adjudicatedAt": "2026-08-11T10:36:30Z",
+  "status": "completed",
+  "protocol": {
+    "file": "benchmarks/review-protocol/blinded-agent-review-v3.json",
+    "sha256": "66c04354b88aa1f3cf442345a92bfa24de1a596d2ac107d678b107ba648b2ea8"
+  },
+  "methodology": {
+    "file": "benchmarks/review-protocol/per-case-methodology-v3.md",
+    "sha256": "9118710fdccc4f6d12aa546b03d8985adf8e04d42fe4c0ad4e46e4ebbd1b6ed3"
+  },
+  "prompt": {
+    "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+    "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+  },
+  "responseSchema": {
+    "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+    "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+  },
+  "comparison": {
+    "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/comparison.json",
+    "sha256": "6e640c78f649a1e6639a2fab4f2b9da98162c36ab7c6f760265c9ae78fcc5a23"
+  },
+  "adjudication": {
+    "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/human-adjudication.json",
+    "sha256": "d5b077b96a7a2d3f866199c9d561d3cea36974edae59a93498de4eebe28e9067"
+  },
+  "milestone": {
+    "number": 4,
+    "partitionProgress": "30/36",
+    "caseIds": [
+      "real-project-v1-go-03-3",
+      "real-project-v1-go-04-1",
+      "real-project-v1-python-03-3",
+      "real-project-v1-python-04-1",
+      "real-project-v1-typescript-03-3",
+      "real-project-v1-typescript-04-1"
+    ]
+  },
+  "execution": {
+    "sessionPolicy": "fresh_session_per_provider_per_case",
+    "packetPolicy": "one_case_manifest_plus_complete_pinned_project",
+    "blinding": [
+      "authored_expectations",
+      "prior_strata",
+      "analyzer_identity_and_output",
+      "other_reviewer_responses",
+      "prior_adjudication",
+      "git_history"
+    ]
+  },
+  "packets": [
+    {
+      "caseId": "real-project-v1-go-03-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/packets/real-project-v1-go-03-3.json",
+      "sha256": "cb2e3f9b2781065519eb8f64cde2c3d4793f36924151a50bd6b16a34d838d307"
+    },
+    {
+      "caseId": "real-project-v1-go-04-1",
+      "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/packets/real-project-v1-go-04-1.json",
+      "sha256": "16d80c03b5353a49cf8b1859cef7bc24ea00d3f69fd89b7ff7bd839517ef21b6"
+    },
+    {
+      "caseId": "real-project-v1-python-03-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/packets/real-project-v1-python-03-3.json",
+      "sha256": "358442f2f754f0ef745cdd0259b4a5bd2768c040b99b2ff3cb6634d333bd508e"
+    },
+    {
+      "caseId": "real-project-v1-python-04-1",
+      "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/packets/real-project-v1-python-04-1.json",
+      "sha256": "86494036cef1eceed71da83886543b3886abde17de7ff7792641cb46d2ddfa4c"
+    },
+    {
+      "caseId": "real-project-v1-typescript-03-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/packets/real-project-v1-typescript-03-3.json",
+      "sha256": "58c5a9e35208a60a2dba592b0a9cdf3c93b629dda36de71e844f5d6fe46b43b8"
+    },
+    {
+      "caseId": "real-project-v1-typescript-04-1",
+      "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/packets/real-project-v1-typescript-04-1.json",
+      "sha256": "6a516c6d6eb196e3ab112f977b4a8fb9027bcaa69274c19c8c7f80b60087a193"
+    }
+  ],
+  "sources": [
+    {
+      "repo": "https://github.com/fatedier/frp",
+      "commit": "9d45a557200fcbc6a4598b5ee0d75c405299c521",
+      "tree": "e3fc9233f774f8ad068140936d220b16845e3c84",
+      "archive": "benchmarks/evaluation/real-project-v1/sources/fatedier--frp.tar.gz",
+      "sha256": "d7e4770e6a124dc5ed465f066571594255e895d9ab47c022f4b9f88825cb9f38"
+    },
+    {
+      "repo": "https://github.com/syncthing/syncthing",
+      "commit": "bcef5c5bc68dddfb68a3d341f41fad44c11fb52e",
+      "tree": "73e96843b00694e610ca4f558f4d61f26e4864cc",
+      "archive": "benchmarks/evaluation/real-project-v1/sources/syncthing--syncthing.tar.gz",
+      "sha256": "1623beb608c6b0971a42b45f9c045e6d259bed3a22d31d3df1422703505ad439"
+    },
+    {
+      "repo": "https://github.com/ytdl-org/youtube-dl",
+      "commit": "956b8c585591b401a543e409accb163eeaaa1193",
+      "tree": "596ff4ef809eaab6454a8c3a44d879c2ba04fcdf",
+      "archive": "benchmarks/evaluation/real-project-v1/sources/ytdl-org--youtube-dl.tar.gz",
+      "sha256": "b57e05902806fccac5b8085eab53e5adc4f6c0e6c0cba6bfda878030d957f5f1"
+    },
+    {
+      "repo": "https://github.com/odysseus-dev/odysseus",
+      "commit": "28c333e64780ae2fbb7f0757d752e8bb5fb74990",
+      "tree": "e7fd19178789b5faaef42ca5019ce1ba829b778c",
+      "archive": "benchmarks/evaluation/real-project-v1/sources/odysseus-dev--odysseus.tar.gz",
+      "sha256": "9cb9f50f7bb5f35ac9ff3155f9ce46109bf36de5d6b7e6acf6c2a012c2f0c748"
+    },
+    {
+      "repo": "https://github.com/coder/code-server",
+      "commit": "14bdb36f9217671bff9e9389f812c9ac9de575c0",
+      "tree": "9fa38cdd45ac8848cd1beb1c6841820a429850db",
+      "archive": "benchmarks/evaluation/real-project-v1/sources/coder--code-server.tar.gz",
+      "sha256": "e02ae6c8d63c0a7bfcb7958a74c153d384e91629452515b0358cdad7fb942c0b"
+    },
+    {
+      "repo": "https://github.com/paperclipai/paperclip",
+      "commit": "d5b9f6c8c9d9edb0c9796df86c61826b11400b5b",
+      "tree": "0b09ebff0928f6b740e5a7871c44b78031f512bc",
+      "archive": "benchmarks/evaluation/real-project-v1/sources/paperclipai--paperclip.tar.gz",
+      "sha256": "5f4d04e92d8b3efcb3ed3ad60f78d9dcff99fe400c923ab110ff5bf6233e391a"
+    }
+  ],
+  "sessions": [
+    {
+      "caseId": "real-project-v1-go-03-3",
+      "provider": "openai",
+      "model": "gpt-5.6-sol",
+      "executionId": "codex-task:/root/m4_sol_go_03_3",
+      "executedAt": "2026-08-11T10:27:35Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-go-03-3/openai-gpt-5.6-sol.json",
+        "sha256": "c4af90307ef2b0f2263ac8a7244d13eb2eb7b96b2e3ad32e3b304541b5690726"
+      }
+    },
+    {
+      "caseId": "real-project-v1-go-03-3",
+      "provider": "anthropic",
+      "model": "claude-fable-5",
+      "executionId": "c032673e-0f30-479f-889a-40fb59da6e7f",
+      "executedAt": "2026-08-11T10:27:35Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-go-03-3/anthropic-claude-fable-5.json",
+        "sha256": "e52d61a5f9a3c1be4dea0a60287d2fa17f4b0d06d93b9b98dd85c695ed40c961"
+      }
+    },
+    {
+      "caseId": "real-project-v1-go-04-1",
+      "provider": "openai",
+      "model": "gpt-5.6-sol",
+      "executionId": "codex-task:/root/m4_sol_go_04_1",
+      "executedAt": "2026-08-11T10:27:35Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-go-04-1/openai-gpt-5.6-sol.json",
+        "sha256": "8dd5728929078732dcb4ab8effa910c41f230b47f53854a2ba764636d8551e49"
+      }
+    },
+    {
+      "caseId": "real-project-v1-go-04-1",
+      "provider": "anthropic",
+      "model": "claude-fable-5",
+      "executionId": "1b287ac3-1ea9-4a72-bfea-ce2a735d4a77",
+      "executedAt": "2026-08-11T10:27:35Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-go-04-1/anthropic-claude-fable-5.json",
+        "sha256": "4c0060461e0e31ad3468cf44e408f5f68687ea5da075d18a6c2e254720e62959"
+      }
+    },
+    {
+      "caseId": "real-project-v1-python-03-3",
+      "provider": "openai",
+      "model": "gpt-5.6-sol",
+      "executionId": "codex-task:/root/m4_sol_python_03_3",
+      "executedAt": "2026-08-11T10:27:35Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-python-03-3/openai-gpt-5.6-sol.json",
+        "sha256": "54efe14579279d023535d5d46cb2c2fdbfc2855549c7539932875befb6434acc"
+      }
+    },
+    {
+      "caseId": "real-project-v1-python-03-3",
+      "provider": "anthropic",
+      "model": "claude-fable-5",
+      "executionId": "3ab19ae8-c650-4244-aa3a-a0d08d43eabf",
+      "executedAt": "2026-08-11T10:27:35Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-python-03-3/anthropic-claude-fable-5.json",
+        "sha256": "d905c1ca6f5b74feb82f8ea7d743e8d0962a8b3a9f356a41442749f82b5e562e"
+      }
+    },
+    {
+      "caseId": "real-project-v1-python-04-1",
+      "provider": "openai",
+      "model": "gpt-5.6-sol",
+      "executionId": "codex-task:/root/m4_sol_python_04_1",
+      "executedAt": "2026-08-11T10:30:14Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-python-04-1/openai-gpt-5.6-sol.json",
+        "sha256": "0d260439cbefa758aa2a9f1811d6ca43af292e26e3943441b24d755744039a18"
+      }
+    },
+    {
+      "caseId": "real-project-v1-python-04-1",
+      "provider": "anthropic",
+      "model": "claude-fable-5",
+      "executionId": "4c961dc8-f0a0-4afc-9b87-9943151630a8",
+      "executedAt": "2026-08-11T10:27:35Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-python-04-1/anthropic-claude-fable-5.json",
+        "sha256": "15f55ceeba3cbc394a8721b7553295d088c03aad10a1ae0beedad4bac4d75de1"
+      }
+    },
+    {
+      "caseId": "real-project-v1-typescript-03-3",
+      "provider": "openai",
+      "model": "gpt-5.6-sol",
+      "executionId": "codex-task:/root/m4_sol_typescript_03_3",
+      "executedAt": "2026-08-11T10:30:14Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-typescript-03-3/openai-gpt-5.6-sol.json",
+        "sha256": "be9e2d18d4756b06a4814dcdfffcb486977d76a550ee8e7a46cfefd008ad3e99"
+      }
+    },
+    {
+      "caseId": "real-project-v1-typescript-03-3",
+      "provider": "anthropic",
+      "model": "claude-fable-5",
+      "executionId": "444ae3a9-4805-4260-a72d-aec528e14130",
+      "executedAt": "2026-08-11T10:27:35Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-typescript-03-3/anthropic-claude-fable-5.json",
+        "sha256": "3f914f9be36731b9ef0e6e2772db5c847b4baa0e063c5adf434305d1208e9ef3"
+      }
+    },
+    {
+      "caseId": "real-project-v1-typescript-04-1",
+      "provider": "openai",
+      "model": "gpt-5.6-sol",
+      "executionId": "codex-task:/root/m4_sol_typescript_04_1",
+      "executedAt": "2026-08-11T10:30:14Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-typescript-04-1/openai-gpt-5.6-sol.json",
+        "sha256": "5a9a97185a5ce8e37a326244554d2c72b7693460296ff4124c86676e211a38da"
+      }
+    },
+    {
+      "caseId": "real-project-v1-typescript-04-1",
+      "provider": "anthropic",
+      "model": "claude-fable-5",
+      "executionId": "1c3d08dc-8b84-4588-babd-46010f33900f",
+      "executedAt": "2026-08-11T10:27:35Z",
+      "rawResponse": {
+        "file": "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/raw/real-project-v1-typescript-04-1/anthropic-claude-fable-5.json",
+        "sha256": "d34f5dc66efa83bceaa17c00b9c7cd5585410162e1411a70f7fc29e21a3c8615"
+      }
+    }
+  ]
+}
