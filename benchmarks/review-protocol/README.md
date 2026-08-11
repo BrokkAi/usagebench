@@ -32,3 +32,11 @@ accountable human batch sign-off with a recorded identity and attestation.
 Analyzer outputs may be revealed only after
 the ground-truth review and adjudication have been frozen; subsequent
 anonymized comparisons cannot change ground truth without a new freeze.
+
+The publication review manifest and its two normalized reviewer artifacts are
+derived deterministically from the retained v3 runs. Verify that checked-in
+provenance has not drifted with:
+
+```bash
+python3 scripts/build-real-project-v1-publication-review.py --check
+```

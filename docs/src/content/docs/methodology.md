@@ -6,10 +6,9 @@ description: Classify observed differences without overclaiming analyzer defects
 UsageBench reports required-destination recall first, strict contract agreement
 second, and causal interpretation third. The fixture-backed development corpus
 has completed one human source review. The separate 36-case `real-project-v1`
-slice is preregistered, source-locked, agent-reviewed, and adjudicated source
-evidence; it is not publication-eligible until a cross-provider panel and
-accountable human adjudication are recorded. Analyzer results for it have not
-yet been published.
+slice is preregistered and source-locked, with blinded OpenAI and Anthropic
+derivations plus accountable human adjudication. It is publication-qualified;
+analyzer results for it have not yet been frozen or published.
 An analyzer may also expose a different public grouping policy without
 containing an implementation bug.
 
@@ -222,11 +221,11 @@ and three declarations for each of the gopls, Pyright, and TypeScript LS
 profiles: 12 repositories and 36 cases in total. Published evaluation pages
 must show those per-profile denominators, the recorded population exclusions
 and source-review replacements, the freeze ID and claim scope, and the hashed
-protocol, selection, review, and source-lock provenance. Its historical review
-used two same-provider Codex agents and is classified as `agent_reviewed`; it
-cannot be publicly frozen until a qualifying cross-provider panel and
-accountable human adjudication are recorded. Evaluation tables are descriptive
-only: they exclude language-wide or ecosystem-wide estimates,
+protocol, selection, review, and source-lock provenance. Its historical
+same-provider Codex review remains preserved, while the qualifying schema-v2
+review binds 72 per-case sessions from stable OpenAI and Anthropic cohorts and
+the accountable human adjudications. Evaluation tables are descriptive only:
+they exclude language-wide or ecosystem-wide estimates,
 cross-language ranking, causal defect attribution, and latency, memory, or
 cold-start claims.
 

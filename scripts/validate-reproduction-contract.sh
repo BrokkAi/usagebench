@@ -8,6 +8,8 @@ workflow="$repo_root/.github/workflows/reference-environments.yml"
 native_workflow="$repo_root/.github/workflows/native-reproduction.yml"
 scope_resolver="$repo_root/scripts/resolve-freeze-scope.sh"
 
+python3 "$repo_root/scripts/build-real-project-v1-publication-review.py" --check
+
 jq -e '.schemaVersion == 2' "$registry" >/dev/null
 
 while IFS=$'\t' read -r candidate_id reference_runner; do

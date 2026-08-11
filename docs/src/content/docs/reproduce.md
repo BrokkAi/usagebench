@@ -242,11 +242,11 @@ latency, memory, and cold-start claims.
 The checked-in fixture cases remain a development and diagnosis corpus. All 158
 have completed a first human review, but retain `legacy_unattributed`
 ground-truth metadata. The separate `real-project-v1` evaluation partition has
-36 preregistered, historically agent-reviewed, adjudicated, source-locked cases.
-It still requires a qualifying cross-provider panel and accountable human
-adjudication before publication. Its analyzer results have not yet been
-published. Container reproducibility
-makes execution repeatable; it does not by itself upgrade review status.
+36 preregistered, source-locked cases with a qualifying blinded OpenAI and
+Anthropic panel and accountable human adjudication. Its analyzer results have
+not yet been frozen or published. Container reproducibility makes execution
+repeatable; the hash-bound review evidence is what qualifies the ground-truth
+status.
 
 See the [human ground-truth audit](../ground-truth-review/) for the review
 procedure and the distinction between reviewed development assertions and a

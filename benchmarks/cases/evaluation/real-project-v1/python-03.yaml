@@ -7,10 +7,10 @@ corpus:
   reviewManifest: "benchmarks/evaluation/real-project-v1/review.json"
   sourceLock: "benchmarks/evaluation/real-project-v1/sources.json"
 groundTruth:
-  status: "agent_reviewed"
+  status: "human_adjudicated_agent_panel"
   reviewers:
-    - "codex-source-reviewer-a"
-    - "codex-source-reviewer-b"
+    - "openai-gpt-5.6-sol"
+    - "anthropic-claude-fable-5"
 referencePolicy: "bindings_optional"
 positionEncoding: "utf-16"
 source:

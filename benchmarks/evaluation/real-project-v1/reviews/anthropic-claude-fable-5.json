@@ -1,27 +1,8 @@
 {
   "schemaVersion": 1,
-  "freezeId": "real-project-v1",
-  "protocolCommit": "5a766563e2f459c61de577b4c2e056c0af8d7cd1",
-  "reviewBasis": "Source-only adjudication; no analyzer, Bifrost, language-server, or analyzer-output evidence consulted.",
-  "referencePolicy": "bindings_optional: ordinary semantic source references required; import/re-export/binding-only occurrences optional and excluded; comments, strings, shadowed names, and unrelated same-name tokens excluded.",
-  "sourceArtifacts": [
-    "selection.issue90.final-candidates.json",
-    "real-project-v1-reviewer-a-complete.json",
-    "real-project-v1-reviewer-b-complete.json",
-    "benchmarks/review-protocol/runs/real-project-v1-agent-panel-pilot-v3/human-adjudication.json",
-    "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-1-v3/human-adjudication.json",
-    "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-2-v3/human-adjudication.json",
-    "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-3-v3/human-adjudication.json",
-    "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-4-v3/human-adjudication.json",
-    "benchmarks/review-protocol/runs/real-project-v1-agent-panel-milestone-5-v3/human-adjudication.json"
-  ],
-  "summary": {
-    "caseCount": 36,
-    "acceptedCount": 36,
-    "exactAgreementCount": 17,
-    "disagreementCount": 19,
-    "allExactTokenRangesValidated": true
-  },
+  "reviewer": "anthropic-claude-fable-5",
+  "referencePolicy": "bindings_optional",
+  "selectionAlgorithm": "real-project-v1-source-syntax-v1",
   "records": [
     {
       "caseId": "real-project-v1-go-01-1",
@@ -99,18 +80,6 @@
         },
         "kind": "method",
         "displayName": "addName"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 3,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -342,26 +311,11 @@
         },
         "kind": "class",
         "displayName": "ComponentPath"
-      },
-      "notes": "Corrected on 2026-08-07 after fresh blinded full-project reviews by OpenAI GPT-5.6 Sol and Anthropic Claude Fable 5 independently classified the receiver-clause type reference as required. DavidBakerEffendi approved the six-case v3 consensus panel, including this correction and its deterministic definition target.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages",
-          "definitionUsage"
-        ],
-        "resolution": "The original reviewers disagreed: reviewer B included the receiver-clause type reference and reviewer A excluded it. Two fresh cross-provider v3 reviews independently included it; accountable human adjudication accepted that consensus and selected it as the deterministic definition target."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 12,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-go-01-3",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "gohugoio/hugo",
         "commit": "8a468df065a75c1c7cf9f6850f32148746590ea5",
@@ -418,18 +372,6 @@
         },
         "kind": "method",
         "displayName": "pageToPermalinkSection"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 2,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -508,18 +450,6 @@
         },
         "kind": "method",
         "displayName": "staticFileHandler"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 3,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -649,20 +579,6 @@
         },
         "kind": "class",
         "displayName": "bsonBinding"
-      },
-      "notes": "Accepted after source-only adjudication and corrected after fresh blinded OpenAI and Anthropic reviews on 2026-08-11. The two composite-literal references and three receiver-clause type references are required semantic usages under the v3 contract.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages"
-        ],
-        "resolution": "The original adjudication excluded receiver-clause type references. The fresh cross-provider panel independently included all three, and accountable human adjudication accepted that consensus under the explicit v3 receiver-usage rule."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 6,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -894,21 +810,6 @@
         },
         "kind": "function",
         "displayName": "IsDebugging"
-      },
-      "notes": "Accepted after source-only adjudication. Included the three IsDebugging calls in debug_test.go. Test files are source, and these are ordinary calls; the policy does not exclude test usages. Retained reviewer A's valid production call as definitionUsage.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages",
-          "definitionUsage"
-        ],
-        "resolution": "Included the three IsDebugging calls in debug_test.go. Test files are source, and these are ordinary calls; the policy does not exclude test usages. Retained reviewer A's valid production call as definitionUsage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 12,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -1259,21 +1160,6 @@
         },
         "kind": "class",
         "displayName": "Frame"
-      },
-      "notes": "Accepted after source-only adjudication. Included the three Frame struct literals in wire_v2_test.go. They are ordinary semantic type references despite occurring in tests. Retained reviewer A's valid production struct literal as definitionUsage.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages",
-          "definitionUsage"
-        ],
-        "resolution": "Included the three Frame struct literals in wire_v2_test.go. They are ordinary semantic type references despite occurring in tests. Retained reviewer A's valid production struct literal as definitionUsage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 19,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -1386,26 +1272,11 @@
         },
         "kind": "method",
         "displayName": "clearUselessInfo"
-      },
-      "notes": "Accepted after source-only adjudication. Included the clearUselessInfo call in server_test.go because it is an ordinary receiver call. Retained reviewer A's valid production call as definitionUsage.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages",
-          "definitionUsage"
-        ],
-        "resolution": "Included the clearUselessInfo call in server_test.go because it is an ordinary receiver call. Retained reviewer A's valid production call as definitionUsage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 5,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-go-03-3",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "fatedier/frp",
         "commit": "9d45a557200fcbc6a4598b5ee0d75c405299c521",
@@ -1547,21 +1418,6 @@
         },
         "kind": "function",
         "displayName": "AddUserPrefix"
-      },
-      "notes": "Accepted after source-only adjudication. Included both AddUserPrefix calls in names_test.go because test usages remain ordinary semantic references. Retained reviewer A's valid production call as definitionUsage.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages",
-          "definitionUsage"
-        ],
-        "resolution": "Included both AddUserPrefix calls in names_test.go because test usages remain ordinary semantic references. Retained reviewer A's valid production call as definitionUsage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 7,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -1657,18 +1513,6 @@
         },
         "kind": "method",
         "displayName": "updateFileInfo"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 4,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -1702,11 +1546,11 @@
             "range": {
               "start": {
                 "line": 374,
-                "character": 35
+                "character": 34
               },
               "end": {
                 "line": 374,
-                "character": 48
+                "character": 47
               }
             }
           },
@@ -1720,28 +1564,16 @@
           "range": {
             "start": {
               "line": 374,
-              "character": 35
+              "character": 34
             },
             "end": {
               "line": 374,
-              "character": 48
+              "character": 47
             }
           }
         },
         "kind": "method",
         "displayName": "ToggleIgnored"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 2,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -1803,18 +1635,6 @@
         },
         "kind": "function",
         "displayName": "sortedObservedFolderSlice"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 2,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -1842,6 +1662,57 @@
         "displayName": "interpolate"
       },
       "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 73
+              },
+              "end": {
+                "line": 121,
+                "character": 84
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 147,
+                "character": 16
+              },
+              "end": {
+                "line": 147,
+                "character": 27
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/manimlib/utils/bezier.py",
+            "range": {
+              "start": {
+                "line": 167,
+                "character": 11
+              },
+              "end": {
+                "line": 167,
+                "character": 22
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "interpolate"
+        },
         {
           "location": {
             "uri": "benchmark://source/manimlib/animation/composition.py",
@@ -2269,57 +2140,6 @@
         },
         {
           "location": {
-            "uri": "benchmark://source/manimlib/utils/bezier.py",
-            "range": {
-              "start": {
-                "line": 121,
-                "character": 73
-              },
-              "end": {
-                "line": 121,
-                "character": 84
-              }
-            }
-          },
-          "kind": "function",
-          "displayName": "interpolate"
-        },
-        {
-          "location": {
-            "uri": "benchmark://source/manimlib/utils/bezier.py",
-            "range": {
-              "start": {
-                "line": 147,
-                "character": 16
-              },
-              "end": {
-                "line": 147,
-                "character": 27
-              }
-            }
-          },
-          "kind": "function",
-          "displayName": "interpolate"
-        },
-        {
-          "location": {
-            "uri": "benchmark://source/manimlib/utils/bezier.py",
-            "range": {
-              "start": {
-                "line": 167,
-                "character": 11
-              },
-              "end": {
-                "line": 167,
-                "character": 22
-              }
-            }
-          },
-          "kind": "function",
-          "displayName": "interpolate"
-        },
-        {
-          "location": {
             "uri": "benchmark://source/manimlib/utils/color.py",
             "range": {
               "start": {
@@ -2454,21 +2274,6 @@
         },
         "kind": "function",
         "displayName": "interpolate"
-      },
-      "notes": "Accepted after source-only adjudication. Included numbers.py:160: the unqualified call resolves to the module-level import from manimlib.utils.bezier; the enclosing method named interpolate does not create a local binding for that bare name. Retained reviewer A's valid call as definitionUsage.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages",
-          "definitionUsage"
-        ],
-        "resolution": "Included numbers.py:160: the unqualified call resolves to the module-level import from manimlib.utils.bezier; the enclosing method named interpolate does not create a local binding for that bare name. Retained reviewer A's valid call as definitionUsage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 36,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -2598,21 +2403,6 @@
         },
         "kind": "function",
         "displayName": "color_to_rgba"
-      },
-      "notes": "Accepted after source-only adjudication. The expected usage sets agree. Both proposed definition usages are valid calls to color_to_rgba; retained reviewer A's camera.py call as definitionUsage.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages",
-          "definitionUsage"
-        ],
-        "resolution": "The expected usage sets agree. Both proposed definition usages are valid calls to color_to_rgba; retained reviewer A's camera.py call as definitionUsage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 6,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -2674,18 +2464,6 @@
         },
         "kind": "function",
         "displayName": "make_even"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 2,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -2781,23 +2559,11 @@
         },
         "kind": "function",
         "displayName": "clean_branch_name"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 4,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-python-02-2",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "github/spec-kit",
         "commit": "296fdf2ee7188fa9ed12246f83e38186bd700716",
@@ -3007,20 +2773,6 @@
         },
         "kind": "class",
         "displayName": "DoWhileStep"
-      },
-      "notes": "Accepted after source-only adjudication. Included all nine DoWhileStep constructions in tests/test_workflows.py. They are ordinary class references; test location alone is not an exclusion.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages"
-        ],
-        "resolution": "Included all nine DoWhileStep constructions in tests/test_workflows.py. They are ordinary class references; test location alone is not an exclusion."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 11,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -3099,25 +2851,11 @@
         },
         "kind": "class",
         "displayName": "KilocodeIntegration"
-      },
-      "notes": "Accepted after source-only adjudication. Included tests/test_workflows.py:945, which constructs KilocodeIntegration after the local import. The import binding is excluded, but the constructor reference is required.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages"
-        ],
-        "resolution": "Included tests/test_workflows.py:945, which constructs KilocodeIntegration after the local import. The import binding is excluded, but the constructor reference is required."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 3,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-python-03-1",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "ytdl-org/youtube-dl",
         "commit": "956b8c585591b401a543e409accb163eeaaa1193",
@@ -3174,23 +2912,11 @@
         },
         "kind": "class",
         "displayName": "CuriosityStreamIE"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 2,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-python-03-2",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "ytdl-org/youtube-dl",
         "commit": "956b8c585591b401a543e409accb163eeaaa1193",
@@ -3281,23 +3007,11 @@
         },
         "kind": "function",
         "displayName": "win_service_report_event"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 4,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-python-03-3",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "ytdl-org/youtube-dl",
         "commit": "956b8c585591b401a543e409accb163eeaaa1193",
@@ -3456,25 +3170,11 @@
         },
         "kind": "class",
         "displayName": "PornHubBaseIE"
-      },
-      "notes": "Accepted after source-only adjudication and confirmed by fresh blinded OpenAI and Anthropic reviews on 2026-08-11. All seven usages remain required; the super() reference is now the deterministic first definitionUsage under the v3 ordering rule.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "definitionUsage"
-        ],
-        "resolution": "The fresh cross-provider panel agreed on the usage set and selected the earliest required location by URI, line, and character, replacing the prior valid but non-canonical subclass-base target."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 8,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-python-04-1",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "odysseus-dev/odysseus",
         "commit": "28c333e64780ae2fbb7f0757d752e8bb5fb74990",
@@ -3582,20 +3282,6 @@
         },
         "kind": "function",
         "displayName": "setup_contacts_routes"
-      },
-      "notes": "Accepted after source-only adjudication and corrected after fresh blinded OpenAI and Anthropic reviews on 2026-08-11. The canonical-module attribute in test_contacts_routes_shim.py is a required semantic reference through the legacy-module identity shim.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages"
-        ],
-        "resolution": "Retained the existing calls and added the independently confirmed canonical-module attribute reference exercised by the shim identity test."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 5,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -3793,21 +3479,6 @@
         },
         "kind": "function",
         "displayName": "get_chroma_client"
-      },
-      "notes": "Accepted after source-only adjudication. Included the get_chroma_client call in tests/test_chroma_client.py. It is an ordinary module-qualified call. Retained reviewer A's valid migration-script call as definitionUsage.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages",
-          "definitionUsage"
-        ],
-        "resolution": "Included the get_chroma_client call in tests/test_chroma_client.py. It is an ordinary module-qualified call. Retained reviewer A's valid migration-script call as definitionUsage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 10,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -3869,18 +3540,6 @@
         },
         "kind": "function",
         "displayName": "action_tidy_research"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 2,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -4010,18 +3669,6 @@
         },
         "kind": "type",
         "displayName": "AppEventPromiseValue"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 6,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -4100,25 +3747,11 @@
         },
         "kind": "class",
         "displayName": "AppStateObserver"
-      },
-      "notes": "Accepted after source-only adjudication. Included the AppStateObserver construction in appStateHooks.test.tsx because it is an ordinary class reference.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages"
-        ],
-        "resolution": "Included the AppStateObserver construction in appStateHooks.test.tsx because it is an ordinary class reference."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 3,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-typescript-01-3",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "excalidraw/excalidraw",
         "commit": "786ab266ff3a9cfffaed16804cf9132b44bc08ae",
@@ -4192,20 +3825,6 @@
         },
         "kind": "class",
         "displayName": "AppViewport"
-      },
-      "notes": "Accepted after source-only adjudication and reconfirmed by fresh blinded OpenAI and Anthropic reviews on 2026-08-11. Both the type annotation and constructor occurrence on App.tsx:688 are semantic references. The type annotation is the deterministic definition usage because it sorts first by URI and source position.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "definitionUsage"
-        ],
-        "resolution": "The expected usage sets agree. The fresh blinded panel agreed that both occurrences are required and selected the type annotation under the deterministic URI, line, and character ordering rule."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 3,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -4284,20 +3903,6 @@
         },
         "kind": "function",
         "displayName": "isValidStaticUtilityName"
-      },
-      "notes": "Accepted after source-only adjudication and reconfirmed by fresh blinded OpenAI and Anthropic reviews on 2026-08-11. Both calls are required semantic references. The utilities.test.ts call is the deterministic definition usage because its URI sorts before utilities.ts.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages"
-        ],
-        "resolution": "Included the isValidStaticUtilityName call in utilities.test.ts because it is an ordinary function reference. The fresh blinded panel selected that call under the deterministic URI, line, and character ordering rule."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 3,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -4393,18 +3998,6 @@
         },
         "kind": "function",
         "displayName": "getAppliedNodeStack"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 4,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -4670,26 +4263,11 @@
         },
         "kind": "function",
         "displayName": "error"
-      },
-      "notes": "Accepted after source-only adjudication. Excluded extract-static-plugins.ts:276. The catch parameter `error` shadows the imported renderer function name, so this token does not refer to the selected declaration. Both remaining proposed definition usages are valid; retained reviewer A's analyze.ts call.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages",
-          "definitionUsage"
-        ],
-        "resolution": "Excluded extract-static-plugins.ts:276. The catch parameter `error` shadows the imported renderer function name, so this token does not refer to the selected declaration. Both remaining proposed definition usages are valid; retained reviewer A's analyze.ts call."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 14,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-typescript-03-1",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "coder/code-server",
         "commit": "14bdb36f9217671bff9e9389f812c9ac9de575c0",
@@ -4763,23 +4341,11 @@
         },
         "kind": "function",
         "displayName": "getResolvedPathsFromArgs"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 3,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-typescript-03-2",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "coder/code-server",
         "commit": "14bdb36f9217671bff9e9389f812c9ac9de575c0",
@@ -4870,18 +4436,6 @@
         },
         "kind": "interface",
         "displayName": "GetSessionResponse"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 4,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -4960,23 +4514,11 @@
         },
         "kind": "function",
         "displayName": "onMessage"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 3,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-typescript-04-1",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "paperclipai/paperclip",
         "commit": "d5b9f6c8c9d9edb0c9796df86c61826b11400b5b",
@@ -5067,25 +4609,11 @@
         },
         "kind": "function",
         "displayName": "isWorkerEntrypoint"
-      },
-      "notes": "Accepted after source-only adjudication. Included both isWorkerEntrypoint calls in worker-rpc-host.test.ts. They are ordinary function references.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages"
-        ],
-        "resolution": "Included both isWorkerEntrypoint calls in worker-rpc-host.test.ts. They are ordinary function references."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 4,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
       "caseId": "real-project-v1-typescript-04-2",
-      "decision": "accepted",
+      "decision": "replace",
       "declaration": {
         "repository": "paperclipai/paperclip",
         "commit": "d5b9f6c8c9d9edb0c9796df86c61826b11400b5b",
@@ -5193,21 +4721,6 @@
         },
         "kind": "function",
         "displayName": "getAvailableInboxIssueColumns"
-      },
-      "notes": "Accepted after source-only adjudication. Included both getAvailableInboxIssueColumns calls in inbox.test.ts. They are ordinary function references. Retained reviewer A's valid IssuesList.tsx call as definitionUsage.",
-      "disagreementResolution": {
-        "hadDisagreement": true,
-        "differingFields": [
-          "expectedUsages",
-          "definitionUsage"
-        ],
-        "resolution": "Included both getAvailableInboxIssueColumns calls in inbox.test.ts. They are ordinary function references. Retained reviewer A's valid IssuesList.tsx call as definitionUsage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 5,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     },
     {
@@ -5269,18 +4782,6 @@
         },
         "kind": "interface",
         "displayName": "RestoreRoutineRevisionSecretMaterial"
-      },
-      "notes": "Accepted by exact independent-reviewer agreement and source-token validation.",
-      "disagreementResolution": {
-        "hadDisagreement": false,
-        "differingFields": [],
-        "resolution": "No disagreement: both independent reviewers agreed exactly on the declaration, expected usage locations/ranges, and definition usage."
-      },
-      "rangeValidation": {
-        "positionEncoding": "utf-16",
-        "validated": true,
-        "locationsChecked": 2,
-        "method": "Decoded each exact UTF-16 range from the pinned extracted source and required equality with displayName."
       }
     }
   ]
