@@ -10,7 +10,6 @@ use usagebench::real_project::{
     capture_population, draw_selection, require_committed_population, CapturePopulationOptions,
     DrawSelectionOptions,
 };
-use usagebench::reproduction::{create_native_evidence, CreateNativeEvidenceOptions};
 use usagebench::runners::lsp::{run_lsp, RunLspOptions};
 
 #[derive(Debug, Parser)]
@@ -82,14 +81,11 @@ enum Command {
         expected: PathBuf,
         /// Newly reproduced report.
         actual: PathBuf,
-        /// Comparison contract: canonical provenance or cross-host native results.
-        #[arg(long, value_enum, default_value_t)]
-        scope: usagebench::runners::report_compare::ComparisonScope,
         /// Optional complete machine-readable semantic diff.
         #[arg(long)]
         output_diff: Option<PathBuf>,
     },
-    /// Validate selected candidate evidence and write an immutable snapshot manifest.
+    /// Validate selected candidate reports and write an immutable snapshot manifest.
     FreezeManifest {
         /// Development evidence is explicitly labeled; evaluation requires promoted corpus metadata.
         #[arg(long)]
@@ -109,9 +105,6 @@ enum Command {
         /// Report produced by each selected candidate. Repeat once per candidate.
         #[arg(long, required = true)]
         report: Vec<PathBuf>,
-        /// Reproduction evidence for a selected candidate. Repeat once per candidate.
-        #[arg(long, required = true)]
-        evidence: Vec<PathBuf>,
         /// Promoted evaluation corpus to validate and bind into an evaluation snapshot.
         #[arg(long)]
         evaluation_corpus: Option<PathBuf>,
@@ -130,43 +123,6 @@ enum Command {
         /// Fail instead of writing when generated fragments differ from disk.
         #[arg(long)]
         check: bool,
-    },
-    /// Create typed two-host reproduction evidence from two native reports.
-    CreateNativeEvidence {
-        #[arg(long)]
-        candidate: String,
-        #[arg(long)]
-        primary_report: PathBuf,
-        #[arg(long)]
-        primary_host_id: String,
-        #[arg(long)]
-        primary_runner_name: String,
-        #[arg(long)]
-        primary_host_provider: String,
-        #[arg(long)]
-        primary_host_provenance: String,
-        #[arg(long)]
-        primary_requested_version: String,
-        #[arg(long)]
-        primary_profile_sha256: String,
-        #[arg(long)]
-        corroborating_report: PathBuf,
-        #[arg(long)]
-        corroborating_host_id: String,
-        #[arg(long)]
-        corroborating_runner_name: String,
-        #[arg(long)]
-        corroborating_host_provider: String,
-        #[arg(long)]
-        corroborating_host_provenance: String,
-        #[arg(long)]
-        corroborating_requested_version: String,
-        #[arg(long)]
-        corroborating_profile_sha256: String,
-        #[arg(long)]
-        output: PathBuf,
-        #[arg(long)]
-        diff_output: PathBuf,
     },
     /// Run benchmark case YAML files against Bifrost.
     RunBifrost {
@@ -301,12 +257,10 @@ fn main() -> Result<()> {
         Command::CompareReports {
             expected,
             actual,
-            scope,
             output_diff,
         } => {
-            let differences = usagebench::runners::report_compare::compare_report_files_with_scope(
-                &expected, &actual, scope,
-            )?;
+            let differences =
+                usagebench::runners::report_compare::compare_report_files(&expected, &actual)?;
             if let Some(path) = output_diff {
                 usagebench::runners::report_compare::write_differences(&path, &differences)?;
             }
@@ -331,7 +285,6 @@ fn main() -> Result<()> {
             candidates_file,
             candidates,
             report,
-            evidence,
             evaluation_corpus,
             output,
         } => {
@@ -342,7 +295,6 @@ fn main() -> Result<()> {
                 candidates_file,
                 candidate_ids: candidates,
                 report_paths: report,
-                evidence_paths: evidence,
                 evaluation_corpus,
             })?;
             usagebench::freeze::write_manifest(&output, &manifest)?;
@@ -368,51 +320,6 @@ fn main() -> Result<()> {
                     output_directory.display()
                 );
             }
-        }
-        Command::CreateNativeEvidence {
-            candidate,
-            primary_report,
-            primary_host_id,
-            primary_runner_name,
-            primary_host_provider,
-            primary_host_provenance,
-            primary_requested_version,
-            primary_profile_sha256,
-            corroborating_report,
-            corroborating_host_id,
-            corroborating_runner_name,
-            corroborating_host_provider,
-            corroborating_host_provenance,
-            corroborating_requested_version,
-            corroborating_profile_sha256,
-            output,
-            diff_output,
-        } => {
-            let evidence = create_native_evidence(CreateNativeEvidenceOptions {
-                candidate_id: candidate,
-                primary_report,
-                primary_host_id,
-                primary_runner_name,
-                primary_host_provider,
-                primary_host_provenance,
-                primary_requested_version,
-                primary_profile_sha256,
-                corroborating_report,
-                corroborating_host_id,
-                corroborating_runner_name,
-                corroborating_host_provider,
-                corroborating_host_provenance,
-                corroborating_requested_version,
-                corroborating_profile_sha256,
-                output: output.clone(),
-                diff_output,
-            })?;
-            println!(
-                "wrote {} reproduction evidence for {} to {}",
-                evidence.proof.class(),
-                evidence.candidate_id,
-                output.display()
-            );
         }
         Command::RunBifrost {
             path,

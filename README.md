@@ -99,8 +99,6 @@ git lfs pull
 ```
 
 GitHub workflows that consume the full corpus enable LFS during checkout.
-Self-hosted runners used by the native-reproduction workflow must have the
-`git-lfs` executable installed.
 
 ## Development Corpus
 
@@ -120,13 +118,14 @@ preregistered selection, and a freeze ID.
 ## Evaluation Corpus
 
 `benchmarks/cases/evaluation/real-project-v1` is a separate, preregistered,
-source-locked slice with historical agent review: four repositories and three declarations for each
-of Go/gopls, Python/Pyright, and TypeScript/TypeScript LS, for 12 repositories
-and 36 cases. Its source archives, selection, review, adjudication, and source
-lock are checked in and hash-bound. The two historical reviewers were
-same-provider Codex agents, so publication still requires a cross-provider
-panel and accountable human adjudication. Its analyzer results have not yet
-been published. Any eventual aggregate is evaluation-only and limited to the
+source-locked slice: four repositories and three declarations for each of
+Go/gopls, Python/Pyright, and TypeScript/TypeScript LS, for 12 repositories and
+36 cases. Its source archives, selection, review, adjudication, and source lock
+are checked in and hash-bound. The historical same-provider review is retained,
+and all 36 cases now also have blinded OpenAI and Anthropic derivations plus
+accountable human adjudication under the schema-v2 protocol. The partition is
+publication-qualified, but its analyzer results have not yet been frozen or
+published. Any eventual aggregate is evaluation-only and limited to the
 protocol's descriptive per-profile claim; it is not pooled with development
 fixtures or presented as language-wide, ecosystem-wide, causal, or performance
 evidence.
@@ -160,7 +159,7 @@ per-scan budget for development runs. When `--output` is set, the runner also
 atomically updates a sibling `*.partial.json` checkpoint after each completed
 benchmark document so interrupted batch runs retain valid evidence. Checkpoints
 record `completed: false` plus the full `requestedCaseFiles` scope and are
-rejected by snapshot and reproduction tooling as completed evidence.
+rejected by snapshot and release tooling as completed evidence.
 
 The generic LSP adapter starts a versioned stdio language server, opens an
 isolated fixture workspace, and translates the protocol's native references,
@@ -181,15 +180,11 @@ arguments. See [the LSP profile guide](adapters/lsp/README.md) for setup and
 the measured comparison.
 
 The primary public profile registry distinguishes canonical reference runners
-from independently reproduced native profiles. Bifrost and gopls use the
-canonical `linux/amd64` environment. The remaining advertised LSP rows require
-equivalent reports from two documented hosts before generated result pages will
-include them. Apple clangd 21 and upstream clangd 22 are separate candidate
-identities.
-
-Release maintainers produce those pairs with the manual **Native two-host
-reproduction** workflow on two distinct pre-provisioned self-hosted runners,
-then pass its verified run ID to the freeze workflow.
+from native LSP profiles. Bifrost and gopls use the canonical `linux/amd64`
+environment. Each remaining advertised LSP row is frozen from one pinned run
+whose report records the profile checksum, resolved analyzer identity,
+executable provenance, environment, and result checksum. Apple clangd 21 and
+upstream clangd 22 remain separate candidate identities.
 
 UsageBench deliberately stays focused on the LSP-shaped task of finding symbol
 references and navigating those references back to declarations and types.

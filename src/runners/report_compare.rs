@@ -1,16 +1,8 @@
 use super::RunReport;
 use anyhow::{Context, Result};
-use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::{collections::BTreeMap, fs, path::Path};
-
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, ValueEnum)]
-pub enum ComparisonScope {
-    #[default]
-    Canonical,
-    NativeResults,
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,17 +20,9 @@ pub enum DifferenceValue {
 }
 
 pub fn compare_report_files(expected: &Path, actual: &Path) -> Result<Vec<ReportDifference>> {
-    compare_report_files_with_scope(expected, actual, ComparisonScope::Canonical)
-}
-
-pub fn compare_report_files_with_scope(
-    expected: &Path,
-    actual: &Path,
-    scope: ComparisonScope,
-) -> Result<Vec<ReportDifference>> {
     let expected = read_report_value(expected)?;
     let actual = read_report_value(actual)?;
-    Ok(compare_values(expected, actual, scope))
+    Ok(compare_values(expected, actual))
 }
 
 pub fn read_report(path: &Path) -> Result<RunReport> {
@@ -59,18 +43,9 @@ fn read_report_value(path: &Path) -> Result<Value> {
 }
 
 pub fn compare_reports(expected: &RunReport, actual: &RunReport) -> Vec<ReportDifference> {
-    compare_reports_with_scope(expected, actual, ComparisonScope::Canonical)
-}
-
-pub fn compare_reports_with_scope(
-    expected: &RunReport,
-    actual: &RunReport,
-    scope: ComparisonScope,
-) -> Vec<ReportDifference> {
     compare_values(
         serde_json::to_value(expected).expect("RunReport serialization cannot fail"),
         serde_json::to_value(actual).expect("RunReport serialization cannot fail"),
-        scope,
     )
 }
 
@@ -82,15 +57,15 @@ pub fn write_differences(path: &Path, differences: &[ReportDifference]) -> Resul
         .with_context(|| format!("write report differences {}", path.display()))
 }
 
-fn compare_values(expected: Value, actual: Value, scope: ComparisonScope) -> Vec<ReportDifference> {
-    let expected = semantic_value(expected, scope);
-    let actual = semantic_value(actual, scope);
+fn compare_values(expected: Value, actual: Value) -> Vec<ReportDifference> {
+    let expected = semantic_value(expected);
+    let actual = semantic_value(actual);
     let mut differences = Vec::new();
     collect_differences("$", &expected, &actual, &mut differences);
     differences
 }
 
-fn semantic_value(mut value: Value, scope: ComparisonScope) -> Value {
+fn semantic_value(mut value: Value) -> Value {
     let source_roots = value
         .get("documents")
         .and_then(Value::as_array)
@@ -109,18 +84,6 @@ fn semantic_value(mut value: Value, scope: ComparisonScope) -> Value {
     root.remove("finishedAtUnixSeconds");
     root.remove("bifrostRepo");
     root.remove("bifrostCommit");
-
-    if scope == ComparisonScope::NativeResults {
-        let analyzer_executable = root
-            .get("environment")
-            .and_then(|environment| environment.get("analyzerExecutable"))
-            .cloned()
-            .unwrap_or(Value::Null);
-        root.insert(
-            "environment".to_string(),
-            serde_json::json!({"analyzerExecutable": analyzer_executable}),
-        );
-    }
 
     if let Some(Value::Object(runner)) = root.get_mut("runner") {
         if runner
@@ -394,40 +357,6 @@ mod tests {
     }
 
     #[test]
-    fn native_results_ignore_host_provenance_but_keep_analyzer_identity() {
-        let expected = report();
-        let mut actual = expected.clone();
-        actual.environment.operating_system = "macos".to_string();
-        actual.environment.architecture = "aarch64".to_string();
-        actual.environment.execution_mode = super::super::ExecutionMode::Native;
-        actual.environment.platform_scope = super::super::PlatformScope::HostSpecific;
-        actual.environment.reference_environment = None;
-        actual.environment.container = None;
-
-        assert!(
-            compare_reports_with_scope(&expected, &actual, ComparisonScope::NativeResults)
-                .is_empty()
-        );
-
-        actual.environment.analyzer_executable.sha256 = Some("f".repeat(64));
-        let differences =
-            compare_reports_with_scope(&expected, &actual, ComparisonScope::NativeResults);
-        assert_eq!(differences.len(), 1);
-        assert_eq!(
-            differences[0].path,
-            "$.environment.analyzerExecutable.sha256"
-        );
-        actual.environment.analyzer_executable.sha256 =
-            expected.environment.analyzer_executable.sha256.clone();
-
-        actual.runner.resolved_version = "different".to_string();
-        let differences =
-            compare_reports_with_scope(&expected, &actual, ComparisonScope::NativeResults);
-        assert_eq!(differences.len(), 1);
-        assert_eq!(differences[0].path, "$.runner.resolvedVersion");
-    }
-
-    #[test]
     fn writes_complete_structured_differences() {
         let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("diff.json");
@@ -445,11 +374,7 @@ mod tests {
 
     #[test]
     fn distinguishes_missing_values_from_json_null() {
-        let differences = compare_values(
-            serde_json::json!({"field": null}),
-            serde_json::json!({}),
-            ComparisonScope::Canonical,
-        );
+        let differences = compare_values(serde_json::json!({"field": null}), serde_json::json!({}));
 
         assert_eq!(differences.len(), 1);
         assert_eq!(

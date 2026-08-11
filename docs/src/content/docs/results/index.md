@@ -10,8 +10,8 @@ description: Required-destination and strict-contract results from the reviewed 
 
 > **Historical identity limitation.** This pre-schema-v2 page requested the
 > upstream clangd 22.1.6 profile while the host resolved Apple clangd 21.0.0.
-> It is preserved as development history, but that row is not valid
-> reproduction evidence. New freezes use the distinct `apple-clangd-21`
+> It is preserved as development history, but that row is not valid published
+> candidate evidence. New freezes use the distinct `apple-clangd-21`
 > candidate and reject upstream or unverified executables.
 
 This corrected native result replaces the legacy 16 July figures. Bifrost was

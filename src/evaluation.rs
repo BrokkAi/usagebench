@@ -3021,11 +3021,20 @@ mod tests {
     }
 
     #[test]
-    fn legacy_real_project_review_cannot_be_published() {
+    fn promoted_real_project_review_builds_release_audit() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-        let error = build_release_audit(root.join("benchmarks/cases/evaluation/real-project-v1"))
-            .unwrap_err();
-        assert!(format!("{error:#}").contains("requires schema-v2 review evidence"));
+        let audit =
+            build_release_audit(root.join("benchmarks/cases/evaluation/real-project-v1")).unwrap();
+        assert_eq!(
+            audit.review_tier,
+            ReviewTierAudit::HumanAdjudicatedAgentPanel
+        );
+        assert_eq!(audit.case_count, 36);
+        assert_eq!(audit.reviewers.len(), 2);
+        assert!(audit
+            .reviewers
+            .iter()
+            .all(|reviewer| reviewer.sessions.len() == 36));
     }
 
     #[test]
