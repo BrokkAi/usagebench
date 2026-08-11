@@ -20,12 +20,15 @@ usage and navigation contract: parity preserves the quality developers expect,
 while reviewed Bifrost-specific edges exercise the analysis substrate agents
 depend on. It does not compare either product's complete feature surface.
 
-The synchronized 24 July 2026 development run compares the 131 cases scoreable
-by both sides: Bifrost is exact on 116 and the reference language servers on 95.
-Both are exact on 84 cases; 32 are exact only for Bifrost, 11 only for the LSP,
-and 4 for neither. See the
-[current result](docs/src/content/docs/results/index.md) for the full
-denominators, capability boundaries, versions, and evidence limitations.
+The independently reviewed
+[`real-project-v1` evaluation](docs/src/content/docs/results/index.md) is
+published as immutable release
+[`v0.2.0`](https://github.com/BrokkAi/usagebench/releases/tag/v0.2.0). It
+compares Bifrost with gopls, Pyright, and TypeScript language server across 12
+source-only sampled repositories and 36 preregistered cases. The broader 24
+July 2026 ten-language development run remains available as
+[historical regression evidence](docs/src/content/docs/results/development-2026-07-24.md)
+and is not pooled with the evaluation result.
 
 The benchmark corpus is authored by source location instead of by an
 analyzer-specific symbol ID. Each case points at a declaration, expected usage
@@ -55,9 +58,10 @@ replacements, and cannot mix development documents into an evaluation claim.
 Location-level precision, recall, and range-quality tables require reports
 produced by UsageBench 0.2.0 or newer; older reports remain readable for their
 existing strict and required-destination fields but are never interpreted as
-having zero location metrics. The current hand-authored 24 July summary
-predates the release evidence pipeline; `real-project-v1` analyzer results have
-not yet been published.
+having zero location metrics. The current site summary is derived from the
+hash-bound v0.2.0 release. The hand-authored 24 July summary predates the
+release evidence pipeline and is retained only as explicitly labelled
+development history.
 
 ## Directory Structure
 
@@ -123,9 +127,10 @@ Go/gopls, Python/Pyright, and TypeScript/TypeScript LS, for 12 repositories and
 36 cases. Its source archives, selection, review, adjudication, and source lock
 are checked in and hash-bound. The historical same-provider review is retained,
 and all 36 cases now also have blinded OpenAI and Anthropic derivations plus
-accountable human adjudication under the schema-v2 protocol. The partition is
-publication-qualified, but its analyzer results have not yet been frozen or
-published. Any eventual aggregate is evaluation-only and limited to the
+accountable human adjudication under the schema-v2 protocol. Its analyzer
+evidence is frozen in immutable release
+[`v0.2.0`](https://github.com/BrokkAi/usagebench/releases/tag/v0.2.0). Every
+published table is evaluation-only and limited to the
 protocol's descriptive per-profile claim; it is not pooled with development
 fixtures or presented as language-wide, ecosystem-wide, causal, or performance
 evidence.

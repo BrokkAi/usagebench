@@ -1,94 +1,59 @@
 ---
-title: Case comparison
-description: Cases that separate Bifrost from the reference language servers in the corrected 24 July 2026 result.
+title: Evaluation case comparison
+description: Cases separating Bifrost from gopls, Pyright, and TypeScript language server in v0.2.0.
 ---
 
-This page expands the **131 cases scoreable by both sides** in the corrected
-24 July development run. Exact means complete token ranges, no unallowed extras,
-and the one reviewed navigation target. A language-server disagreement is a
-contract result, not an automatic defect verdict.
+> **Evaluation partition only.** These cases come from the immutable
+> [v0.2.0 release](https://github.com/BrokkAi/usagebench/releases/tag/v0.2.0)
+> and are never pooled with development cases.
 
-Import, re-export, and export-metadata bindings are optional. They remain
-visible in reports but do not make an otherwise exact case non-exact.
+Exact means the tool returned the complete reviewed location set with exact
+token ranges. A disagreement is a measured contract result, not automatically
+a defect verdict; the reviewed source contract remains the reference.
 
-## Shared-case overview
+## Strict-contract overview
 
-| Language | Shared | Both exact | Bifrost only | LSP only | Neither |
+| Reference profile | Shared | Both exact | Bifrost only | Reference only | Neither |
 |---|---:|---:|---:|---:|---:|
-| C++ | 15 | 11 | 1 | 1 | 2 |
-| C# | 16 | 11 | 3 | 2 | 0 |
-| Go | 6 | 5 | 0 | 1 | 0 |
-| Java | 11 | 4 | 7 | 0 | 0 |
-| JavaScript | 8 | 3 | 3 | 2 | 0 |
-| TypeScript | 9 | 8 | 1 | 0 | 0 |
-| PHP | 10 | 9 | 1 | 0 | 0 |
-| Python | 13 | 10 | 0 | 3 | 0 |
-| Ruby | 16 | 5 | 10 | 0 | 1 |
-| Rust | 15 | 11 | 3 | 1 | 0 |
-| Scala | 12 | 8 | 2 | 1 | 1 |
-| **Total** | **131** | **85** | **31** | **11** | **4** |
+| gopls 0.23.0 | 12 | 7 | 1 | 2 | 2 |
+| Pyright 1.1.411 | 12 | 6 | 1 | 4 | 1 |
+| TypeScript language server 5.3.0 | 12 | 5 | 5 | 2 | 0 |
+| **Total** | **36** | **18** | **7** | **8** | **3** |
 
 ## Exact only for Bifrost
 
-These 31 cases satisfy the reviewed contract in Bifrost but not in the
-reference LSP. Nine LSP results are `position_unverified`; the remaining 22 are
-hard disagreements.
-
-| Language | Separating cases | Current distinction |
+| Reference profile | Case file | Case |
 |---|---|---|
-| C++ | `cpp-parity-concrete-override-method-call` | clangd expands the implementation family beyond the concrete receiver. |
-| C# | `csharp-parity-interface-receiver-method-call`, `csharp-parity-concrete-implementation-method-call`, `csharp-parity-buffer-implementation-method-call` | Roslyn returns related interface/implementation-family calls beyond the reviewed static identity. |
-| Java | `java-service-method-call`, `java-nested-class-constructor`, `java-parity-static-import-method-call`, `java-parity-interface-receiver-method-call`, `java-parity-concrete-implementation-method-call`, `java-lambda-body-member-call`, `java-static-qualified-method-call` | JDT LS returns every expected usage site. Five cases use broader containing ranges and two group interface and override-family calls. |
-| JavaScript | `js-class-construction`, `js-parity-commonjs-destructured-function-call`, `js-commonjs-barrel-class-construction` | TypeScript LS broadens constructor navigation in one case and omits two CommonJS edges. |
-| TypeScript | `ts-default-class-import-and-construction` | TypeScript LS reaches the expected class plus an enclosing constructor-body range, so strict singleton navigation is position-unverified. |
-| PHP | `php-class-construction` | Intelephense returns both the class and explicit constructor; Bifrost returns the reviewed class target alone. |
-| Ruby | `ruby-relative-nested-constant`, `ruby-include-instance-mixin`, `ruby-prepend-method-precedence`, `ruby-top-level-implicit-self-method-call`, `ruby-singleton-method-dispatch`, `ruby-class-variable-access`, `ruby-parity-autoload-constant-definition`, `ruby-parity-attr-reader-method-call`, `ruby-parity-alias-method-call`, `ruby-factory-return-member-call` | Ruby LSP spans range, declaration-inclusion, mixin, alias, generated-reader, singleton, and factory-return boundaries. No single approximation label explains the group. |
-| Rust | `rust-parity-associated-type-definition-no-movement`, `rust-parity-associated-type-use-definition`, `rust-ufcs-trait-method-through-barrel` | Bifrost keeps associated-type owner identity and the UFCS trait member narrower than rust-analyzer. |
-| Scala | `scala-class-construction`, `scala-object-apply-call` | Bifrost separates class/companion identity and connects the visible application to the authored `apply` member. |
+| gopls | [`go-02.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/go-02.yaml) | `real-project-v1-go-02-2` |
+| Pyright | [`python-03.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/python-03.yaml) | `real-project-v1-python-03-1` |
+| TypeScript language server | [`typescript-01.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/typescript-01.yaml) | `real-project-v1-typescript-01-2` |
+| TypeScript language server | [`typescript-02.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/typescript-02.yaml) | `real-project-v1-typescript-02-1` |
+| TypeScript language server | [`typescript-04.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/typescript-04.yaml) | `real-project-v1-typescript-04-1` |
+| TypeScript language server | [`typescript-04.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/typescript-04.yaml) | `real-project-v1-typescript-04-2` |
+| TypeScript language server | [`typescript-04.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/typescript-04.yaml) | `real-project-v1-typescript-04-3` |
 
-## Exact only for the language server
+## Exact only for the reference server
 
-These 11 cases are the clearest current Bifrost parity backlog.
+These eight cases are the clearest current Bifrost parity backlog within this
+evaluation slice.
 
-| Language | Separating cases | Current Bifrost gap |
+| Reference profile | Case file | Case |
 |---|---|---|
-| C++ | `cpp-parity-function-like-macro-expanded-call` | Does not navigate the visible macro argument to the expanded function definition. |
-| C# | `csharp-parity-namespace-alias-constructor`, `csharp-parity-extension-method-call` | Navigates the alias to the namespace surface and does not resolve the extension receiver. |
-| Go | `go-dot-import-concrete-receiver-call` | Misclassifies both imported concrete member selectors as shadowed local bindings. |
-| JavaScript | `js-parity-computed-string-literal-method-call`, `js-commonjs-barrel-member-call` | Misses the computed string-literal call and the member immediately following `new Client()` through a destructured barrel. |
-| Python | `python-module-import`, `python-parity-reexported-class-alias-classmethod`, `python-barrel-inherited-member-call` | Misses module declaration navigation, one alias-site usage, and a narrow inherited-member contract. |
-| Rust | `rust-parity-macro-generated-function-reference` | Does not expand the declarative macro to recover the generated declaration and call. |
-| Scala | `scala-parity-case-class-generated-construction-and-copy` | Handles construction but cannot resolve the generated `copy` receiver. |
+| gopls | [`go-01.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/go-01.yaml) | `real-project-v1-go-01-1` |
+| gopls | [`go-02.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/go-02.yaml) | `real-project-v1-go-02-3` |
+| Pyright | [`python-01.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/python-01.yaml) | `real-project-v1-python-01-1` |
+| Pyright | [`python-03.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/python-03.yaml) | `real-project-v1-python-03-3` |
+| Pyright | [`python-04.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/python-04.yaml) | `real-project-v1-python-04-2` |
+| Pyright | [`python-04.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/python-04.yaml) | `real-project-v1-python-04-3` |
+| TypeScript language server | [`typescript-01.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/typescript-01.yaml) | `real-project-v1-typescript-01-1` |
+| TypeScript language server | [`typescript-02.yaml`](https://github.com/BrokkAi/usagebench/blob/v0.2.0/benchmarks/cases/evaluation/real-project-v1/typescript-02.yaml) | `real-project-v1-typescript-02-3` |
 
-## Exact for neither
+## Neither exact
 
-| Language | Case | Current distinction |
-|---|---|---|
-| C++ | `cpp-class-reference` | Bifrost misses a required class usage; clangd adds constructor-family tokens. |
-| C++ | `cpp-parity-using-alias-constructor` | Bifrost navigates declaration identity to the underlying class and lacks C++ type lookup; clangd misses the alias usage and adds constructor-family locations. |
-| Ruby | `ruby-require-relative-class-construction` | Bifrost misses the class self-construction; Ruby LSP reaches the expected lines but not exact token ranges. |
-| Scala | `scala-parity-trait-method-implementation` | Bifrost over-expands to a concrete call while Metals omits the reviewed implementation edge. |
+Three cases are non-exact for both Bifrost and the corresponding reference
+server. They remain visible in the raw reports and count in the denominator;
+they are not silently dropped from the comparison.
 
-## Capability boundary
-
-Twenty-three cases are unsupported by the corresponding LSP profile because
-the authored operation is not advertised: 6 Go, 5 JavaScript/TypeScript, 4 PHP,
-4 Ruby, 3 Scala, and 1 C++. Bifrost exactly satisfies 17 of them, is non-exact
-on 4, and shares the unsupported boundary on 2 configured-build cases.
-
-Four runtime-driven cases are not planned for either side: one JavaScript, two
-Python, and one Ruby case.
-
-## What to isolate next
-
-The highest-value additions are:
-
-1. More compiler-generated and configured-project controls where LSPs should
-   lead: macros, source generators, SDK symbols, conditional compilation, and
-   synthetic members.
-2. Interface-family minimal pairs with multiple implementations and receiver
-   contexts, separating intentional symbol-family grouping from receiver
-   sensitivity.
-3. Alias and barrel chains with direct, one-hop, and two-hop controls.
-4. Future competitor runners evaluated against these same frozen source
-   contracts, without tool-specific scoring exceptions.
+The broader [historical development case comparison](../development-case-comparison/)
+covers ten language-server profiles and 131 shared cases. It is useful for
+regression history but has a different selection and review boundary.

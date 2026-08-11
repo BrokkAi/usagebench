@@ -15,9 +15,10 @@ registry, push an image, export an OCI archive, or upload an image artifact.
 Built images may be archived with a future Zenodo deposit after the artifact
 has been reviewed.
 
-The checked-in corpus is currently a development and diagnosis corpus. Its
-reproducible execution environment does not change the separate ground-truth
-review status recorded in each benchmark document.
+The checked-in fixture corpus remains a development and diagnosis corpus. The
+separate `real-project-v1` partition is preregistered, independently reviewed,
+and published as evaluation release `v0.2.0`. Reproducible execution does not
+change the ground-truth status recorded by either partition.
 
 The wider public comparison uses one pinned native report when a canonical
 image is not available. The freeze validates the selected release, profile

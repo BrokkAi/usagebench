@@ -1,6 +1,6 @@
 name: Docs
 
-# Publishing stays manual until benchmark results have a versioned release model.
+# Publishing is manual so a reviewed release can be promoted deliberately.
 on:
   workflow_dispatch:
 

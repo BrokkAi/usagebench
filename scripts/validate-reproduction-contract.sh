@@ -39,8 +39,12 @@ jq -e '
   and ([.candidates[] | select(.id == "clangd" and (.advertised | not))] | length == 1)
 ' "$registry" >/dev/null
 
-grep -q 'Historical identity limitation' "$repo_root/docs/src/content/docs/results/index.md"
-grep -q 'candidate evidence' "$repo_root/docs/src/content/docs/results/index.md"
+historical_results="$repo_root/docs/src/content/docs/results/development-2026-07-24.md"
+current_results="$repo_root/docs/src/content/docs/results/index.md"
+grep -q 'Historical identity limitation' "$historical_results"
+grep -q 'candidate evidence' "$historical_results"
+grep -q 'Evaluation evidence' "$current_results"
+grep -q 'UsageBench v0.2.0' "$current_results"
 
 development_scope="$(bash "$scope_resolver" development)"
 evaluation_scope="$(bash "$scope_resolver" evaluation)"
