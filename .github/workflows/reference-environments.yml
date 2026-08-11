@@ -58,6 +58,22 @@ jobs:
       - name: Build local image
         run: scripts/reference-image.sh "${{ matrix.runner }}" v0.0.0 "${{ github.sha }}"
 
+      - name: Verify offline Git source validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="usagebench-reference:v0.0.0-env1-${{ matrix.runner }}"
+          docker run --rm --network none --entrypoint /bin/sh "$image" -c '
+            set -eu
+            repository="$(mktemp -d)"
+            git init --bare --quiet "$repository"
+            printf "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor UsageBench <usagebench@example.invalid> 0 +0000\ncommitter UsageBench <usagebench@example.invalid> 0 +0000\n\n" \
+              | git hash-object -t commit --stdin >/dev/null
+            printf "feature done\ncommit refs/heads/archive\ncommitter UsageBench <usagebench@example.invalid> 0 +0000\ndata 0\n\ndone\n" \
+              | git --git-dir="$repository" fast-import --quiet
+            git --git-dir="$repository" rev-parse "refs/heads/archive^{tree}" >/dev/null
+          '
+
       - name: Run exact offline smoke case
         run: |
           mkdir -p target/reference-smoke
