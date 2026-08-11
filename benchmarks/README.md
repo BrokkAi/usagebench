@@ -97,6 +97,12 @@ For fixture-backed cases, `source.path` is resolved relative to the repository
 working directory, and validation requires every referenced
 `benchmark://source/...` file to exist under that fixture root.
 
+Semantic-pack destinations use `bifrost-model://v1/...` URIs. Model-only
+records retain Bifrost's record URI. Source-backed records are normalized as
+`bifrost-model://v1/<pack-digest>/source/<percent-encoded-source-path>` so the
+location stays portable, preserves pack provenance, and cannot be confused
+with a file in the benchmark fixture.
+
 ## Positions
 
 Positions are LSP-shaped and zero-based. `positionEncoding` defaults to

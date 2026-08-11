@@ -35,9 +35,9 @@ cases:
           kind: type
           displayName: List
         expectedDeclaration:
-          location: { uri: bifrost-model://v1/87053e06f21f3bda4652f4391978c7839e58c9ec28172a5ee65e654b82b37e94/type/type.265e98b629a501e7c6db842e4eb77821f0e3bc373faa3ceabb6aae21620a537f, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } }
+          location: { uri: bifrost-model://v1/87053e06f21f3bda4652f4391978c7839e58c9ec28172a5ee65e654b82b37e94/source/scala%2Fcollection%2Fimmutable%2FList.scala, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } }
           kind: type
           displayName: scala.collection.immutable.List
     verification:
       method: manual_inspection
-      notes: Exact v0.9.1 release artifact, digest, coordinate, pack version, semantic digest, and stable List record identity reviewed on 2026-08-11.
+      notes: Exact v0.9.1 release artifact, digest, coordinate, pack version, semantic digest, and source-backed List destination reviewed on 2026-08-11.

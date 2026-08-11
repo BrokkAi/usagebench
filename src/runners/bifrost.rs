@@ -1810,10 +1810,11 @@ fn parse_navigation(value: &Value, candidates_key: &str, tool_name: &str) -> Par
         .into_iter()
         .flatten()
         .filter_map(|definition| {
-            let path = definition.get("path").and_then(Value::as_str)?;
+            let raw_path = definition.get("path").and_then(Value::as_str)?;
+            let path = semantic_model_destination_path(definition, raw_path);
             let line = definition.get("start_line").and_then(Value::as_u64)?;
             Some(NormalizedLocation {
-                path: path.to_string(),
+                path,
                 line: line as u32,
                 column: definition
                     .get("start_column")
@@ -1862,6 +1863,32 @@ fn parse_navigation(value: &Value, candidates_key: &str, tool_name: &str) -> Par
         actual_declarations,
         diagnostics,
     }
+}
+
+fn semantic_model_destination_path(definition: &Value, raw_path: &str) -> String {
+    if raw_path.starts_with("bifrost-model://v1/") {
+        return raw_path.to_string();
+    }
+    let Some(pack_digest) = definition
+        .get("semantic_model")
+        .and_then(|provenance| provenance.get("pack_digest"))
+        .and_then(Value::as_str)
+    else {
+        return raw_path.to_string();
+    };
+    let Ok(mut uri) = Url::parse("bifrost-model://v1/") else {
+        return raw_path.to_string();
+    };
+    let Ok(mut segments) = uri.path_segments_mut() else {
+        return raw_path.to_string();
+    };
+    segments
+        .pop_if_empty()
+        .push(pack_digest)
+        .push("source")
+        .push(raw_path);
+    drop(segments);
+    uri.to_string()
 }
 
 fn parse_get_type(value: &Value) -> ParsedGetType {
@@ -2400,6 +2427,48 @@ mod tests {
         assert_eq!(normalized.path, "src/lib.rs");
         assert_eq!(normalized.line, 5);
         assert_eq!(normalized.column, Some(3));
+    }
+
+    #[test]
+    fn navigation_preserves_semantic_pack_provenance_for_source_backed_destinations() {
+        let response = serde_json::json!({
+            "results": [{
+                "status": "found",
+                "definitions": [{
+                    "path": "java.base/java/util/ArrayList.java",
+                    "start_line": 0,
+                    "end_line": 0,
+                    "fqn": "java.util.ArrayList",
+                    "kind": "class",
+                    "semantic_model": {
+                        "pack_digest": "abc123"
+                    }
+                }]
+            }]
+        });
+
+        let parsed = parse_navigation(&response, "definitions", "get_definition");
+
+        assert_eq!(parsed.actual_declarations.len(), 1);
+        assert_eq!(
+            parsed.actual_declarations[0].path,
+            "bifrost-model://v1/abc123/source/java.base%2Fjava%2Futil%2FArrayList.java"
+        );
+    }
+
+    #[test]
+    fn navigation_keeps_model_only_destination_uri() {
+        let definition = serde_json::json!({
+            "path": "bifrost-model://v1/abc123/type/type.123",
+            "semantic_model": {
+                "pack_digest": "abc123"
+            }
+        });
+
+        assert_eq!(
+            semantic_model_destination_path(&definition, "bifrost-model://v1/abc123/type/type.123"),
+            "bifrost-model://v1/abc123/type/type.123"
+        );
     }
 
     #[test]

@@ -304,7 +304,7 @@
       }
     },
     "location": {
-      "description": "LSP Location-compatible object using workspace source or portable Bifrost model URIs.",
+      "description": "LSP Location-compatible object using workspace source or portable Bifrost model URIs, including source-backed model destinations.",
       "type": "object",
       "additionalProperties": false,
       "required": ["uri", "range"],
