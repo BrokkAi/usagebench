@@ -35,9 +35,9 @@ cases:
           kind: class
           displayName: ArrayList
         expectedDeclaration:
-          location: { uri: bifrost-model://v1/f8fe5aa74028ad2c274c32c963a63137ae40b5a041ce47130e4f627bd998c504/source/java.base%2Fjava%2Futil%2FArrayList.java, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } }
+          location: { uri: bifrost-model://v1/f8fe5aa74028ad2c274c32c963a63137ae40b5a041ce47130e4f627bd998c504/type/type.7085c38223effc81cafbf18bb7c08e2c08004f151a9a78b87c25e3e65e3664b4, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } }
           kind: class
           displayName: java.util.ArrayList
     verification:
       method: manual_inspection
-      notes: Exact v0.9.1 release artifact, digest, coordinate, pack version, semantic digest, and source-backed ArrayList destination reviewed on 2026-08-11.
+      notes: Exact v0.9.1 release artifact, digest, coordinate, pack version, semantic digest, and stable ArrayList record identity reviewed on 2026-08-11.
