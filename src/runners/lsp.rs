@@ -20,7 +20,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fs,
     path::{Path, PathBuf},
     process::Command,
@@ -1416,20 +1416,87 @@ fn write_compile_commands(profile: &LspProfile, source_root: &Path) -> Result<()
 }
 
 fn copy_source_tree(source: &Path, destination: &Path) -> Result<()> {
+    let source_root = fs::canonicalize(source)
+        .with_context(|| format!("resolve source tree {}", source.display()))?;
+    let mut active_directories = BTreeSet::new();
+    copy_source_tree_within(source, destination, &source_root, &mut active_directories)
+}
+
+fn copy_source_tree_within(
+    source: &Path,
+    destination: &Path,
+    source_root: &Path,
+    active_directories: &mut BTreeSet<PathBuf>,
+) -> Result<()> {
+    let resolved_source = fs::canonicalize(source)
+        .with_context(|| format!("resolve source directory {}", source.display()))?;
+    if !resolved_source.starts_with(source_root) {
+        bail!(
+            "source directory symlink {} resolves outside {}",
+            source.display(),
+            source_root.display()
+        );
+    }
+    if !active_directories.insert(resolved_source.clone()) {
+        bail!(
+            "source tree contains a directory symlink cycle at {}",
+            source.display()
+        );
+    }
+
+    let result = copy_source_tree_entries(source, destination, source_root, active_directories);
+    active_directories.remove(&resolved_source);
+    result
+}
+
+fn copy_source_tree_entries(
+    source: &Path,
+    destination: &Path,
+    source_root: &Path,
+    active_directories: &mut BTreeSet<PathBuf>,
+) -> Result<()> {
     fs::create_dir_all(destination)
         .with_context(|| format!("create source copy {}", destination.display()))?;
     for entry in fs::read_dir(source).with_context(|| format!("read {}", source.display()))? {
         let entry = entry?;
+        if matches!(entry.file_name().to_str(), Some(".git" | ".bifrost")) {
+            continue;
+        }
         let target = destination.join(entry.file_name());
-        if entry.file_type()?.is_dir() {
-            if matches!(entry.file_name().to_str(), Some(".git" | ".bifrost")) {
-                continue;
+        let entry_path = entry.path();
+        let file_type = entry.file_type()?;
+        if file_type.is_dir() {
+            copy_source_tree_within(&entry_path, &target, source_root, active_directories)?;
+        } else if file_type.is_symlink() {
+            let resolved_entry = fs::canonicalize(&entry_path)
+                .with_context(|| format!("resolve source symlink {}", entry_path.display()))?;
+            if !resolved_entry.starts_with(source_root) {
+                bail!(
+                    "source symlink {} resolves outside {}",
+                    entry_path.display(),
+                    source_root.display()
+                );
             }
-            copy_source_tree(&entry.path(), &target)?;
-        } else {
+            let metadata = fs::metadata(&entry_path)
+                .with_context(|| format!("inspect source symlink {}", entry_path.display()))?;
+            if metadata.is_dir() {
+                copy_source_tree_within(&entry_path, &target, source_root, active_directories)?;
+            } else if metadata.is_file() {
+                fs::copy(&entry_path, &target).with_context(|| {
+                    format!("copy {} to {}", entry_path.display(), target.display())
+                })?;
+            } else {
+                bail!(
+                    "unsupported source symlink target: {}",
+                    entry_path.display()
+                );
+            }
+        } else if file_type.is_file() {
             fs::copy(entry.path(), &target).with_context(|| {
                 format!("copy {} to {}", entry.path().display(), target.display())
             })?;
+        } else {
+            bail!("unsupported source tree entry: {}", entry_path.display());
         }
     }
     Ok(())
@@ -1543,6 +1610,64 @@ impl Drop for CleanupGuard {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn source_copy_materializes_internal_directory_symlinks() {
+        use std::os::unix::fs::symlink;
+
+        let root = tempfile::tempdir().unwrap();
+        let source = root.path().join("source");
+        let destination = root.path().join("destination");
+        fs::create_dir_all(source.join("shared")).unwrap();
+        fs::write(source.join("shared/module.ts"), "export const value = 1;\n").unwrap();
+        symlink("shared", source.join("linked")).unwrap();
+
+        copy_source_tree(&source, &destination).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(destination.join("linked/module.ts")).unwrap(),
+            "export const value = 1;\n"
+        );
+        assert!(destination.join("linked").is_dir());
+        assert!(!destination.join("linked").is_symlink());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn source_copy_rejects_symlinks_outside_the_source_tree() {
+        use std::os::unix::fs::symlink;
+
+        let root = tempfile::tempdir().unwrap();
+        let source = root.path().join("source");
+        let outside = root.path().join("outside");
+        let destination = root.path().join("destination");
+        fs::create_dir_all(&source).unwrap();
+        fs::create_dir_all(&outside).unwrap();
+        fs::write(outside.join("secret.ts"), "not source material\n").unwrap();
+        symlink(&outside, source.join("escaped")).unwrap();
+
+        let error = copy_source_tree(&source, &destination).unwrap_err();
+
+        assert!(error.to_string().contains("resolves outside"));
+        assert!(!destination.join("escaped/secret.ts").exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn source_copy_rejects_directory_symlink_cycles() {
+        use std::os::unix::fs::symlink;
+
+        let root = tempfile::tempdir().unwrap();
+        let source = root.path().join("source");
+        let destination = root.path().join("destination");
+        fs::create_dir_all(&source).unwrap();
+        symlink(".", source.join("loop")).unwrap();
+
+        let error = copy_source_tree(&source, &destination).unwrap_err();
+
+        assert!(error.to_string().contains("directory symlink cycle"));
+    }
 
     #[test]
     fn recognizes_boolean_and_options_capabilities() {
