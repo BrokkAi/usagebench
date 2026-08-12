@@ -40,3 +40,19 @@ provenance has not drifted with:
 ```bash
 python3 scripts/build-real-project-v1-publication-review.py --check
 ```
+
+## Retrospective legacy-promotion milestones
+
+Legacy-promotion review proceeds one frozen case per language at a time. Each
+milestone retains the 11 blinded packets, 22 provider-native raw responses,
+provider execution metadata, mechanical comparison, and accountable human
+adjudication before the next selection order begins. It remains
+`retrospectively_selected`; review does not convert the analyzer-informed
+legacy selection into preregistered evidence.
+
+Validate the first adjudicated milestone with:
+
+```bash
+python3 scripts/validate-legacy-promotion-milestone.py \
+  benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/run.json
+```

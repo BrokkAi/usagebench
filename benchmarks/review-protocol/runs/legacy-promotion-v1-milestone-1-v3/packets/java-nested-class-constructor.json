@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-1",
+  "caseId": "java-nested-class-constructor",
+  "language": "java",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "d9c80a238bbdac0b72ec4264ca00ea0a57990baea4ffc405222818bd40b514fc"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/main/java/example/Service.java",
+    "range": {
+      "start": {
+        "line": 16,
+        "character": 24
+      },
+      "end": {
+        "line": 16,
+        "character": 34
+      }
+    }
+  },
+  "displayName": "Repository"
+}
