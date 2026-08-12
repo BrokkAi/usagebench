@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v2-agent-panel-milestone-5-v3",
+  "status": "awaiting_external_sessions",
+  "milestone": {
+    "number": 5,
+    "partitionProgress": "30/36 packets prepared",
+    "caseIds": [
+      "real-project-v2-java-03-3",
+      "real-project-v2-java-04-1",
+      "real-project-v2-rust-03-3",
+      "real-project-v2-rust-04-1",
+      "real-project-v2-cpp-03-3",
+      "real-project-v2-cpp-04-1"
+    ],
+    "balance": {
+      "java": 2,
+      "rust": 2,
+      "cpp": 2
+    }
+  },
+  "executionRequired": {
+    "sessionPolicy": "fresh_session_per_provider_per_case",
+    "providers": [
+      "openai",
+      "anthropic"
+    ],
+    "sessionCount": 12,
+    "humanAdjudicationRequired": true,
+    "note": "This manifest records prepared inputs only; it is not review, execution, or adjudication evidence."
+  },
+  "protocol": {
+    "file": "benchmarks/review-protocol/blinded-agent-review-v3.json",
+    "sha256": "66c04354b88aa1f3cf442345a92bfa24de1a596d2ac107d678b107ba648b2ea8"
+  },
+  "methodology": {
+    "file": "benchmarks/review-protocol/per-case-methodology-v3.md",
+    "sha256": "9118710fdccc4f6d12aa546b03d8985adf8e04d42fe4c0ad4e46e4ebbd1b6ed3"
+  },
+  "prompt": {
+    "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+    "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+  },
+  "responseSchema": {
+    "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+    "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+  },
+  "declarationRanking": {
+    "file": "benchmarks/evaluation/real-project-v2/declarations.json",
+    "sha256": "667c5bba3ff30a64aaa15336811023325aced4d51c7a8aa2578187dae0dc7bd7"
+  },
+  "sourceLock": {
+    "file": "benchmarks/evaluation/real-project-v2/sources.json",
+    "sha256": "cd0684b7210d63ae21b7b953699e53e1eaafd750ec8918bb4ae783dc9a377857"
+  },
+  "packets": [
+    {
+      "caseId": "real-project-v2-java-03-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-java-03-3.json",
+      "sha256": "76bb3d2184ae6fd4555d97c3e4d73263b02f198677c1fc0fc1a1014fafe80586"
+    },
+    {
+      "caseId": "real-project-v2-java-04-1",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-java-04-1.json",
+      "sha256": "dacbeca27254a814dfd93bdde383f941774912ecbb5cf02051b066f043234296"
+    },
+    {
+      "caseId": "real-project-v2-rust-03-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-rust-03-3.json",
+      "sha256": "ba91c92633ac6a0143f5dcd649a39d5a0d358f32611420244517388f5a243c3f"
+    },
+    {
+      "caseId": "real-project-v2-rust-04-1",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-rust-04-1.json",
+      "sha256": "820403ac9e75f5ee1d945c9192592827e14b08cf8bae91da211d968536c9b545"
+    },
+    {
+      "caseId": "real-project-v2-cpp-03-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-cpp-03-3.json",
+      "sha256": "44e7bbdc2fed57cb76a465bac968b3f0e5e91df71270adb6aec3b4deda7c5116"
+    },
+    {
+      "caseId": "real-project-v2-cpp-04-1",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-cpp-04-1.json",
+      "sha256": "709108487686cdbaf55076f0c0a87c14b0a56bfbb2938d9abe8b8956931db15b"
+    }
+  ],
+  "sources": [
+    {
+      "repo": "https://github.com/Blankj/AndroidUtilCode",
+      "commit": "7b4caf9e5440046b3fefb63b6b6e2ead7ebaf809",
+      "tree": "239ee6dc5aa993ebfff29f440b04b449985d208f",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/Blankj--AndroidUtilCode.tar.gz",
+      "sha256": "df16155b8342a7249c3a883afd5eeb32db294a6cf8cc41faafca9257e6af520f"
+    },
+    {
+      "repo": "https://github.com/binarywang/WxJava",
+      "commit": "f96fd58d1c9fb09accaf492f166cf21a3c81dce4",
+      "tree": "f4f4474e356ee2bee88f82566df21286b6375017",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/binarywang--WxJava.tar.gz",
+      "sha256": "2f35c1396aa278a63be8438a5a121776421ef2c158d4995caeeeb34f082333e7"
+    },
+    {
+      "repo": "https://github.com/googleworkspace/cli",
+      "commit": "a3768d0e82ad83cca2da97724e46bea4ff0e6dbd",
+      "tree": "28127e4c0edff4bdf9226369e7a2ef744b353c25",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/googleworkspace--cli.tar.gz",
+      "sha256": "ed9dcfc977b01de955062fac47ff4919e232ac25c2b8d54c65fb19247d29112d"
+    },
+    {
+      "repo": "https://github.com/DioxusLabs/dioxus",
+      "commit": "0dbfab5274abd3628b0558f909b5946e783dbc65",
+      "tree": "1753d233149595e4d0b278dfad94d6501dff08cc",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/DioxusLabs--dioxus.tar.gz",
+      "sha256": "bec2d8fbd44d0538973bee3e947dc93dc64f309a1b2b68326726d82697be1c27"
+    },
+    {
+      "repo": "https://github.com/hyprwm/Hyprland",
+      "commit": "2effd2da48e8e7bd1485eac589329e8f82f13c41",
+      "tree": "30b1a4b2381d084bb80073df6799d91652259a6d",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/hyprwm--Hyprland.tar.gz",
+      "sha256": "5e4dedd63773400c39f58982592874d01e6c8bd3a2c83842225275ccc412a262"
+    },
+    {
+      "repo": "https://github.com/microsoft/WSL",
+      "commit": "e7197ca7774aa0ea66354632a6527c482fbde213",
+      "tree": "7e0d9b2a6cb9961008e52421c1beb82593d87150",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/microsoft--WSL.tar.gz",
+      "sha256": "44f78c968b1c09144b4ac9e643c0ce57bc59a2f5acaef01153eaaa7a4529c226"
+    }
+  ]
+}

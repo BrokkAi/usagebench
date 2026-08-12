@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v2-agent-panel-milestone-3-v3",
+  "status": "human_adjudicated",
+  "summary": {
+    "caseCount": 6,
+    "requiredLocationAgreementCount": 5,
+    "automaticConsensusCount": 5,
+    "decisionDisagreementCount": 1,
+    "classificationDisagreementCount": 1,
+    "highConfidenceNoAmbiguityCount": 6,
+    "humanEscalationCount": 6,
+    "humanAdjudicatedCount": 6,
+    "unresolvedEscalationCount": 0
+  },
+  "cases": [
+    {
+      "caseId": "real-project-v2-java-02-2",
+      "requiredLocationsAgree": false,
+      "allClassificationsAgree": false,
+      "definitionUsageAgrees": false,
+      "decisionAgrees": false,
+      "openaiDecision": "accept",
+      "anthropicDecision": "replace",
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "disagreement": {
+        "kind": "constructor_declarator_classification",
+        "location": {
+          "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/AggregatedRouterFunction.java",
+          "range": {
+            "start": { "line": 18, "character": 11 },
+            "end": { "line": 18, "character": 35 }
+          }
+        },
+        "openaiClassification": "excluded",
+        "anthropicClassification": "required"
+      },
+      "recommendedAdjudication": "accept_openai_contract_and_exclude_constructor_declarator"
+    },
+    {
+      "caseId": "real-project-v2-java-02-3",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "openaiDecision": "accept",
+      "anthropicDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "recommendedAdjudication": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-rust-02-2",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "openaiDecision": "accept",
+      "anthropicDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "recommendedAdjudication": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-rust-02-3",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "openaiDecision": "accept",
+      "anthropicDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "recommendedAdjudication": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-cpp-02-2",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "openaiDecision": "accept",
+      "anthropicDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "recommendedAdjudication": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-cpp-02-3",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "openaiDecision": "accept",
+      "anthropicDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "recommendedAdjudication": "accept_consensus_contract"
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:16aeaffb-9ed8-4088-bb9d-0370fc1d8514",
+    "executedAt": "2026-08-12T13:07:27.283Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-03-3",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+        "range": {
+          "start": {
+            "line": 8,
+            "character": 11
+          },
+          "end": {
+            "line": 8,
+            "character": 26
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+            "range": {
+              "start": {
+                "line": 31,
+                "character": 56
+              },
+              "end": {
+                "line": 31,
+                "character": 71
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return-type reference in `fn parse_subscribe_args(...) -> Result<SubscribeConfig, GwsError>`; resolves to the struct declared at line 8 of the same module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+            "range": {
+              "start": {
+                "line": 82,
+                "character": 38
+              },
+              "end": {
+                "line": 82,
+                "character": 53
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type reference in `fn validate_subscribe_config(config: &SubscribeConfig)`; resolves to the same struct."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+            "range": {
+              "start": {
+                "line": 381,
+                "character": 12
+              },
+              "end": {
+                "line": 381,
+                "character": 27
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type reference `config: SubscribeConfig` in `async fn pull_loop`; resolves to the same struct."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+        "range": {
+          "start": {
+            "line": 31,
+            "character": 56
+          },
+          "end": {
+            "line": 31,
+            "character": 71
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+        "crates/google-workspace-cli/src/helpers/events/mod.rs"
+      ],
+      "rationale": "A repository-wide exact-token search for `SubscribeConfig` found occurrences only in crates/google-workspace-cli/src/helpers/events/subscribe.rs: the declaration itself (line 8, excluded as the query token) and three type references at 0-based lines 31, 82, and 381, all resolving to the struct via same-module scope. All other matches are the distinct derive-generated identifier `SubscribeConfigBuilder` (substring, not an exact-name token, omitted per rule 3). events/mod.rs declares `pub mod subscribe;` but contains no import or re-export binding token for `SubscribeConfig`, and the test module's `use super::*;` is an implicit wildcard with no identifier token, so no optional binding locations exist. All lines are ASCII, so UTF-16 columns equal character indexes. definitionUsage is the first required location after sorting by URI, start line, then start character."
+    }
+  ]
+}

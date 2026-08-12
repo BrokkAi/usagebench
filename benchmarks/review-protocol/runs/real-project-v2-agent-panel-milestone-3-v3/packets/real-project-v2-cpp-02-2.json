@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-cpp-02-2",
+  "language": "cpp",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/tesseract-ocr/tesseract",
+    "commit": "25e4fb2e3d17e1a82a0c27950335573b50f8693e",
+    "archiveSha256": "a9dd06d1c0c35a9e3b6b646f538127fa54bfe66a15707729a4daf8167fc6eac3"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/cutil/bitvec.h",
+    "range": {
+      "start": {
+        "line": 36,
+        "character": 19
+      },
+      "end": {
+        "line": 36,
+        "character": 32
+      }
+    }
+  },
+  "displayName": "zero_all_bits"
+}

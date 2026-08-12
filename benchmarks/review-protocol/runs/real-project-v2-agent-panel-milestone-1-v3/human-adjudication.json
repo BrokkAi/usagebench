@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v2-agent-panel-milestone-1-v3",
+  "adjudicator": {
+    "kind": "human",
+    "identity": "DavidBakerEffendi",
+    "executedAt": "2026-08-12T11:55:35Z",
+    "attestation": "I approve the five shared semantic contracts, including acceptance of the two cases whose Anthropic replace labels proposed no substantive replacement. For EmulatorSettingsImpl, exclude the four constructor and destructor declarator-name tokens; retain the separate class qualifiers and ordinary type references as required. Do not consult analyzer output for this adjudication."
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-01-1",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-java-01-2",
+      "decision": "accept_consensus_contract_with_decision_label_resolution",
+      "decisionLabelResolution": {
+        "openai": "accept",
+        "anthropic": "replace",
+        "adjudicated": "accept",
+        "rationale": "The reviewers agreed exactly on the declaration, sole required location, deterministic definition usage, high confidence, and absence of ambiguity. The replace label proposed no replacement."
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-01-1",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-rust-01-2",
+      "decision": "accept_consensus_contract_with_decision_label_resolution",
+      "decisionLabelResolution": {
+        "openai": "accept",
+        "anthropic": "replace",
+        "adjudicated": "accept",
+        "rationale": "The reviewers agreed exactly on the declaration, sole required location, deterministic definition usage, high confidence, and absence of ambiguity. The replace label proposed no replacement."
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-01-1",
+      "decision": "accept_openai_contract_after_classification_adjudication",
+      "classificationResolution": {
+        "adjudicated": "excluded",
+        "rationale": "The four constructor and destructor declarator-name tokens declare special-member entities rather than refer to the selected class entity. The separate class qualifiers in the out-of-line definitions remain required.",
+        "locations": [
+          {"uri": "benchmark://source/src/core/emulator_settings.cpp", "range": {"start": {"line": 99, "character": 22}, "end": {"line": 99, "character": 42}}},
+          {"uri": "benchmark://source/src/core/emulator_settings.cpp", "range": {"start": {"line": 101, "character": 23}, "end": {"line": 101, "character": 43}}},
+          {"uri": "benchmark://source/src/core/emulator_settings.h", "range": {"start": {"line": 485, "character": 4}, "end": {"line": 485, "character": 24}}},
+          {"uri": "benchmark://source/src/core/emulator_settings.h", "range": {"start": {"line": 486, "character": 5}, "end": {"line": 486, "character": 25}}}
+        ]
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-01-2",
+      "decision": "accept_consensus_contract"
+    }
+  ]
+}

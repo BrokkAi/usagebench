@@ -141,6 +141,7 @@ struct EvaluationSelection {
     profiles: Vec<SelectionProfile>,
     #[serde(default)]
     replacements: Vec<SelectionReplacement>,
+    #[serde(default)]
     documents: Vec<SelectedDocument>,
 }
 
@@ -182,7 +183,8 @@ struct PlannedRepository {
     source: GitSource,
     case_file: String,
     case_ids: Vec<String>,
-    declaration_draw: DeclarationDraw,
+    #[serde(default)]
+    declaration_draw: Option<DeclarationDraw>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -707,13 +709,14 @@ pub(crate) fn validate_document_evidence_cached(
         required_metadata(&document.corpus.source_lock, "sourceLock")?,
     )?;
 
-    let (selection, selection_bytes) = load_checked::<EvaluationSelection>(
+    let (mut selection, selection_bytes) = load_checked::<EvaluationSelection>(
         &selection_path,
         EVALUATION_SELECTION_SCHEMA,
         "evaluation selection manifest",
     )?;
     validate_schema_version(selection.schema_version, "evaluation selection manifest")?;
     require_same("selection freezeId", &selection.freeze_id, freeze_id)?;
+    hydrate_declaration_draws(&mut selection, &selection_path)?;
 
     let protocol_path = evidence_path(repo_root, &selection.protocol.file)?;
     let (protocol, protocol_bytes) = load_checked::<EvaluationProtocol>(
@@ -874,11 +877,12 @@ pub fn validate_path(path: impl AsRef<Path>) -> Result<Vec<PathBuf>> {
                 .as_deref()
                 .context("evaluation corpus has no selection manifest")?,
         )?;
-        let (selection, _) = load_checked::<EvaluationSelection>(
+        let (mut selection, _) = load_checked::<EvaluationSelection>(
             &selection_path,
             EVALUATION_SELECTION_SCHEMA,
             "evaluation selection manifest",
         )?;
+        hydrate_declaration_draws(&mut selection, &selection_path)?;
         let protocol_path = evidence_path(&repo_root, &selection.protocol.file)?;
         let (protocol, protocol_bytes) = load_checked::<EvaluationProtocol>(
             &protocol_path,
@@ -1274,13 +1278,16 @@ fn validate_selection_coverage(
             {
                 bail!("evaluation repository draw contains duplicate documents or case IDs");
             }
-            let declaration_case_ids = repository
+            let declaration_draw = repository
                 .declaration_draw
+                .as_ref()
+                .context("evaluation repository draw is missing declaration ranking evidence")?;
+            let declaration_case_ids = declaration_draw
                 .selected
                 .iter()
                 .map(|declaration| declaration.case_id.clone())
                 .collect::<BTreeSet<_>>();
-            if declaration_case_ids.len() != repository.declaration_draw.selected.len()
+            if declaration_case_ids.len() != declaration_draw.selected.len()
                 || declaration_case_ids != case_ids
             {
                 bail!("evaluation declaration draw does not cover its planned case IDs");
@@ -1634,9 +1641,11 @@ fn validate_document_draw(
         bail!("evaluation repository draw does not contain exactly one entry for {case_file}");
     };
     validate_document_source(document, &planned.source)?;
+    let declaration_draw = planned.declaration_draw.as_ref().with_context(|| {
+        format!("declaration ranking evidence has no declaration draw for {case_file}")
+    })?;
     for case in &document.cases {
-        let selected = planned
-            .declaration_draw
+        let selected = declaration_draw
             .selected
             .iter()
             .filter(|declaration| declaration.case_id == case.id)
@@ -1655,6 +1664,95 @@ fn validate_document_draw(
         }
     }
     Ok(())
+}
+
+fn hydrate_declaration_draws(
+    selection: &mut EvaluationSelection,
+    selection_path: &Path,
+) -> Result<()> {
+    if selection.profiles.iter().all(|profile| {
+        profile
+            .selected
+            .iter()
+            .all(|repository| repository.declaration_draw.is_some())
+    }) {
+        return Ok(());
+    }
+    let path = selection_path.with_file_name("declarations.json");
+    let bytes = fs::read(&path).with_context(|| {
+        format!(
+            "read separate declaration ranking evidence {}",
+            path.display()
+        )
+    })?;
+    let mut value: serde_json::Value = serde_json::from_slice(&bytes).with_context(|| {
+        format!(
+            "deserialize separate declaration ranking evidence {}",
+            path.display()
+        )
+    })?;
+    normalize_declaration_enum_kinds(&mut value);
+    let evidence: EvaluationSelection = serde_json::from_value(value).with_context(|| {
+        format!(
+            "deserialize separate declaration ranking evidence {}",
+            path.display()
+        )
+    })?;
+    require_same(
+        "declaration ranking freezeId",
+        &evidence.freeze_id,
+        &selection.freeze_id,
+    )?;
+    if selection.documents.is_empty() {
+        selection.documents = evidence.documents.clone();
+    }
+    for profile in &mut selection.profiles {
+        for repository in &mut profile.selected {
+            if repository.declaration_draw.is_some() {
+                continue;
+            }
+            let matches = evidence
+                .profiles
+                .iter()
+                .flat_map(|profile| &profile.selected)
+                .filter(|candidate| {
+                    candidate.case_file == repository.case_file
+                        && candidate.source == repository.source
+                        && candidate.case_ids == repository.case_ids
+                })
+                .collect::<Vec<_>>();
+            let [matched] = matches.as_slice() else {
+                bail!(
+                    "separate declaration ranking evidence does not contain exactly one matching entry for {}",
+                    repository.case_file
+                );
+            };
+            repository.declaration_draw = matched.declaration_draw.clone();
+        }
+    }
+    Ok(())
+}
+
+fn normalize_declaration_enum_kinds(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::Object(object) => {
+            if object.get("kind").and_then(serde_json::Value::as_str) == Some("enum") {
+                object.insert(
+                    "kind".to_string(),
+                    serde_json::Value::String("class".to_string()),
+                );
+            }
+            for child in object.values_mut() {
+                normalize_declaration_enum_kinds(child);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for item in items {
+                normalize_declaration_enum_kinds(item);
+            }
+        }
+        _ => {}
+    }
 }
 
 fn validate_reviewers(
@@ -1730,7 +1828,7 @@ fn validate_reviewers(
         require_same(
             "reviewer evidence selection algorithm",
             &evidence.selection_algorithm,
-            "real-project-v1-source-syntax-v1",
+            &format!("{}-source-syntax-v1", selection.freeze_id),
         )?;
         validate_reviewer_evidence_records(
             &evidence.records,
@@ -2216,7 +2314,10 @@ fn load_linked_json<T: DeserializeOwned>(
     let path = evidence_path(repo_root, &link.file)?;
     let bytes = fs::read(&path).with_context(|| format!("read {kind} {}", path.display()))?;
     validate_link(link, &path, &bytes, kind)?;
-    serde_json::from_slice(&bytes).with_context(|| format!("parse {kind} {}", path.display()))
+    let mut value: serde_json::Value = serde_json::from_slice(&bytes)
+        .with_context(|| format!("parse {kind} {}", path.display()))?;
+    normalize_declaration_enum_kinds(&mut value);
+    serde_json::from_value(value).with_context(|| format!("parse {kind} {}", path.display()))
 }
 
 fn compile_agent_response_schema(
@@ -2524,7 +2625,10 @@ fn load_review_artifact<T: DeserializeOwned>(
     if !is_hex_digest(&artifact.sha256) || sha256(&bytes) != artifact.sha256 {
         bail!("{kind} sha256 does not match {}", path.display());
     }
-    serde_json::from_slice(&bytes).with_context(|| format!("parse {kind} {}", path.display()))
+    let mut value: serde_json::Value = serde_json::from_slice(&bytes)
+        .with_context(|| format!("parse {kind} {}", path.display()))?;
+    normalize_declaration_enum_kinds(&mut value);
+    serde_json::from_value(value).with_context(|| format!("parse {kind} {}", path.display()))
 }
 
 fn validate_reviewer_evidence_records(
@@ -2610,8 +2714,9 @@ fn validate_evidence_identity(
             profile.selected.iter().flat_map(move |repository| {
                 repository
                     .declaration_draw
-                    .selected
-                    .iter()
+                    .as_ref()
+                    .into_iter()
+                    .flat_map(|draw| &draw.selected)
                     .filter(move |declaration| declaration.case_id == record.case_id)
                     .map(move |declaration| (profile, repository, declaration))
             })
@@ -2823,8 +2928,13 @@ fn validate_archive_ranges(
                 location.location.uri
             );
         }
-        let text = fs::read_to_string(&source_path)
-            .with_context(|| format!("decode referenced archived source file {relative}"))?;
+        // Real repositories can contain an isolated non-UTF-8 byte even in a
+        // source file whose reviewed identifier lines are valid UTF-8. LSP
+        // clients decode such documents lossily, so validate against the same
+        // Unicode view instead of rejecting the entire frozen source archive.
+        let bytes = fs::read(&source_path)
+            .with_context(|| format!("read referenced archived source file {relative}"))?;
+        let text = String::from_utf8_lossy(&bytes);
         location
             .location
             .range
@@ -4104,4 +4214,11 @@ mod tests {
         assert!(output.status.success(), "git {args:?} failed");
         String::from_utf8(output.stdout).unwrap().trim().to_string()
     }
+}
+#[test]
+fn v2_enum_declaration_kind_normalizes_to_nominal_class_contract() {
+    let mut value = serde_json::json!({"kind": "enum", "nested": [{"kind": "function"}]});
+    normalize_declaration_enum_kinds(&mut value);
+    assert_eq!(value["kind"], "class");
+    assert_eq!(value["nested"][0]["kind"], "function");
 }

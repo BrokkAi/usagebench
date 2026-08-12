@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v2-agent-panel-milestone-3-v3",
+  "adjudicator": {
+    "kind": "human",
+    "identity": "DavidBakerEffendi",
+    "executedAt": "2026-08-12T12:48:19Z",
+    "attestation": "I approve the five exact consensus contracts and the recommended entity-specific resolution for real-project-v2-java-02-2: constructor invocation and type uses remain required class usages, while the constructor declarator name is excluded as a separate procedure declaration."
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-02-2",
+      "decision": "accept_openai_contract_after_classification_adjudication",
+      "resolution": {
+        "location": {
+          "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/AggregatedRouterFunction.java",
+          "range": {
+            "start": { "line": 18, "character": 11 },
+            "end": { "line": 18, "character": 35 }
+          }
+        },
+        "classification": "excluded",
+        "rationale": "The token declares the constructor procedure rather than using the enclosing class entity. Constructor invocations and ordinary type uses of the class remain required."
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-02-3",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-rust-02-2",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-rust-02-3",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-cpp-02-2",
+      "decision": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-cpp-02-3",
+      "decision": "accept_consensus_contract"
+    }
+  ]
+}

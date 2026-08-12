@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "/root/m5_cpp_03_3",
+    "executedAt": "2026-08-12T13:10:11Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-03-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/ipc/s1/Commands.cpp",
+        "range": {
+          "start": {
+            "line": 610,
+            "character": 19
+          },
+          "end": {
+            "line": 610,
+            "character": 38
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/ipc/s1/Commands.cpp",
+            "range": {
+              "start": {
+                "line": 1891,
+                "character": 78
+              },
+              "end": {
+                "line": 1891,
+                "character": 97
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This identifier is the function argument passed to legacyCommand when registering the activewindow command and resolves to the selected file-local activeWindowRequest function."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/ipc/s1/Commands.cpp",
+        "range": {
+          "start": {
+            "line": 1891,
+            "character": 78
+          },
+          "end": {
+            "line": 1891,
+            "character": 97
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "src/ipc/s1/Commands.cpp"
+      ],
+      "rationale": "A project-wide exact-identifier search found only the selected declaration and the registration reference. The latter resolves unambiguously to the static function in the same translation unit, yielding one complete required usage and no optional bindings or required-contract ambiguities."
+    }
+  ]
+}

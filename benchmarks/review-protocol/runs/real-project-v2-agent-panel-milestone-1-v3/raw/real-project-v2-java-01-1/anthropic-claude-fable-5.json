@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:8426980a-1930-477a-94ab-db7b7b28d5a0",
+    "executedAt": "2026-08-12T11:45:15.851Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/strategy/ExecutorRouteFirst.java",
+        "range": {
+          "start": {
+            "line": 10,
+            "character": 13
+          },
+          "end": {
+            "line": 10,
+            "character": 31
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 57
+              },
+              "end": {
+                "line": 10,
+                "character": 75
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor invocation `new ExecutorRouteFirst()` in the FIRST enum constant of ExecutorRouteStrategyEnum. The file wildcard-imports com.xxl.job.admin.business.scheduler.route.strategy.*, and ExecutorRouteFirst is the only type with this simple name in the pinned snapshot, so the token resolves to the selected class declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java",
+        "range": {
+          "start": {
+            "line": 10,
+            "character": 57
+          },
+          "end": {
+            "line": 10,
+            "character": 75
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source",
+        "source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/strategy/ExecutorRouteFirst.java",
+        "source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java"
+      ],
+      "rationale": "The selected declaration is the class ExecutorRouteFirst (declaration token at line 10, chars 13-31, verified in source). A repo-wide exact-identifier search for `ExecutorRouteFirst` across the entire pinned snapshot (all file types) returned exactly two tokens: the declaration token itself (never a usage) and one semantic usage, the constructor call `new ExecutorRouteFirst()` at ExecutorRouteStrategyEnum.java line 10 (0-based), chars 57-75 (UTF-16; line is ASCII-only). The referencing file imports the strategy package via wildcard (`import com.xxl.job.admin.business.scheduler.route.strategy.*;`), so per the bindings_optional policy there is no explicit import binding token to classify and none is invented. No other type named ExecutorRouteFirst exists in the snapshot, so resolution is unambiguous. The required set has one location; deterministic definitionUsage selection (sort by URI, start line, start character) selects it. No required-contract ambiguity remains."
+    }
+  ]
+}

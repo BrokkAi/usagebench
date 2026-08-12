@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:1cadb9f8-5689-4882-aaf4-41d39bc71a87",
+    "executedAt": "2026-08-12T13:29:43.759Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-04-2",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Point.java",
+        "range": {
+          "start": {
+            "line": 15,
+            "character": 13
+          },
+          "end": {
+            "line": 15,
+            "character": 18
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Series.java",
+            "range": {
+              "start": {
+                "line": 24,
+                "character": 15
+              },
+              "end": {
+                "line": 24,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type argument in field declaration `private List<Point> points;` in Series, same package me.chanjar.weixin.channel.bean.live.dashboard, so the simple name resolves to the selected Point class without an import."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-miniapp/src/test/java/cn/binarywang/wx/miniapp/api/impl/WxMaCloudServiceImplTest.java",
+            "range": {
+              "start": {
+                "line": 68,
+                "character": 22
+              },
+              "end": {
+                "line": 68,
+                "character": 27
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "String literal \"Point\" used as a GeoJSON type tag in test data for the WeChat cloud database Geo.Point API; it is text inside a string, not an identifier, and does not resolve to the channel dashboard Point class. Inspected as a repo-wide exact-name candidate; all other Point matches in this file are likewise inside comments or string literals referring to db.Geo.Point."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Series.java",
+        "range": {
+          "start": {
+            "line": 24,
+            "character": 15
+          },
+          "end": {
+            "line": 24,
+            "character": 20
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Point.java",
+        "weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Series.java",
+        "weixin-java-miniapp/src/test/java/cn/binarywang/wx/miniapp/api/impl/WxMaCloudServiceImplTest.java"
+      ],
+      "rationale": "The declaration is the class Point in me.chanjar.weixin.channel.bean.live.dashboard (Point.java line 15, chars 13-18, 0-based). A repo-wide exact-token search for `Point` found exactly one identifier that semantically resolves to this class: the List<Point> field type in Series.java (0-based line 24, chars 15-20), which is in the same package and therefore binds without any import; no explicit import, export, or re-export binding tokens for this class exist anywhere in the snapshot, so no optional binding locations are reported. All other exact-name matches occur in weixin-java-miniapp test code inside comments and string literals describing the unrelated WeChat cloud DB db.Geo.Point API and are non-identifiers. No fully-qualified references to the class exist. The required set is the single Series.java location; definitionUsage is that location by the deterministic sort. No unresolved ambiguity affects the required set, so confidence is high."
+    }
+  ]
+}

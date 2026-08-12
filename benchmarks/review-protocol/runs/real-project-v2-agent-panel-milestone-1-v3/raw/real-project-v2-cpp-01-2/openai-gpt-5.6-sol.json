@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "fresh_cpp_01_2",
+    "executedAt": "2026-08-12T11:31:48Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-01-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+        "range": {
+          "start": {
+            "line": 856,
+            "character": 12
+          },
+          "end": {
+            "line": 856,
+            "character": 40
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 726,
+                "character": 12
+              },
+              "end": {
+                "line": 726,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This file-scope static forward declaration redeclares the same internal-linkage function entity defined by the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 739,
+                "character": 4
+              },
+              "end": {
+                "line": 739,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This call in ImGui_ImplSDL3_Shutdown resolves through the preceding static declaration to the selected function definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 867,
+                "character": 4
+              },
+              "end": {
+                "line": 867,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This call in ImGui_ImplSDL3_SetGamepadMode directly resolves to the selected file-scope static function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 907,
+                "character": 8
+              },
+              "end": {
+                "line": 907,
+                "character": 36
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This call in ImGui_ImplSDL3_UpdateGamepads directly resolves to the selected file-scope static function."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+        "range": {
+          "start": {
+            "line": 726,
+            "character": 12
+          },
+          "end": {
+            "line": 726,
+            "character": 40
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp"
+      ],
+      "rationale": "The exact identifier occurs five times in the complete source snapshot: the selected definition, one same-entity static forward declaration, and three calls. Excluding the selected declaration itself leaves four required semantic usages. There are no import, export, or re-export bindings and no unresolved same-name candidates."
+    }
+  ]
+}

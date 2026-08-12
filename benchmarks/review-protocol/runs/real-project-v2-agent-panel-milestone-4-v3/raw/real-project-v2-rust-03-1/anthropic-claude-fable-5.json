@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:4ff43d6f-a80b-42a5-a524-c9b775b5dccc",
+    "executedAt": "2026-08-12T12:51:35.287Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-03-1",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+        "range": {
+          "start": {
+            "line": 1502,
+            "character": 7
+          },
+          "end": {
+            "line": 1502,
+            "character": 28
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 171,
+                "character": 4
+              },
+              "end": {
+                "line": 171,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in read_refresh_token_from_cache in the same module; unqualified path resolves to the module-level fn extract_refresh_token."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 1998,
+                "character": 12
+              },
+              "end": {
+                "line": 1998,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside test extract_refresh_token_from_yup_oauth2_format; mod tests has `use super::*;` so the name resolves to the parent-module declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2006,
+                "character": 19
+              },
+              "end": {
+                "line": 2006,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside test extract_refresh_token_missing_token via `use super::*;` glob import."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2011,
+                "character": 19
+              },
+              "end": {
+                "line": 2011,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside test extract_refresh_token_empty_array via `use super::*;` glob import."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2016,
+                "character": 19
+              },
+              "end": {
+                "line": 2016,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside test extract_refresh_token_invalid_json via `use super::*;` glob import."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2023,
+                "character": 19
+              },
+              "end": {
+                "line": 2023,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside test extract_refresh_token_object_format via `use super::*;` glob import."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+        "range": {
+          "start": {
+            "line": 171,
+            "character": 4
+          },
+          "end": {
+            "line": 171,
+            "character": 25
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "crates/google-workspace-cli/src/auth_commands.rs"
+      ],
+      "rationale": "Repo-wide exact-token search found occurrences of extract_refresh_token only in crates/google-workspace-cli/src/auth_commands.rs. The declaration token at 1502:7-28 (pub fn) is excluded as the query token. Required usages: one production call at 171:4 in read_refresh_token_from_cache and five test calls (1998:12, 2006:19, 2011:19, 2016:19, 2023:19) inside `mod tests`, which imports the parent module via `use super::*;` (line 1723 0-based), so each unqualified call resolves to this declaration. No other function or shadowing binding named extract_refresh_token exists in the crate. Test function names such as extract_refresh_token_missing_token are longer identifiers (substring matches) and are omitted per rule 3. There are no explicit import/re-export/export binding tokens for this symbol; the `use super::*;` wildcard has no identifier token, so per rule 2 no optional binding location is recorded. All lines are ASCII, so UTF-16 columns equal byte columns. definitionUsage is the URI/line/character-minimal required location (171:4)."
+    }
+  ]
+}

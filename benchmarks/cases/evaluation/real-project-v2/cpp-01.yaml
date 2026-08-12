@@ -1,0 +1,1481 @@
+{
+  "schemaVersion": 2,
+  "corpus": {
+    "partition": "evaluation",
+    "selection": "pre_registered",
+    "freezeId": "real-project-v2",
+    "selectionManifest": "benchmarks/evaluation/real-project-v2/selection.json",
+    "reviewManifest": "benchmarks/evaluation/real-project-v2/review.json",
+    "sourceLock": "benchmarks/evaluation/real-project-v2/sources.json"
+  },
+  "groundTruth": {
+    "status": "human_adjudicated_agent_panel",
+    "reviewers": [
+      "openai-gpt-5.6-sol",
+      "anthropic-claude-fable-5"
+    ]
+  },
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "kind": "git",
+    "repo": "https://github.com/shadps4-emu/shadPS4",
+    "commit": "65c9463c6a2f7a5bb3cb0ad02f5f3edbaeb3e49a"
+  },
+  "language": "cpp",
+  "cases": [
+    {
+      "id": "real-project-v2-cpp-01-1",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/src/core/emulator_settings.h",
+          "range": {
+            "start": {
+              "line": 483,
+              "character": 6
+            },
+            "end": {
+              "line": 483,
+              "character": 26
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "EmulatorSettingsImpl"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 101,
+                "character": 0
+              },
+              "end": {
+                "line": 101,
+                "character": 20
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 99,
+                "character": 0
+              },
+              "end": {
+                "line": 99,
+                "character": 20
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 138,
+                "character": 4
+              },
+              "end": {
+                "line": 138,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 302,
+                "character": 4
+              },
+              "end": {
+                "line": 302,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 316,
+                "character": 4
+              },
+              "end": {
+                "line": 316,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 341,
+                "character": 4
+              },
+              "end": {
+                "line": 341,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 356,
+                "character": 4
+              },
+              "end": {
+                "line": 356,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 662,
+                "character": 4
+              },
+              "end": {
+                "line": 662,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 777,
+                "character": 4
+              },
+              "end": {
+                "line": 777,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 790,
+                "character": 4
+              },
+              "end": {
+                "line": 790,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 839,
+                "character": 4
+              },
+              "end": {
+                "line": 839,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 113,
+                "character": 5
+              },
+              "end": {
+                "line": 113,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 5
+              },
+              "end": {
+                "line": 121,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 141,
+                "character": 5
+              },
+              "end": {
+                "line": 141,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 145,
+                "character": 5
+              },
+              "end": {
+                "line": 145,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 154,
+                "character": 5
+              },
+              "end": {
+                "line": 154,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 164,
+                "character": 5
+              },
+              "end": {
+                "line": 164,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 187,
+                "character": 5
+              },
+              "end": {
+                "line": 187,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 198,
+                "character": 5
+              },
+              "end": {
+                "line": 198,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 209,
+                "character": 5
+              },
+              "end": {
+                "line": 209,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 220,
+                "character": 5
+              },
+              "end": {
+                "line": 220,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 225,
+                "character": 5
+              },
+              "end": {
+                "line": 225,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 235,
+                "character": 5
+              },
+              "end": {
+                "line": 235,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 263,
+                "character": 5
+              },
+              "end": {
+                "line": 263,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 358,
+                "character": 5
+              },
+              "end": {
+                "line": 358,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 476,
+                "character": 5
+              },
+              "end": {
+                "line": 476,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 486,
+                "character": 5
+              },
+              "end": {
+                "line": 486,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 89,
+                "character": 5
+              },
+              "end": {
+                "line": 89,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 102,
+                "character": 8
+              },
+              "end": {
+                "line": 102,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 106,
+                "character": 8
+              },
+              "end": {
+                "line": 106,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 501,
+                "character": 8
+              },
+              "end": {
+                "line": 501,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 510,
+                "character": 8
+              },
+              "end": {
+                "line": 510,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 832,
+                "character": 8
+              },
+              "end": {
+                "line": 832,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 21,
+                "character": 11
+              },
+              "end": {
+                "line": 21,
+                "character": 31
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 106,
+                "character": 16
+              },
+              "end": {
+                "line": 106,
+                "character": 36
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 20,
+                "character": 16
+              },
+              "end": {
+                "line": 20,
+                "character": 36
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 20
+              },
+              "end": {
+                "line": 121,
+                "character": 40
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 20
+              },
+              "end": {
+                "line": 137,
+                "character": 40
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 180,
+                "character": 22
+              },
+              "end": {
+                "line": 180,
+                "character": 42
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 191,
+                "character": 22
+              },
+              "end": {
+                "line": 191,
+                "character": 42
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 202,
+                "character": 22
+              },
+              "end": {
+                "line": 202,
+                "character": 42
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 213,
+                "character": 22
+              },
+              "end": {
+                "line": 213,
+                "character": 42
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 172,
+                "character": 24
+              },
+              "end": {
+                "line": 172,
+                "character": 44
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 729,
+                "character": 25
+              },
+              "end": {
+                "line": 729,
+                "character": 45
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 17,
+                "character": 27
+              },
+              "end": {
+                "line": 17,
+                "character": 47
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 488,
+                "character": 27
+              },
+              "end": {
+                "line": 488,
+                "character": 47
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 548,
+                "character": 27
+              },
+              "end": {
+                "line": 548,
+                "character": 47
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 315,
+                "character": 30
+              },
+              "end": {
+                "line": 315,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 340,
+                "character": 30
+              },
+              "end": {
+                "line": 340,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 355,
+                "character": 30
+              },
+              "end": {
+                "line": 355,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 661,
+                "character": 30
+              },
+              "end": {
+                "line": 661,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 776,
+                "character": 30
+              },
+              "end": {
+                "line": 776,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 789,
+                "character": 30
+              },
+              "end": {
+                "line": 789,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 301,
+                "character": 34
+              },
+              "end": {
+                "line": 301,
+                "character": 54
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 500,
+                "character": 34
+              },
+              "end": {
+                "line": 500,
+                "character": 54
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 509,
+                "character": 34
+              },
+              "end": {
+                "line": 509,
+                "character": 54
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 831,
+                "character": 34
+              },
+              "end": {
+                "line": 831,
+                "character": 54
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 129,
+                "character": 35
+              },
+              "end": {
+                "line": 129,
+                "character": 55
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 35
+              },
+              "end": {
+                "line": 137,
+                "character": 55
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 838,
+                "character": 35
+              },
+              "end": {
+                "line": 838,
+                "character": 55
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 106,
+                "character": 38
+              },
+              "end": {
+                "line": 106,
+                "character": 58
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 109,
+                "character": 38
+              },
+              "end": {
+                "line": 109,
+                "character": 58
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 20,
+                "character": 38
+              },
+              "end": {
+                "line": 20,
+                "character": 58
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 101,
+                "character": 41
+              },
+              "end": {
+                "line": 101,
+                "character": 61
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 818,
+                "character": 42
+              },
+              "end": {
+                "line": 818,
+                "character": 62
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 489,
+                "character": 44
+              },
+              "end": {
+                "line": 489,
+                "character": 64
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 113,
+                "character": 55
+              },
+              "end": {
+                "line": 113,
+                "character": 75
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 74
+              },
+              "end": {
+                "line": 137,
+                "character": 94
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/src/core/emulator_settings.cpp",
+              "range": {
+                "start": {
+                  "line": 20,
+                  "character": 16
+                },
+                "end": {
+                  "line": 20,
+                  "character": 36
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "EmulatorSettingsImpl"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/src/core/emulator_settings.h",
+              "range": {
+                "start": {
+                  "line": 483,
+                  "character": 6
+                },
+                "end": {
+                  "line": 483,
+                  "character": 26
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "EmulatorSettingsImpl"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    },
+    {
+      "id": "real-project-v2-cpp-01-2",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+          "range": {
+            "start": {
+              "line": 856,
+              "character": 12
+            },
+            "end": {
+              "line": 856,
+              "character": 40
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "ImGui_ImplSDL3_CloseGamepads"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 739,
+                "character": 4
+              },
+              "end": {
+                "line": 739,
+                "character": 32
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "ImGui_ImplSDL3_CloseGamepads"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 867,
+                "character": 4
+              },
+              "end": {
+                "line": 867,
+                "character": 32
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "ImGui_ImplSDL3_CloseGamepads"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 907,
+                "character": 8
+              },
+              "end": {
+                "line": 907,
+                "character": 36
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "ImGui_ImplSDL3_CloseGamepads"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 726,
+                "character": 12
+              },
+              "end": {
+                "line": 726,
+                "character": 40
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "ImGui_ImplSDL3_CloseGamepads"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+              "range": {
+                "start": {
+                  "line": 726,
+                  "character": 12
+                },
+                "end": {
+                  "line": 726,
+                  "character": 40
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "ImGui_ImplSDL3_CloseGamepads"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+              "range": {
+                "start": {
+                  "line": 856,
+                  "character": 12
+                },
+                "end": {
+                  "line": 856,
+                  "character": 40
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "ImGui_ImplSDL3_CloseGamepads"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    },
+    {
+      "id": "real-project-v2-cpp-01-3",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+          "range": {
+            "start": {
+              "line": 2036,
+              "character": 6
+            },
+            "end": {
+              "line": 2036,
+              "character": 18
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "AZolSignedF3"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+            "range": {
+              "start": {
+                "line": 2208,
+                "character": 20
+              },
+              "end": {
+                "line": 2208,
+                "character": 32
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "AZolSignedF3"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+            "range": {
+              "start": {
+                "line": 2227,
+                "character": 20
+              },
+              "end": {
+                "line": 2227,
+                "character": 32
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "AZolSignedF3"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+              "range": {
+                "start": {
+                  "line": 2208,
+                  "character": 20
+                },
+                "end": {
+                  "line": 2208,
+                  "character": 32
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "AZolSignedF3"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+              "range": {
+                "start": {
+                  "line": 2036,
+                  "character": 6
+                },
+                "end": {
+                  "line": 2036,
+                  "character": 18
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "AZolSignedF3"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    }
+  ]
+}

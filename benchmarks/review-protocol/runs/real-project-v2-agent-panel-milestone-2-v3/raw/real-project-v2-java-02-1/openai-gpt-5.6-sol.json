@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m2_java_02_1",
+    "executedAt": "2026-08-12T11:58:06Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-02-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttribute.java",
+        "range": {
+          "start": {
+            "line": 13,
+            "character": 17
+          },
+          "end": {
+            "line": 13,
+            "character": 31
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/DefaultIndexAttribute.java",
+            "range": {
+              "start": {
+                "line": 9,
+                "character": 85
+              },
+              "end": {
+                "line": 9,
+                "character": 99
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The implements-clause type resolves by same-package lookup to the selected IndexAttribute interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 40
+              },
+              "end": {
+                "line": 18,
+                "character": 54
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The simpleAttribute return type resolves by same-package lookup to the selected interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 40
+              },
+              "end": {
+                "line": 28,
+                "character": 54
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The multiValueAttribute return type resolves by same-package lookup to the selected interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 38,
+                "character": 66
+              },
+              "end": {
+                "line": 38,
+                "character": 80
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The attributes helper return type resolves by same-package lookup to the selected interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 43,
+                "character": 66
+              },
+              "end": {
+                "line": 43,
+                "character": 80
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The attribute helper return type resolves by same-package lookup to the selected interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexSpec.java",
+            "range": {
+              "start": {
+                "line": 23,
+                "character": 12
+              },
+              "end": {
+                "line": 23,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The indexFunc field type resolves by same-package lookup to the selected interface."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/DefaultIndexAttribute.java",
+        "range": {
+          "start": {
+            "line": 9,
+            "character": 85
+          },
+          "end": {
+            "line": 9,
+            "character": 99
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "api/src/main/java/run/halo/app/extension/index/IndexAttribute.java",
+        "api/src/main/java/run/halo/app/extension/index/DefaultIndexAttribute.java",
+        "api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+        "api/src/main/java/run/halo/app/extension/index/IndexSpec.java",
+        "docs/index/README.md"
+      ],
+      "rationale": "An exhaustive exact-name search of the pinned source found the selected declaration, six Java source tokens that resolve to it, and one documentation example. The declaration token and documentation text are not usages. All six code tokens are same-package references to run.halo.app.extension.index.IndexAttribute; no explicit binding token exists, and no required-contract ambiguity remains."
+    }
+  ]
+}

@@ -34,6 +34,54 @@ repositories, selection fails closed rather than weakening the protocol.
 5. Only after those artifacts are frozen may Bifrost or a reference language
    server execute against v2.
 
+## Source materialization and review packets
+
+The retained source-only tooling is intentionally separate from analyzer
+execution. Materialize each selected commit outside the repository, then build
+the source lock and declaration ranking:
+
+```bash
+python3 scripts/real_project_v1_sources.py \
+  --selection benchmarks/evaluation/real-project-v2/selection.json \
+  --archives benchmarks/evaluation/real-project-v2/sources \
+  --checkouts /path/to/pinned-checkouts \
+  --output benchmarks/evaluation/real-project-v2/sources.json
+python3 scripts/real_project_v1_candidates.py \
+  --selection benchmarks/evaluation/real-project-v2/selection.json \
+  --sources-root /path/to/pinned-checkouts \
+  --output benchmarks/evaluation/real-project-v2/declarations.json
+```
+
+Build the six balanced blinded-review input sets with:
+
+```bash
+python3 scripts/build_real_project_review_packets.py \
+  --declarations benchmarks/evaluation/real-project-v2/declarations.json \
+  --sources benchmarks/evaluation/real-project-v2/sources.json \
+  --output-root benchmarks/review-protocol/runs
+```
+
+The generated `packet-manifest.json` files describe prepared inputs only. They
+are not provider-session, comparison, human-adjudication, ground-truth, or
+publication evidence. Complete and retain each milestone's 12 genuine fresh
+provider sessions and accountable human adjudication before proceeding to the
+next milestone. Do not execute an analyzer or reference language server until
+all 36 adjudicated contracts are frozen.
+
+After all six milestones are adjudicated, the retained builders reproduce the
+published review links and case documents without consulting analyzer output:
+
+```bash
+python3 scripts/build-real-project-v2-publication-review.py --check
+python3 scripts/build_real_project_v2_cases.py --check
+cargo run -- validate-evaluation benchmarks/cases/evaluation/real-project-v2
+```
+
+The immutable evaluation release resolves its candidate set from this freeze's
+protocol. It executes Bifrost plus `eclipse-jdtls`, `rust-analyzer`, and
+`apple-clangd-21`; the Apple profile runs on the registered macOS/Xcode host
+and does not introduce a second-host evidence gate.
+
 The v1 selection is hash-linked by the v2 protocol. Every v1-selected
 repository is ineligible even if it appears in a v2 GitHub language frame.
 Capture, rank, and replacement decisions use public source metadata only.

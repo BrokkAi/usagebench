@@ -1,0 +1,547 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "OpenAI",
+    "model": "gpt-5.6-sol",
+    "executionId": "m6r-cpp-04-2-openai-20260812T141257Z",
+    "executedAt": "2026-08-12T14:12:57Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-04-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/linux/init/util.cpp",
+        "range": {
+          "start": {
+            "line": 1756,
+            "character": 4
+          },
+          "end": {
+            "line": 1756,
+            "character": 13
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 729,
+                "character": 32
+              },
+              "end": {
+                "line": 729,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1082,
+                "character": 8
+              },
+              "end": {
+                "line": 1082,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1087,
+                "character": 8
+              },
+              "end": {
+                "line": 1087,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1092,
+                "character": 8
+              },
+              "end": {
+                "line": 1092,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1097,
+                "character": 8
+              },
+              "end": {
+                "line": 1097,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1102,
+                "character": 8
+              },
+              "end": {
+                "line": 1102,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 153,
+                "character": 12
+              },
+              "end": {
+                "line": 153,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 885,
+                "character": 32
+              },
+              "end": {
+                "line": 885,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 1856,
+                "character": 12
+              },
+              "end": {
+                "line": 1856,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 1895,
+                "character": 12
+              },
+              "end": {
+                "line": 1895,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 457,
+                "character": 17
+              },
+              "end": {
+                "line": 457,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1275,
+                "character": 8
+              },
+              "end": {
+                "line": 1275,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1295,
+                "character": 8
+              },
+              "end": {
+                "line": 1295,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1883,
+                "character": 8
+              },
+              "end": {
+                "line": 1883,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1945,
+                "character": 11
+              },
+              "end": {
+                "line": 1945,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1998,
+                "character": 12
+              },
+              "end": {
+                "line": 1998,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2148,
+                "character": 11
+              },
+              "end": {
+                "line": 2148,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2310,
+                "character": 36
+              },
+              "end": {
+                "line": 2310,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2325,
+                "character": 36
+              },
+              "end": {
+                "line": 2325,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2327,
+                "character": 36
+              },
+              "end": {
+                "line": 2327,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2731,
+                "character": 29
+              },
+              "end": {
+                "line": 2731,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3685,
+                "character": 28
+              },
+              "end": {
+                "line": 3685,
+                "character": 37
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3884,
+                "character": 17
+              },
+              "end": {
+                "line": 3884,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3980,
+                "character": 8
+              },
+              "end": {
+                "line": 3980,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3985,
+                "character": 8
+              },
+              "end": {
+                "line": 3985,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 4040,
+                "character": 8
+              },
+              "end": {
+                "line": 4040,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call resolves through util.h to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.cpp",
+            "range": {
+              "start": {
+                "line": 1909,
+                "character": 8
+              },
+              "end": {
+                "line": 1909,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in the defining translation unit resolves to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.cpp",
+            "range": {
+              "start": {
+                "line": 1932,
+                "character": 8
+              },
+              "end": {
+                "line": 1932,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in the defining translation unit resolves to the selected global UtilMount definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.h",
+            "range": {
+              "start": {
+                "line": 268,
+                "character": 4
+              },
+              "end": {
+                "line": 268,
+                "character": 13
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This prototype is a redeclaration of the same external-linkage global function defined at the selected declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+        "range": {
+          "start": {
+            "line": 729,
+            "character": 32
+          },
+          "end": {
+            "line": 729,
+            "character": 41
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "src/linux/init/WSLCInit.cpp",
+        "src/linux/init/config.cpp",
+        "src/linux/init/drvfs.cpp",
+        "src/linux/init/main.cpp",
+        "src/linux/init/util.cpp",
+        "src/linux/init/util.h"
+      ],
+      "rationale": "The selected token defines the global UtilMount function declared in util.h. A project-wide exact-token inspection found 28 executable call sites, all in translation units that include util.h, plus the matching header prototype. No imports, re-exports, conflicting declarations, shadowing declarations, or unresolved exact-name candidates exist. The selected declaration token itself is omitted, and the lexicographically first required location is used as definitionUsage."
+    }
+  ]
+}

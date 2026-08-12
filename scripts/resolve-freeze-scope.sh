@@ -3,8 +3,13 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 snapshot_kind="${1:-}"
+evaluation_freeze="${2:-real-project-v2}"
 registry="$repo_root/adapters/candidates.json"
-protocol="$repo_root/benchmarks/evaluation/real-project-v1/protocol.json"
+[[ "$evaluation_freeze" =~ ^real-project-v[0-9]+$ ]] || {
+  echo "evaluation freeze must match real-project-vN" >&2
+  exit 2
+}
+protocol="$repo_root/benchmarks/evaluation/$evaluation_freeze/protocol.json"
 
 case "$snapshot_kind" in
   development)
@@ -14,6 +19,10 @@ case "$snapshot_kind" in
     }' "$registry"
     ;;
   evaluation)
+    [[ -f "$protocol" ]] || {
+      echo "unknown evaluation freeze: $evaluation_freeze" >&2
+      exit 1
+    }
     target_candidates="$(jq -ce '[.targetProfiles[].candidateId]' "$protocol")"
     advertised_candidates="$(jq -ce '[.candidates[] | select(.advertised) | .id]' "$registry")"
     missing_candidates="$(jq -cn \
@@ -26,12 +35,12 @@ case "$snapshot_kind" in
     }
     candidates="$(jq -cn --argjson targets "$target_candidates" '["bifrost"] + $targets')"
     jq -cn \
-      --arg case_path "benchmarks/cases/evaluation/real-project-v1" \
+      --arg case_path "benchmarks/cases/evaluation/$evaluation_freeze" \
       --argjson candidates "$candidates" \
       '{casePath: $case_path, candidates: $candidates}'
     ;;
   *)
-    echo "usage: $0 {development|evaluation}" >&2
+    echo "usage: $0 {development|evaluation} [real-project-vN]" >&2
     exit 2
     ;;
 esac

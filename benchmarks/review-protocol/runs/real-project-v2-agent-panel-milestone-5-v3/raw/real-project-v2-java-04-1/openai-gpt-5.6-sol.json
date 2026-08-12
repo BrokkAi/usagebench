@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "m5_java_04_1",
+    "executedAt": "2026-08-12T13:06:15Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-04-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/WxCpTpTagService.java",
+        "range": {
+          "start": {
+            "line": 17,
+            "character": 17
+          },
+          "end": {
+            "line": 17,
+            "character": 33
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 39
+              },
+              "end": {
+                "line": 14,
+                "character": 55
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the selected interface under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 30,
+                "character": 45
+              },
+              "end": {
+                "line": 30,
+                "character": 61
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The implements-clause type reference resolves to the selected interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-cp/src/test/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImplTest.java",
+            "range": {
+              "start": {
+                "line": 8,
+                "character": 39
+              },
+              "end": {
+                "line": 8,
+                "character": 55
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the selected interface under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-cp/src/test/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImplTest.java",
+            "range": {
+              "start": {
+                "line": 37,
+                "character": 10
+              },
+              "end": {
+                "line": 37,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The field type reference resolves to the selected interface."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImpl.java",
+        "range": {
+          "start": {
+            "line": 30,
+            "character": 45
+          },
+          "end": {
+            "line": 30,
+            "character": 61
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/WxCpTpTagService.java",
+        "weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImpl.java",
+        "weixin-java-cp/src/test/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImplTest.java"
+      ],
+      "rationale": "Project-wide exact-name inspection found two semantic type usages and two explicit import bindings. The required set is complete, the declaration is usable, and no required-contract ambiguity remains."
+    }
+  ]
+}

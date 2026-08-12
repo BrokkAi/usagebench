@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m3_java_02_2",
+    "executedAt": "2026-08-12T12:13:44Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-02-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/AggregatedRouterFunction.java",
+        "range": {
+          "start": {
+            "line": 14,
+            "character": 13
+          },
+          "end": {
+            "line": 14,
+            "character": 37
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/DefaultPluginApplicationContextFactory.java",
+            "range": {
+              "start": {
+                "line": 101,
+                "character": 29
+              },
+              "end": {
+                "line": 101,
+                "character": 53
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The class-literal expression AggregatedRouterFunction.class is an exact type reference resolving to the selected class declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/AggregatedRouterFunction.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 11
+              },
+              "end": {
+                "line": 18,
+                "character": 35
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token is the constructor declarator and denotes the constructor declaration rather than a type-reference usage resolving to the selected class declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/DefaultPluginApplicationContextFactory.java",
+        "range": {
+          "start": {
+            "line": 101,
+            "character": 29
+          },
+          "end": {
+            "line": 101,
+            "character": 53
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "application/src/main/java/run/halo/app/plugin/AggregatedRouterFunction.java",
+        "application/src/main/java/run/halo/app/plugin/DefaultPluginApplicationContextFactory.java"
+      ],
+      "rationale": "A whole-project exact-identifier scan found only the supplied class declaration, its constructor declarator, and the class-literal reference used to register the bean. The declaration token is not a usage, the constructor declarator binds as a constructor declaration, and the class literal is therefore the complete required semantic usage set. There are no explicit import, re-export, or export binding tokens."
+    }
+  ]
+}

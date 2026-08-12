@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "/root/m4_java_03_2",
+    "executedAt": "2026-08-12T12:50:14Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-03-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+        "range": {
+          "start": {
+            "line": 22,
+            "character": 22
+          },
+          "end": {
+            "line": 22,
+            "character": 32
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 34
+              },
+              "end": {
+                "line": 28,
+                "character": 44
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The method parameter type directly refers to the declared BaseDialog class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 32,
+                "character": 11
+              },
+              "end": {
+                "line": 32,
+                "character": 21
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares a BaseDialog constructor; it is the constructor procedure name rather than a semantic usage of the class declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 36,
+                "character": 11
+              },
+              "end": {
+                "line": 36,
+                "character": 21
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares an overloaded BaseDialog constructor; it is the constructor procedure name rather than a semantic usage of the class declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 60,
+                "character": 20
+              },
+              "end": {
+                "line": 60,
+                "character": 30
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The qualified super invocation uses BaseDialog as the enclosing class qualifier."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 72,
+                "character": 20
+              },
+              "end": {
+                "line": 72,
+                "character": 30
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The qualified super invocation uses BaseDialog as the enclosing class qualifier."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+        "range": {
+          "start": {
+            "line": 28,
+            "character": 34
+          },
+          "end": {
+            "line": 28,
+            "character": 44
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java"
+      ],
+      "rationale": "A source-wide exact-identifier search found six BaseDialog tokens: the supplied class declaration, one parameter type usage, two constructor declarators, and two enclosing-class qualifiers on super calls. Excluding the declaration and constructor procedure names leaves three complete required class usages. No explicit import or export binding token exists for this declaration."
+    }
+  ]
+}

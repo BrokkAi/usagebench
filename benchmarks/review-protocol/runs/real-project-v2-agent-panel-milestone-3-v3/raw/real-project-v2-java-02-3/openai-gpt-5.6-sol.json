@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m3_java_02_3",
+    "executedAt": "2026-08-12T12:13:43Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-02-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/query/StringNotEndsWithCondition.java",
+        "range": {
+          "start": {
+            "line": 2,
+            "character": 7
+          },
+          "end": {
+            "line": 2,
+            "character": 33
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/query/StringEndsWithCondition.java",
+            "range": {
+              "start": {
+                "line": 6,
+                "character": 19
+              },
+              "end": {
+                "line": 6,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This constructor type token resolves to the package-local StringNotEndsWithCondition record declared in the same package."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/application/src/main/java/run/halo/app/extension/index/query/QueryVisitor.java",
+            "range": {
+              "start": {
+                "line": 125,
+                "character": 21
+              },
+              "end": {
+                "line": 125,
+                "character": 47
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This record-pattern type token resolves to the package-local StringNotEndsWithCondition declaration in the same package."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/query/StringEndsWithCondition.java",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 19
+          },
+          "end": {
+            "line": 6,
+            "character": 45
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "api/src/main/java/run/halo/app/extension/index/query/StringNotEndsWithCondition.java",
+        "api/src/main/java/run/halo/app/extension/index/query/StringEndsWithCondition.java",
+        "api/src/main/java/run/halo/app/extension/index/query/IndexCondition.java",
+        "application/src/main/java/run/halo/app/extension/index/query/QueryVisitor.java",
+        "application/src/test/java/run/halo/app/extension/index/query/QueryVisitorTest.java"
+      ],
+      "rationale": "An exhaustive exact-identifier scan of the supplied snapshot found two tokens outside the selected declaration. Context inspection proves both resolve to the declared package-local record. There are no explicit import, export, or re-export binding tokens, and the similarly named test method is only a substring match. The required set is complete, so the lexicographically first required location is the deterministic definition usage."
+    }
+  ]
+}

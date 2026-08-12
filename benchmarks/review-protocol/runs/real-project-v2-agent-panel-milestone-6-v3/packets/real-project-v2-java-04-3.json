@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-java-04-3",
+  "language": "java",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/binarywang/WxJava",
+    "commit": "f96fd58d1c9fb09accaf492f166cf21a3c81dce4",
+    "archiveSha256": "2f35c1396aa278a63be8438a5a121776421ef2c158d4995caeeeb34f082333e7"
+  },
+  "declaration": {
+    "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/bean/auth/MaAuthSubmitResult.java",
+    "range": {
+      "start": {
+        "line": 18,
+        "character": 13
+      },
+      "end": {
+        "line": 18,
+        "character": 31
+      }
+    }
+  },
+  "displayName": "MaAuthSubmitResult"
+}

@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:38a2b482-f278-4e0b-a93e-388464ad35c6",
+    "executedAt": "2026-08-12T12:14:39.930Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-02-2",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/AggregatedRouterFunction.java",
+        "range": {
+          "start": {
+            "line": 14,
+            "character": 13
+          },
+          "end": {
+            "line": 14,
+            "character": 37
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/AggregatedRouterFunction.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 11
+              },
+              "end": {
+                "line": 18,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor identifier 'public AggregatedRouterFunction(ObjectProvider<CustomEndpoint> customEndpoints)'; in Java a constructor name token must match and semantically resolves to the enclosing class declaration. Outside the supplied declaration token range."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/DefaultPluginApplicationContextFactory.java",
+            "range": {
+              "start": {
+                "line": 101,
+                "character": 29
+              },
+              "end": {
+                "line": 101,
+                "character": 53
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class literal reference 'context.registerBean(AggregatedRouterFunction.class)' registering the router function bean in each plugin application context. Same package run.halo.app.plugin, so the simple name resolves to the queried class with no import."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/AggregatedRouterFunction.java",
+        "range": {
+          "start": {
+            "line": 18,
+            "character": 11
+          },
+          "end": {
+            "line": 18,
+            "character": 35
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "application/src/main/java/run/halo/app/plugin/AggregatedRouterFunction.java",
+        "application/src/main/java/run/halo/app/plugin/DefaultPluginApplicationContextFactory.java"
+      ],
+      "rationale": "Repo-wide exact-token search of the pinned snapshot (commit 669ee1d) for 'AggregatedRouterFunction' yields exactly three tokens: the class declaration token itself (the query, never a usage), the constructor name at AggregatedRouterFunction.java line 18 (0-based), and the AggregatedRouterFunction.class bean registration at DefaultPluginApplicationContextFactory.java line 101 (0-based). Both non-declaration tokens semantically resolve to the class, so the required set has two locations. Both referencing sites are in the same package as the declaration, so no explicit import, re-export, or export binding tokens exist; per the bindings_optional policy no binding location is invented. No other exact-name tokens exist anywhere in the project (including UI, resources, and config files), so there are no excluded candidates to inventory. definitionUsage is the first required location after sorting by URI then start position: the constructor token in AggregatedRouterFunction.java ('Agg...' sorts before 'Def...'). The set is complete with no unresolved required-contract ambiguity, so confidence is high."
+    }
+  ]
+}

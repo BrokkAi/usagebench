@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:a4a5ea5f-d354-4d7e-884d-43c803f3f995",
+    "executedAt": "2026-08-12T11:45:12.113Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-01-2",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/strategy/ExecutorRouteBusyover.java",
+        "range": {
+          "start": {
+            "line": 16,
+            "character": 13
+          },
+          "end": {
+            "line": 16,
+            "character": 34
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 63
+              },
+              "end": {
+                "line": 18,
+                "character": 84
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor invocation `new ExecutorRouteBusyover()` in the BUSYOVER enum constant; resolves to the selected class via the wildcard import of com.xxl.job.admin.business.scheduler.route.strategy."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java",
+        "range": {
+          "start": {
+            "line": 18,
+            "character": 63
+          },
+          "end": {
+            "line": 18,
+            "character": 84
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/strategy/ExecutorRouteBusyover.java",
+        "xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java"
+      ],
+      "rationale": "An exhaustive exact-token search of the complete pinned snapshot found only two occurrences of `ExecutorRouteBusyover`: the class declaration itself (excluded as the selected declaration token) and the constructor call in ExecutorRouteStrategyEnum line 18 (0-indexed), which is the sole required semantic usage. ExecutorRouteStrategyEnum imports the strategy package with a wildcard `strategy.*`, an implicit binding with no identifier token for this class, so per the bindings_optional policy no optional binding location is invented. No other file references the class by simple or qualified name, so the required set is complete with no ambiguity. definitionUsage is the single required location."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-java-04-1",
+  "language": "java",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/binarywang/WxJava",
+    "commit": "f96fd58d1c9fb09accaf492f166cf21a3c81dce4",
+    "archiveSha256": "2f35c1396aa278a63be8438a5a121776421ef2c158d4995caeeeb34f082333e7"
+  },
+  "declaration": {
+    "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/WxCpTpTagService.java",
+    "range": {
+      "start": {
+        "line": 17,
+        "character": 17
+      },
+      "end": {
+        "line": 17,
+        "character": 33
+      }
+    }
+  },
+  "displayName": "WxCpTpTagService"
+}

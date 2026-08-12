@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:2eb78745-d296-4907-ab07-12b7ba32bede",
+    "executedAt": "2026-08-12T13:34:57.720Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-04-3",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+        "range": {
+          "start": {
+            "line": 20,
+            "character": 11
+          },
+          "end": {
+            "line": 20,
+            "character": 23
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+            "range": {
+              "start": {
+                "line": 25,
+                "character": 22
+              },
+              "end": {
+                "line": 25,
+                "character": 34
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding `use dioxus_fullstack::ServerEvents;`; classified optional under the bindings_optional policy. Resolves to the declaration via the crate's wildcard re-exports (lib.rs `pub use payloads::*;` and `pub use sse::*;`)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+            "range": {
+              "start": {
+                "line": 64,
+                "character": 40
+              },
+              "end": {
+                "line": 64,
+                "character": 52
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type reference in the server-function return type `Result<ServerEvents<MyServerEvent>>`; resolves through the file's explicit import of dioxus_fullstack::ServerEvents."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 7
+              },
+              "end": {
+                "line": 67,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Path expression `ServerEvents::new(...)` constructing the type via its server-side associated function; resolves through the file's explicit import."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 34,
+                "character": 26
+              },
+              "end": {
+                "line": 34,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Self type of `impl<T: DeserializeOwned> ServerEvents<T>` (recv) in the declaring file."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 56,
+                "character": 8
+              },
+              "end": {
+                "line": 56,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Self type of `impl<T> ServerEvents<T>` (next_event) in the declaring file."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 65,
+                "character": 37
+              },
+              "end": {
+                "line": 65,
+                "character": 49
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver type in `impl<T: DeserializeOwned> Stream for ServerEvents<T>`."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 90,
+                "character": 25
+              },
+              "end": {
+                "line": 90,
+                "character": 37
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver type in `impl<T> FromResponse for ServerEvents<T>`."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 269,
+                "character": 21
+              },
+              "end": {
+                "line": 269,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Self type of `impl<T: 'static> ServerEvents<T>` inside the server-gated `server_impl` module; `use super::*;` brings the struct into scope."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 350,
+                "character": 29
+              },
+              "end": {
+                "line": 350,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver type in `impl<T> IntoResponse for ServerEvents<T>` inside the server-gated `server_impl` module."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+        "range": {
+          "start": {
+            "line": 64,
+            "character": 40
+          },
+          "end": {
+            "line": 64,
+            "character": 52
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "packages/fullstack/src/payloads/sse.rs",
+        "packages/fullstack/src/lib.rs",
+        "packages/fullstack/Cargo.toml",
+        "examples/07-fullstack/server_sent_events.rs",
+        "Cargo.toml"
+      ],
+      "rationale": "The declaration is `pub struct ServerEvents<T>` at packages/fullstack/src/payloads/sse.rs line 20 (0-indexed). A repository-wide exact-token search found `ServerEvents` only in the declaring file and examples/07-fullstack/server_sent_events.rs. Required usages are the six impl-block type references in the declaring file (lines 34, 56, 65, 90 and, inside the server_impl module which imports super::*, lines 269 and 350) and the two code references in the example (return type on line 64 and the `ServerEvents::new` path expression on line 67), which resolve via the file's explicit import of dioxus_fullstack::ServerEvents through the wildcard re-export chain `pub use payloads::*;` / `pub use sse::*;` in packages/fullstack/src/lib.rs (crate name dioxus-fullstack confirmed in its Cargo.toml; the example is registered in the workspace Cargo.toml). The import token on example line 25 is an explicit import binding and is optional under bindings_optional; the wildcard re-exports have no ServerEvents identifier token, so no binding location is invented for them. Occurrences on sse.rs doc-comment lines 270/308/336 (1-indexed 271/309/337) and example doc-comment lines 15/17/61 are comment text and omitted. No exact-name token resolves elsewhere, so no exclusions were needed. definitionUsage is the URI/line/character-first required location, which falls in the example file since 'examples/...' sorts before 'packages/...'."
+    }
+  ]
+}

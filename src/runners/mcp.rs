@@ -10,7 +10,7 @@ use std::{
         Arc, Mutex,
     },
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 // Bifrost usage scans can consume their full five-minute batch budget before
@@ -193,9 +193,17 @@ fn read_json_rpc_response(
     expected_id: Value,
     label: &str,
 ) -> Result<Value> {
+    let deadline = Instant::now() + MCP_REQUEST_TIMEOUT;
     loop {
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            bail!(
+                "timed out after {} seconds waiting for {label} MCP response",
+                MCP_REQUEST_TIMEOUT.as_secs()
+            );
+        }
         let line = stdout_lines
-            .recv_timeout(MCP_REQUEST_TIMEOUT)
+            .recv_timeout(remaining)
             .with_context(|| {
                 format!(
                     "timed out after {} seconds waiting for {label} MCP response",

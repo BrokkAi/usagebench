@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:368b5809-eb70-4823-8dce-557ecbfcaf39",
+    "executedAt": "2026-08-12T11:47:01.359Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-01-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+        "range": {
+          "start": {
+            "line": 856,
+            "character": 12
+          },
+          "end": {
+            "line": 856,
+            "character": 40
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 726,
+                "character": 12
+              },
+              "end": {
+                "line": 726,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Forward declaration 'static void ImGui_ImplSDL3_CloseGamepads();' preceding ImGui_ImplSDL3_Shutdown; this redeclaration token resolves to the same internal-linkage function defined at line 856 and is outside the supplied declaration range."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 739,
+                "character": 4
+              },
+              "end": {
+                "line": 739,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside ImGui_ImplSDL3_Shutdown(); resolves via the file-local forward declaration to the static function defined at line 856."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 867,
+                "character": 4
+              },
+              "end": {
+                "line": 867,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside ImGui_ImplSDL3_SetGamepadMode(); resolves to the static function defined at line 856 in the same translation unit."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 907,
+                "character": 8
+              },
+              "end": {
+                "line": 907,
+                "character": 36
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call inside ImGui_ImplSDL3_UpdateGamepads() when refreshing the gamepad list; resolves to the static function defined at line 856."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+        "range": {
+          "start": {
+            "line": 726,
+            "character": 12
+          },
+          "end": {
+            "line": 726,
+            "character": 40
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp"
+      ],
+      "rationale": "ImGui_ImplSDL3_CloseGamepads is declared 'static', giving it internal linkage confined to imgui_impl_sdl3_big_picture.cpp. A whole-snapshot exact-token search for 'ImGui_ImplSDL3_CloseGamepads' returned exactly five occurrences, all in that file: the definition token at line 856 (the supplied declaration, never a usage), the forward declaration at 0-based line 726 chars 12-40, and three call sites at 0-based lines 739 (chars 4-32), 867 (chars 4-32), and 907 (chars 8-36). No occurrences exist in comments, strings, headers, or any other file, so there are no excluded same-name candidates to inventory, and no import/export binding tokens exist for this internal-linkage C++ symbol under the bindings_optional policy. All lines are pure ASCII, so UTF-16 code-unit columns match the visible character columns. definitionUsage is the deterministic first required location after sorting by URI, start line, and start character (the forward declaration at line 726). The required set is complete with no unresolved ambiguity, supporting high confidence."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v2-agent-panel-milestone-6-v3",
+  "adjudicator": {"kind":"human","identity":"DavidBakerEffendi","executedAt":"2026-08-12T13:52:21Z","attestation":"I approve the five shared required-location contracts and resolve their non-substantive replace labels to accept. For UtilMount, the matching util.h function prototype is required because it redeclares the same function entity; optional remains limited to explicit import, re-export, and export binding tokens. Ground truth may now be frozen before analyzer execution."},
+  "records": [
+    {"caseId":"real-project-v2-java-04-2","decision":"accept_consensus_contract_with_decision_label_resolution"},
+    {"caseId":"real-project-v2-java-04-3","decision":"accept_consensus_contract_with_decision_label_resolution"},
+    {"caseId":"real-project-v2-rust-04-2","decision":"accept_consensus_contract_with_decision_label_resolution"},
+    {"caseId":"real-project-v2-rust-04-3","decision":"accept_consensus_contract_with_decision_label_resolution"},
+    {"caseId":"real-project-v2-cpp-04-2","decision":"accept_openai_contract_after_classification_adjudication","classificationResolution":{"adjudicated":"required","rationale":"The util.h prototype redeclares the same external-linkage function entity. It is not an explicit import, re-export, or export binding token.","locations":[{"uri":"benchmark://source/src/linux/init/util.h","range":{"start":{"line":268,"character":4},"end":{"line":268,"character":13}}}]}},
+    {"caseId":"real-project-v2-cpp-04-3","decision":"accept_consensus_contract_with_decision_label_resolution"}
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "/root/m5_rust_04_1",
+    "executedAt": "2026-08-12T13:09:52Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-04-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/router/src/routable.rs",
+        "range": {
+          "start": {
+            "line": 170,
+            "character": 11
+          },
+          "end": {
+            "line": 170,
+            "character": 23
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/router/src/routable.rs",
+            "range": {
+              "start": {
+                "line": 172,
+                "character": 45
+              },
+              "end": {
+                "line": 172,
+                "character": 57
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This generic marker argument in the FromQueryArgument implementation resolves directly to the module-level OptionMarker declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/router/src/routable.rs",
+            "range": {
+              "start": {
+                "line": 260,
+                "character": 33
+              },
+              "end": {
+                "line": 260,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This generic marker argument in the ToQueryArgument implementation resolves directly to the module-level OptionMarker declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/packages/router/src/routable.rs",
+        "range": {
+          "start": {
+            "line": 172,
+            "character": 45
+          },
+          "end": {
+            "line": 172,
+            "character": 57
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "packages/router/src/routable.rs"
+      ],
+      "rationale": "A project-wide exact-identifier search found only the declaration and these two semantic type references. Both usages are in trait implementation marker parameters in the same module, with no imports, re-exports, shadowing, or other exact-name candidates."
+    }
+  ]
+}

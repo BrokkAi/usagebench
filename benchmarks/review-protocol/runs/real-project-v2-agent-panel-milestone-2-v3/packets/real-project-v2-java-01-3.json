@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-java-01-3",
+  "language": "java",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/xuxueli/xxl-job",
+    "commit": "e74c784f68f81fa89cb350913ef15794865d7b12",
+    "archiveSha256": "bbb2abebe271a34eb79a5aaa5b0164275a2068c55133dd7b77df77a0ec84064f"
+  },
+  "declaration": {
+    "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/strategy/FixRateScheduleType.java",
+    "range": {
+      "start": {
+        "line": 8,
+        "character": 13
+      },
+      "end": {
+        "line": 8,
+        "character": 32
+      }
+    }
+  },
+  "displayName": "FixRateScheduleType"
+}

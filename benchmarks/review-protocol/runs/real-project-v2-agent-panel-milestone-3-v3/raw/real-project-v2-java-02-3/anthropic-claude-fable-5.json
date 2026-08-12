@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:7703cef5-8390-4cdb-8a68-23a693f907da",
+    "executedAt": "2026-08-12T12:14:05.892Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-02-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/query/StringNotEndsWithCondition.java",
+        "range": {
+          "start": {
+            "line": 2,
+            "character": 7
+          },
+          "end": {
+            "line": 2,
+            "character": 33
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/query/StringEndsWithCondition.java",
+            "range": {
+              "start": {
+                "line": 6,
+                "character": 19
+              },
+              "end": {
+                "line": 6,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor invocation `new StringNotEndsWithCondition(indexName, suffix)` in StringEndsWithCondition.not(); same package run.halo.app.extension.index.query, resolves to the selected package-private record declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/application/src/main/java/run/halo/app/extension/index/query/QueryVisitor.java",
+            "range": {
+              "start": {
+                "line": 125,
+                "character": 21
+              },
+              "end": {
+                "line": 125,
+                "character": 47
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Record deconstruction pattern `case StringNotEndsWithCondition(var indexName, var suffix)` in QueryVisitor.ConditionVisitor.enter; declared in package run.halo.app.extension.index.query with no import needed (same-name split package on the classpath, no module-info.java in the project), so the type reference resolves to the selected declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/query/StringEndsWithCondition.java",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 19
+          },
+          "end": {
+            "line": 6,
+            "character": 45
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/api/src/main/java/run/halo/app/extension/index/query/StringNotEndsWithCondition.java",
+        "source/api/src/main/java/run/halo/app/extension/index/query/StringEndsWithCondition.java",
+        "source/application/src/main/java/run/halo/app/extension/index/query/QueryVisitor.java",
+        "source/application/src/test/java/run/halo/app/extension/index/query/QueryVisitorTest.java"
+      ],
+      "rationale": "StringNotEndsWithCondition is a package-private record in run.halo.app.extension.index.query (api module). A repo-wide exact-token search over the pinned snapshot yields four hits: the declaration token itself (excluded as query metadata), a constructor call in StringEndsWithCondition.not() (required), a record pattern in QueryVisitor's switch (required), and the test method name shouldVisitStringNotEndsWithCondition in QueryVisitorTest, which is a substring of a larger identifier and not a reference to the type, so it is omitted per rule 3. Being package-private with no imports, re-exports, or fully-qualified references, there are no optional binding tokens under bindings_optional. definitionUsage is the URI-first required location (api/ sorts before application/). The required set is complete with no unresolved ambiguity, so confidence is high."
+    }
+  ]
+}

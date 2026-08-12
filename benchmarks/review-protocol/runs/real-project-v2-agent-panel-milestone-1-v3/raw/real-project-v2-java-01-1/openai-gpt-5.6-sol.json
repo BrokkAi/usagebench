@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/review_java_01_1",
+    "executedAt": "2026-08-12T11:23:55Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/strategy/ExecutorRouteFirst.java",
+        "range": {
+          "start": {
+            "line": 10,
+            "character": 13
+          },
+          "end": {
+            "line": 10,
+            "character": 31
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 57
+              },
+              "end": {
+                "line": 10,
+                "character": 75
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The constructor expression new ExecutorRouteFirst() resolves through the strategy-package wildcard import to the selected public class."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java",
+        "range": {
+          "start": {
+            "line": 10,
+            "character": 57
+          },
+          "end": {
+            "line": 10,
+            "character": 75
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/strategy/ExecutorRouteFirst.java",
+        "xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java"
+      ],
+      "rationale": "A whole-snapshot exact-identifier search found only the supplied declaration and one constructor reference. The wildcard import contains no explicit ExecutorRouteFirst identifier token, so bindings_optional adds no optional location. The sole required location is therefore also the deterministic definitionUsage."
+    }
+  ]
+}

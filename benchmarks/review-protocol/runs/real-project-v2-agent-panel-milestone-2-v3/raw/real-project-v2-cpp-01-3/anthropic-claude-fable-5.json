@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:cb7ad2ec-0948-447a-b430-ad0393ff7605",
+    "executedAt": "2026-08-12T12:01:06.340Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-01-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+        "range": {
+          "start": {
+            "line": 2036,
+            "character": 6
+          },
+          "end": {
+            "line": 2036,
+            "character": 18
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+            "range": {
+              "start": {
+                "line": 2208,
+                "character": 20
+              },
+              "end": {
+                "line": 2208,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call to AZolSignedF3 inside AFrom709F3 (0-based line 2208): 'return AZolSelF3(AZolSignedF3(c-j.xxx),...)'. Exact identifier token resolving to the sole definition of AZolSignedF3 in the snapshot."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+            "range": {
+              "start": {
+                "line": 2227,
+                "character": 20
+              },
+              "end": {
+                "line": 2227,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call to AZolSignedF3 inside AFromSrgbF3 (0-based line 2227): 'return AZolSelF3(AZolSignedF3(c-j.xxx),...)'. Exact identifier token resolving to the sole definition of AZolSignedF3 in the snapshot."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+        "range": {
+          "start": {
+            "line": 2208,
+            "character": 20
+          },
+          "end": {
+            "line": 2208,
+            "character": 32
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/video_core/host_shaders/fsr/ffx_a.h",
+        "source/"
+      ],
+      "rationale": "AZolSignedF3 is a single-precision zero-one-logic helper defined once in the FSR shader portability header ffx_a.h at 0-based line 2036 ('AF3 AZolSignedF3(AF3 x){return ASatF3(x*AF3_(A_INFN_F));}'); the packet declaration range exactly covers that identifier token. A repo-wide exact-token search of the pinned snapshot yields exactly three occurrences, all in ffx_a.h: the declaration itself plus two call sites at 0-based lines 2208 (in AFrom709F3) and 2227 (in AFromSrgbF3), both inside always-enabled '#if 1' blocks and both unambiguously resolving to this unique definition; sibling variants (AZolSignedF1/F2/F4) are distinct tokens. There are no import, re-export, or export binding tokens for this C-preprocessor-included shader function, so no optional binding locations exist. No comment/string occurrences were found. All lines are ASCII, so UTF-16 character offsets equal byte/char offsets; the usage token spans characters 20-32 on both call-site lines. Deterministic definitionUsage is the first required location after sorting by URI, start line, start character: line 2208, character 20."
+    }
+  ]
+}

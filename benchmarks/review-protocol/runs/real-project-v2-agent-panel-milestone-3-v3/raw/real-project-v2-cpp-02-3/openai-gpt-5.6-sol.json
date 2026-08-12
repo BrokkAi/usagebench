@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m3_cpp_02_3",
+    "executedAt": "2026-08-12T12:16:38Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-02-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/api/capi.cpp",
+        "range": {
+          "start": {
+            "line": 656,
+            "character": 5
+          },
+          "end": {
+            "line": 656,
+            "character": 40
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/include/tesseract/capi.h",
+            "range": {
+              "start": {
+                "line": 597,
+                "character": 0
+              },
+              "end": {
+                "line": 597,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This public C API prototype declares the same externally linked function defined by the selected declaration in capi.cpp; the definition includes this header, so the token denotes the same C-linkage function entity."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/include/tesseract/capi.h",
+        "range": {
+          "start": {
+            "line": 597,
+            "character": 0
+          },
+          "end": {
+            "line": 597,
+            "character": 35
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "include/tesseract/capi.h",
+        "src/api/capi.cpp"
+      ],
+      "rationale": "A whole-snapshot exact-token search found only the selected definition and the public header prototype. The selected definition token is excluded by the v3 contract. The header prototype is a required semantic occurrence of the same function, yielding a complete one-location required set and its deterministic first definition usage."
+    }
+  ]
+}

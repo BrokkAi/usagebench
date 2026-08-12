@@ -1,0 +1,653 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:c25809fd-a907-4fb7-b09b-2b868e637d37",
+    "executedAt": "2026-08-12T13:11:35.166Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-03-3",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+        "range": {
+          "start": {
+            "line": 18,
+            "character": 19
+          },
+          "end": {
+            "line": 18,
+            "character": 35
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDoubleUtils.java",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 18
+              },
+              "end": {
+                "line": 28,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type of field mCacheMemoryUtils; same package, resolves to the declared class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDoubleUtils.java",
+            "range": {
+              "start": {
+                "line": 37,
+                "character": 27
+              },
+              "end": {
+                "line": 37,
+                "character": 43
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver of static call CacheMemoryUtils.getInstance() in CacheDoubleUtils.getInstance()."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDoubleUtils.java",
+            "range": {
+              "start": {
+                "line": 47,
+                "character": 62
+              },
+              "end": {
+                "line": 47,
+                "character": 78
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type in CacheDoubleUtils.getInstance(CacheMemoryUtils, CacheDiskUtils)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDoubleUtils.java",
+            "range": {
+              "start": {
+                "line": 63,
+                "character": 29
+              },
+              "end": {
+                "line": 63,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type in the private CacheDoubleUtils constructor."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 19
+              },
+              "end": {
+                "line": 14,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type of static field sDefaultCacheMemoryUtils."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 21,
+                "character": 56
+              },
+              "end": {
+                "line": 21,
+                "character": 72
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type in setDefaultCacheMemoryUtils."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 108,
+                "character": 42
+              },
+              "end": {
+                "line": 108,
+                "character": 58
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type in put(key, value, cacheMemoryUtils); indent verified as 27 spaces via anchored regex."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 123,
+                "character": 42
+              },
+              "end": {
+                "line": 123,
+                "character": 58
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type in put(key, value, saveTime, cacheMemoryUtils); indent verified as 27 spaces via anchored regex."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 135,
+                "character": 70
+              },
+              "end": {
+                "line": 135,
+                "character": 86
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type in get(key, cacheMemoryUtils)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 150,
+                "character": 43
+              },
+              "end": {
+                "line": 150,
+                "character": 59
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type in get(key, defaultValue, cacheMemoryUtils); indent verified as 28 spaces via anchored regex."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 160,
+                "character": 51
+              },
+              "end": {
+                "line": 160,
+                "character": 67
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type in getCacheCount(cacheMemoryUtils)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 171,
+                "character": 74
+              },
+              "end": {
+                "line": 171,
+                "character": 90
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type in remove(key, cacheMemoryUtils)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 180,
+                "character": 44
+              },
+              "end": {
+                "line": 180,
+                "character": 60
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type in clear(cacheMemoryUtils)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 184,
+                "character": 19
+              },
+              "end": {
+                "line": 184,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of getDefaultCacheMemoryUtils()."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 185,
+                "character": 77
+              },
+              "end": {
+                "line": 185,
+                "character": 93
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver of static call CacheMemoryUtils.getInstance() in the ternary fallback."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 22,
+                "character": 37
+              },
+              "end": {
+                "line": 22,
+                "character": 53
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type argument in Map<String, CacheMemoryUtils> for CACHE_MAP; outside the declaration token range."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 32,
+                "character": 18
+              },
+              "end": {
+                "line": 32,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of getInstance()."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 42,
+                "character": 18
+              },
+              "end": {
+                "line": 42,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of getInstance(int)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 53,
+                "character": 18
+              },
+              "end": {
+                "line": 53,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of getInstance(String, int)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 54,
+                "character": 8
+              },
+              "end": {
+                "line": 54,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Local variable type of cache in getInstance(String, int)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 56,
+                "character": 26
+              },
+              "end": {
+                "line": 56,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class literal CacheMemoryUtils.class used as the synchronized monitor."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 59,
+                "character": 32
+              },
+              "end": {
+                "line": 59,
+                "character": 48
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor invocation new CacheMemoryUtils(...)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 12
+              },
+              "end": {
+                "line": 67,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor declaration identifier; a Java constructor name is an exact token that semantically resolves to the enclosing class and lies outside the supplied class-name declaration range."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheDoubleStaticUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 25
+              },
+              "end": {
+                "line": 45,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type of test field CACHE_MEMORY_UTILS; test is in the same package com.blankj.utilcode.util."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheDoubleStaticUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 63
+              },
+              "end": {
+                "line": 45,
+                "character": 79
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver of static call CacheMemoryUtils.getInstance() in the same field initializer."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheDoubleUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 25
+              },
+              "end": {
+                "line": 45,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type of test field CACHE_MEMORY_UTILS; test is in the same package com.blankj.utilcode.util."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheDoubleUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 63
+              },
+              "end": {
+                "line": 45,
+                "character": 79
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver of static call CacheMemoryUtils.getInstance() in the same field initializer."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryStaticUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 12
+              },
+              "end": {
+                "line": 18,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type of test field mCacheMemoryUtils."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryStaticUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 49
+              },
+              "end": {
+                "line": 18,
+                "character": 65
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver of static call CacheMemoryUtils.getInstance(3)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryStaticUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 46,
+                "character": 49
+              },
+              "end": {
+                "line": 46,
+                "character": 65
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver in CacheMemoryUtils.SEC; SEC is inherited from CacheConstants but the qualifier token resolves to this class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 12
+              },
+              "end": {
+                "line": 18,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type of test field mCacheMemoryUtils1."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 50
+              },
+              "end": {
+                "line": 18,
+                "character": 66
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver of static call CacheMemoryUtils.getInstance()."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 19,
+                "character": 12
+              },
+              "end": {
+                "line": 19,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type of test field mCacheMemoryUtils2."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 19,
+                "character": 50
+              },
+              "end": {
+                "line": 19,
+                "character": 66
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver of static call CacheMemoryUtils.getInstance(3)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 47,
+                "character": 45
+              },
+              "end": {
+                "line": 47,
+                "character": 61
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Receiver in CacheMemoryUtils.SEC; qualifier token resolves to this class."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDoubleUtils.java",
+        "range": {
+          "start": {
+            "line": 28,
+            "character": 18
+          },
+          "end": {
+            "line": 28,
+            "character": 34
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+        "lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+        "lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDoubleUtils.java",
+        "lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryUtilsTest.java",
+        "lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryStaticUtilsTest.java",
+        "lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheDoubleUtilsTest.java",
+        "lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheDoubleStaticUtilsTest.java",
+        "lib/utilcode/README.md",
+        "lib/utilcode/README-CN.md",
+        "CHANGELOG.md"
+      ],
+      "rationale": "The declaration is the top-level class CacheMemoryUtils (line 18, chars 19-35 of CacheMemoryUtils.java). A repository-wide whole-word search for CacheMemoryUtils found exact-name tokens in exactly 7 Java files plus documentation (README.md, README-CN.md, CHANGELOG.md, Javadoc {@link} tags, and one test-file comment), which are omitted per rule 3, along with substring identifiers (mCacheMemoryUtils*, sDefaultCacheMemoryUtils, setDefaultCacheMemoryUtils, getDefaultCacheMemoryUtils, cacheMemoryUtils, CacheMemoryUtilsTest). All 7 Java files declare package com.blankj.utilcode.util, the same package as the class, so no import or other binding tokens exist anywhere (no file outside the package references the class), and every exact-name code token resolves to this single declaration - there is no other CacheMemoryUtils type in the snapshot, so no excluded locations were needed. The 35 required usages comprise: within the declaring file, the CACHE_MAP type argument, three getInstance return types, a local variable type, the CacheMemoryUtils.class literal, the constructor invocation on line 59 (0-based), and the constructor declaration identifier on line 67 (a token outside the declaration range that must resolve to the class name); in CacheMemoryStaticUtils, one field type, nine parameter types, one return type, and one static-call receiver; in CacheDoubleUtils, one field type, two parameter types, and one static-call receiver; and in the four test files, field types and static-call receivers including two CacheMemoryUtils.SEC qualifiers (SEC is inherited from CacheConstants, but the qualifier resolves to this class). All files are ASCII, so UTF-16 columns equal byte columns; every reported column was verified with anchored ^.{N}CacheMemoryUtils regex matches. definitionUsage is the first required location after sorting by URI, then line, then character: CacheDoubleUtils.java line 28, character 18."
+    }
+  ]
+}

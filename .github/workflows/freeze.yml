@@ -25,6 +25,11 @@ on:
         required: true
         default: 'bifrost,gopls'
         type: string
+      evaluation_freeze:
+        description: 'Registered evaluation freeze ID'
+        required: true
+        default: 'real-project-v2'
+        type: string
 permissions:
   contents: read
 
@@ -35,7 +40,7 @@ concurrency:
 jobs:
   prepare:
     name: validate and freeze evidence
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.snapshot_kind == 'evaluation' && inputs.evaluation_freeze == 'real-project-v2' && 'macos-26' || 'ubuntu-latest' }}
     outputs:
       tag: ${{ steps.identity.outputs.tag }}
       revision: ${{ steps.identity.outputs.revision }}
@@ -60,6 +65,7 @@ jobs:
           SNAPSHOT_VERSION: ${{ inputs.version }}
           SNAPSHOT_KIND: ${{ inputs.snapshot_kind }}
           REQUESTED_CANDIDATES: ${{ inputs.candidates }}
+          EVALUATION_FREEZE: ${{ inputs.evaluation_freeze }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
@@ -106,7 +112,7 @@ jobs:
           if [[ "$SNAPSHOT_KIND" == "development" ]]; then
             release_name="$SNAPSHOT_VERSION development snapshot"
           else
-            scope="$(bash scripts/resolve-freeze-scope.sh evaluation)"
+            scope="$(bash scripts/resolve-freeze-scope.sh evaluation "$EVALUATION_FREEZE")"
             case_path="$(jq -er '.casePath' <<< "$scope")"
             candidates="$(jq -er '.candidates | join(",")' <<< "$scope")"
             [[ "$REQUESTED_CANDIDATES" == "$candidates" ]] || {
@@ -131,6 +137,30 @@ jobs:
       - name: Cache cargo + target
         uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
+      - name: Install exact real-project-v2 candidate tools
+        if: inputs.snapshot_kind == 'evaluation' && inputs.evaluation_freeze == 'real-project-v2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools="$RUNNER_TEMP/usagebench-tools"
+          mkdir -p "$tools/bin" "$tools/jdtls"
+          curl --fail --location --silent --show-error \
+            https://download.eclipse.org/jdtls/snapshots/jdt-language-server-1.61.0-202607142124.tar.gz \
+            --output "$tools/jdtls.tar.gz"
+          echo '4dc0747f22fb86dfada4c9214d3ef94c94f1e84eb57ce52126c26ecf2f17dce4  '"$tools/jdtls.tar.gz" | shasum -a 256 --check
+          tar -xzf "$tools/jdtls.tar.gz" -C "$tools/jdtls"
+          ln -s "$tools/jdtls/bin/jdtls" "$tools/bin/jdtls"
+          curl --fail --location --silent --show-error \
+            https://github.com/rust-lang/rust-analyzer/releases/download/2026-07-13/rust-analyzer-aarch64-apple-darwin.gz \
+            --output "$tools/rust-analyzer.gz"
+          echo '9c6b3ebf06480e2c95a7b01750fa68d77834bffa34da81e4eb00cef3cdff4613  '"$tools/rust-analyzer.gz" | shasum -a 256 --check
+          gzip -dc "$tools/rust-analyzer.gz" > "$tools/bin/rust-analyzer"
+          chmod +x "$tools/bin/rust-analyzer"
+          echo "$tools/bin" >> "$GITHUB_PATH"
+          /usr/bin/clangd --version | grep -F 'Apple clangd version 21.0.0'
+          git clone --filter=blob:none https://github.com/BrokkAi/bifrost.git "$RUNNER_TEMP/bifrost"
+          git -C "$RUNNER_TEMP/bifrost" cat-file -e a54be9be9b08b9d9ddbab1c471e26d7f8bd932df^{commit}
+
       - name: Test harness
         run: cargo test --locked
 
@@ -150,6 +180,7 @@ jobs:
           CANDIDATES: ${{ steps.identity.outputs.candidates }}
           CASE_PATH: ${{ steps.identity.outputs.case_path }}
           REVISION: ${{ steps.identity.outputs.revision }}
+          NATIVE_BIFROST_REPO: ${{ inputs.snapshot_kind == 'evaluation' && inputs.evaluation_freeze == 'real-project-v2' && format('{0}/bifrost', runner.temp) || '' }}
         run: |
           set -euo pipefail
           scripts/stage-release-bundle.sh \

@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:e2745820-1924-4ed6-969e-83a3d6f87b70",
+    "executedAt": "2026-08-12T11:58:48.144Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-01-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/formatter/model.rs",
+        "range": {
+          "start": {
+            "line": 28,
+            "character": 9
+          },
+          "end": {
+            "line": 28,
+            "character": 21
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/model.rs",
+            "range": {
+              "start": {
+                "line": 16,
+                "character": 19
+              },
+              "end": {
+                "line": 16,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type reference in the `style: Vec<StyleElement<'a>>` field of `pub struct TextGroup`; resolves to the enum declared in the same module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/model.rs",
+            "range": {
+              "start": {
+                "line": 66,
+                "character": 47
+              },
+              "end": {
+                "line": 66,
+                "character": 59
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Self type of `impl<'a> StyleVariableHolder<Cow<'a, str>> for StyleElement<'a>`; resolves to the enum declared in the same module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/model.rs",
+            "range": {
+              "start": {
+                "line": 79,
+                "character": 51
+              },
+              "end": {
+                "line": 79,
+                "character": 63
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type argument in `impl<'a> StyleVariableHolder<Cow<'a, str>> for Vec<StyleElement<'a>>`; resolves to the enum declared in the same module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/parser.rs",
+            "range": {
+              "start": {
+                "line": 49,
+                "character": 41
+              },
+              "end": {
+                "line": 49,
+                "character": 53
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type `Vec<StyleElement>` of `fn parse_style`; resolves via the wildcard import `use super::model::*;` to the target enum."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/parser.rs",
+            "range": {
+              "start": {
+                "line": 53,
+                "character": 28
+              },
+              "end": {
+                "line": 53,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Enum path in variant constructor `StyleElement::Text(...)` inside `parse_style`; resolves via wildcard import of `super::model` to the target enum."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/parser.rs",
+            "range": {
+              "start": {
+                "line": 54,
+                "character": 30
+              },
+              "end": {
+                "line": 54,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Enum path in variant constructor `StyleElement::Variable(...)` inside `parse_style`; resolves via wildcard import of `super::model` to the target enum."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/string_formatter.rs",
+            "range": {
+              "start": {
+                "line": 256,
+                "character": 23
+              },
+              "end": {
+                "line": 256,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type `style: Vec<StyleElement>` of the nested `fn parse_style`; resolves via the wildcard import `use super::model::*;` to the target enum."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/string_formatter.rs",
+            "range": {
+              "start": {
+                "line": 263,
+                "character": 20
+              },
+              "end": {
+                "line": 263,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Enum path in match arm pattern `StyleElement::Text(text)`; resolves via wildcard import of `super::model` to the target enum."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/string_formatter.rs",
+            "range": {
+              "start": {
+                "line": 264,
+                "character": 20
+              },
+              "end": {
+                "line": 264,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Enum path in match arm pattern `StyleElement::Variable(name)`; resolves via wildcard import of `super::model` to the target enum."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/formatter/model.rs",
+        "range": {
+          "start": {
+            "line": 16,
+            "character": 19
+          },
+          "end": {
+            "line": 16,
+            "character": 31
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/formatter/model.rs",
+        "source/src/formatter/parser.rs",
+        "source/src/formatter/string_formatter.rs",
+        "source/src/formatter/mod.rs"
+      ],
+      "rationale": "`StyleElement` is a `pub enum` declared at src/formatter/model.rs line 28 (0-indexed), chars 9-21, matching the query token exactly. A repository-wide exact-token search found 10 `StyleElement` tokens; excluding the declaration token itself, all 9 remaining tokens semantically resolve to this enum: three type references in model.rs (the `TextGroup.style` field and two `StyleVariableHolder` impl headers), three in parser.rs (the `parse_style` return type and two variant constructors), and three in string_formatter.rs (the nested `parse_style` parameter type and two match-arm patterns). parser.rs and string_formatter.rs both import the type solely via the implicit wildcard `use super::model::*;`, which has no `StyleElement` identifier token, so per the bindings_optional policy no optional binding location is recorded. src/formatter/mod.rs re-exports only `StyleVariableHolder` and `VariableHolder`, not `StyleElement`, so no re-export binding exists. The `Self::Text`/`Self::Variable` paths in the model.rs impl refer to the enum but are not exact-name tokens and are omitted. No same-name tokens resolve elsewhere, so no excluded locations were inventoried. All lines are ASCII, so UTF-16 columns equal byte columns. definitionUsage is the first required location after sorting by URI, then start line, then start character."
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "fresh_rust_01_2",
+    "executedAt": "2026-08-12T11:31:13Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-01-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/modules/azure.rs",
+        "range": {
+          "start": {
+            "line": 18,
+            "character": 7
+          },
+          "end": {
+            "line": 18,
+            "character": 11
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/modules/azure.rs",
+            "range": {
+              "start": {
+                "line": 26,
+                "character": 10
+              },
+              "end": {
+                "line": 26,
+                "character": 14
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This User type token annotates the user field of Subscription and resolves directly to the private User struct declared earlier in the same module."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/modules/azure.rs",
+        "range": {
+          "start": {
+            "line": 26,
+            "character": 10
+          },
+          "end": {
+            "line": 26,
+            "character": 14
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "src/modules/azure.rs",
+        "src/modules/mod.rs",
+        "src/modules/pulumi.rs"
+      ],
+      "rationale": "The private User struct has exactly one semantic identifier use outside its declaration: the Subscription.user field type. Repository-wide exact-token inspection found no import, re-export, or other code reference; other matches were comments, documentation, or prose and do not belong to the semantic usage set."
+    }
+  ]
+}

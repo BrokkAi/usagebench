@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-rust-03-1",
+  "language": "rust",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/googleworkspace/cli",
+    "commit": "a3768d0e82ad83cca2da97724e46bea4ff0e6dbd",
+    "archiveSha256": "ed9dcfc977b01de955062fac47ff4919e232ac25c2b8d54c65fb19247d29112d"
+  },
+  "declaration": {
+    "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+    "range": {
+      "start": {
+        "line": 1502,
+        "character": 7
+      },
+      "end": {
+        "line": 1502,
+        "character": 28
+      }
+    }
+  },
+  "displayName": "extract_refresh_token"
+}

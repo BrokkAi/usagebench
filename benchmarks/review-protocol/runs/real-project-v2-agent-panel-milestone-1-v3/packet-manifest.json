@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v2-agent-panel-milestone-1-v3",
+  "status": "awaiting_external_sessions",
+  "milestone": {
+    "number": 1,
+    "partitionProgress": "6/36 packets prepared",
+    "caseIds": [
+      "real-project-v2-java-01-1",
+      "real-project-v2-java-01-2",
+      "real-project-v2-rust-01-1",
+      "real-project-v2-rust-01-2",
+      "real-project-v2-cpp-01-1",
+      "real-project-v2-cpp-01-2"
+    ],
+    "balance": {
+      "java": 2,
+      "rust": 2,
+      "cpp": 2
+    }
+  },
+  "executionRequired": {
+    "sessionPolicy": "fresh_session_per_provider_per_case",
+    "providers": [
+      "openai",
+      "anthropic"
+    ],
+    "sessionCount": 12,
+    "humanAdjudicationRequired": true,
+    "note": "This manifest records prepared inputs only; it is not review, execution, or adjudication evidence."
+  },
+  "protocol": {
+    "file": "benchmarks/review-protocol/blinded-agent-review-v3.json",
+    "sha256": "66c04354b88aa1f3cf442345a92bfa24de1a596d2ac107d678b107ba648b2ea8"
+  },
+  "methodology": {
+    "file": "benchmarks/review-protocol/per-case-methodology-v3.md",
+    "sha256": "9118710fdccc4f6d12aa546b03d8985adf8e04d42fe4c0ad4e46e4ebbd1b6ed3"
+  },
+  "prompt": {
+    "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+    "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+  },
+  "responseSchema": {
+    "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+    "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+  },
+  "declarationRanking": {
+    "file": "benchmarks/evaluation/real-project-v2/declarations.json",
+    "sha256": "667c5bba3ff30a64aaa15336811023325aced4d51c7a8aa2578187dae0dc7bd7"
+  },
+  "sourceLock": {
+    "file": "benchmarks/evaluation/real-project-v2/sources.json",
+    "sha256": "cd0684b7210d63ae21b7b953699e53e1eaafd750ec8918bb4ae783dc9a377857"
+  },
+  "packets": [
+    {
+      "caseId": "real-project-v2-java-01-1",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-java-01-1.json",
+      "sha256": "f0a7ed0fe4b0e911371cd308797217944de059d7132e4c5cc0cd335927e062ea"
+    },
+    {
+      "caseId": "real-project-v2-java-01-2",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-java-01-2.json",
+      "sha256": "e6b4f4f21df5d4496f22629508ff9194cd387cfd4aa01c08f22d0ab31b6f52fd"
+    },
+    {
+      "caseId": "real-project-v2-rust-01-1",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-rust-01-1.json",
+      "sha256": "c207180d0ac5ab2c0219adb19d0ac9ead23ece6a356bc569825faeaf76d29ab1"
+    },
+    {
+      "caseId": "real-project-v2-rust-01-2",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-rust-01-2.json",
+      "sha256": "ffcff22d54839d8e1c78ef613531fb2fe478b7ff07a478b0e8578e0bd248911d"
+    },
+    {
+      "caseId": "real-project-v2-cpp-01-1",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-cpp-01-1.json",
+      "sha256": "e0c6139d97389a42046a27564db41065749c06b0bd3f6cf44aaa24837f9e6b1f"
+    },
+    {
+      "caseId": "real-project-v2-cpp-01-2",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-cpp-01-2.json",
+      "sha256": "efa9ee8a2a2a6764f5f2a4a9ac0ec16ac4ab293848b3b5317698958ea9871557"
+    }
+  ],
+  "sources": [
+    {
+      "repo": "https://github.com/xuxueli/xxl-job",
+      "commit": "e74c784f68f81fa89cb350913ef15794865d7b12",
+      "tree": "1eab45da9adcae02f76658e5ab279d28742ab46b",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/xuxueli--xxl-job.tar.gz",
+      "sha256": "bbb2abebe271a34eb79a5aaa5b0164275a2068c55133dd7b77df77a0ec84064f"
+    },
+    {
+      "repo": "https://github.com/starship/starship",
+      "commit": "7946f2d9fbb02a5be76856ed27ddb85da10af3da",
+      "tree": "d7322906cac9a21b167204615eee62405aabfbda",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/starship--starship.tar.gz",
+      "sha256": "14d7fb5364e06fa3301d9ea33b21c84672f4b5729aec28573a2b7d0e8fa39d5b"
+    },
+    {
+      "repo": "https://github.com/shadps4-emu/shadPS4",
+      "commit": "65c9463c6a2f7a5bb3cb0ad02f5f3edbaeb3e49a",
+      "tree": "04c316bf333be6e478f94af9a43ce09e8b10935e",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/shadps4-emu--shadPS4.tar.gz",
+      "sha256": "53313b509b781863cdab49ac54c2c02f6b0727e943317638aab51fd9c2a41c2b"
+    }
+  ]
+}

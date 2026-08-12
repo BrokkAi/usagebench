@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:83b35562-b534-4b92-a2c5-41d0ad8cf1e5",
+    "executedAt": "2026-08-12T13:23:12.491Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-04-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/router/src/routable.rs",
+        "range": {
+          "start": {
+            "line": 170,
+            "character": 11
+          },
+          "end": {
+            "line": 170,
+            "character": 23
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/router/src/routable.rs",
+            "range": {
+              "start": {
+                "line": 172,
+                "character": 45
+              },
+              "end": {
+                "line": 172,
+                "character": 57
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type argument `FromQueryArgument<OptionMarker>` in the impl of FromQueryArgument for Option<T>; resolves to the struct declared at line 170 in the same module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/router/src/routable.rs",
+            "range": {
+              "start": {
+                "line": 260,
+                "character": 33
+              },
+              "end": {
+                "line": 260,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type argument `ToQueryArgument<OptionMarker>` in the impl of ToQueryArgument for Option<T>; resolves to the struct declared at line 170 in the same module."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/packages/router/src/routable.rs",
+        "range": {
+          "start": {
+            "line": 172,
+            "character": 45
+          },
+          "end": {
+            "line": 172,
+            "character": 57
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "packages/router/src/routable.rs",
+        "packages/router/src/lib.rs"
+      ],
+      "rationale": "A repository-wide exact-token search for `OptionMarker` yields exactly three occurrences, all in packages/router/src/routable.rs: the declaration `pub struct OptionMarker;` at line 170 (chars 11-23, matching the query declaration and excluded as the declaration token) and two semantic type references used as trait generic arguments at line 172 (chars 45-57) and line 260 (chars 33-45), both required. The module is re-exported only via the wildcard `pub use crate::routable::*;` in packages/router/src/lib.rs, which has no `OptionMarker` identifier token, so under the bindings_optional policy no binding location exists to record. All relevant lines are pure ASCII, so UTF-16 columns equal character columns. definitionUsage is the first required location after sorting by URI, line, then character. The required set is complete with no unresolved ambiguity."
+    }
+  ]
+}

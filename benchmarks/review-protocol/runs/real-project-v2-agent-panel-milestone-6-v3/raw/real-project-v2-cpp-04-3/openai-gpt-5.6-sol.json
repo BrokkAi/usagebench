@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m6r_cpp_04_3",
+    "executedAt": "2026-08-12T14:13:54Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-04-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+        "range": {
+          "start": {
+            "line": 357,
+            "character": 4
+          },
+          "end": {
+            "line": 357,
+            "character": 19
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 4
+              },
+              "end": {
+                "line": 45,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This earlier global-scope forward declaration redeclares the same five-parameter function entity defined at the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 499,
+                "character": 15
+              },
+              "end": {
+                "line": 499,
+                "character": 30
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The unqualified five-argument call in MountDrvfs resolves to the selected global MountFilesystem function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 598,
+                "character": 15
+              },
+              "end": {
+                "line": 598,
+                "character": 30
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The unqualified five-argument call in MountPlan9Share resolves to the selected global MountFilesystem function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/mountutil/mountflags.cpp",
+            "range": {
+              "start": {
+                "line": 177,
+                "character": 4
+              },
+              "end": {
+                "line": 177,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This is the definition of the distinct four-parameter mountutil::MountFilesystem function inside namespace mountutil."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/mountutil/mountutilcpp.h",
+            "range": {
+              "start": {
+                "line": 81,
+                "character": 4
+              },
+              "end": {
+                "line": 81,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This declaration belongs to the distinct four-parameter mountutil::MountFilesystem function inside namespace mountutil."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+        "range": {
+          "start": {
+            "line": 45,
+            "character": 4
+          },
+          "end": {
+            "line": 45,
+            "character": 19
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "src/linux/init/drvfs.cpp",
+        "src/linux/mountutil/mountflags.cpp",
+        "src/linux/mountutil/mountutilcpp.h"
+      ],
+      "rationale": "A whole-snapshot exact-token search found six MountFilesystem tokens. Excluding the selected definition token itself, the forward declaration and both five-argument calls in drvfs.cpp resolve to the selected global function. The header declaration and definition under namespace mountutil form a separate four-parameter function entity. The earliest required location by URI and source position is the forward declaration at line 45."
+    }
+  ]
+}

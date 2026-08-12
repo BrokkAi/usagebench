@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m2_rust_01_3",
+    "executedAt": "2026-08-12T11:58:18Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-01-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/formatter/model.rs",
+        "range": {
+          "start": {
+            "line": 28,
+            "character": 9
+          },
+          "end": {
+            "line": 28,
+            "character": 21
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/model.rs",
+            "range": {
+              "start": {
+                "line": 16,
+                "character": 19
+              },
+              "end": {
+                "line": 16,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The TextGroup style field directly names the StyleElement enum as its vector element type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/model.rs",
+            "range": {
+              "start": {
+                "line": 66,
+                "character": 47
+              },
+              "end": {
+                "line": 66,
+                "character": 59
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This impl target directly names the declared StyleElement enum."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/model.rs",
+            "range": {
+              "start": {
+                "line": 79,
+                "character": 51
+              },
+              "end": {
+                "line": 79,
+                "character": 63
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This impl target directly names Vec<StyleElement> using the declared enum."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/parser.rs",
+            "range": {
+              "start": {
+                "line": 49,
+                "character": 41
+              },
+              "end": {
+                "line": 49,
+                "character": 53
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The parse_style return type names StyleElement imported from the sibling model module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/parser.rs",
+            "range": {
+              "start": {
+                "line": 53,
+                "character": 28
+              },
+              "end": {
+                "line": 53,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This constructor path selects the Text variant of the imported StyleElement enum."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/parser.rs",
+            "range": {
+              "start": {
+                "line": 54,
+                "character": 30
+              },
+              "end": {
+                "line": 54,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This constructor path selects the Variable variant of the imported StyleElement enum."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/string_formatter.rs",
+            "range": {
+              "start": {
+                "line": 256,
+                "character": 23
+              },
+              "end": {
+                "line": 256,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The nested parse_style parameter type names StyleElement imported from the sibling model module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/string_formatter.rs",
+            "range": {
+              "start": {
+                "line": 263,
+                "character": 20
+              },
+              "end": {
+                "line": 263,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This match pattern selects the Text variant of the imported StyleElement enum."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/string_formatter.rs",
+            "range": {
+              "start": {
+                "line": 264,
+                "character": 20
+              },
+              "end": {
+                "line": 264,
+                "character": 32
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This match pattern selects the Variable variant of the imported StyleElement enum."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/formatter/model.rs",
+        "range": {
+          "start": {
+            "line": 16,
+            "character": 19
+          },
+          "end": {
+            "line": 16,
+            "character": 31
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "src/formatter/model.rs",
+        "src/formatter/mod.rs",
+        "src/formatter/parser.rs",
+        "src/formatter/string_formatter.rs"
+      ],
+      "rationale": "A project-wide exact-token search found nine non-declaration StyleElement identifiers. The three model.rs references resolve directly within the declaring module, while parser.rs and string_formatter.rs import model symbols through use super::model::* and all six references resolve to this enum. The wildcard imports create no explicit StyleElement binding token, and formatter/mod.rs does not re-export StyleElement. The required set is complete with no unresolved contract ambiguity."
+    }
+  ]
+}

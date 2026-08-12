@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "747F3D2A-8CE8-42ED-9FBD-1B3068B8B212",
+    "executedAt": "2026-08-12T14:06:50Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-04-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/bean/auth/MaAuthSubmitResult.java",
+        "range": {
+          "start": {
+            "line": 18,
+            "character": 13
+          },
+          "end": {
+            "line": 18,
+            "character": 31
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/WxOpenMaAuthService.java",
+            "range": {
+              "start": {
+                "line": 47,
+                "character": 2
+              },
+              "end": {
+                "line": 47,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The submit method return type resolves through the auth-package wildcard import to the selected MaAuthSubmitResult class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/WxOpenMaAuthService.java",
+            "range": {
+              "start": {
+                "line": 72,
+                "character": 2
+              },
+              "end": {
+                "line": 72,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The resubmit method return type resolves through the auth-package wildcard import to the selected MaAuthSubmitResult class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 27,
+                "character": 9
+              },
+              "end": {
+                "line": 27,
+                "character": 27
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The overriding submit method return type resolves through the auth-package wildcard import to the selected MaAuthSubmitResult class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 29,
+                "character": 55
+              },
+              "end": {
+                "line": 29,
+                "character": 73
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This class-literal type token resolves through the auth-package wildcard import to the selected MaAuthSubmitResult class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 9
+              },
+              "end": {
+                "line": 45,
+                "character": 27
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The overriding resubmit method return type resolves through the auth-package wildcard import to the selected MaAuthSubmitResult class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 47,
+                "character": 55
+              },
+              "end": {
+                "line": 47,
+                "character": 73
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This class-literal type token resolves through the auth-package wildcard import to the selected MaAuthSubmitResult class."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/WxOpenMaAuthService.java",
+        "range": {
+          "start": {
+            "line": 47,
+            "character": 2
+          },
+          "end": {
+            "line": 47,
+            "character": 20
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "weixin-java-open/pom.xml",
+        "weixin-java-open/src/main/java/me/chanjar/weixin/open/api/WxOpenMaAuthService.java",
+        "weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+        "weixin-java-open/src/main/java/me/chanjar/weixin/open/bean/auth/MaAuthSubmitResult.java"
+      ],
+      "rationale": "The selected declaration is the unique project source declaration of MaAuthSubmitResult. A project-wide exact-token search found only the declaration and these six semantic references. Both consuming files use an auth-package wildcard import, which resolves every listed type token to this declaration; the wildcard itself contains no MaAuthSubmitResult identifier token and therefore yields no optional binding location. The required set is complete, the deterministic first required location is selected for definitionUsage, and no required-contract ambiguity remains."
+    }
+  ]
+}

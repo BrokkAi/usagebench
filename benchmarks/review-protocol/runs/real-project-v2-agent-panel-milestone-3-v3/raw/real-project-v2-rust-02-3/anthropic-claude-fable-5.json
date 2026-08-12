@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:17b18ca7-e1bd-4982-b854-89a4bd255b34",
+    "executedAt": "2026-08-12T12:17:54.916Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-02-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+        "range": {
+          "start": {
+            "line": 5572,
+            "character": 11
+          },
+          "end": {
+            "line": 5572,
+            "character": 26
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/conversions.rs",
+            "range": {
+              "start": {
+                "line": 1137,
+                "character": 64
+              },
+              "end": {
+                "line": 1137,
+                "character": 79
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Struct-literal construction `VectorsSelector { names: include }` inside `impl From<segment::types::WithVector> for WithVectorsSelector`; resolves to the declaration via the explicit import at line 60 of the same file."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 5221,
+                "character": 40
+              },
+              "end": {
+                "line": 5221,
+                "character": 55
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Field type `::core::option::Option<VectorsSelector>` on `DeletePointVectors.vectors` in the same module as the declaration; resolves directly to the declared struct."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 5593,
+                "character": 23
+              },
+              "end": {
+                "line": 5593,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Path segment `super::VectorsSelector` in enum variant `SelectorOptions::Include` inside nested module `with_vectors_selector`; `super` is the declaring module, so the token resolves to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 7017,
+                "character": 51
+              },
+              "end": {
+                "line": 7017,
+                "character": 66
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Path segment `super::VectorsSelector` in the field type of the nested `DeleteVectors` message struct; `super` is the declaring module, so the token resolves to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/collection/src/shards/conversions.rs",
+            "range": {
+              "start": {
+                "line": 262,
+                "character": 26
+              },
+              "end": {
+                "line": 262,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Struct-literal construction `Some(VectorsSelector { names: vector_names })` in `internal_delete_vectors`; resolves to the declaration via the explicit import `api::grpc::qdrant::VectorsSelector` at line 10."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/collection/src/shards/conversions.rs",
+            "range": {
+              "start": {
+                "line": 293,
+                "character": 26
+              },
+              "end": {
+                "line": 293,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Struct-literal construction `Some(VectorsSelector { names: vector_names })` in `internal_delete_vectors_by_filter`; resolves to the declaration via the explicit import at line 10."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/conversions.rs",
+            "range": {
+              "start": {
+                "line": 60,
+                "character": 17
+              },
+              "end": {
+                "line": 60,
+                "character": 32
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token in `use crate::grpc::qdrant::{ ..., VectorsSelector, ... }`; classified optional under the bindings_optional reference policy."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/collection/src/shards/conversions.rs",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 35
+              },
+              "end": {
+                "line": 10,
+                "character": 50
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token in `use api::grpc::qdrant::{ ..., VectorsSelector }`; classified optional under the bindings_optional reference policy."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/proto/points.proto",
+            "range": {
+              "start": {
+                "line": 249,
+                "character": 2
+              },
+              "end": {
+                "line": 249,
+                "character": 17
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Protobuf field type reference in points.proto; resolves in the protobuf namespace to the proto message from which the Rust struct is generated, not to the Rust declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/proto/points.proto",
+            "range": {
+              "start": {
+                "line": 451,
+                "character": 8
+              },
+              "end": {
+                "line": 451,
+                "character": 23
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Protobuf message declaration `message VectorsSelector` in points.proto; this is the proto-language definition, not a token resolving to the Rust declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/proto/points.proto",
+            "range": {
+              "start": {
+                "line": 461,
+                "character": 4
+              },
+              "end": {
+                "line": 461,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Protobuf field type reference inside `message WithVectorsSelector`; resolves to the proto message, not the Rust declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/proto/points.proto",
+            "range": {
+              "start": {
+                "line": 1313,
+                "character": 4
+              },
+              "end": {
+                "line": 1313,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Protobuf field type reference in points.proto; resolves to the proto message, not the Rust declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/api/src/grpc/conversions.rs",
+        "range": {
+          "start": {
+            "line": 1137,
+            "character": 64
+          },
+          "end": {
+            "line": 1137,
+            "character": 79
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "lib/api/src/grpc/qdrant.rs",
+        "lib/api/src/grpc/conversions.rs",
+        "lib/api/src/grpc/mod.rs",
+        "lib/collection/src/shards/conversions.rs",
+        "lib/api/src/grpc/proto/points.proto",
+        "lib/api/src/grpc/proto/points_internal_service.proto",
+        "src/tonic/api/query_common.rs",
+        "lib/shard/src/query/conversions.rs"
+      ],
+      "rationale": "The query selects `pub struct VectorsSelector` at lib/api/src/grpc/qdrant.rs line 5572 (0-based), a prost-generated gRPC message type. A repository-wide exact-token search found all `VectorsSelector` identifier tokens; every other hit is the distinct identifier `WithVectorsSelector`, a substring-containing but different token, omitted per the rules. Only one Rust declaration named VectorsSelector exists, so in-crate references resolve unambiguously. Required usages: two type references in the declaring module (DeletePointVectors field at line 5221 and the nested `super::VectorsSelector` references at lines 5593 and 7017), one struct-literal construction in lib/api/src/grpc/conversions.rs line 1137, and two struct-literal constructions in lib/collection/src/shards/conversions.rs lines 262 and 293 (imported via `api::grpc::qdrant`, with `lib/api/src/grpc/mod.rs` declaring `pub mod qdrant`). The wildcard re-export `pub use qdrant::*;` in mod.rs carries no VectorsSelector identifier token, so no location is invented for it per rule 2. Explicit per-name import tokens in the two conversions files are optional bindings under bindings_optional. Exact-name tokens in the .proto files belong to the protobuf language and resolve to the proto message definition, not the Rust struct, so they are excluded. definitionUsage is the first required location after sorting by URI, then line, then character. The required set is complete with no unresolved ambiguity, so confidence is high."
+    }
+  ]
+}

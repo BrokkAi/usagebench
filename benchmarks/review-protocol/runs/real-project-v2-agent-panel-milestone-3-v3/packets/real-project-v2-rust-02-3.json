@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-rust-02-3",
+  "language": "rust",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/qdrant/qdrant",
+    "commit": "db8fa43fcb6aedec1e739487e17a99731b74590a",
+    "archiveSha256": "4dfc06c6c60c69a9b1c9866fd665860c437cdd8bba34a4520190679ebaf0b9fb"
+  },
+  "declaration": {
+    "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+    "range": {
+      "start": {
+        "line": 5572,
+        "character": 11
+      },
+      "end": {
+        "line": 5572,
+        "character": 26
+      }
+    }
+  },
+  "displayName": "VectorsSelector"
+}

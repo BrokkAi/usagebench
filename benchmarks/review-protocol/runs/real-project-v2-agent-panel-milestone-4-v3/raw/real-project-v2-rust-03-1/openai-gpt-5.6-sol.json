@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "/root/m4_rust_03_1",
+    "executedAt": "2026-08-12T12:50:37Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-03-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+        "range": {
+          "start": {
+            "line": 1502,
+            "character": 7
+          },
+          "end": {
+            "line": 1502,
+            "character": 28
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 171,
+                "character": 4
+              },
+              "end": {
+                "line": 171,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call in read_refresh_token_from_cache resolves to the selected module-level function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 1998,
+                "character": 12
+              },
+              "end": {
+                "line": 1998,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Test call in the same module resolves to the selected function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2006,
+                "character": 19
+              },
+              "end": {
+                "line": 2006,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Test call in the same module resolves to the selected function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2011,
+                "character": 19
+              },
+              "end": {
+                "line": 2011,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Test call in the same module resolves to the selected function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2016,
+                "character": 19
+              },
+              "end": {
+                "line": 2016,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Test call in the same module resolves to the selected function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2023,
+                "character": 19
+              },
+              "end": {
+                "line": 2023,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Test call in the same module resolves to the selected function."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+        "range": {
+          "start": {
+            "line": 171,
+            "character": 4
+          },
+          "end": {
+            "line": 171,
+            "character": 25
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "crates/google-workspace-cli/src/auth_commands.rs",
+        "crates/google-workspace-cli/src/main.rs"
+      ],
+      "rationale": "The selected declaration is valid. A project-wide exact-identifier search found six tokens outside the declaration, all unqualified calls within the declaring module and all resolving to this function. No explicit import, re-export, or export binding token exists, and no required-contract ambiguity remains."
+    }
+  ]
+}

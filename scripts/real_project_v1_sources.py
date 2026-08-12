@@ -55,13 +55,15 @@ def archive_tree(path: Path, gitlinks: list[dict[str, str]]) -> str:
                     mode = "120000"
                 else:
                     raise SystemExit(f"unsupported archive entry {member.name}")
-                stream.write(f"M {mode} inline {json.dumps(member.name)}\n".encode())
+                stream.write(
+                    f"M {mode} inline {json.dumps(member.name, ensure_ascii=False)}\n".encode()
+                )
                 stream.write(f"data {len(data)}\n".encode())
                 stream.write(data)
                 stream.write(b"\n")
         for gitlink in gitlinks:
             stream.write(
-                f"M 160000 {gitlink['commit']} {json.dumps(gitlink['path'])}\n".encode()
+                f"M 160000 {gitlink['commit']} {json.dumps(gitlink['path'], ensure_ascii=False)}\n".encode()
             )
         stream.write(b"\ndone\n")
         stream.close()

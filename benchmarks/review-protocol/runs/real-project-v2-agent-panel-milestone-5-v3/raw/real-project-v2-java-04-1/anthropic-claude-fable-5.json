@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:507da4ef-674c-46b2-ad54-c3e9d5a831df",
+    "executedAt": "2026-08-12T13:07:41.875Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-04-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/WxCpTpTagService.java",
+        "range": {
+          "start": {
+            "line": 17,
+            "character": 17
+          },
+          "end": {
+            "line": 17,
+            "character": 33
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 30,
+                "character": 45
+              },
+              "end": {
+                "line": 30,
+                "character": 61
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type reference in the implements clause of WxCpTpTagServiceImpl; resolves to the selected interface declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-cp/src/test/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImplTest.java",
+            "range": {
+              "start": {
+                "line": 37,
+                "character": 10
+              },
+              "end": {
+                "line": 37,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Field type of the private field wxCpTpTagService in the test class; resolves to the selected interface via the explicit import on line 9."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 39
+              },
+              "end": {
+                "line": 14,
+                "character": 55
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token 'import me.chanjar.weixin.cp.tp.service.WxCpTpTagService;'; classified optional under the bindings_optional reference policy."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-cp/src/test/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImplTest.java",
+            "range": {
+              "start": {
+                "line": 8,
+                "character": 39
+              },
+              "end": {
+                "line": 8,
+                "character": 55
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token in the test class; classified optional under the bindings_optional reference policy."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImpl.java",
+        "range": {
+          "start": {
+            "line": 30,
+            "character": 45
+          },
+          "end": {
+            "line": 30,
+            "character": 61
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/WxCpTpTagService.java",
+        "weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImpl.java",
+        "weixin-java-cp/src/test/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImplTest.java",
+        "weixin-java-cp/src/test/resources/testng.xml"
+      ],
+      "rationale": "Exhaustive case-sensitive search of the pinned snapshot for the exact token 'WxCpTpTagService' yields matches only in the declaration file, WxCpTpTagServiceImpl.java, WxCpTpTagServiceImplTest.java, and testng.xml. Required usages: the implements-clause type reference in WxCpTpTagServiceImpl (line 30, cols 45-61) and the field type in WxCpTpTagServiceImplTest (line 37, cols 10-26); both resolve to the selected interface via explicit imports of me.chanjar.weixin.cp.tp.service.WxCpTpTagService. The two explicit import statements are optional binding tokens under bindings_optional. Non-usages omitted per rule 3: the declaration token itself; 'WxCpTpTagServiceImpl' and 'WxCpTpTagServiceImplTest' identifiers (distinct identifiers containing the token as a substring); the field/variable name 'wxCpTpTagService' (case-differing identifier, lines 38 and 50 of the test); and the testng.xml class-name string (string content naming the test class, not an identifier token). No exact-name token resolving elsewhere exists, so no excluded entries are inventoried. definitionUsage is the first required location after sorting by URI then position (src/main sorts before src/test). No unresolved ambiguity affects the required set."
+    }
+  ]
+}

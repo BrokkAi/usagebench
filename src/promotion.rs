@@ -409,7 +409,7 @@ mod tests {
             analyzer_outcome_use: "forbidden".into(),
             eligibility_policy: ArtifactLink {
                 file: "Cargo.toml".into(),
-                sha256: "f219fb9a04d4ee3b21dd12ef166ea52ac766b1e03a1690109fb0e5ac46588d28".into(),
+                sha256: sha256(&fs::read("Cargo.toml").unwrap()),
             },
             balance_policy: BalancePolicy {
                 language_count: 11,

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m2_java_01_3",
+    "executedAt": "2026-08-12T11:57:50Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-01-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/strategy/FixRateScheduleType.java",
+        "range": {
+          "start": {
+            "line": 8,
+            "character": 13
+          },
+          "end": {
+            "line": 8,
+            "character": 32
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/ScheduleTypeEnum.java",
+            "range": {
+              "start": {
+                "line": 3,
+                "character": 58
+              },
+              "end": {
+                "line": 3,
+                "character": 77
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "This exact-name token is the explicit import binding for the declared class and is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/ScheduleTypeEnum.java",
+            "range": {
+              "start": {
+                "line": 22,
+                "character": 63
+              },
+              "end": {
+                "line": 22,
+                "character": 82
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This type token in the class-instance creation expression resolves through the explicit import to the selected FixRateScheduleType declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/ScheduleTypeEnum.java",
+        "range": {
+          "start": {
+            "line": 22,
+            "character": 63
+          },
+          "end": {
+            "line": 22,
+            "character": 82
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/ScheduleTypeEnum.java",
+        "xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/ScheduleType.java",
+        "xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/strategy/FixRateScheduleType.java"
+      ],
+      "rationale": "A project-wide exact-name search found only the supplied declaration and two external identifier tokens. The import token is optional under bindings_optional; the constructor type reference is the sole required semantic usage. No competing declaration or unresolved exact-name candidate exists, so the required set is complete and the sole required location is the deterministic definitionUsage."
+    }
+  ]
+}

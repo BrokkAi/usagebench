@@ -1,0 +1,359 @@
+{
+  "schemaVersion": 2,
+  "corpus": {
+    "partition": "evaluation",
+    "selection": "pre_registered",
+    "freezeId": "real-project-v2",
+    "selectionManifest": "benchmarks/evaluation/real-project-v2/selection.json",
+    "reviewManifest": "benchmarks/evaluation/real-project-v2/review.json",
+    "sourceLock": "benchmarks/evaluation/real-project-v2/sources.json"
+  },
+  "groundTruth": {
+    "status": "human_adjudicated_agent_panel",
+    "reviewers": [
+      "openai-gpt-5.6-sol",
+      "anthropic-claude-fable-5"
+    ]
+  },
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "kind": "git",
+    "repo": "https://github.com/tesseract-ocr/tesseract",
+    "commit": "25e4fb2e3d17e1a82a0c27950335573b50f8693e"
+  },
+  "language": "cpp",
+  "cases": [
+    {
+      "id": "real-project-v2-cpp-02-1",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/src/api/capi.cpp",
+          "range": {
+            "start": {
+              "line": 505,
+              "character": 5
+            },
+            "end": {
+              "line": 505,
+              "character": 27
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "TessPageIteratorDelete"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/include/tesseract/capi.h",
+            "range": {
+              "start": {
+                "line": 520,
+                "character": 14
+              },
+              "end": {
+                "line": 520,
+                "character": 36
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "TessPageIteratorDelete"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/include/tesseract/capi.h",
+              "range": {
+                "start": {
+                  "line": 520,
+                  "character": 14
+                },
+                "end": {
+                  "line": 520,
+                  "character": 36
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "TessPageIteratorDelete"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/src/api/capi.cpp",
+              "range": {
+                "start": {
+                  "line": 505,
+                  "character": 5
+                },
+                "end": {
+                  "line": 505,
+                  "character": 27
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "TessPageIteratorDelete"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    },
+    {
+      "id": "real-project-v2-cpp-02-2",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/src/cutil/bitvec.h",
+          "range": {
+            "start": {
+              "line": 36,
+              "character": 19
+            },
+            "end": {
+              "line": 36,
+              "character": 32
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "zero_all_bits"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptive.cpp",
+            "range": {
+              "start": {
+                "line": 131,
+                "character": 2
+              },
+              "end": {
+                "line": 131,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptmatch.cpp",
+            "range": {
+              "start": {
+                "line": 1704,
+                "character": 2
+              },
+              "end": {
+                "line": 1704,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptmatch.cpp",
+            "range": {
+              "start": {
+                "line": 566,
+                "character": 2
+              },
+              "end": {
+                "line": 566,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptive.cpp",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 2
+              },
+              "end": {
+                "line": 67,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/protos.cpp",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 2
+              },
+              "end": {
+                "line": 67,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptive.cpp",
+            "range": {
+              "start": {
+                "line": 68,
+                "character": 2
+              },
+              "end": {
+                "line": 68,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/src/classify/adaptive.cpp",
+              "range": {
+                "start": {
+                  "line": 67,
+                  "character": 2
+                },
+                "end": {
+                  "line": 67,
+                  "character": 15
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "zero_all_bits"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/src/cutil/bitvec.h",
+              "range": {
+                "start": {
+                  "line": 36,
+                  "character": 19
+                },
+                "end": {
+                  "line": 36,
+                  "character": 32
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "zero_all_bits"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    },
+    {
+      "id": "real-project-v2-cpp-02-3",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/src/api/capi.cpp",
+          "range": {
+            "start": {
+              "line": 656,
+              "character": 5
+            },
+            "end": {
+              "line": 656,
+              "character": 40
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "TessResultIteratorSymbolIsSubscript"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/include/tesseract/capi.h",
+            "range": {
+              "start": {
+                "line": 597,
+                "character": 0
+              },
+              "end": {
+                "line": 597,
+                "character": 35
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "TessResultIteratorSymbolIsSubscript"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/include/tesseract/capi.h",
+              "range": {
+                "start": {
+                  "line": 597,
+                  "character": 0
+                },
+                "end": {
+                  "line": 597,
+                  "character": 35
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "TessResultIteratorSymbolIsSubscript"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/src/api/capi.cpp",
+              "range": {
+                "start": {
+                  "line": 656,
+                  "character": 5
+                },
+                "end": {
+                  "line": 656,
+                  "character": 40
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "TessResultIteratorSymbolIsSubscript"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    }
+  ]
+}

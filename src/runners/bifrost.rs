@@ -2120,23 +2120,29 @@ fn build_bifrost(repo: &Path) -> Result<()> {
             .current_dir(repo),
     )
     .with_context(|| format!("build Bifrost binary in {}", repo.display()))?;
-    run_command(
-        Command::new("cargo")
-            .arg("build")
-            .arg("-p")
-            .arg("brokk-bifrost-semantic-packs")
-            .arg("--features")
-            .arg("release-tooling")
-            .arg("--bin")
-            .arg("bifrost-semantic-pack")
-            .current_dir(repo),
-    )
-    .with_context(|| {
-        format!(
-            "build Bifrost semantic-pack installer in {}",
-            repo.display()
+    if repo
+        .join("crates/bifrost-semantic-packs/Cargo.toml")
+        .is_file()
+    {
+        run_command(
+            Command::new("cargo")
+                .arg("build")
+                .arg("-p")
+                .arg("brokk-bifrost-semantic-packs")
+                .arg("--features")
+                .arg("release-tooling")
+                .arg("--bin")
+                .arg("bifrost-semantic-pack")
+                .current_dir(repo),
         )
-    })
+        .with_context(|| {
+            format!(
+                "build Bifrost semantic-pack installer in {}",
+                repo.display()
+            )
+        })?;
+    }
+    Ok(())
 }
 
 fn bifrost_binary_path(repo: &Path) -> PathBuf {
@@ -2509,9 +2515,9 @@ mod tests {
         let totals =
             requested_run_totals(documents.iter().map(|(_, document)| document), false, None);
 
-        assert_eq!(totals.documents, 49);
-        assert_eq!(totals.authored_cases, 196);
-        assert_eq!(totals.planned_cases, 190);
+        assert_eq!(totals.documents, 61);
+        assert_eq!(totals.authored_cases, 232);
+        assert_eq!(totals.planned_cases, 226);
         assert_eq!(
             totals.development_planned_cases + totals.evaluation_planned_cases,
             totals.planned_cases

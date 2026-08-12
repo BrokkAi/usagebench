@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:0701d60f-a7d3-4538-a88d-7b0587962bca",
+    "executedAt": "2026-08-12T11:57:54.434Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-01-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/strategy/FixRateScheduleType.java",
+        "range": {
+          "start": {
+            "line": 8,
+            "character": 13
+          },
+          "end": {
+            "line": 8,
+            "character": 32
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/ScheduleTypeEnum.java",
+            "range": {
+              "start": {
+                "line": 22,
+                "character": 63
+              },
+              "end": {
+                "line": 22,
+                "character": 82
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor invocation `new FixRateScheduleType()` in the FIX_RATE enum constant; resolves to the declared class via the explicit import of com.xxl.job.admin.business.scheduler.type.strategy.FixRateScheduleType."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/ScheduleTypeEnum.java",
+            "range": {
+              "start": {
+                "line": 3,
+                "character": 58
+              },
+              "end": {
+                "line": 3,
+                "character": 77
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit single-type import binding token `import com.xxl.job.admin.business.scheduler.type.strategy.FixRateScheduleType;`; classified optional under the bindings_optional reference policy."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/ScheduleTypeEnum.java",
+        "range": {
+          "start": {
+            "line": 22,
+            "character": 63
+          },
+          "end": {
+            "line": 22,
+            "character": 82
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/strategy/FixRateScheduleType.java",
+        "source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/ScheduleTypeEnum.java"
+      ],
+      "rationale": "An exhaustive exact-token search of the complete pinned snapshot found exactly three occurrences of `FixRateScheduleType`: the class declaration token itself (excluded per protocol as the query token), the explicit import in ScheduleTypeEnum.java line 3 (optional binding under bindings_optional), and the constructor call `new FixRateScheduleType()` in ScheduleTypeEnum.java line 22, which is the sole required semantic usage. No fully-qualified references, reflective/config-file references, or same-name shadowing declarations exist elsewhere in the snapshot, so no excluded candidates required inventory. definitionUsage is the deterministic first (and only) required location. All lines involved are pure ASCII, so UTF-16 character offsets equal byte/column offsets."
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:1cb8f7b7-54da-4654-bbfa-009aed356416",
+    "executedAt": "2026-08-12T13:30:09.836Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-04-2",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+        "range": {
+          "start": {
+            "line": 526,
+            "character": 3
+          },
+          "end": {
+            "line": 526,
+            "character": 17
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+            "range": {
+              "start": {
+                "line": 130,
+                "character": 41
+              },
+              "end": {
+                "line": 130,
+                "character": 55
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call `find_component(&components, component)` inside the `.map` closure of the `Self::Add` match arm. Resolves to the module-level private fn `find_component` declared at line 526 in the same file; no import, local binding, or other item shadows the name."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+            "range": {
+              "start": {
+                "line": 164,
+                "character": 51
+              },
+              "end": {
+                "line": 164,
+                "character": 65
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call `find_component(&registry_components, name)?` in the dependency-resolution loop of the `Self::Add` match arm. Resolves to the same module-level private fn declared at line 526; the local variable `dependency_component` is a distinct identifier, not this token."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+        "range": {
+          "start": {
+            "line": 130,
+            "character": 41
+          },
+          "end": {
+            "line": 130,
+            "character": 55
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/packages/cli/src/cli/component.rs"
+      ],
+      "rationale": "`find_component` is a private (non-pub) free function declared at file/module scope in packages/cli/src/cli/component.rs (0-based line 526, chars 3-17, matching the packet). A repository-wide exact-token search for `find_component` yields exactly three occurrences, all in this file: the declaration and two call expressions at 0-based lines 130 and 164, both inside the `Self::Add` match arm of the same module, so both semantically resolve to this declaration. The function is not imported, re-exported, or referenced anywhere else in the snapshot, so under bindings_optional there are no optional binding tokens. No other item, local, or closure parameter named `find_component` exists to create shadowing, and no exact-name candidate required an excluded classification (`dependency_component` is a different identifier; the doc comment above the declaration contains no exact token). All relevant lines are pure ASCII, so UTF-16 columns equal character counts. Deterministic definitionUsage: sorting the two required locations by URI, start line, then start character selects line 130 char 41. Required set is complete with no unresolved ambiguity, so confidence is high."
+    }
+  ]
+}
