@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:34d096ba-c7d1-4399-8181-cb9b8c413560",
+    "executedAt": "2026-08-12T12:55:46.445Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-03-2",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsToplevel.cpp",
+        "range": {
+          "start": {
+            "line": 131,
+            "character": 11
+          },
+          "end": {
+            "line": 131,
+            "character": 17
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsToplevel.cpp",
+            "range": {
+              "start": {
+                "line": 536,
+                "character": 39
+              },
+              "end": {
+                "line": 536,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Function-pointer argument in Internal::setMgrFn(L, mgr, \"bind\", hlBind) inside Internal::registerToplevelBindings; the token resolves to the static function hlBind declared at line 132 of the same translation unit."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsToplevel.cpp",
+        "range": {
+          "start": {
+            "line": 536,
+            "character": 39
+          },
+          "end": {
+            "line": 536,
+            "character": 45
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/config/lua/bindings/LuaBindingsToplevel.cpp"
+      ],
+      "rationale": "hlBind is declared as a static (internal-linkage) function at src/config/lua/bindings/LuaBindingsToplevel.cpp line 132, so it is only referable within this translation unit. A repository-wide exact-token search for hlBind returned exactly two occurrences: the declaration token itself (never a usage) and the reference at line 537 (0-indexed 536) where hlBind is passed as the C function registered under the Lua name \"bind\". No import/export binding tokens exist in C++ for a static function, so under bindings_optional the required set is the single registration-site token. definitionUsage is the sole required location. The line is pure ASCII, so UTF-16 character offsets 39-45 are exact."
+    }
+  ]
+}

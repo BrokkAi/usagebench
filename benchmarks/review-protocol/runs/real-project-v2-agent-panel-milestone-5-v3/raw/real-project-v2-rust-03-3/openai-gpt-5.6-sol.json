@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "/root/m5_rust_03_3",
+    "executedAt": "2026-08-12T13:06:16Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-03-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+        "range": {
+          "start": {
+            "line": 8,
+            "character": 11
+          },
+          "end": {
+            "line": 8,
+            "character": 26
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+            "range": {
+              "start": {
+                "line": 31,
+                "character": 56
+              },
+              "end": {
+                "line": 31,
+                "character": 71
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The function return type directly names the selected SubscribeConfig struct."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+            "range": {
+              "start": {
+                "line": 82,
+                "character": 38
+              },
+              "end": {
+                "line": 82,
+                "character": 53
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The borrowed parameter type directly names the selected SubscribeConfig struct."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+            "range": {
+              "start": {
+                "line": 381,
+                "character": 12
+              },
+              "end": {
+                "line": 381,
+                "character": 27
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The pull_loop parameter type directly names the selected SubscribeConfig struct."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+        "range": {
+          "start": {
+            "line": 31,
+            "character": 56
+          },
+          "end": {
+            "line": 31,
+            "character": 71
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source",
+        "source/crates/google-workspace-cli/src/helpers/events/subscribe.rs"
+      ],
+      "rationale": "A project-wide exact-name search found the declaration and three exact SubscribeConfig tokens outside it, all of which resolve to the selected private struct. SubscribeConfigBuilder occurrences are distinct generated-builder identifiers rather than exact identifier tokens. There are no explicit import, re-export, or export bindings for SubscribeConfig and no unresolved required-contract ambiguity."
+    }
+  ]
+}

@@ -1,0 +1,259 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m3_rust_02_3",
+    "executedAt": "2026-08-12T12:16:42Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-02-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+        "range": {
+          "start": {
+            "line": 5572,
+            "character": 11
+          },
+          "end": {
+            "line": 5572,
+            "character": 26
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/conversions.rs",
+            "range": {
+              "start": {
+                "line": 60,
+                "character": 17
+              },
+              "end": {
+                "line": 60,
+                "character": 32
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding from crate::grpc::qdrant under the bindings_optional policy."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/conversions.rs",
+            "range": {
+              "start": {
+                "line": 1137,
+                "character": 64
+              },
+              "end": {
+                "line": 1137,
+                "character": 79
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Struct-literal construction resolves through the explicit import to the selected VectorsSelector declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/proto/points.proto",
+            "range": {
+              "start": {
+                "line": 249,
+                "character": 2
+              },
+              "end": {
+                "line": 249,
+                "character": 17
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Protocol Buffers type reference resolves to the separate message declaration in points.proto, not to the Rust declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/proto/points.proto",
+            "range": {
+              "start": {
+                "line": 451,
+                "character": 8
+              },
+              "end": {
+                "line": 451,
+                "character": 23
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This is the distinct Protocol Buffers message declaration that generates the selected Rust type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/proto/points.proto",
+            "range": {
+              "start": {
+                "line": 461,
+                "character": 4
+              },
+              "end": {
+                "line": 461,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Protocol Buffers type reference resolves to the points.proto message, not through Rust name resolution."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/proto/points.proto",
+            "range": {
+              "start": {
+                "line": 1313,
+                "character": 4
+              },
+              "end": {
+                "line": 1313,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Protocol Buffers type reference resolves to the points.proto message, not through Rust name resolution."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 5221,
+                "character": 40
+              },
+              "end": {
+                "line": 5221,
+                "character": 55
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified field type in the same module resolves to the selected VectorsSelector declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 5593,
+                "character": 23
+              },
+              "end": {
+                "line": 5593,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The nested with_vectors_selector module's super-qualified tuple-variant field type resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 7017,
+                "character": 51
+              },
+              "end": {
+                "line": 7017,
+                "character": 66
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The nested points_update_operation module's super-qualified field type resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/collection/src/shards/conversions.rs",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 35
+              },
+              "end": {
+                "line": 10,
+                "character": 50
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding from api::grpc::qdrant under the bindings_optional policy."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/collection/src/shards/conversions.rs",
+            "range": {
+              "start": {
+                "line": 262,
+                "character": 26
+              },
+              "end": {
+                "line": 262,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Struct-literal construction resolves through the explicit api::grpc::qdrant import to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/collection/src/shards/conversions.rs",
+            "range": {
+              "start": {
+                "line": 293,
+                "character": 26
+              },
+              "end": {
+                "line": 293,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Struct-literal construction resolves through the explicit api::grpc::qdrant import to the selected declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/api/src/grpc/conversions.rs",
+        "range": {
+          "start": {
+            "line": 1137,
+            "character": 64
+          },
+          "end": {
+            "line": 1137,
+            "character": 79
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "lib/api/src/grpc/qdrant.rs",
+        "lib/api/src/grpc/conversions.rs",
+        "lib/api/src/grpc/proto/points.proto",
+        "lib/api/src/grpc/mod.rs",
+        "lib/api/src/lib.rs",
+        "lib/collection/src/shards/conversions.rs",
+        "lib/collection/Cargo.toml"
+      ],
+      "rationale": "A project-wide exact-token search found nine Rust occurrences including the selected declaration. Six non-binding Rust tokens resolve to that declaration and are required; two explicit imports are optional under bindings_optional. The four same-name Protocol Buffers tokens resolve within the separate proto language and are excluded. The wildcard pub use qdrant::* contains no VectorsSelector identifier token, so no binding location is invented. The required set is complete, and its lexicographically first location is the struct construction in lib/api/src/grpc/conversions.rs."
+    }
+  ]
+}

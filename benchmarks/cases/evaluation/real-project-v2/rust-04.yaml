@@ -1,0 +1,427 @@
+{
+  "schemaVersion": 2,
+  "corpus": {
+    "partition": "evaluation",
+    "selection": "pre_registered",
+    "freezeId": "real-project-v2",
+    "selectionManifest": "benchmarks/evaluation/real-project-v2/selection.json",
+    "reviewManifest": "benchmarks/evaluation/real-project-v2/review.json",
+    "sourceLock": "benchmarks/evaluation/real-project-v2/sources.json"
+  },
+  "groundTruth": {
+    "status": "human_adjudicated_agent_panel",
+    "reviewers": [
+      "openai-gpt-5.6-sol",
+      "anthropic-claude-fable-5"
+    ]
+  },
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "kind": "git",
+    "repo": "https://github.com/DioxusLabs/dioxus",
+    "commit": "0dbfab5274abd3628b0558f909b5946e783dbc65"
+  },
+  "language": "rust",
+  "cases": [
+    {
+      "id": "real-project-v2-rust-04-1",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/packages/router/src/routable.rs",
+          "range": {
+            "start": {
+              "line": 170,
+              "character": 11
+            },
+            "end": {
+              "line": 170,
+              "character": 23
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "OptionMarker"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/router/src/routable.rs",
+            "range": {
+              "start": {
+                "line": 260,
+                "character": 33
+              },
+              "end": {
+                "line": 260,
+                "character": 45
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "OptionMarker"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/router/src/routable.rs",
+            "range": {
+              "start": {
+                "line": 172,
+                "character": 45
+              },
+              "end": {
+                "line": 172,
+                "character": 57
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "OptionMarker"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/packages/router/src/routable.rs",
+              "range": {
+                "start": {
+                  "line": 172,
+                  "character": 45
+                },
+                "end": {
+                  "line": 172,
+                  "character": 57
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "OptionMarker"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/packages/router/src/routable.rs",
+              "range": {
+                "start": {
+                  "line": 170,
+                  "character": 11
+                },
+                "end": {
+                  "line": 170,
+                  "character": 23
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "OptionMarker"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    },
+    {
+      "id": "real-project-v2-rust-04-2",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+          "range": {
+            "start": {
+              "line": 526,
+              "character": 3
+            },
+            "end": {
+              "line": 526,
+              "character": 17
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "find_component"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+            "range": {
+              "start": {
+                "line": 130,
+                "character": 41
+              },
+              "end": {
+                "line": 130,
+                "character": 55
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "find_component"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+            "range": {
+              "start": {
+                "line": 164,
+                "character": 51
+              },
+              "end": {
+                "line": 164,
+                "character": 65
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "find_component"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+              "range": {
+                "start": {
+                  "line": 130,
+                  "character": 41
+                },
+                "end": {
+                  "line": 130,
+                  "character": 55
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "find_component"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+              "range": {
+                "start": {
+                  "line": 526,
+                  "character": 3
+                },
+                "end": {
+                  "line": 526,
+                  "character": 17
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "find_component"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    },
+    {
+      "id": "real-project-v2-rust-04-3",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+          "range": {
+            "start": {
+              "line": 20,
+              "character": 11
+            },
+            "end": {
+              "line": 20,
+              "character": 23
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "ServerEvents"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 7
+              },
+              "end": {
+                "line": 67,
+                "character": 19
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 56,
+                "character": 8
+              },
+              "end": {
+                "line": 56,
+                "character": 20
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 269,
+                "character": 21
+              },
+              "end": {
+                "line": 269,
+                "character": 33
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 90,
+                "character": 25
+              },
+              "end": {
+                "line": 90,
+                "character": 37
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 34,
+                "character": 26
+              },
+              "end": {
+                "line": 34,
+                "character": 38
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 350,
+                "character": 29
+              },
+              "end": {
+                "line": 350,
+                "character": 41
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 65,
+                "character": 37
+              },
+              "end": {
+                "line": 65,
+                "character": 49
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+            "range": {
+              "start": {
+                "line": 64,
+                "character": 40
+              },
+              "end": {
+                "line": 64,
+                "character": 52
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+              "range": {
+                "start": {
+                  "line": 64,
+                  "character": 40
+                },
+                "end": {
+                  "line": 64,
+                  "character": 52
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "ServerEvents"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+              "range": {
+                "start": {
+                  "line": 20,
+                  "character": 11
+                },
+                "end": {
+                  "line": 20,
+                  "character": 23
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "ServerEvents"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    }
+  ]
+}

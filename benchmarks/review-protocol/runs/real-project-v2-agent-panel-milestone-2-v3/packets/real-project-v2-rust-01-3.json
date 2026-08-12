@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-rust-01-3",
+  "language": "rust",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/starship/starship",
+    "commit": "7946f2d9fbb02a5be76856ed27ddb85da10af3da",
+    "archiveSha256": "14d7fb5364e06fa3301d9ea33b21c84672f4b5729aec28573a2b7d0e8fa39d5b"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/formatter/model.rs",
+    "range": {
+      "start": {
+        "line": 28,
+        "character": 9
+      },
+      "end": {
+        "line": 28,
+        "character": 21
+      }
+    }
+  },
+  "displayName": "StyleElement"
+}

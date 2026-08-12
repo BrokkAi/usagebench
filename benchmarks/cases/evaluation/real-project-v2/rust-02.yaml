@@ -1,0 +1,427 @@
+{
+  "schemaVersion": 2,
+  "corpus": {
+    "partition": "evaluation",
+    "selection": "pre_registered",
+    "freezeId": "real-project-v2",
+    "selectionManifest": "benchmarks/evaluation/real-project-v2/selection.json",
+    "reviewManifest": "benchmarks/evaluation/real-project-v2/review.json",
+    "sourceLock": "benchmarks/evaluation/real-project-v2/sources.json"
+  },
+  "groundTruth": {
+    "status": "human_adjudicated_agent_panel",
+    "reviewers": [
+      "openai-gpt-5.6-sol",
+      "anthropic-claude-fable-5"
+    ]
+  },
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "kind": "git",
+    "repo": "https://github.com/qdrant/qdrant",
+    "commit": "db8fa43fcb6aedec1e739487e17a99731b74590a"
+  },
+  "language": "rust",
+  "cases": [
+    {
+      "id": "real-project-v2-rust-02-1",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/lib/posting_list/src/value_handler.rs",
+          "range": {
+            "start": {
+              "line": 75,
+              "character": 11
+            },
+            "end": {
+              "line": 75,
+              "character": 25
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "UnsizedHandler"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/tests.rs",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 19
+              },
+              "end": {
+                "line": 14,
+                "character": 33
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "UnsizedHandler"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/segment/src/index/field_index/full_text_index/inverted_index/positions.rs",
+            "range": {
+              "start": {
+                "line": 30,
+                "character": 19
+              },
+              "end": {
+                "line": 30,
+                "character": 33
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "UnsizedHandler"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/value_handler.rs",
+            "range": {
+              "start": {
+                "line": 77,
+                "character": 39
+              },
+              "end": {
+                "line": 77,
+                "character": 53
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "UnsizedHandler"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/lib/posting_list/src/tests.rs",
+              "range": {
+                "start": {
+                  "line": 14,
+                  "character": 19
+                },
+                "end": {
+                  "line": 14,
+                  "character": 33
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "UnsizedHandler"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/lib/posting_list/src/value_handler.rs",
+              "range": {
+                "start": {
+                  "line": 75,
+                  "character": 11
+                },
+                "end": {
+                  "line": 75,
+                  "character": 25
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "UnsizedHandler"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    },
+    {
+      "id": "real-project-v2-rust-02-2",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+          "range": {
+            "start": {
+              "line": 75,
+              "character": 7
+            },
+            "end": {
+              "line": 75,
+              "character": 22
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "read_disk_usage"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 63,
+                "character": 16
+              },
+              "end": {
+                "line": 63,
+                "character": 31
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "read_disk_usage"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 88,
+                "character": 20
+              },
+              "end": {
+                "line": 88,
+                "character": 35
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "read_disk_usage"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 116,
+                "character": 29
+              },
+              "end": {
+                "line": 116,
+                "character": 44
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "read_disk_usage"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+              "range": {
+                "start": {
+                  "line": 63,
+                  "character": 16
+                },
+                "end": {
+                  "line": 63,
+                  "character": 31
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "read_disk_usage"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+              "range": {
+                "start": {
+                  "line": 75,
+                  "character": 7
+                },
+                "end": {
+                  "line": 75,
+                  "character": 22
+                }
+              }
+            },
+            "kind": "function",
+            "displayName": "read_disk_usage"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    },
+    {
+      "id": "real-project-v2-rust-02-3",
+      "declaration": {
+        "location": {
+          "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+          "range": {
+            "start": {
+              "line": 5572,
+              "character": 11
+            },
+            "end": {
+              "line": 5572,
+              "character": 26
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "VectorsSelector"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 5593,
+                "character": 23
+              },
+              "end": {
+                "line": 5593,
+                "character": 38
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/collection/src/shards/conversions.rs",
+            "range": {
+              "start": {
+                "line": 262,
+                "character": 26
+              },
+              "end": {
+                "line": 262,
+                "character": 41
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/collection/src/shards/conversions.rs",
+            "range": {
+              "start": {
+                "line": 293,
+                "character": 26
+              },
+              "end": {
+                "line": 293,
+                "character": 41
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 5221,
+                "character": 40
+              },
+              "end": {
+                "line": 5221,
+                "character": 55
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 7017,
+                "character": 51
+              },
+              "end": {
+                "line": 7017,
+                "character": 66
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/conversions.rs",
+            "range": {
+              "start": {
+                "line": 1137,
+                "character": 64
+              },
+              "end": {
+                "line": 1137,
+                "character": 79
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        }
+      ],
+      "usageLookups": [
+        {
+          "operation": "definition",
+          "usage": {
+            "location": {
+              "uri": "benchmark://source/lib/api/src/grpc/conversions.rs",
+              "range": {
+                "start": {
+                  "line": 1137,
+                  "character": 64
+                },
+                "end": {
+                  "line": 1137,
+                  "character": 79
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "VectorsSelector"
+          },
+          "expectedDeclaration": {
+            "location": {
+              "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+              "range": {
+                "start": {
+                  "line": 5572,
+                  "character": 11
+                },
+                "end": {
+                  "line": 5572,
+                  "character": 26
+                }
+              }
+            },
+            "kind": "class",
+            "displayName": "VectorsSelector"
+          }
+        }
+      ],
+      "verification": {
+        "method": "manual_inspection",
+        "notes": "Independently reviewed from the pinned source archive by fresh OpenAI and Anthropic agent sessions, then source-only human adjudicated before analyzer execution. Exact required-location classifications include the recorded human resolutions."
+      }
+    }
+  ]
+}

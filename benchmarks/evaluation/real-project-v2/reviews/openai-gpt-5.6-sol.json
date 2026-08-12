@@ -1,0 +1,6097 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "openai-gpt-5.6-sol",
+  "referencePolicy": "bindings_optional",
+  "selectionAlgorithm": "real-project-v2-source-syntax-v1",
+  "records": [
+    {
+      "caseId": "real-project-v2-java-01-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "xuxueli/xxl-job",
+        "commit": "e74c784f68f81fa89cb350913ef15794865d7b12",
+        "language": "java",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/strategy/ExecutorRouteFirst.java",
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 13
+            },
+            "end": {
+              "line": 10,
+              "character": 31
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "ExecutorRouteFirst"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 57
+              },
+              "end": {
+                "line": 10,
+                "character": 75
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ExecutorRouteFirst"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java",
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 57
+            },
+            "end": {
+              "line": 10,
+              "character": 75
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "ExecutorRouteFirst"
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-01-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "xuxueli/xxl-job",
+        "commit": "e74c784f68f81fa89cb350913ef15794865d7b12",
+        "language": "java",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/strategy/ExecutorRouteBusyover.java",
+          "range": {
+            "start": {
+              "line": 16,
+              "character": 13
+            },
+            "end": {
+              "line": 16,
+              "character": 34
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "ExecutorRouteBusyover"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 63
+              },
+              "end": {
+                "line": 18,
+                "character": 84
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ExecutorRouteBusyover"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/route/ExecutorRouteStrategyEnum.java",
+          "range": {
+            "start": {
+              "line": 18,
+              "character": 63
+            },
+            "end": {
+              "line": 18,
+              "character": 84
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "ExecutorRouteBusyover"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-01-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "starship/starship",
+        "commit": "7946f2d9fbb02a5be76856ed27ddb85da10af3da",
+        "language": "rust",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/src/config.rs",
+          "range": {
+            "start": {
+              "line": 120,
+              "character": 11
+            },
+            "end": {
+              "line": 120,
+              "character": 25
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "StarshipConfig"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/config.rs",
+            "range": {
+              "start": {
+                "line": 124,
+                "character": 5
+              },
+              "end": {
+                "line": 124,
+                "character": 19
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "StarshipConfig"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/config.rs",
+            "range": {
+              "start": {
+                "line": 1049,
+                "character": 12
+              },
+              "end": {
+                "line": 1049,
+                "character": 26
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "StarshipConfig"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/context/mod.rs",
+            "range": {
+              "start": {
+                "line": 43,
+                "character": 16
+              },
+              "end": {
+                "line": 43,
+                "character": 30
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "StarshipConfig"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/context/mod.rs",
+            "range": {
+              "start": {
+                "line": 140,
+                "character": 21
+              },
+              "end": {
+                "line": 140,
+                "character": 35
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "StarshipConfig"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/test/mod.rs",
+            "range": {
+              "start": {
+                "line": 65,
+                "character": 21
+              },
+              "end": {
+                "line": 65,
+                "character": 35
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "StarshipConfig"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/context/mod.rs",
+            "range": {
+              "start": {
+                "line": 200,
+                "character": 22
+              },
+              "end": {
+                "line": 200,
+                "character": 36
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "StarshipConfig"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/configure.rs",
+            "range": {
+              "start": {
+                "line": 232,
+                "character": 23
+              },
+              "end": {
+                "line": 232,
+                "character": 37
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "StarshipConfig"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/configure.rs",
+            "range": {
+              "start": {
+                "line": 225,
+                "character": 26
+              },
+              "end": {
+                "line": 225,
+                "character": 40
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "StarshipConfig"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/config.rs",
+          "range": {
+            "start": {
+              "line": 124,
+              "character": 5
+            },
+            "end": {
+              "line": 124,
+              "character": 19
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "StarshipConfig"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-01-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "starship/starship",
+        "commit": "7946f2d9fbb02a5be76856ed27ddb85da10af3da",
+        "language": "rust",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/src/modules/azure.rs",
+          "range": {
+            "start": {
+              "line": 18,
+              "character": 7
+            },
+            "end": {
+              "line": 18,
+              "character": 11
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "User"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/modules/azure.rs",
+            "range": {
+              "start": {
+                "line": 26,
+                "character": 10
+              },
+              "end": {
+                "line": 26,
+                "character": 14
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "User"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/modules/azure.rs",
+          "range": {
+            "start": {
+              "line": 26,
+              "character": 10
+            },
+            "end": {
+              "line": 26,
+              "character": 14
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "User"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-01-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "shadps4-emu/shadPS4",
+        "commit": "65c9463c6a2f7a5bb3cb0ad02f5f3edbaeb3e49a",
+        "language": "cpp",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/src/core/emulator_settings.h",
+          "range": {
+            "start": {
+              "line": 483,
+              "character": 6
+            },
+            "end": {
+              "line": 483,
+              "character": 26
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "EmulatorSettingsImpl"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 101,
+                "character": 0
+              },
+              "end": {
+                "line": 101,
+                "character": 20
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 99,
+                "character": 0
+              },
+              "end": {
+                "line": 99,
+                "character": 20
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 138,
+                "character": 4
+              },
+              "end": {
+                "line": 138,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 302,
+                "character": 4
+              },
+              "end": {
+                "line": 302,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 316,
+                "character": 4
+              },
+              "end": {
+                "line": 316,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 341,
+                "character": 4
+              },
+              "end": {
+                "line": 341,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 356,
+                "character": 4
+              },
+              "end": {
+                "line": 356,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 662,
+                "character": 4
+              },
+              "end": {
+                "line": 662,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 777,
+                "character": 4
+              },
+              "end": {
+                "line": 777,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 790,
+                "character": 4
+              },
+              "end": {
+                "line": 790,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 839,
+                "character": 4
+              },
+              "end": {
+                "line": 839,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 113,
+                "character": 5
+              },
+              "end": {
+                "line": 113,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 5
+              },
+              "end": {
+                "line": 121,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 141,
+                "character": 5
+              },
+              "end": {
+                "line": 141,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 145,
+                "character": 5
+              },
+              "end": {
+                "line": 145,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 154,
+                "character": 5
+              },
+              "end": {
+                "line": 154,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 164,
+                "character": 5
+              },
+              "end": {
+                "line": 164,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 187,
+                "character": 5
+              },
+              "end": {
+                "line": 187,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 198,
+                "character": 5
+              },
+              "end": {
+                "line": 198,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 209,
+                "character": 5
+              },
+              "end": {
+                "line": 209,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 220,
+                "character": 5
+              },
+              "end": {
+                "line": 220,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 225,
+                "character": 5
+              },
+              "end": {
+                "line": 225,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 235,
+                "character": 5
+              },
+              "end": {
+                "line": 235,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 263,
+                "character": 5
+              },
+              "end": {
+                "line": 263,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 358,
+                "character": 5
+              },
+              "end": {
+                "line": 358,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 476,
+                "character": 5
+              },
+              "end": {
+                "line": 476,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 486,
+                "character": 5
+              },
+              "end": {
+                "line": 486,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 89,
+                "character": 5
+              },
+              "end": {
+                "line": 89,
+                "character": 25
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 102,
+                "character": 8
+              },
+              "end": {
+                "line": 102,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 106,
+                "character": 8
+              },
+              "end": {
+                "line": 106,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 501,
+                "character": 8
+              },
+              "end": {
+                "line": 501,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 510,
+                "character": 8
+              },
+              "end": {
+                "line": 510,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 832,
+                "character": 8
+              },
+              "end": {
+                "line": 832,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 21,
+                "character": 11
+              },
+              "end": {
+                "line": 21,
+                "character": 31
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 106,
+                "character": 16
+              },
+              "end": {
+                "line": 106,
+                "character": 36
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 20,
+                "character": 16
+              },
+              "end": {
+                "line": 20,
+                "character": 36
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 20
+              },
+              "end": {
+                "line": 121,
+                "character": 40
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 20
+              },
+              "end": {
+                "line": 137,
+                "character": 40
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 180,
+                "character": 22
+              },
+              "end": {
+                "line": 180,
+                "character": 42
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 191,
+                "character": 22
+              },
+              "end": {
+                "line": 191,
+                "character": 42
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 202,
+                "character": 22
+              },
+              "end": {
+                "line": 202,
+                "character": 42
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 213,
+                "character": 22
+              },
+              "end": {
+                "line": 213,
+                "character": 42
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 172,
+                "character": 24
+              },
+              "end": {
+                "line": 172,
+                "character": 44
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 729,
+                "character": 25
+              },
+              "end": {
+                "line": 729,
+                "character": 45
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 17,
+                "character": 27
+              },
+              "end": {
+                "line": 17,
+                "character": 47
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 488,
+                "character": 27
+              },
+              "end": {
+                "line": 488,
+                "character": 47
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 548,
+                "character": 27
+              },
+              "end": {
+                "line": 548,
+                "character": 47
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 315,
+                "character": 30
+              },
+              "end": {
+                "line": 315,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 340,
+                "character": 30
+              },
+              "end": {
+                "line": 340,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 355,
+                "character": 30
+              },
+              "end": {
+                "line": 355,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 661,
+                "character": 30
+              },
+              "end": {
+                "line": 661,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 776,
+                "character": 30
+              },
+              "end": {
+                "line": 776,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 789,
+                "character": 30
+              },
+              "end": {
+                "line": 789,
+                "character": 50
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 301,
+                "character": 34
+              },
+              "end": {
+                "line": 301,
+                "character": 54
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 500,
+                "character": 34
+              },
+              "end": {
+                "line": 500,
+                "character": 54
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 509,
+                "character": 34
+              },
+              "end": {
+                "line": 509,
+                "character": 54
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 831,
+                "character": 34
+              },
+              "end": {
+                "line": 831,
+                "character": 54
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 129,
+                "character": 35
+              },
+              "end": {
+                "line": 129,
+                "character": 55
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 35
+              },
+              "end": {
+                "line": 137,
+                "character": 55
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 838,
+                "character": 35
+              },
+              "end": {
+                "line": 838,
+                "character": 55
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 106,
+                "character": 38
+              },
+              "end": {
+                "line": 106,
+                "character": 58
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 109,
+                "character": 38
+              },
+              "end": {
+                "line": 109,
+                "character": 58
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 20,
+                "character": 38
+              },
+              "end": {
+                "line": 20,
+                "character": 58
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 101,
+                "character": 41
+              },
+              "end": {
+                "line": 101,
+                "character": 61
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 818,
+                "character": 42
+              },
+              "end": {
+                "line": 818,
+                "character": 62
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 489,
+                "character": 44
+              },
+              "end": {
+                "line": 489,
+                "character": 64
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 113,
+                "character": 55
+              },
+              "end": {
+                "line": 113,
+                "character": 75
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 74
+              },
+              "end": {
+                "line": 137,
+                "character": 94
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "EmulatorSettingsImpl"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/core/emulator_settings.cpp",
+          "range": {
+            "start": {
+              "line": 20,
+              "character": 16
+            },
+            "end": {
+              "line": 20,
+              "character": 36
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "EmulatorSettingsImpl"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-01-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "shadps4-emu/shadPS4",
+        "commit": "65c9463c6a2f7a5bb3cb0ad02f5f3edbaeb3e49a",
+        "language": "cpp",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+          "range": {
+            "start": {
+              "line": 856,
+              "character": 12
+            },
+            "end": {
+              "line": 856,
+              "character": 40
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "ImGui_ImplSDL3_CloseGamepads"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 739,
+                "character": 4
+              },
+              "end": {
+                "line": 739,
+                "character": 32
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "ImGui_ImplSDL3_CloseGamepads"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 867,
+                "character": 4
+              },
+              "end": {
+                "line": 867,
+                "character": 32
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "ImGui_ImplSDL3_CloseGamepads"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 907,
+                "character": 8
+              },
+              "end": {
+                "line": 907,
+                "character": 36
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "ImGui_ImplSDL3_CloseGamepads"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+            "range": {
+              "start": {
+                "line": 726,
+                "character": 12
+              },
+              "end": {
+                "line": 726,
+                "character": 40
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "ImGui_ImplSDL3_CloseGamepads"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/imgui/big_picture/imgui_impl_sdl3_big_picture.cpp",
+          "range": {
+            "start": {
+              "line": 726,
+              "character": 12
+            },
+            "end": {
+              "line": 726,
+              "character": 40
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "ImGui_ImplSDL3_CloseGamepads"
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-01-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "xuxueli/xxl-job",
+        "commit": "e74c784f68f81fa89cb350913ef15794865d7b12",
+        "language": "java",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/strategy/FixRateScheduleType.java",
+          "range": {
+            "start": {
+              "line": 8,
+              "character": 13
+            },
+            "end": {
+              "line": 8,
+              "character": 32
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "FixRateScheduleType"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/ScheduleTypeEnum.java",
+            "range": {
+              "start": {
+                "line": 22,
+                "character": 63
+              },
+              "end": {
+                "line": 22,
+                "character": 82
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "FixRateScheduleType"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/xxl-job-admin/src/main/java/com/xxl/job/admin/business/scheduler/type/ScheduleTypeEnum.java",
+          "range": {
+            "start": {
+              "line": 22,
+              "character": 63
+            },
+            "end": {
+              "line": 22,
+              "character": 82
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "FixRateScheduleType"
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-02-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "halo-dev/halo",
+        "commit": "669ee1d0b431f45bb260c844eb6eddb071f4f4fb",
+        "language": "java",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttribute.java",
+          "range": {
+            "start": {
+              "line": 13,
+              "character": 17
+            },
+            "end": {
+              "line": 13,
+              "character": 31
+            }
+          }
+        },
+        "kind": "interface",
+        "displayName": "IndexAttribute"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexSpec.java",
+            "range": {
+              "start": {
+                "line": 23,
+                "character": 12
+              },
+              "end": {
+                "line": 23,
+                "character": 26
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "IndexAttribute"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 40
+              },
+              "end": {
+                "line": 18,
+                "character": 54
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "IndexAttribute"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 40
+              },
+              "end": {
+                "line": 28,
+                "character": 54
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "IndexAttribute"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 38,
+                "character": 66
+              },
+              "end": {
+                "line": 38,
+                "character": 80
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "IndexAttribute"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 43,
+                "character": 66
+              },
+              "end": {
+                "line": 43,
+                "character": 80
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "IndexAttribute"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/DefaultIndexAttribute.java",
+            "range": {
+              "start": {
+                "line": 9,
+                "character": 85
+              },
+              "end": {
+                "line": 9,
+                "character": 99
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "IndexAttribute"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/DefaultIndexAttribute.java",
+          "range": {
+            "start": {
+              "line": 9,
+              "character": 85
+            },
+            "end": {
+              "line": 9,
+              "character": 99
+            }
+          }
+        },
+        "kind": "interface",
+        "displayName": "IndexAttribute"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-01-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "starship/starship",
+        "commit": "7946f2d9fbb02a5be76856ed27ddb85da10af3da",
+        "language": "rust",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/src/formatter/model.rs",
+          "range": {
+            "start": {
+              "line": 28,
+              "character": 9
+            },
+            "end": {
+              "line": 28,
+              "character": 21
+            }
+          }
+        },
+        "kind": "enum",
+        "displayName": "StyleElement"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/model.rs",
+            "range": {
+              "start": {
+                "line": 16,
+                "character": 19
+              },
+              "end": {
+                "line": 16,
+                "character": 31
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "StyleElement"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/string_formatter.rs",
+            "range": {
+              "start": {
+                "line": 263,
+                "character": 20
+              },
+              "end": {
+                "line": 263,
+                "character": 32
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "StyleElement"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/string_formatter.rs",
+            "range": {
+              "start": {
+                "line": 264,
+                "character": 20
+              },
+              "end": {
+                "line": 264,
+                "character": 32
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "StyleElement"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/string_formatter.rs",
+            "range": {
+              "start": {
+                "line": 256,
+                "character": 23
+              },
+              "end": {
+                "line": 256,
+                "character": 35
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "StyleElement"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/parser.rs",
+            "range": {
+              "start": {
+                "line": 53,
+                "character": 28
+              },
+              "end": {
+                "line": 53,
+                "character": 40
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "StyleElement"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/parser.rs",
+            "range": {
+              "start": {
+                "line": 54,
+                "character": 30
+              },
+              "end": {
+                "line": 54,
+                "character": 42
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "StyleElement"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/parser.rs",
+            "range": {
+              "start": {
+                "line": 49,
+                "character": 41
+              },
+              "end": {
+                "line": 49,
+                "character": 53
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "StyleElement"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/model.rs",
+            "range": {
+              "start": {
+                "line": 66,
+                "character": 47
+              },
+              "end": {
+                "line": 66,
+                "character": 59
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "StyleElement"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/formatter/model.rs",
+            "range": {
+              "start": {
+                "line": 79,
+                "character": 51
+              },
+              "end": {
+                "line": 79,
+                "character": 63
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "StyleElement"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/formatter/model.rs",
+          "range": {
+            "start": {
+              "line": 16,
+              "character": 19
+            },
+            "end": {
+              "line": 16,
+              "character": 31
+            }
+          }
+        },
+        "kind": "enum",
+        "displayName": "StyleElement"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-02-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "qdrant/qdrant",
+        "commit": "db8fa43fcb6aedec1e739487e17a99731b74590a",
+        "language": "rust",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/lib/posting_list/src/value_handler.rs",
+          "range": {
+            "start": {
+              "line": 75,
+              "character": 11
+            },
+            "end": {
+              "line": 75,
+              "character": 25
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "UnsizedHandler"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/tests.rs",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 19
+              },
+              "end": {
+                "line": 14,
+                "character": 33
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "UnsizedHandler"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/segment/src/index/field_index/full_text_index/inverted_index/positions.rs",
+            "range": {
+              "start": {
+                "line": 30,
+                "character": 19
+              },
+              "end": {
+                "line": 30,
+                "character": 33
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "UnsizedHandler"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/value_handler.rs",
+            "range": {
+              "start": {
+                "line": 77,
+                "character": 39
+              },
+              "end": {
+                "line": 77,
+                "character": 53
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "UnsizedHandler"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/lib/posting_list/src/tests.rs",
+          "range": {
+            "start": {
+              "line": 14,
+              "character": 19
+            },
+            "end": {
+              "line": 14,
+              "character": 33
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "UnsizedHandler"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-01-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "shadps4-emu/shadPS4",
+        "commit": "65c9463c6a2f7a5bb3cb0ad02f5f3edbaeb3e49a",
+        "language": "cpp",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+          "range": {
+            "start": {
+              "line": 2036,
+              "character": 6
+            },
+            "end": {
+              "line": 2036,
+              "character": 18
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "AZolSignedF3"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+            "range": {
+              "start": {
+                "line": 2208,
+                "character": 20
+              },
+              "end": {
+                "line": 2208,
+                "character": 32
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "AZolSignedF3"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+            "range": {
+              "start": {
+                "line": 2227,
+                "character": 20
+              },
+              "end": {
+                "line": 2227,
+                "character": 32
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "AZolSignedF3"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/video_core/host_shaders/fsr/ffx_a.h",
+          "range": {
+            "start": {
+              "line": 2208,
+              "character": 20
+            },
+            "end": {
+              "line": 2208,
+              "character": 32
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "AZolSignedF3"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-02-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "tesseract-ocr/tesseract",
+        "commit": "25e4fb2e3d17e1a82a0c27950335573b50f8693e",
+        "language": "cpp",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/src/api/capi.cpp",
+          "range": {
+            "start": {
+              "line": 505,
+              "character": 5
+            },
+            "end": {
+              "line": 505,
+              "character": 27
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "TessPageIteratorDelete"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/include/tesseract/capi.h",
+            "range": {
+              "start": {
+                "line": 520,
+                "character": 14
+              },
+              "end": {
+                "line": 520,
+                "character": 36
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "TessPageIteratorDelete"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/include/tesseract/capi.h",
+          "range": {
+            "start": {
+              "line": 520,
+              "character": 14
+            },
+            "end": {
+              "line": 520,
+              "character": 36
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "TessPageIteratorDelete"
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-02-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "halo-dev/halo",
+        "commit": "669ee1d0b431f45bb260c844eb6eddb071f4f4fb",
+        "language": "java",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/AggregatedRouterFunction.java",
+          "range": {
+            "start": {
+              "line": 14,
+              "character": 13
+            },
+            "end": {
+              "line": 14,
+              "character": 37
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "AggregatedRouterFunction"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/DefaultPluginApplicationContextFactory.java",
+            "range": {
+              "start": {
+                "line": 101,
+                "character": 29
+              },
+              "end": {
+                "line": 101,
+                "character": 53
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "AggregatedRouterFunction"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/DefaultPluginApplicationContextFactory.java",
+          "range": {
+            "start": {
+              "line": 101,
+              "character": 29
+            },
+            "end": {
+              "line": 101,
+              "character": 53
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "AggregatedRouterFunction"
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-02-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "halo-dev/halo",
+        "commit": "669ee1d0b431f45bb260c844eb6eddb071f4f4fb",
+        "language": "java",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/query/StringNotEndsWithCondition.java",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 7
+            },
+            "end": {
+              "line": 2,
+              "character": 33
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "StringNotEndsWithCondition"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/query/StringEndsWithCondition.java",
+            "range": {
+              "start": {
+                "line": 6,
+                "character": 19
+              },
+              "end": {
+                "line": 6,
+                "character": 45
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "StringNotEndsWithCondition"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/application/src/main/java/run/halo/app/extension/index/query/QueryVisitor.java",
+            "range": {
+              "start": {
+                "line": 125,
+                "character": 21
+              },
+              "end": {
+                "line": 125,
+                "character": 47
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "StringNotEndsWithCondition"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/query/StringEndsWithCondition.java",
+          "range": {
+            "start": {
+              "line": 6,
+              "character": 19
+            },
+            "end": {
+              "line": 6,
+              "character": 45
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "StringNotEndsWithCondition"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-02-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "qdrant/qdrant",
+        "commit": "db8fa43fcb6aedec1e739487e17a99731b74590a",
+        "language": "rust",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+          "range": {
+            "start": {
+              "line": 75,
+              "character": 7
+            },
+            "end": {
+              "line": 75,
+              "character": 22
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "read_disk_usage"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 63,
+                "character": 16
+              },
+              "end": {
+                "line": 63,
+                "character": 31
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "read_disk_usage"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 88,
+                "character": 20
+              },
+              "end": {
+                "line": 88,
+                "character": 35
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "read_disk_usage"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 116,
+                "character": 29
+              },
+              "end": {
+                "line": 116,
+                "character": 44
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "read_disk_usage"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+          "range": {
+            "start": {
+              "line": 63,
+              "character": 16
+            },
+            "end": {
+              "line": 63,
+              "character": 31
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "read_disk_usage"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-02-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "qdrant/qdrant",
+        "commit": "db8fa43fcb6aedec1e739487e17a99731b74590a",
+        "language": "rust",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+          "range": {
+            "start": {
+              "line": 5572,
+              "character": 11
+            },
+            "end": {
+              "line": 5572,
+              "character": 26
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "VectorsSelector"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 5593,
+                "character": 23
+              },
+              "end": {
+                "line": 5593,
+                "character": 38
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/collection/src/shards/conversions.rs",
+            "range": {
+              "start": {
+                "line": 262,
+                "character": 26
+              },
+              "end": {
+                "line": 262,
+                "character": 41
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/collection/src/shards/conversions.rs",
+            "range": {
+              "start": {
+                "line": 293,
+                "character": 26
+              },
+              "end": {
+                "line": 293,
+                "character": 41
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 5221,
+                "character": 40
+              },
+              "end": {
+                "line": 5221,
+                "character": 55
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/qdrant.rs",
+            "range": {
+              "start": {
+                "line": 7017,
+                "character": 51
+              },
+              "end": {
+                "line": 7017,
+                "character": 66
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/api/src/grpc/conversions.rs",
+            "range": {
+              "start": {
+                "line": 1137,
+                "character": 64
+              },
+              "end": {
+                "line": 1137,
+                "character": 79
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "VectorsSelector"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/lib/api/src/grpc/conversions.rs",
+          "range": {
+            "start": {
+              "line": 1137,
+              "character": 64
+            },
+            "end": {
+              "line": 1137,
+              "character": 79
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "VectorsSelector"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-02-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "tesseract-ocr/tesseract",
+        "commit": "25e4fb2e3d17e1a82a0c27950335573b50f8693e",
+        "language": "cpp",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/src/cutil/bitvec.h",
+          "range": {
+            "start": {
+              "line": 36,
+              "character": 19
+            },
+            "end": {
+              "line": 36,
+              "character": 32
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "zero_all_bits"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptive.cpp",
+            "range": {
+              "start": {
+                "line": 131,
+                "character": 2
+              },
+              "end": {
+                "line": 131,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptmatch.cpp",
+            "range": {
+              "start": {
+                "line": 1704,
+                "character": 2
+              },
+              "end": {
+                "line": 1704,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptmatch.cpp",
+            "range": {
+              "start": {
+                "line": 566,
+                "character": 2
+              },
+              "end": {
+                "line": 566,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptive.cpp",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 2
+              },
+              "end": {
+                "line": 67,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/protos.cpp",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 2
+              },
+              "end": {
+                "line": 67,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptive.cpp",
+            "range": {
+              "start": {
+                "line": 68,
+                "character": 2
+              },
+              "end": {
+                "line": 68,
+                "character": 15
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "zero_all_bits"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/classify/adaptive.cpp",
+          "range": {
+            "start": {
+              "line": 67,
+              "character": 2
+            },
+            "end": {
+              "line": 67,
+              "character": 15
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "zero_all_bits"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-02-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "tesseract-ocr/tesseract",
+        "commit": "25e4fb2e3d17e1a82a0c27950335573b50f8693e",
+        "language": "cpp",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/src/api/capi.cpp",
+          "range": {
+            "start": {
+              "line": 656,
+              "character": 5
+            },
+            "end": {
+              "line": 656,
+              "character": 40
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "TessResultIteratorSymbolIsSubscript"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/include/tesseract/capi.h",
+            "range": {
+              "start": {
+                "line": 597,
+                "character": 0
+              },
+              "end": {
+                "line": 597,
+                "character": 35
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "TessResultIteratorSymbolIsSubscript"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/include/tesseract/capi.h",
+          "range": {
+            "start": {
+              "line": 597,
+              "character": 0
+            },
+            "end": {
+              "line": 597,
+              "character": 35
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "TessResultIteratorSymbolIsSubscript"
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-03-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "Blankj/AndroidUtilCode",
+        "commit": "7b4caf9e5440046b3fefb63b6b6e2ead7ebaf809",
+        "language": "java",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+          "range": {
+            "start": {
+              "line": 18,
+              "character": 13
+            },
+            "end": {
+              "line": 18,
+              "character": 29
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "FloatViewManager"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/BaseFloatView.java",
+            "range": {
+              "start": {
+                "line": 70,
+                "character": 8
+              },
+              "end": {
+                "line": 70,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "FloatViewManager"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/BaseFloatView.java",
+            "range": {
+              "start": {
+                "line": 74,
+                "character": 8
+              },
+              "end": {
+                "line": 74,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "FloatViewManager"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+            "range": {
+              "start": {
+                "line": 26,
+                "character": 18
+              },
+              "end": {
+                "line": 26,
+                "character": 34
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "FloatViewManager"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+            "range": {
+              "start": {
+                "line": 31,
+                "character": 29
+              },
+              "end": {
+                "line": 31,
+                "character": 45
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "FloatViewManager"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+            "range": {
+              "start": {
+                "line": 31,
+                "character": 61
+              },
+              "end": {
+                "line": 31,
+                "character": 77
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "FloatViewManager"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/BaseFloatView.java",
+          "range": {
+            "start": {
+              "line": 70,
+              "character": 8
+            },
+            "end": {
+              "line": 70,
+              "character": 24
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "FloatViewManager"
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-03-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "Blankj/AndroidUtilCode",
+        "commit": "7b4caf9e5440046b3fefb63b6b6e2ead7ebaf809",
+        "language": "java",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+          "range": {
+            "start": {
+              "line": 22,
+              "character": 22
+            },
+            "end": {
+              "line": 22,
+              "character": 32
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "BaseDialog"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 60,
+                "character": 20
+              },
+              "end": {
+                "line": 60,
+                "character": 30
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "BaseDialog"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 72,
+                "character": 20
+              },
+              "end": {
+                "line": 72,
+                "character": 30
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "BaseDialog"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 34
+              },
+              "end": {
+                "line": 28,
+                "character": 44
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "BaseDialog"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+          "range": {
+            "start": {
+              "line": 28,
+              "character": 34
+            },
+            "end": {
+              "line": 28,
+              "character": 44
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "BaseDialog"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-03-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "googleworkspace/cli",
+        "commit": "a3768d0e82ad83cca2da97724e46bea4ff0e6dbd",
+        "language": "rust",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+          "range": {
+            "start": {
+              "line": 1502,
+              "character": 7
+            },
+            "end": {
+              "line": 1502,
+              "character": 28
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "extract_refresh_token"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 171,
+                "character": 4
+              },
+              "end": {
+                "line": 171,
+                "character": 25
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "extract_refresh_token"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 1998,
+                "character": 12
+              },
+              "end": {
+                "line": 1998,
+                "character": 33
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "extract_refresh_token"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2006,
+                "character": 19
+              },
+              "end": {
+                "line": 2006,
+                "character": 40
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "extract_refresh_token"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2011,
+                "character": 19
+              },
+              "end": {
+                "line": 2011,
+                "character": 40
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "extract_refresh_token"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2016,
+                "character": 19
+              },
+              "end": {
+                "line": 2016,
+                "character": 40
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "extract_refresh_token"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+            "range": {
+              "start": {
+                "line": 2023,
+                "character": 19
+              },
+              "end": {
+                "line": 2023,
+                "character": 40
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "extract_refresh_token"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/crates/google-workspace-cli/src/auth_commands.rs",
+          "range": {
+            "start": {
+              "line": 171,
+              "character": 4
+            },
+            "end": {
+              "line": 171,
+              "character": 25
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "extract_refresh_token"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-03-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "googleworkspace/cli",
+        "commit": "a3768d0e82ad83cca2da97724e46bea4ff0e6dbd",
+        "language": "rust",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+          "range": {
+            "start": {
+              "line": 1191,
+              "character": 14
+            },
+            "end": {
+              "line": 1191,
+              "character": 30
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "finalize_message"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/forward.rs",
+            "range": {
+              "start": {
+                "line": 168,
+                "character": 4
+              },
+              "end": {
+                "line": 168,
+                "character": 20
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "finalize_message"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/reply.rs",
+            "range": {
+              "start": {
+                "line": 370,
+                "character": 4
+              },
+              "end": {
+                "line": 370,
+                "character": 20
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "finalize_message"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/send.rs",
+            "range": {
+              "start": {
+                "line": 69,
+                "character": 4
+              },
+              "end": {
+                "line": 69,
+                "character": 20
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "finalize_message"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3031,
+                "character": 18
+              },
+              "end": {
+                "line": 3031,
+                "character": 34
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "finalize_message"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3058,
+                "character": 18
+              },
+              "end": {
+                "line": 3058,
+                "character": 34
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "finalize_message"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3076,
+                "character": 18
+              },
+              "end": {
+                "line": 3076,
+                "character": 34
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "finalize_message"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3090,
+                "character": 18
+              },
+              "end": {
+                "line": 3090,
+                "character": 34
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "finalize_message"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3786,
+                "character": 18
+              },
+              "end": {
+                "line": 3786,
+                "character": 34
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "finalize_message"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3820,
+                "character": 18
+              },
+              "end": {
+                "line": 3820,
+                "character": 34
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "finalize_message"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3840,
+                "character": 18
+              },
+              "end": {
+                "line": 3840,
+                "character": 34
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "finalize_message"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3925,
+                "character": 18
+              },
+              "end": {
+                "line": 3925,
+                "character": 34
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "finalize_message"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/forward.rs",
+          "range": {
+            "start": {
+              "line": 168,
+              "character": 4
+            },
+            "end": {
+              "line": 168,
+              "character": 20
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "finalize_message"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-03-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "hyprwm/Hyprland",
+        "commit": "2effd2da48e8e7bd1485eac589329e8f82f13c41",
+        "language": "cpp",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/src/SharedDefs.hpp",
+          "range": {
+            "start": {
+              "line": 8,
+              "character": 5
+            },
+            "end": {
+              "line": 8,
+              "character": 11
+            }
+          }
+        },
+        "kind": "enum",
+        "displayName": "eIcons"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsNotification.cpp",
+            "range": {
+              "start": {
+                "line": 82,
+                "character": 4
+              },
+              "end": {
+                "line": 82,
+                "character": 10
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/notification/NotificationOverlay.hpp",
+            "range": {
+              "start": {
+                "line": 15,
+                "character": 118
+              },
+              "end": {
+                "line": 15,
+                "character": 124
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/notification/NotificationOverlay.cpp",
+            "range": {
+              "start": {
+                "line": 154,
+                "character": 132
+              },
+              "end": {
+                "line": 154,
+                "character": 138
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/plugins/PluginAPI.cpp",
+            "range": {
+              "start": {
+                "line": 242,
+                "character": 8
+              },
+              "end": {
+                "line": 242,
+                "character": 14
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/notification/Notification.hpp",
+            "range": {
+              "start": {
+                "line": 33,
+                "character": 8
+              },
+              "end": {
+                "line": 33,
+                "character": 14
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/notification/Notification.hpp",
+            "range": {
+              "start": {
+                "line": 52,
+                "character": 8
+              },
+              "end": {
+                "line": 52,
+                "character": 14
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/config/lua/objects/LuaNotification.cpp",
+            "range": {
+              "start": {
+                "line": 38,
+                "character": 18
+              },
+              "end": {
+                "line": 38,
+                "character": 24
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/config/lua/objects/LuaNotification.cpp",
+            "range": {
+              "start": {
+                "line": 55,
+                "character": 18
+              },
+              "end": {
+                "line": 55,
+                "character": 24
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsNotification.cpp",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 21
+              },
+              "end": {
+                "line": 18,
+                "character": 27
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsNotification.cpp",
+            "range": {
+              "start": {
+                "line": 35,
+                "character": 21
+              },
+              "end": {
+                "line": 35,
+                "character": 27
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsNotification.cpp",
+            "range": {
+              "start": {
+                "line": 39,
+                "character": 22
+              },
+              "end": {
+                "line": 39,
+                "character": 28
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/config/lua/objects/LuaNotification.cpp",
+            "range": {
+              "start": {
+                "line": 59,
+                "character": 26
+              },
+              "end": {
+                "line": 59,
+                "character": 32
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/notification/Notification.cpp",
+            "range": {
+              "start": {
+                "line": 20,
+                "character": 28
+              },
+              "end": {
+                "line": 20,
+                "character": 34
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/plugins/PluginAPI.cpp",
+            "range": {
+              "start": {
+                "line": 245,
+                "character": 33
+              },
+              "end": {
+                "line": 245,
+                "character": 39
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/notification/Notification.hpp",
+            "range": {
+              "start": {
+                "line": 27,
+                "character": 35
+              },
+              "end": {
+                "line": 27,
+                "character": 41
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/notification/NotificationOverlay.cpp",
+            "range": {
+              "start": {
+                "line": 40,
+                "character": 45
+              },
+              "end": {
+                "line": 40,
+                "character": 51
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/notification/Notification.cpp",
+            "range": {
+              "start": {
+                "line": 43,
+                "character": 0
+              },
+              "end": {
+                "line": 43,
+                "character": 6
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsNotification.cpp",
+            "range": {
+              "start": {
+                "line": 21,
+                "character": 55
+              },
+              "end": {
+                "line": 21,
+                "character": 61
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/config/lua/objects/LuaNotification.cpp",
+            "range": {
+              "start": {
+                "line": 41,
+                "character": 59
+              },
+              "end": {
+                "line": 41,
+                "character": 65
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/ipc/s1/Commands.cpp",
+            "range": {
+              "start": {
+                "line": 1815,
+                "character": 70
+              },
+              "end": {
+                "line": 1815,
+                "character": 76
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/notification/Notification.hpp",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 75
+              },
+              "end": {
+                "line": 10,
+                "character": 81
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/notification/Notification.cpp",
+            "range": {
+              "start": {
+                "line": 5,
+                "character": 82
+              },
+              "end": {
+                "line": 5,
+                "character": 88
+              }
+            }
+          },
+          "kind": "enum",
+          "displayName": "eIcons"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsNotification.cpp",
+          "range": {
+            "start": {
+              "line": 18,
+              "character": 21
+            },
+            "end": {
+              "line": 18,
+              "character": 27
+            }
+          }
+        },
+        "kind": "enum",
+        "displayName": "eIcons"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-03-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "hyprwm/Hyprland",
+        "commit": "2effd2da48e8e7bd1485eac589329e8f82f13c41",
+        "language": "cpp",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsToplevel.cpp",
+          "range": {
+            "start": {
+              "line": 131,
+              "character": 11
+            },
+            "end": {
+              "line": 131,
+              "character": 17
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "hlBind"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsToplevel.cpp",
+            "range": {
+              "start": {
+                "line": 536,
+                "character": 39
+              },
+              "end": {
+                "line": 536,
+                "character": 45
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "hlBind"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/config/lua/bindings/LuaBindingsToplevel.cpp",
+          "range": {
+            "start": {
+              "line": 536,
+              "character": 39
+            },
+            "end": {
+              "line": 536,
+              "character": 45
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "hlBind"
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-03-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "Blankj/AndroidUtilCode",
+        "commit": "7b4caf9e5440046b3fefb63b6b6e2ead7ebaf809",
+        "language": "java",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+          "range": {
+            "start": {
+              "line": 18,
+              "character": 19
+            },
+            "end": {
+              "line": 18,
+              "character": 35
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "CacheMemoryUtils"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 54,
+                "character": 8
+              },
+              "end": {
+                "line": 54,
+                "character": 24
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryStaticUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 12
+              },
+              "end": {
+                "line": 18,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 12
+              },
+              "end": {
+                "line": 18,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 19,
+                "character": 12
+              },
+              "end": {
+                "line": 19,
+                "character": 28
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDoubleUtils.java",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 18
+              },
+              "end": {
+                "line": 28,
+                "character": 34
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 32,
+                "character": 18
+              },
+              "end": {
+                "line": 32,
+                "character": 34
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 42,
+                "character": 18
+              },
+              "end": {
+                "line": 42,
+                "character": 34
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 53,
+                "character": 18
+              },
+              "end": {
+                "line": 53,
+                "character": 34
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 19
+              },
+              "end": {
+                "line": 14,
+                "character": 35
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 184,
+                "character": 19
+              },
+              "end": {
+                "line": 184,
+                "character": 35
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheDoubleStaticUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 25
+              },
+              "end": {
+                "line": 45,
+                "character": 41
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheDoubleUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 25
+              },
+              "end": {
+                "line": 45,
+                "character": 41
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 56,
+                "character": 26
+              },
+              "end": {
+                "line": 56,
+                "character": 42
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDoubleUtils.java",
+            "range": {
+              "start": {
+                "line": 37,
+                "character": 27
+              },
+              "end": {
+                "line": 37,
+                "character": 43
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDoubleUtils.java",
+            "range": {
+              "start": {
+                "line": 63,
+                "character": 29
+              },
+              "end": {
+                "line": 63,
+                "character": 45
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 59,
+                "character": 32
+              },
+              "end": {
+                "line": 59,
+                "character": 48
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+            "range": {
+              "start": {
+                "line": 22,
+                "character": 37
+              },
+              "end": {
+                "line": 22,
+                "character": 53
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 108,
+                "character": 42
+              },
+              "end": {
+                "line": 108,
+                "character": 58
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 123,
+                "character": 42
+              },
+              "end": {
+                "line": 123,
+                "character": 58
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 150,
+                "character": 43
+              },
+              "end": {
+                "line": 150,
+                "character": 59
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 180,
+                "character": 44
+              },
+              "end": {
+                "line": 180,
+                "character": 60
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 47,
+                "character": 45
+              },
+              "end": {
+                "line": 47,
+                "character": 61
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryStaticUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 49
+              },
+              "end": {
+                "line": 18,
+                "character": 65
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryStaticUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 46,
+                "character": 49
+              },
+              "end": {
+                "line": 46,
+                "character": 65
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 50
+              },
+              "end": {
+                "line": 18,
+                "character": 66
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheMemoryUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 19,
+                "character": 50
+              },
+              "end": {
+                "line": 19,
+                "character": 66
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 160,
+                "character": 51
+              },
+              "end": {
+                "line": 160,
+                "character": 67
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 21,
+                "character": 56
+              },
+              "end": {
+                "line": 21,
+                "character": 72
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDoubleUtils.java",
+            "range": {
+              "start": {
+                "line": 47,
+                "character": 62
+              },
+              "end": {
+                "line": 47,
+                "character": 78
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheDoubleStaticUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 63
+              },
+              "end": {
+                "line": 45,
+                "character": 79
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheDoubleUtilsTest.java",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 63
+              },
+              "end": {
+                "line": 45,
+                "character": 79
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 135,
+                "character": 70
+              },
+              "end": {
+                "line": 135,
+                "character": 86
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 171,
+                "character": 74
+              },
+              "end": {
+                "line": 171,
+                "character": 90
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryStaticUtils.java",
+            "range": {
+              "start": {
+                "line": 185,
+                "character": 77
+              },
+              "end": {
+                "line": 185,
+                "character": 93
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "CacheMemoryUtils"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDoubleUtils.java",
+          "range": {
+            "start": {
+              "line": 28,
+              "character": 18
+            },
+            "end": {
+              "line": 28,
+              "character": 34
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "CacheMemoryUtils"
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-04-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "binarywang/WxJava",
+        "commit": "f96fd58d1c9fb09accaf492f166cf21a3c81dce4",
+        "language": "java",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/WxCpTpTagService.java",
+          "range": {
+            "start": {
+              "line": 17,
+              "character": 17
+            },
+            "end": {
+              "line": 17,
+              "character": 33
+            }
+          }
+        },
+        "kind": "interface",
+        "displayName": "WxCpTpTagService"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-cp/src/test/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImplTest.java",
+            "range": {
+              "start": {
+                "line": 37,
+                "character": 10
+              },
+              "end": {
+                "line": 37,
+                "character": 26
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "WxCpTpTagService"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 30,
+                "character": 45
+              },
+              "end": {
+                "line": 30,
+                "character": 61
+              }
+            }
+          },
+          "kind": "interface",
+          "displayName": "WxCpTpTagService"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/weixin-java-cp/src/main/java/me/chanjar/weixin/cp/tp/service/impl/WxCpTpTagServiceImpl.java",
+          "range": {
+            "start": {
+              "line": 30,
+              "character": 45
+            },
+            "end": {
+              "line": 30,
+              "character": 61
+            }
+          }
+        },
+        "kind": "interface",
+        "displayName": "WxCpTpTagService"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-03-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "googleworkspace/cli",
+        "commit": "a3768d0e82ad83cca2da97724e46bea4ff0e6dbd",
+        "language": "rust",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+          "range": {
+            "start": {
+              "line": 8,
+              "character": 11
+            },
+            "end": {
+              "line": 8,
+              "character": 26
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "SubscribeConfig"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+            "range": {
+              "start": {
+                "line": 381,
+                "character": 12
+              },
+              "end": {
+                "line": 381,
+                "character": 27
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "SubscribeConfig"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+            "range": {
+              "start": {
+                "line": 82,
+                "character": 38
+              },
+              "end": {
+                "line": 82,
+                "character": 53
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "SubscribeConfig"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+            "range": {
+              "start": {
+                "line": 31,
+                "character": 56
+              },
+              "end": {
+                "line": 31,
+                "character": 71
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "SubscribeConfig"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/events/subscribe.rs",
+          "range": {
+            "start": {
+              "line": 31,
+              "character": 56
+            },
+            "end": {
+              "line": 31,
+              "character": 71
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "SubscribeConfig"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-04-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "DioxusLabs/dioxus",
+        "commit": "0dbfab5274abd3628b0558f909b5946e783dbc65",
+        "language": "rust",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/packages/router/src/routable.rs",
+          "range": {
+            "start": {
+              "line": 170,
+              "character": 11
+            },
+            "end": {
+              "line": 170,
+              "character": 23
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "OptionMarker"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/router/src/routable.rs",
+            "range": {
+              "start": {
+                "line": 260,
+                "character": 33
+              },
+              "end": {
+                "line": 260,
+                "character": 45
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "OptionMarker"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/router/src/routable.rs",
+            "range": {
+              "start": {
+                "line": 172,
+                "character": 45
+              },
+              "end": {
+                "line": 172,
+                "character": 57
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "OptionMarker"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/packages/router/src/routable.rs",
+          "range": {
+            "start": {
+              "line": 172,
+              "character": 45
+            },
+            "end": {
+              "line": 172,
+              "character": 57
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "OptionMarker"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-03-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "hyprwm/Hyprland",
+        "commit": "2effd2da48e8e7bd1485eac589329e8f82f13c41",
+        "language": "cpp",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/src/ipc/s1/Commands.cpp",
+          "range": {
+            "start": {
+              "line": 610,
+              "character": 19
+            },
+            "end": {
+              "line": 610,
+              "character": 38
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "activeWindowRequest"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/ipc/s1/Commands.cpp",
+            "range": {
+              "start": {
+                "line": 1891,
+                "character": 78
+              },
+              "end": {
+                "line": 1891,
+                "character": 97
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "activeWindowRequest"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/ipc/s1/Commands.cpp",
+          "range": {
+            "start": {
+              "line": 1891,
+              "character": 78
+            },
+            "end": {
+              "line": 1891,
+              "character": 97
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "activeWindowRequest"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-04-1",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "microsoft/WSL",
+        "commit": "e7197ca7774aa0ea66354632a6527c482fbde213",
+        "language": "cpp",
+        "selectionRank": 1,
+        "location": {
+          "uri": "benchmark://source/src/linux/init/util.cpp",
+          "range": {
+            "start": {
+              "line": 2666,
+              "character": 12
+            },
+            "end": {
+              "line": 2666,
+              "character": 22
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "SkipSignal"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.cpp",
+            "range": {
+              "start": {
+                "line": 2706,
+                "character": 12
+              },
+              "end": {
+                "line": 2706,
+                "character": 22
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "SkipSignal"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.cpp",
+            "range": {
+              "start": {
+                "line": 2746,
+                "character": 12
+              },
+              "end": {
+                "line": 2746,
+                "character": 22
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "SkipSignal"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/linux/init/util.cpp",
+          "range": {
+            "start": {
+              "line": 2706,
+              "character": 12
+            },
+            "end": {
+              "line": 2706,
+              "character": 22
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "SkipSignal"
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-04-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "binarywang/WxJava",
+        "commit": "f96fd58d1c9fb09accaf492f166cf21a3c81dce4",
+        "language": "java",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Point.java",
+          "range": {
+            "start": {
+              "line": 15,
+              "character": 13
+            },
+            "end": {
+              "line": 15,
+              "character": 18
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "Point"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Series.java",
+            "range": {
+              "start": {
+                "line": 24,
+                "character": 15
+              },
+              "end": {
+                "line": 24,
+                "character": 20
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "Point"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Series.java",
+          "range": {
+            "start": {
+              "line": 24,
+              "character": 15
+            },
+            "end": {
+              "line": 24,
+              "character": 20
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "Point"
+      }
+    },
+    {
+      "caseId": "real-project-v2-java-04-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "binarywang/WxJava",
+        "commit": "f96fd58d1c9fb09accaf492f166cf21a3c81dce4",
+        "language": "java",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/bean/auth/MaAuthSubmitResult.java",
+          "range": {
+            "start": {
+              "line": 18,
+              "character": 13
+            },
+            "end": {
+              "line": 18,
+              "character": 31
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "MaAuthSubmitResult"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/WxOpenMaAuthService.java",
+            "range": {
+              "start": {
+                "line": 47,
+                "character": 2
+              },
+              "end": {
+                "line": 47,
+                "character": 20
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "MaAuthSubmitResult"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/WxOpenMaAuthService.java",
+            "range": {
+              "start": {
+                "line": 72,
+                "character": 2
+              },
+              "end": {
+                "line": 72,
+                "character": 20
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "MaAuthSubmitResult"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 27,
+                "character": 9
+              },
+              "end": {
+                "line": 27,
+                "character": 27
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "MaAuthSubmitResult"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 9
+              },
+              "end": {
+                "line": 45,
+                "character": 27
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "MaAuthSubmitResult"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 29,
+                "character": 55
+              },
+              "end": {
+                "line": 29,
+                "character": 73
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "MaAuthSubmitResult"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 47,
+                "character": 55
+              },
+              "end": {
+                "line": 47,
+                "character": 73
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "MaAuthSubmitResult"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/WxOpenMaAuthService.java",
+          "range": {
+            "start": {
+              "line": 47,
+              "character": 2
+            },
+            "end": {
+              "line": 47,
+              "character": 20
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "MaAuthSubmitResult"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-04-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "DioxusLabs/dioxus",
+        "commit": "0dbfab5274abd3628b0558f909b5946e783dbc65",
+        "language": "rust",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+          "range": {
+            "start": {
+              "line": 526,
+              "character": 3
+            },
+            "end": {
+              "line": 526,
+              "character": 17
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "find_component"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+            "range": {
+              "start": {
+                "line": 130,
+                "character": 41
+              },
+              "end": {
+                "line": 130,
+                "character": 55
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "find_component"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+            "range": {
+              "start": {
+                "line": 164,
+                "character": 51
+              },
+              "end": {
+                "line": 164,
+                "character": 65
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "find_component"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+          "range": {
+            "start": {
+              "line": 130,
+              "character": 41
+            },
+            "end": {
+              "line": 130,
+              "character": 55
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "find_component"
+      }
+    },
+    {
+      "caseId": "real-project-v2-rust-04-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "DioxusLabs/dioxus",
+        "commit": "0dbfab5274abd3628b0558f909b5946e783dbc65",
+        "language": "rust",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+          "range": {
+            "start": {
+              "line": 20,
+              "character": 11
+            },
+            "end": {
+              "line": 20,
+              "character": 23
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "ServerEvents"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 7
+              },
+              "end": {
+                "line": 67,
+                "character": 19
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 56,
+                "character": 8
+              },
+              "end": {
+                "line": 56,
+                "character": 20
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 269,
+                "character": 21
+              },
+              "end": {
+                "line": 269,
+                "character": 33
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 90,
+                "character": 25
+              },
+              "end": {
+                "line": 90,
+                "character": 37
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 34,
+                "character": 26
+              },
+              "end": {
+                "line": 34,
+                "character": 38
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 350,
+                "character": 29
+              },
+              "end": {
+                "line": 350,
+                "character": 41
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 65,
+                "character": 37
+              },
+              "end": {
+                "line": 65,
+                "character": 49
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+            "range": {
+              "start": {
+                "line": 64,
+                "character": 40
+              },
+              "end": {
+                "line": 64,
+                "character": 52
+              }
+            }
+          },
+          "kind": "class",
+          "displayName": "ServerEvents"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+          "range": {
+            "start": {
+              "line": 64,
+              "character": 40
+            },
+            "end": {
+              "line": 64,
+              "character": 52
+            }
+          }
+        },
+        "kind": "class",
+        "displayName": "ServerEvents"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-04-2",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "microsoft/WSL",
+        "commit": "e7197ca7774aa0ea66354632a6527c482fbde213",
+        "language": "cpp",
+        "selectionRank": 2,
+        "location": {
+          "uri": "benchmark://source/src/linux/init/util.cpp",
+          "range": {
+            "start": {
+              "line": 1756,
+              "character": 4
+            },
+            "end": {
+              "line": 1756,
+              "character": 13
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "UtilMount"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.h",
+            "range": {
+              "start": {
+                "line": 268,
+                "character": 4
+              },
+              "end": {
+                "line": 268,
+                "character": 13
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1082,
+                "character": 8
+              },
+              "end": {
+                "line": 1082,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1087,
+                "character": 8
+              },
+              "end": {
+                "line": 1087,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1092,
+                "character": 8
+              },
+              "end": {
+                "line": 1092,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1097,
+                "character": 8
+              },
+              "end": {
+                "line": 1097,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1102,
+                "character": 8
+              },
+              "end": {
+                "line": 1102,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1275,
+                "character": 8
+              },
+              "end": {
+                "line": 1275,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1295,
+                "character": 8
+              },
+              "end": {
+                "line": 1295,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1883,
+                "character": 8
+              },
+              "end": {
+                "line": 1883,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.cpp",
+            "range": {
+              "start": {
+                "line": 1909,
+                "character": 8
+              },
+              "end": {
+                "line": 1909,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.cpp",
+            "range": {
+              "start": {
+                "line": 1932,
+                "character": 8
+              },
+              "end": {
+                "line": 1932,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3980,
+                "character": 8
+              },
+              "end": {
+                "line": 3980,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3985,
+                "character": 8
+              },
+              "end": {
+                "line": 3985,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 4040,
+                "character": 8
+              },
+              "end": {
+                "line": 4040,
+                "character": 17
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1945,
+                "character": 11
+              },
+              "end": {
+                "line": 1945,
+                "character": 20
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2148,
+                "character": 11
+              },
+              "end": {
+                "line": 2148,
+                "character": 20
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 153,
+                "character": 12
+              },
+              "end": {
+                "line": 153,
+                "character": 21
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 1856,
+                "character": 12
+              },
+              "end": {
+                "line": 1856,
+                "character": 21
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 1895,
+                "character": 12
+              },
+              "end": {
+                "line": 1895,
+                "character": 21
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1998,
+                "character": 12
+              },
+              "end": {
+                "line": 1998,
+                "character": 21
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3884,
+                "character": 17
+              },
+              "end": {
+                "line": 3884,
+                "character": 26
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 457,
+                "character": 17
+              },
+              "end": {
+                "line": 457,
+                "character": 26
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3685,
+                "character": 28
+              },
+              "end": {
+                "line": 3685,
+                "character": 37
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2731,
+                "character": 29
+              },
+              "end": {
+                "line": 2731,
+                "character": 38
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 729,
+                "character": 32
+              },
+              "end": {
+                "line": 729,
+                "character": 41
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 885,
+                "character": 32
+              },
+              "end": {
+                "line": 885,
+                "character": 41
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2310,
+                "character": 36
+              },
+              "end": {
+                "line": 2310,
+                "character": 45
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2325,
+                "character": 36
+              },
+              "end": {
+                "line": 2325,
+                "character": 45
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2327,
+                "character": 36
+              },
+              "end": {
+                "line": 2327,
+                "character": 45
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "UtilMount"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+          "range": {
+            "start": {
+              "line": 729,
+              "character": 32
+            },
+            "end": {
+              "line": 729,
+              "character": 41
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "UtilMount"
+      }
+    },
+    {
+      "caseId": "real-project-v2-cpp-04-3",
+      "decision": "accepted",
+      "declaration": {
+        "repository": "microsoft/WSL",
+        "commit": "e7197ca7774aa0ea66354632a6527c482fbde213",
+        "language": "cpp",
+        "selectionRank": 3,
+        "location": {
+          "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+          "range": {
+            "start": {
+              "line": 357,
+              "character": 4
+            },
+            "end": {
+              "line": 357,
+              "character": 19
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "MountFilesystem"
+      },
+      "expectedUsages": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 4
+              },
+              "end": {
+                "line": 45,
+                "character": 19
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "MountFilesystem"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 499,
+                "character": 15
+              },
+              "end": {
+                "line": 499,
+                "character": 30
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "MountFilesystem"
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 598,
+                "character": 15
+              },
+              "end": {
+                "line": 598,
+                "character": 30
+              }
+            }
+          },
+          "kind": "function",
+          "displayName": "MountFilesystem"
+        }
+      ],
+      "definitionUsage": {
+        "location": {
+          "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+          "range": {
+            "start": {
+              "line": 45,
+              "character": 4
+            },
+            "end": {
+              "line": 45,
+              "character": 19
+            }
+          }
+        },
+        "kind": "function",
+        "displayName": "MountFilesystem"
+      }
+    }
+  ]
+}

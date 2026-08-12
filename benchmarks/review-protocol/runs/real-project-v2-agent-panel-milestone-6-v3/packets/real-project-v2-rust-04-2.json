@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-rust-04-2",
+  "language": "rust",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/DioxusLabs/dioxus",
+    "commit": "0dbfab5274abd3628b0558f909b5946e783dbc65",
+    "archiveSha256": "bec2d8fbd44d0538973bee3e947dc93dc64f309a1b2b68326726d82697be1c27"
+  },
+  "declaration": {
+    "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+    "range": {
+      "start": {
+        "line": 526,
+        "character": 3
+      },
+      "end": {
+        "line": 526,
+        "character": 17
+      }
+    }
+  },
+  "displayName": "find_component"
+}

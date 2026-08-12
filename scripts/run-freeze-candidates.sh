@@ -66,7 +66,26 @@ for candidate_id in "${candidate_ids[@]}"; do
     exit 1
   }
   reference_runner="$(jq -r '.referenceRunner // empty' <<< "$candidate")"
-  if [[ -n "$reference_runner" ]]; then
+  if [[ "$candidate_id" == "bifrost" && -n "${NATIVE_BIFROST_REPO:-}" ]]; then
+    bifrost_revision="$(jq -er '.revision' <<< "$candidate")"
+    set +e
+    cargo run --locked --manifest-path "$corpus_root/Cargo.toml" -- \
+      run-bifrost "$case_directory" \
+      --bifrost-repo "$NATIVE_BIFROST_REPO" \
+      --bifrost-commit "$bifrost_revision" \
+      --work-dir "$output_directory/$candidate_id-work" \
+      --output "$output_directory/$candidate_id.json"
+    status=$?
+    set -e
+    [[ -f "$output_directory/$candidate_id.json" ]] || {
+      echo "candidate $candidate_id did not write a report" >&2
+      exit 1
+    }
+    if [[ "$status" -ne 0 ]]; then
+      echo "candidate $candidate_id completed with non-exact benchmark results; preserving its report" >&2
+    fi
+    report_paths+=("$output_directory/$candidate_id.json")
+  elif [[ -n "$reference_runner" ]]; then
     [[ "$reference_runner" =~ ^[a-z0-9][a-z0-9-]*$ ]] || {
       echo "candidate $candidate_id has an invalid reference runner" >&2
       exit 1

@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "06089D59-7938-400F-8F29-433797A1245F",
+    "executedAt": "2026-08-12T14:06:14Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-04-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Point.java",
+        "range": {
+          "start": {
+            "line": 15,
+            "character": 13
+          },
+          "end": {
+            "line": 15,
+            "character": 18
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Series.java",
+            "range": {
+              "start": {
+                "line": 24,
+                "character": 15
+              },
+              "end": {
+                "line": 24,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The Point token is a generic element-type reference in List<Point>; Series is in the same package as the selected Point declaration, so the token resolves directly to that class."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Series.java",
+        "range": {
+          "start": {
+            "line": 24,
+            "character": 15
+          },
+          "end": {
+            "line": 24,
+            "character": 20
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Point.java",
+        "weixin-java-channel/src/main/java/me/chanjar/weixin/channel/bean/live/dashboard/Series.java",
+        "weixin-java-miniapp/src/test/java/cn/binarywang/wx/miniapp/api/impl/WxMaCloudServiceImplTest.java"
+      ],
+      "rationale": "A whole-project exact-token search found only the selected declaration, the same-package generic type reference in Series.java, and comment/string occurrences in WxMaCloudServiceImplTest.java. The comment and string occurrences are not Java identifier usages and are omitted under the policy. The required set is therefore complete, with the sole required location selected deterministically as definitionUsage."
+    }
+  ]
+}

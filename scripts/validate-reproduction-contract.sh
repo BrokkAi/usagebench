@@ -8,6 +8,7 @@ workflow="$repo_root/.github/workflows/reference-environments.yml"
 scope_resolver="$repo_root/scripts/resolve-freeze-scope.sh"
 
 python3 "$repo_root/scripts/build-real-project-v1-publication-review.py" --check
+python3 "$repo_root/scripts/build-real-project-v2-publication-review.py" --check
 
 jq -e '.schemaVersion == 3' "$registry" >/dev/null
 
@@ -47,18 +48,27 @@ grep -q 'Evaluation evidence' "$current_results"
 grep -q 'UsageBench v0.2.0' "$current_results"
 
 development_scope="$(bash "$scope_resolver" development)"
-evaluation_scope="$(bash "$scope_resolver" evaluation)"
+evaluation_v1_scope="$(bash "$scope_resolver" evaluation real-project-v1)"
+evaluation_scope="$(bash "$scope_resolver" evaluation real-project-v2)"
 development_candidates="$(jq -c '.candidates' <<< "$development_scope")"
 [[ "$(jq -r 'length' <<< "$development_candidates")" -eq 11 ]] || {
   echo "development candidate scope must contain all eleven advertised candidates" >&2
   exit 1
 }
-[[ "$(jq -r '.casePath' <<< "$evaluation_scope")" == "benchmarks/cases/evaluation/real-project-v1" ]] || {
-  echo "evaluation case scope does not match the registered release slice" >&2
+[[ "$(jq -r '.casePath' <<< "$evaluation_scope")" == "benchmarks/cases/evaluation/real-project-v2" ]] || {
+  echo "evaluation v2 case scope does not match the registered release slice" >&2
   exit 1
 }
-[[ "$(jq -c '.candidates' <<< "$evaluation_scope")" == '["bifrost","gopls","pyright","typescript-language-server"]' ]] || {
-  echo "evaluation full candidate scope does not match Bifrost plus protocol targets" >&2
+[[ "$(jq -r '.casePath' <<< "$evaluation_v1_scope")" == "benchmarks/cases/evaluation/real-project-v1" ]] || {
+  echo "evaluation v1 case scope no longer resolves" >&2
+  exit 1
+}
+[[ "$(jq -c '.candidates' <<< "$evaluation_v1_scope")" == '["bifrost","gopls","pyright","typescript-language-server"]' ]] || {
+  echo "evaluation v1 candidate scope no longer matches its protocol" >&2
+  exit 1
+}
+[[ "$(jq -c '.candidates' <<< "$evaluation_scope")" == '["bifrost","eclipse-jdtls","rust-analyzer","apple-clangd-21"]' ]] || {
+  echo "evaluation v2 candidate scope does not match Bifrost plus protocol targets" >&2
   exit 1
 }
 grep -Fq 'scripts/resolve-freeze-scope.sh evaluation' "$repo_root/.github/workflows/freeze.yml" || {

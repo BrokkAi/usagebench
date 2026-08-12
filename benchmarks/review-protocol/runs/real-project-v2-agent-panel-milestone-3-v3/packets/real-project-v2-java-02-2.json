@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-java-02-2",
+  "language": "java",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/halo-dev/halo",
+    "commit": "669ee1d0b431f45bb260c844eb6eddb071f4f4fb",
+    "archiveSha256": "ada3c4a169533e6d3177e445562da61d0e3168af29737b965a626f0294230187"
+  },
+  "declaration": {
+    "uri": "benchmark://source/application/src/main/java/run/halo/app/plugin/AggregatedRouterFunction.java",
+    "range": {
+      "start": {
+        "line": 14,
+        "character": 13
+      },
+      "end": {
+        "line": 14,
+        "character": 37
+      }
+    }
+  },
+  "displayName": "AggregatedRouterFunction"
+}

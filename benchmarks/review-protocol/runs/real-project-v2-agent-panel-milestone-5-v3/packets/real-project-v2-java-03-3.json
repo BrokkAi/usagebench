@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-java-03-3",
+  "language": "java",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/Blankj/AndroidUtilCode",
+    "commit": "7b4caf9e5440046b3fefb63b6b6e2ead7ebaf809",
+    "archiveSha256": "df16155b8342a7249c3a883afd5eeb32db294a6cf8cc41faafca9257e6af520f"
+  },
+  "declaration": {
+    "uri": "benchmark://source/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheMemoryUtils.java",
+    "range": {
+      "start": {
+        "line": 18,
+        "character": 19
+      },
+      "end": {
+        "line": 18,
+        "character": 35
+      }
+    }
+  },
+  "displayName": "CacheMemoryUtils"
+}

@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v2-agent-panel-milestone-6-v3",
+  "status": "awaiting_external_sessions",
+  "milestone": {
+    "number": 6,
+    "partitionProgress": "36/36 packets prepared",
+    "caseIds": [
+      "real-project-v2-java-04-2",
+      "real-project-v2-java-04-3",
+      "real-project-v2-rust-04-2",
+      "real-project-v2-rust-04-3",
+      "real-project-v2-cpp-04-2",
+      "real-project-v2-cpp-04-3"
+    ],
+    "balance": {
+      "java": 2,
+      "rust": 2,
+      "cpp": 2
+    }
+  },
+  "executionRequired": {
+    "sessionPolicy": "fresh_session_per_provider_per_case",
+    "providers": [
+      "openai",
+      "anthropic"
+    ],
+    "sessionCount": 12,
+    "humanAdjudicationRequired": true,
+    "note": "This manifest records prepared inputs only; it is not review, execution, or adjudication evidence."
+  },
+  "protocol": {
+    "file": "benchmarks/review-protocol/blinded-agent-review-v3.json",
+    "sha256": "66c04354b88aa1f3cf442345a92bfa24de1a596d2ac107d678b107ba648b2ea8"
+  },
+  "methodology": {
+    "file": "benchmarks/review-protocol/per-case-methodology-v3.md",
+    "sha256": "9118710fdccc4f6d12aa546b03d8985adf8e04d42fe4c0ad4e46e4ebbd1b6ed3"
+  },
+  "prompt": {
+    "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+    "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+  },
+  "responseSchema": {
+    "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+    "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+  },
+  "declarationRanking": {
+    "file": "benchmarks/evaluation/real-project-v2/declarations.json",
+    "sha256": "667c5bba3ff30a64aaa15336811023325aced4d51c7a8aa2578187dae0dc7bd7"
+  },
+  "sourceLock": {
+    "file": "benchmarks/evaluation/real-project-v2/sources.json",
+    "sha256": "cd0684b7210d63ae21b7b953699e53e1eaafd750ec8918bb4ae783dc9a377857"
+  },
+  "packets": [
+    {
+      "caseId": "real-project-v2-java-04-2",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-java-04-2.json",
+      "sha256": "e34d4b0be0fcc24cb7891f231dc338c16da25ecfe63e584c90639b78e66265c3"
+    },
+    {
+      "caseId": "real-project-v2-java-04-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-java-04-3.json",
+      "sha256": "a2a9575b42bee86e71eec09fc3cd2e3d69dc0e797db85073f939ad64e935b644"
+    },
+    {
+      "caseId": "real-project-v2-rust-04-2",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-rust-04-2.json",
+      "sha256": "17136b924d313d6d00306d45469d9a713df33a73d5fe790672e95d7de0a8ec23"
+    },
+    {
+      "caseId": "real-project-v2-rust-04-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-rust-04-3.json",
+      "sha256": "46bc472b0111eec9db4cd747eac7cac3b92df1f4ebf7e3b1901a5030abd11b54"
+    },
+    {
+      "caseId": "real-project-v2-cpp-04-2",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-cpp-04-2.json",
+      "sha256": "6602800ec5aed748b2d2d98dfcb1b0912b929ea17fd835b0fd8f13f530c29aa7"
+    },
+    {
+      "caseId": "real-project-v2-cpp-04-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-cpp-04-3.json",
+      "sha256": "dbb2bfcfee3198bd4eb457eb49ef84a737fa9f9b8f47d6ba35b627df337e7a66"
+    }
+  ],
+  "sources": [
+    {
+      "repo": "https://github.com/binarywang/WxJava",
+      "commit": "f96fd58d1c9fb09accaf492f166cf21a3c81dce4",
+      "tree": "f4f4474e356ee2bee88f82566df21286b6375017",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/binarywang--WxJava.tar.gz",
+      "sha256": "2f35c1396aa278a63be8438a5a121776421ef2c158d4995caeeeb34f082333e7"
+    },
+    {
+      "repo": "https://github.com/DioxusLabs/dioxus",
+      "commit": "0dbfab5274abd3628b0558f909b5946e783dbc65",
+      "tree": "1753d233149595e4d0b278dfad94d6501dff08cc",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/DioxusLabs--dioxus.tar.gz",
+      "sha256": "bec2d8fbd44d0538973bee3e947dc93dc64f309a1b2b68326726d82697be1c27"
+    },
+    {
+      "repo": "https://github.com/microsoft/WSL",
+      "commit": "e7197ca7774aa0ea66354632a6527c482fbde213",
+      "tree": "7e0d9b2a6cb9961008e52421c1beb82593d87150",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/microsoft--WSL.tar.gz",
+      "sha256": "44f78c968b1c09144b4ac9e643c0ce57bc59a2f5acaef01153eaaa7a4529c226"
+    }
+  ]
+}

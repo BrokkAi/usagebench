@@ -21,6 +21,7 @@ dataset/**
 **/.DS_Store
 
 /target
+/benchmark-output/
 
 /docs/node_modules/
 /docs/dist/

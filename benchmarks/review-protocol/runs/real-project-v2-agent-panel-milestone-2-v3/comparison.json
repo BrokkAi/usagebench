@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v2-agent-panel-milestone-2-v3",
+  "status": "human_adjudicated",
+  "summary": {
+    "caseCount": 6,
+    "requiredLocationAgreementCount": 6,
+    "automaticConsensusCount": 6,
+    "decisionDisagreementCount": 0,
+    "classificationDisagreementCount": 0,
+    "highConfidenceNoAmbiguityCount": 6,
+    "humanEscalationCount": 6,
+    "humanAdjudicatedCount": 6,
+    "unresolvedEscalationCount": 0
+  },
+  "cases": [
+    {"caseId": "real-project-v2-java-01-3", "requiredLocationsAgree": true, "allClassificationsAgree": true, "definitionUsageAgrees": true, "decisionAgrees": true, "openaiDecision": "accept", "anthropicDecision": "accept", "hasAmbiguity": false, "automaticConsensus": true, "recommendedAdjudication": "accept_consensus_contract"},
+    {"caseId": "real-project-v2-java-02-1", "requiredLocationsAgree": true, "allClassificationsAgree": true, "definitionUsageAgrees": true, "decisionAgrees": true, "openaiDecision": "accept", "anthropicDecision": "accept", "hasAmbiguity": false, "automaticConsensus": true, "recommendedAdjudication": "accept_consensus_contract"},
+    {"caseId": "real-project-v2-rust-01-3", "requiredLocationsAgree": true, "allClassificationsAgree": true, "definitionUsageAgrees": true, "decisionAgrees": true, "openaiDecision": "accept", "anthropicDecision": "accept", "hasAmbiguity": false, "automaticConsensus": true, "recommendedAdjudication": "accept_consensus_contract"},
+    {"caseId": "real-project-v2-rust-02-1", "requiredLocationsAgree": true, "allClassificationsAgree": true, "definitionUsageAgrees": true, "decisionAgrees": true, "openaiDecision": "accept", "anthropicDecision": "accept", "hasAmbiguity": false, "automaticConsensus": true, "recommendedAdjudication": "accept_consensus_contract"},
+    {"caseId": "real-project-v2-cpp-01-3", "requiredLocationsAgree": true, "allClassificationsAgree": true, "definitionUsageAgrees": true, "decisionAgrees": true, "openaiDecision": "accept", "anthropicDecision": "accept", "hasAmbiguity": false, "automaticConsensus": true, "recommendedAdjudication": "accept_consensus_contract"},
+    {"caseId": "real-project-v2-cpp-02-1", "requiredLocationsAgree": true, "allClassificationsAgree": true, "definitionUsageAgrees": true, "decisionAgrees": true, "openaiDecision": "accept", "anthropicDecision": "accept", "hasAmbiguity": false, "automaticConsensus": true, "recommendedAdjudication": "accept_consensus_contract"}
+  ]
+}

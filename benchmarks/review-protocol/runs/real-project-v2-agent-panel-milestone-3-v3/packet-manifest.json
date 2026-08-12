@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v2-agent-panel-milestone-3-v3",
+  "status": "awaiting_external_sessions",
+  "milestone": {
+    "number": 3,
+    "partitionProgress": "18/36 packets prepared",
+    "caseIds": [
+      "real-project-v2-java-02-2",
+      "real-project-v2-java-02-3",
+      "real-project-v2-rust-02-2",
+      "real-project-v2-rust-02-3",
+      "real-project-v2-cpp-02-2",
+      "real-project-v2-cpp-02-3"
+    ],
+    "balance": {
+      "java": 2,
+      "rust": 2,
+      "cpp": 2
+    }
+  },
+  "executionRequired": {
+    "sessionPolicy": "fresh_session_per_provider_per_case",
+    "providers": [
+      "openai",
+      "anthropic"
+    ],
+    "sessionCount": 12,
+    "humanAdjudicationRequired": true,
+    "note": "This manifest records prepared inputs only; it is not review, execution, or adjudication evidence."
+  },
+  "protocol": {
+    "file": "benchmarks/review-protocol/blinded-agent-review-v3.json",
+    "sha256": "66c04354b88aa1f3cf442345a92bfa24de1a596d2ac107d678b107ba648b2ea8"
+  },
+  "methodology": {
+    "file": "benchmarks/review-protocol/per-case-methodology-v3.md",
+    "sha256": "9118710fdccc4f6d12aa546b03d8985adf8e04d42fe4c0ad4e46e4ebbd1b6ed3"
+  },
+  "prompt": {
+    "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+    "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+  },
+  "responseSchema": {
+    "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+    "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+  },
+  "declarationRanking": {
+    "file": "benchmarks/evaluation/real-project-v2/declarations.json",
+    "sha256": "667c5bba3ff30a64aaa15336811023325aced4d51c7a8aa2578187dae0dc7bd7"
+  },
+  "sourceLock": {
+    "file": "benchmarks/evaluation/real-project-v2/sources.json",
+    "sha256": "cd0684b7210d63ae21b7b953699e53e1eaafd750ec8918bb4ae783dc9a377857"
+  },
+  "packets": [
+    {
+      "caseId": "real-project-v2-java-02-2",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-java-02-2.json",
+      "sha256": "7fadf7c7e673d01a8715c66aee366e634b1966bd0f8311bf4a93c8a492c12dbf"
+    },
+    {
+      "caseId": "real-project-v2-java-02-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-java-02-3.json",
+      "sha256": "6dd23abdb617f7d2db755d7171400ded0229248dac105e53c8d6a2392c4a0d8a"
+    },
+    {
+      "caseId": "real-project-v2-rust-02-2",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-rust-02-2.json",
+      "sha256": "149beb12c9ba05368eea0a1341cd4d253a67630fcf3ac4db495139372baa5b02"
+    },
+    {
+      "caseId": "real-project-v2-rust-02-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-rust-02-3.json",
+      "sha256": "97c4c2f238215c4912385b1e9fcf6b5967d93b29f2a0d10ceb7245c33f20f02f"
+    },
+    {
+      "caseId": "real-project-v2-cpp-02-2",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-cpp-02-2.json",
+      "sha256": "21eda1dfe6786554e978600e5c5543ac8b8e3fd9ad58226e1aca49194e5e8937"
+    },
+    {
+      "caseId": "real-project-v2-cpp-02-3",
+      "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-cpp-02-3.json",
+      "sha256": "77d44e244556a74ac294f0b7183716ff4270fc7176bb0d9ff57128fb52d101f1"
+    }
+  ],
+  "sources": [
+    {
+      "repo": "https://github.com/halo-dev/halo",
+      "commit": "669ee1d0b431f45bb260c844eb6eddb071f4f4fb",
+      "tree": "cf4e38c05d8fae23d2ec0e9dd0519e3d2364f435",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/halo-dev--halo.tar.gz",
+      "sha256": "ada3c4a169533e6d3177e445562da61d0e3168af29737b965a626f0294230187"
+    },
+    {
+      "repo": "https://github.com/qdrant/qdrant",
+      "commit": "db8fa43fcb6aedec1e739487e17a99731b74590a",
+      "tree": "a05bfd82d111d37a6a681fe6772626bfea72fe88",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/qdrant--qdrant.tar.gz",
+      "sha256": "4dfc06c6c60c69a9b1c9866fd665860c437cdd8bba34a4520190679ebaf0b9fb"
+    },
+    {
+      "repo": "https://github.com/tesseract-ocr/tesseract",
+      "commit": "25e4fb2e3d17e1a82a0c27950335573b50f8693e",
+      "tree": "bccd1b6642832732d5cd18cfbd5d25edd7b1dbdd",
+      "archive": "benchmarks/evaluation/real-project-v2/sources/tesseract-ocr--tesseract.tar.gz",
+      "sha256": "a9dd06d1c0c35a9e3b6b646f538127fa54bfe66a15707729a4daf8167fc6eac3"
+    }
+  ]
+}

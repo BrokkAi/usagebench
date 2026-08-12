@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:a784f194-eaa5-4cb6-8018-71ca23ad922b",
+    "executedAt": "2026-08-12T12:52:47.513Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-03-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+        "range": {
+          "start": {
+            "line": 22,
+            "character": 22
+          },
+          "end": {
+            "line": 22,
+            "character": 32
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 34
+              },
+              "end": {
+                "line": 28,
+                "character": 44
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Parameter type reference in the abstract method declaration `initView(BaseDialog dialog, View contentView)`; resolves to the selected class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 32,
+                "character": 11
+              },
+              "end": {
+                "line": 32,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor declarator name `public BaseDialog(@NonNull Context context)`; per JLS 8.8 the constructor declarator's SimpleTypeName is the class name and semantically binds to the selected class declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 36,
+                "character": 11
+              },
+              "end": {
+                "line": 36,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor declarator name `public BaseDialog(@NonNull Context context, int themeResId)`; SimpleTypeName binding to the selected class declaration (JLS 8.8)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 60,
+                "character": 20
+              },
+              "end": {
+                "line": 60,
+                "character": 30
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified superclass access `BaseDialog.super.show()` inside the anonymous Runnable in show(); the qualifier token resolves to the selected class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+            "range": {
+              "start": {
+                "line": 72,
+                "character": 20
+              },
+              "end": {
+                "line": 72,
+                "character": 30
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Qualified superclass access `BaseDialog.super.dismiss()` inside the anonymous Runnable in dismiss(); the qualifier token resolves to the selected class."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+        "range": {
+          "start": {
+            "line": 28,
+            "character": 34
+          },
+          "end": {
+            "line": 28,
+            "character": 44
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "lib/base/src/main/java/com/blankj/base/dialog/BaseDialog.java",
+        "lib/base/src/main/java/com/blankj/base/dialog/BaseDialogFragment.java",
+        "lib/base/src/main/java/com/blankj/base/dialog/DialogLayoutCallback.java",
+        "lib/base/src/main/java/com/blankj/base/dialog/DialogCallback.java",
+        "lib/common/src/main/java/com/blankj/common/dialog/CommonDialogContent.java",
+        "lib/common/src/main/java/com/blankj/common/dialog/CommonDialogLoading.java",
+        "feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/helper/DialogHelper.kt"
+      ],
+      "rationale": "Exhaustive exact-token sweep of the pinned snapshot (ripgrep with word boundaries, including ignored and hidden files) found `BaseDialog` tokens only inside BaseDialog.java. Required usages: the initView parameter type (line 29), both constructor declarator SimpleTypeName tokens (lines 33 and 37, JLS 8.8), and the two qualified-super qualifiers `BaseDialog.super.show()`/`BaseDialog.super.dismiss()` (lines 61 and 73; all 1-based here, 0-based in locations). The class is referenced nowhere else: no subclass, no import, and no fully-qualified reference exists in any module, manifest, or build file \u2014 all other grep hits are the distinct type `BaseDialogFragment` and are substring matches, omitted per rule 3. `this(context, 0)` on line 34 contains no BaseDialog identifier token. No binding tokens exist, so the bindings_optional policy yields no optional entries. definitionUsage is the URI/line/character-sorted first required location (line 28, character 34). All tokens are ASCII, so UTF-16 columns equal byte columns."
+    }
+  ]
+}

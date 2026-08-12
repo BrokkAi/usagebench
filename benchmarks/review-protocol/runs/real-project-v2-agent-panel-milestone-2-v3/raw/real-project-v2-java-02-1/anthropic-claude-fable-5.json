@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:be172d79-a7d4-4739-be95-682cabd46543",
+    "executedAt": "2026-08-12T11:58:58.161Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-02-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttribute.java",
+        "range": {
+          "start": {
+            "line": 13,
+            "character": 17
+          },
+          "end": {
+            "line": 13,
+            "character": 31
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/DefaultIndexAttribute.java",
+            "range": {
+              "start": {
+                "line": 9,
+                "character": 85
+              },
+              "end": {
+                "line": 9,
+                "character": 99
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type reference in the implements clause of DefaultIndexAttribute, same package run.halo.app.extension.index; resolves to the selected interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 18,
+                "character": 40
+              },
+              "end": {
+                "line": 18,
+                "character": 54
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of IndexAttributeFactory.simpleAttribute; same-package reference resolving to the selected interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 40
+              },
+              "end": {
+                "line": 28,
+                "character": 54
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of IndexAttributeFactory.multiValueAttribute; same-package reference resolving to the selected interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 38,
+                "character": 66
+              },
+              "end": {
+                "line": 38,
+                "character": 80
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of private IndexAttributeFactory.attributes; same-package reference resolving to the selected interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+            "range": {
+              "start": {
+                "line": 43,
+                "character": 66
+              },
+              "end": {
+                "line": 43,
+                "character": 80
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of private IndexAttributeFactory.attribute; same-package reference resolving to the selected interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/IndexSpec.java",
+            "range": {
+              "start": {
+                "line": 23,
+                "character": 12
+              },
+              "end": {
+                "line": 23,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Field type of IndexSpec.indexFunc; same-package reference resolving to the selected interface."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/docs/index/README.md",
+            "range": {
+              "start": {
+                "line": 127,
+                "character": 12
+              },
+              "end": {
+                "line": 127,
+                "character": 26
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Exact-name token inside a markdown documentation code block; documentation text is not semantically resolved Java source, so it is not a usage."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/api/src/main/java/run/halo/app/extension/index/DefaultIndexAttribute.java",
+        "range": {
+          "start": {
+            "line": 9,
+            "character": 85
+          },
+          "end": {
+            "line": 9,
+            "character": 99
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/api/src/main/java/run/halo/app/extension/index/IndexAttribute.java",
+        "source/api/src/main/java/run/halo/app/extension/index/DefaultIndexAttribute.java",
+        "source/api/src/main/java/run/halo/app/extension/index/IndexAttributeFactory.java",
+        "source/api/src/main/java/run/halo/app/extension/index/IndexSpec.java",
+        "source/api/src/test/java/run/halo/app/extension/index/IndexSpecTest.java",
+        "source/api/src/test/java/run/halo/app/extension/index/IndexAttributeFactoryTest.java",
+        "source/docs/index/README.md"
+      ],
+      "rationale": "The selected declaration is the interface name token IndexAttribute in run.halo.app.extension.index. A whole-snapshot exact-token search found six semantic usages, all within the same package: the implements clause of DefaultIndexAttribute, four generic method return types in IndexAttributeFactory, and the indexFunc field type in IndexSpec. Because every referencing file is in the declaring package, no import or export binding tokens exist, so no optional binding locations apply under bindings_optional. Remaining textual hits are substring matches on distinct identifiers (IndexAttributeFactory, DefaultIndexAttribute, IndexAttributeFactoryTest) or a markdown documentation snippet in docs/index/README.md, which does not resolve semantically. All lines are ASCII, so UTF-16 columns equal character offsets. definitionUsage is the first required location after sorting by URI, then start line, then start character."
+    }
+  ]
+}

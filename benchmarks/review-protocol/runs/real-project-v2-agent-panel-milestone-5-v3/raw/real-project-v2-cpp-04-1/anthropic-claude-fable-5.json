@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:29c45da4-74ff-4264-841c-39f215b8519f",
+    "executedAt": "2026-08-12T13:22:50.097Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-04-1",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/linux/init/util.cpp",
+        "range": {
+          "start": {
+            "line": 2666,
+            "character": 12
+          },
+          "end": {
+            "line": 2666,
+            "character": 22
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.cpp",
+            "range": {
+              "start": {
+                "line": 2706,
+                "character": 12
+              },
+              "end": {
+                "line": 2706,
+                "character": 22
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call `SkipSignal(Index)` inside UtilSaveSignalHandlers; resolves to the file-local static function declared at line 2666."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.cpp",
+            "range": {
+              "start": {
+                "line": 2746,
+                "character": 12
+              },
+              "end": {
+                "line": 2746,
+                "character": 22
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call `SkipSignal(Index)` inside UtilSetSignalHandlers; resolves to the file-local static function declared at line 2666."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/linux/init/util.cpp",
+        "range": {
+          "start": {
+            "line": 2706,
+            "character": 12
+          },
+          "end": {
+            "line": 2706,
+            "character": 22
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/linux/init/util.cpp"
+      ],
+      "rationale": "SkipSignal is a static (internal-linkage) free function defined only in src/linux/init/util.cpp, so all semantic references must be within that translation unit. A whole-snapshot exact-token search found five occurrences: the declaration token itself (line 2666, excluded as the selected declaration), two mentions inside comment/documentation text (lines 2691 and 2727, omitted per rule 3), and two genuine call expressions at lines 2706 and 2746 (0-indexed), each with the identifier at UTF-16 characters 12-22. No header declares the symbol, no other translation unit names it, and no binding/import tokens exist in C++ for a file-local function, so the required set is exactly the two call sites. definitionUsage is the first required location after sorting by URI, start line, then start character."
+    }
+  ]
+}

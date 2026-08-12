@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:6bd025af-bedf-4e11-8690-b17b1bc2ddd7",
+    "executedAt": "2026-08-12T13:23:19.769Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-03-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/ipc/s1/Commands.cpp",
+        "range": {
+          "start": {
+            "line": 610,
+            "character": 19
+          },
+          "end": {
+            "line": 610,
+            "character": 38
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/ipc/s1/Commands.cpp",
+            "range": {
+              "start": {
+                "line": 1891,
+                "character": 78
+              },
+              "end": {
+                "line": 1891,
+                "character": 97
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "activeWindowRequest passed as the handler argument to legacyCommand(\"activewindow\", COMMAND_MATCH_EXACT, activeWindowRequest) inside IPC::Socket1::registerBuiltinCommands; resolves to the file-static function declared at line 610."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/ipc/s1/Commands.cpp",
+        "range": {
+          "start": {
+            "line": 1891,
+            "character": 78
+          },
+          "end": {
+            "line": 1891,
+            "character": 97
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/ipc/s1/Commands.cpp"
+      ],
+      "rationale": "activeWindowRequest is a static (internal-linkage) free function defined at src/ipc/s1/Commands.cpp line 610 (0-indexed), so all semantic references must occur within this translation unit. A repo-wide case-insensitive search for the identifier found exactly two occurrences: the declaration itself and one reference at line 1891 character 78, where the function is passed as a callable to legacyCommand during built-in IPC command registration. The nearby \"activewindow\" token on the same line is a string literal command name, not an identifier resolving to the declaration, and is omitted per rule 3. No import/export binding tokens exist for C++ internal-linkage functions, so none are classified optional. The required set is the single reference; definitionUsage is that location by the URI/line/character sort rule."
+    }
+  ]
+}

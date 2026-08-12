@@ -1,0 +1,1912 @@
+{
+  "schemaVersion": 2,
+  "freezeId": "real-project-v2",
+  "selection": {
+    "file": "benchmarks/evaluation/real-project-v2/selection.json",
+    "sha256": "88a853512223c5c4859df2c9fe068e83364a3c3bb84defdd2d9f2c502aa58b2c"
+  },
+  "reviewTier": "human_adjudicated_agent_panel",
+  "reviewProtocol": {
+    "file": "benchmarks/review-protocol/blinded-agent-review-v3.json",
+    "sha256": "66c04354b88aa1f3cf442345a92bfa24de1a596d2ac107d678b107ba648b2ea8"
+  },
+  "reviewers": [
+    {
+      "id": "openai-gpt-5.6-sol",
+      "file": "benchmarks/evaluation/real-project-v2/reviews/openai-gpt-5.6-sol.json",
+      "sha256": "956a043ea74e0e894d156c45f842e16b6d7cb3e9cdb0274ef57406c45e179afe",
+      "sessions": [
+        {
+          "caseId": "real-project-v2-java-01-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/review_java_01_1",
+            "executedAt": "2026-08-12T11:23:55Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-java-01-1.json",
+            "sha256": "f0a7ed0fe4b0e911371cd308797217944de059d7132e4c5cc0cd335927e062ea"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-java-01-1/openai-gpt-5.6-sol.json",
+            "sha256": "55adf73ed2e517223c3aa7ac27cc631789981f214e5ca474bcbac79e53955a3d"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-01-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/review_java_01_2",
+            "executedAt": "2026-08-12T11:23:51Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-java-01-2.json",
+            "sha256": "e6b4f4f21df5d4496f22629508ff9194cd387cfd4aa01c08f22d0ab31b6f52fd"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-java-01-2/openai-gpt-5.6-sol.json",
+            "sha256": "30cbcdbe2f42a77d5f5aae29a680e494ccc01de1c419b849fee36af505eef353"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-01-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/review_rust_01_1",
+            "executedAt": "2026-08-12T11:23:48Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-rust-01-1.json",
+            "sha256": "c207180d0ac5ab2c0219adb19d0ac9ead23ece6a356bc569825faeaf76d29ab1"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-rust-01-1/openai-gpt-5.6-sol.json",
+            "sha256": "5f01a8a260a412e1d2217d121703ef5361eb3df501d706d0b80012fffa6b35a4"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-01-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "fresh_rust_01_2",
+            "executedAt": "2026-08-12T11:31:13Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-rust-01-2.json",
+            "sha256": "ffcff22d54839d8e1c78ef613531fb2fe478b7ff07a478b0e8578e0bd248911d"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-rust-01-2/openai-gpt-5.6-sol.json",
+            "sha256": "3c74d0f0789ea3848c888e4797402bca70f494515e0e8352e3f5d779803ffd15"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-01-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "fresh_cpp_01_1",
+            "executedAt": "2026-08-12T11:32:37Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-cpp-01-1.json",
+            "sha256": "e0c6139d97389a42046a27564db41065749c06b0bd3f6cf44aaa24837f9e6b1f"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-cpp-01-1/openai-gpt-5.6-sol.json",
+            "sha256": "612ba67a99bb502be11b6cec8a4597d6df0efcd4d079f0b67b0d4fbb8c4c23d6"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-01-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "fresh_cpp_01_2",
+            "executedAt": "2026-08-12T11:31:48Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-cpp-01-2.json",
+            "sha256": "efa9ee8a2a2a6764f5f2a4a9ac0ec16ac4ab293848b3b5317698958ea9871557"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-cpp-01-2/openai-gpt-5.6-sol.json",
+            "sha256": "32a8a92965ce91d7ba5a1b5e02c083ae1e37ecd1fb45c8d184e7ae69c6280db2"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-01-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m2_java_01_3",
+            "executedAt": "2026-08-12T11:57:50Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-java-01-3.json",
+            "sha256": "03c660783b036c459fed981aa39881d7e2df5114393d319773e316a4db04075e"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-java-01-3/openai-gpt-5.6-sol.json",
+            "sha256": "451598efe903762063c1376060110aa5392478697dce035b61500168e7361185"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-02-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m2_java_02_1",
+            "executedAt": "2026-08-12T11:58:06Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-java-02-1.json",
+            "sha256": "835a40da2deceb7596b8d5ea25ccd98c9b86e09422dc3a6a54fee613c77625d8"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-java-02-1/openai-gpt-5.6-sol.json",
+            "sha256": "2876b0fd3d18e2c050c173c481cba2c552b8f233453aaf5122f5b8e3ce698fe4"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-01-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m2_rust_01_3",
+            "executedAt": "2026-08-12T11:58:18Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-rust-01-3.json",
+            "sha256": "5c3eb7b11d6174f9f583d68ceea690c7b741bdce38940168e34fdafe54c41898"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-rust-01-3/openai-gpt-5.6-sol.json",
+            "sha256": "2bc192e30faa293f767c2ec8dedf091394596c6b5ec3402b298f136ba412f40f"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-02-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m2_rust_02_1",
+            "executedAt": "2026-08-12T12:01:03Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-rust-02-1.json",
+            "sha256": "ebc0a495c2dd54dc295daf0cd878119e1b02fa807420883ec47e53da64b8b8d4"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-rust-02-1/openai-gpt-5.6-sol.json",
+            "sha256": "7cdc0b3b5d26d01f2098a272c6804ffb7eff8f29deafbdd594e8b061781ebacc"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-01-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m2_cpp_01_3",
+            "executedAt": "2026-08-12T12:00:35Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-cpp-01-3.json",
+            "sha256": "6314326aecb21f1640f6303a2a81dd9f0e5fafbc7843a0f9b60c8ace8e736eb2"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-cpp-01-3/openai-gpt-5.6-sol.json",
+            "sha256": "0a1b3483d7eacf374ed914629ed40d53128511a772ad5b86c351e1042626e6b7"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-02-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m2_cpp_02_1",
+            "executedAt": "2026-08-12T12:00:49Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-cpp-02-1.json",
+            "sha256": "639128fe2c2cf05e9cd3387969718c1faf913f3d062e1510dfe9aca9ecaa6bb9"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-cpp-02-1/openai-gpt-5.6-sol.json",
+            "sha256": "b210102f8247ae4f909f69416416f0e53c30959d2295a0649dc2b90e23862a77"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-02-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m3_java_02_2",
+            "executedAt": "2026-08-12T12:13:44Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-java-02-2.json",
+            "sha256": "7fadf7c7e673d01a8715c66aee366e634b1966bd0f8311bf4a93c8a492c12dbf"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-java-02-2/openai-gpt-5.6-sol.json",
+            "sha256": "ed4443bb706aba8014acb3ffb7cefa9937ddaca3970f46a910684d979d6f4182"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-02-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m3_java_02_3",
+            "executedAt": "2026-08-12T12:13:43Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-java-02-3.json",
+            "sha256": "6dd23abdb617f7d2db755d7171400ded0229248dac105e53c8d6a2392c4a0d8a"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-java-02-3/openai-gpt-5.6-sol.json",
+            "sha256": "5bca49f175ac4dafc01ce268416789d8519f013bb7e2fdddac6732503938e70a"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-02-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m3_rust_02_2",
+            "executedAt": "2026-08-12T12:13:50Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-rust-02-2.json",
+            "sha256": "149beb12c9ba05368eea0a1341cd4d253a67630fcf3ac4db495139372baa5b02"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-rust-02-2/openai-gpt-5.6-sol.json",
+            "sha256": "7bc8677cef82c9858a072cd2d8393fb3c6c3388b95587d1c4f0c80f51b6525d0"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-02-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m3_rust_02_3",
+            "executedAt": "2026-08-12T12:16:42Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-rust-02-3.json",
+            "sha256": "97c4c2f238215c4912385b1e9fcf6b5967d93b29f2a0d10ceb7245c33f20f02f"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-rust-02-3/openai-gpt-5.6-sol.json",
+            "sha256": "b25d7207b73d177a966a4adf9ea87015bf70c0ba8aebb7c705126bc46a7ab07b"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-02-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m3_cpp_02_2",
+            "executedAt": "2026-08-12T12:17:01Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-cpp-02-2.json",
+            "sha256": "21eda1dfe6786554e978600e5c5543ac8b8e3fd9ad58226e1aca49194e5e8937"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-cpp-02-2/openai-gpt-5.6-sol.json",
+            "sha256": "ea6a5ce409f2e90d7e8de5d408e5151da42d1f177ae7bab5886e88bfa5aac114"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-02-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m3_cpp_02_3",
+            "executedAt": "2026-08-12T12:16:38Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-cpp-02-3.json",
+            "sha256": "77d44e244556a74ac294f0b7183716ff4270fc7176bb0d9ff57128fb52d101f1"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-cpp-02-3/openai-gpt-5.6-sol.json",
+            "sha256": "153c3c8b7f08135d3c4691d4b12233c1ea8f4cdf619a9de7a05bc813614abdeb"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-03-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "/root/m4_java_03_1",
+            "executedAt": "2026-08-12T12:50:09Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-java-03-1.json",
+            "sha256": "8fb5dc6fa4a9685a52c2fc299ba5b5481fa87ad7b796060272f56a00e14cccd2"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-java-03-1/openai-gpt-5.6-sol.json",
+            "sha256": "991697f1b3289b76353a2e5dbd65ac0660bb538ca0f2aa689520507ca6f4b284"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-03-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "/root/m4_java_03_2",
+            "executedAt": "2026-08-12T12:50:14Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-java-03-2.json",
+            "sha256": "c54c7175aee7e29563496e906658ba68a29d91dd3cac39f54057a5bad788e542"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-java-03-2/openai-gpt-5.6-sol.json",
+            "sha256": "1da5facef536ad1eaa923a1e80c9aa0181e1e3064dfcc9e2e6289a7d0b3fb071"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-03-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "/root/m4_rust_03_1",
+            "executedAt": "2026-08-12T12:50:37Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-rust-03-1.json",
+            "sha256": "d01fb7d7b1d57ffd306985f0bf9622493849429cad93bd01754c8d05366e87aa"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-rust-03-1/openai-gpt-5.6-sol.json",
+            "sha256": "59f953baf1ce0dfa0a225394351379ad641208f5a21b08545d6a93692ff4fd1f"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-03-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "/root/m4_rust_03_2",
+            "executedAt": "2026-08-12T12:55:15Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-rust-03-2.json",
+            "sha256": "4a3b2cb9f71104045c04156518c9f2acac37a4fa94e75f3d474bb8070e250b8f"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-rust-03-2/openai-gpt-5.6-sol.json",
+            "sha256": "c66fcd4520fb15332d3b12d484be64e27a19e745f621870481befd2f6e777b09"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-03-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "/root/m4_cpp_03_1",
+            "executedAt": "2026-08-12T12:55:11Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-cpp-03-1.json",
+            "sha256": "c5261d0f5402eb66c71ccb602a44365fc75b1d44d7955b8b49e0f7e046030099"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-cpp-03-1/openai-gpt-5.6-sol.json",
+            "sha256": "6070a5edfe53bc87678101ea16e00d25ec74b68bd1061636bb2b49235979503e"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-03-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "/root/m4_cpp_03_2",
+            "executedAt": "2026-08-12T12:55:16Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-cpp-03-2.json",
+            "sha256": "bd3ebeb18a4e29142334a236b0c6d0b237d3894e2a960360790eea9f06d0b873"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-cpp-03-2/openai-gpt-5.6-sol.json",
+            "sha256": "50aa515a0a45b5e7c35b889aa5fb2502b4c5d705bc1a5541d9dd2ad5da5d6a0f"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-03-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "collaboration:/root/m5_java_03_3",
+            "executedAt": "2026-08-12T13:06:47Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-java-03-3.json",
+            "sha256": "76bb3d2184ae6fd4555d97c3e4d73263b02f198677c1fc0fc1a1014fafe80586"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-java-03-3/openai-gpt-5.6-sol.json",
+            "sha256": "fa5179a09809f04ba8dbc66a84acff58602b33d9855e1b902b0f4fb909927d2d"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-04-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "m5_java_04_1",
+            "executedAt": "2026-08-12T13:06:15Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-java-04-1.json",
+            "sha256": "dacbeca27254a814dfd93bdde383f941774912ecbb5cf02051b066f043234296"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-java-04-1/openai-gpt-5.6-sol.json",
+            "sha256": "cff97cdad306c65219152f40ad294c055483736da4187769a6e467a92407cbcb"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-03-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "/root/m5_rust_03_3",
+            "executedAt": "2026-08-12T13:06:16Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-rust-03-3.json",
+            "sha256": "ba91c92633ac6a0143f5dcd649a39d5a0d358f32611420244517388f5a243c3f"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-rust-03-3/openai-gpt-5.6-sol.json",
+            "sha256": "61bf05af48ad1087dd6553314b0fe53680e251619901d7db2a6dc3b146bf124f"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-04-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "/root/m5_rust_04_1",
+            "executedAt": "2026-08-12T13:09:52Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-rust-04-1.json",
+            "sha256": "820403ac9e75f5ee1d945c9192592827e14b08cf8bae91da211d968536c9b545"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-rust-04-1/openai-gpt-5.6-sol.json",
+            "sha256": "51c08b6db18d107b5e25889ed2f7baa11e68337b4d56ac2b4e60066b20d7a6fc"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-03-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "/root/m5_cpp_03_3",
+            "executedAt": "2026-08-12T13:10:11Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-cpp-03-3.json",
+            "sha256": "44e7bbdc2fed57cb76a465bac968b3f0e5e91df71270adb6aec3b4deda7c5116"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-cpp-03-3/openai-gpt-5.6-sol.json",
+            "sha256": "1dfcc2766eee4e447b7e9e98c6142fe64dcc15e5703930a24a069338fe1c7255"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-04-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "/root/m5_cpp_04_1",
+            "executedAt": "2026-08-12T13:10:21Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-cpp-04-1.json",
+            "sha256": "709108487686cdbaf55076f0c0a87c14b0a56bfbb2938d9abe8b8956931db15b"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-cpp-04-1/openai-gpt-5.6-sol.json",
+            "sha256": "afe31d561d7393dae068b860879bfe262093ded448567f6d86257f588da5418a"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-04-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "06089D59-7938-400F-8F29-433797A1245F",
+            "executedAt": "2026-08-12T14:06:14Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-java-04-2.json",
+            "sha256": "e34d4b0be0fcc24cb7891f231dc338c16da25ecfe63e584c90639b78e66265c3"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-java-04-2/openai-gpt-5.6-sol.json",
+            "sha256": "656989b986ce9dfbb9d4ab487032489d106a47e22e22713ff75dd1fb4a1ba666"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-04-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "747F3D2A-8CE8-42ED-9FBD-1B3068B8B212",
+            "executedAt": "2026-08-12T14:06:50Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-java-04-3.json",
+            "sha256": "a2a9575b42bee86e71eec09fc3cd2e3d69dc0e797db85073f939ad64e935b644"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-java-04-3/openai-gpt-5.6-sol.json",
+            "sha256": "068c179c2c59504dcc7dd6382055257698a28504b589c3c56afa2ff305f75f1a"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-04-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "019ff64c-d109-7b72-9c75-03158e22b452",
+            "executedAt": "2026-08-12T14:09:51Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-rust-04-2.json",
+            "sha256": "17136b924d313d6d00306d45469d9a713df33a73d5fe790672e95d7de0a8ec23"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-rust-04-2/openai-gpt-5.6-sol.json",
+            "sha256": "19b6fcf8ac0f03caea11ac24d31cd2a9d266b8670b120d3fec79b1f4dfbe3c76"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-04-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m6r_rust_04_3_clean",
+            "executedAt": "2026-08-12T14:17:44Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-rust-04-3.json",
+            "sha256": "46bc472b0111eec9db4cd747eac7cac3b92df1f4ebf7e3b1901a5030abd11b54"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-rust-04-3/openai-gpt-5.6-sol.json",
+            "sha256": "115bfa1689a1cc48d473ad05c86a944344d92092bb47bcc4d8e2cbcd0b530d47"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-04-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "OpenAI",
+            "model": "gpt-5.6-sol",
+            "executionId": "m6r-cpp-04-2-openai-20260812T141257Z",
+            "executedAt": "2026-08-12T14:12:57Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-cpp-04-2.json",
+            "sha256": "6602800ec5aed748b2d2d98dfcb1b0912b929ea17fd835b0fd8f13f530c29aa7"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-cpp-04-2/openai-gpt-5.6-sol.json",
+            "sha256": "b836403968670a8490c30ff443a10b8038910c27f6d7a3fc6584e7a1015fdaa6"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-04-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "openai",
+            "model": "gpt-5.6-sol",
+            "executionId": "codex-task:/root/m6r_cpp_04_3",
+            "executedAt": "2026-08-12T14:13:54Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-cpp-04-3.json",
+            "sha256": "dbb2bfcfee3198bd4eb457eb49ef84a737fa9f9b8f47d6ba35b627df337e7a66"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-cpp-04-3/openai-gpt-5.6-sol.json",
+            "sha256": "f1dd33146d993bfddfcdef6bd3794d651388380e7eb44bf5e60a18f4279e48d7"
+          }
+        }
+      ]
+    },
+    {
+      "id": "anthropic-claude-fable-5",
+      "file": "benchmarks/evaluation/real-project-v2/reviews/anthropic-claude-fable-5.json",
+      "sha256": "47d53e24dccf31a7b8c06f746f0d338bca1bcb38d2f9ae3810ce6b56effccd99",
+      "sessions": [
+        {
+          "caseId": "real-project-v2-java-01-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:8426980a-1930-477a-94ab-db7b7b28d5a0",
+            "executedAt": "2026-08-12T11:45:15.851Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-java-01-1.json",
+            "sha256": "f0a7ed0fe4b0e911371cd308797217944de059d7132e4c5cc0cd335927e062ea"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-java-01-1/anthropic-claude-fable-5.json",
+            "sha256": "1b17942610e5e64bc60b0ff378e18e815f5f6aad1d1721ab252af2e99b1112dd"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-01-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:a4a5ea5f-d354-4d7e-884d-43c803f3f995",
+            "executedAt": "2026-08-12T11:45:12.113Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-java-01-2.json",
+            "sha256": "e6b4f4f21df5d4496f22629508ff9194cd387cfd4aa01c08f22d0ab31b6f52fd"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-java-01-2/anthropic-claude-fable-5.json",
+            "sha256": "0bb20f41d7256935470bda4d162602dd79033e03b7b02d0db6856093a256a6cd"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-01-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:102e0c10-56f9-437f-9f24-3a2c7746888f",
+            "executedAt": "2026-08-12T11:45:32.472Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-rust-01-1.json",
+            "sha256": "c207180d0ac5ab2c0219adb19d0ac9ead23ece6a356bc569825faeaf76d29ab1"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-rust-01-1/anthropic-claude-fable-5.json",
+            "sha256": "4453ba56c2c063a052db9441d069ed14d0ffec2427c5876d9a8449016715966b"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-01-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:90e76fdc-899a-4fa1-ac5f-484ea4bde622",
+            "executedAt": "2026-08-12T11:46:49.123Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-rust-01-2.json",
+            "sha256": "ffcff22d54839d8e1c78ef613531fb2fe478b7ff07a478b0e8578e0bd248911d"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-rust-01-2/anthropic-claude-fable-5.json",
+            "sha256": "7631b909217108cf1ec121e468eab502a41c6c612a67daecc90702ad7a605cf3"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-01-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:796e7365-3d29-46a3-aeb1-10e7890a058d",
+            "executedAt": "2026-08-12T11:49:23.283Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-cpp-01-1.json",
+            "sha256": "e0c6139d97389a42046a27564db41065749c06b0bd3f6cf44aaa24837f9e6b1f"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-cpp-01-1/anthropic-claude-fable-5.json",
+            "sha256": "da48f779d0389695a8aadfb7e44d41ca21ece1a2edfba4f56825990a8ad2b9a9"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-01-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:368b5809-eb70-4823-8dce-557ecbfcaf39",
+            "executedAt": "2026-08-12T11:47:01.359Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/packets/real-project-v2-cpp-01-2.json",
+            "sha256": "efa9ee8a2a2a6764f5f2a4a9ac0ec16ac4ab293848b3b5317698958ea9871557"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-1-v3/raw/real-project-v2-cpp-01-2/anthropic-claude-fable-5.json",
+            "sha256": "578869a4cd48438d066ae213455d12f222a73f0e8116a2cbf930af0d6f88298a"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-01-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:0701d60f-a7d3-4538-a88d-7b0587962bca",
+            "executedAt": "2026-08-12T11:57:54.434Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-java-01-3.json",
+            "sha256": "03c660783b036c459fed981aa39881d7e2df5114393d319773e316a4db04075e"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-java-01-3/anthropic-claude-fable-5.json",
+            "sha256": "53c244b327fd6d4778229780de130ec7b70192f83c4313ca5d3c83545423d598"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-02-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:be172d79-a7d4-4739-be95-682cabd46543",
+            "executedAt": "2026-08-12T11:58:58.161Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-java-02-1.json",
+            "sha256": "835a40da2deceb7596b8d5ea25ccd98c9b86e09422dc3a6a54fee613c77625d8"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-java-02-1/anthropic-claude-fable-5.json",
+            "sha256": "f3eee16e08c816009663346fc9f3597ee2faa243e83a2750af79c3d1cc273a3b"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-01-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:e2745820-1924-4ed6-969e-83a3d6f87b70",
+            "executedAt": "2026-08-12T11:58:48.144Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-rust-01-3.json",
+            "sha256": "5c3eb7b11d6174f9f583d68ceea690c7b741bdce38940168e34fdafe54c41898"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-rust-01-3/anthropic-claude-fable-5.json",
+            "sha256": "25aea129bfc12e07173508a3ebf0e26c96137dcf75588550661f577f5821238a"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-02-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:899873f0-f30a-401d-a7b4-1e93a1b3eac0",
+            "executedAt": "2026-08-12T12:01:01.841Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-rust-02-1.json",
+            "sha256": "ebc0a495c2dd54dc295daf0cd878119e1b02fa807420883ec47e53da64b8b8d4"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-rust-02-1/anthropic-claude-fable-5.json",
+            "sha256": "97b1d3e1e9c29c29a69050abff67d80e2205abecd1fe614ab0c09ed7c47538e3"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-01-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:cb7ad2ec-0948-447a-b430-ad0393ff7605",
+            "executedAt": "2026-08-12T12:01:06.340Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-cpp-01-3.json",
+            "sha256": "6314326aecb21f1640f6303a2a81dd9f0e5fafbc7843a0f9b60c8ace8e736eb2"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-cpp-01-3/anthropic-claude-fable-5.json",
+            "sha256": "b39611f08576798fb5f5687cce3b4b9e6b7b1b465bbee111b84d5247bbe07cc7"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-02-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:5892dec6-8106-4603-ae5c-8cc4d62baad5",
+            "executedAt": "2026-08-12T12:00:49.121Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/packets/real-project-v2-cpp-02-1.json",
+            "sha256": "639128fe2c2cf05e9cd3387969718c1faf913f3d062e1510dfe9aca9ecaa6bb9"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-2-v3/raw/real-project-v2-cpp-02-1/anthropic-claude-fable-5.json",
+            "sha256": "b49974efc4c5f2247feea6ca255fdd7ad8a5f40884471c42da64e2d0379e930c"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-02-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:38a2b482-f278-4e0b-a93e-388464ad35c6",
+            "executedAt": "2026-08-12T12:14:39.930Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-java-02-2.json",
+            "sha256": "7fadf7c7e673d01a8715c66aee366e634b1966bd0f8311bf4a93c8a492c12dbf"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-java-02-2/anthropic-claude-fable-5.json",
+            "sha256": "11cd86c2b1620ca12a078a9f747f03aa221c53a79489626716df8194c6bd1543"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-02-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:7703cef5-8390-4cdb-8a68-23a693f907da",
+            "executedAt": "2026-08-12T12:14:05.892Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-java-02-3.json",
+            "sha256": "6dd23abdb617f7d2db755d7171400ded0229248dac105e53c8d6a2392c4a0d8a"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-java-02-3/anthropic-claude-fable-5.json",
+            "sha256": "6fba650d6cdb537bea9fb9eb050620cbb31c0e5021cf340bb0849ac4015522b1"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-02-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:b35ff224-d63e-439d-b0e7-16cc6f73475a",
+            "executedAt": "2026-08-12T12:13:45.544Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-rust-02-2.json",
+            "sha256": "149beb12c9ba05368eea0a1341cd4d253a67630fcf3ac4db495139372baa5b02"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-rust-02-2/anthropic-claude-fable-5.json",
+            "sha256": "fc8a29886b62c49383a60f5405befd5c9d99186858c958e7aabb1c8cf153b6dd"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-02-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:17b18ca7-e1bd-4982-b854-89a4bd255b34",
+            "executedAt": "2026-08-12T12:17:54.916Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-rust-02-3.json",
+            "sha256": "97c4c2f238215c4912385b1e9fcf6b5967d93b29f2a0d10ceb7245c33f20f02f"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-rust-02-3/anthropic-claude-fable-5.json",
+            "sha256": "bb006c86087e9bd90fab652c2ac7d50ba493c316af71f44789b9c33dcef449ef"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-02-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:6addb7b2-7fe7-407a-9d49-ccef6b99b743",
+            "executedAt": "2026-08-12T12:17:32.042Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-cpp-02-2.json",
+            "sha256": "21eda1dfe6786554e978600e5c5543ac8b8e3fd9ad58226e1aca49194e5e8937"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-cpp-02-2/anthropic-claude-fable-5.json",
+            "sha256": "fa7cc93062d46dca42dd8b12f18411f620079394538410e6badffd7cd8b2b71a"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-02-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:e1c8f4fe-1eeb-4b36-987f-682b3d7cd70a",
+            "executedAt": "2026-08-12T12:18:10.153Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/packets/real-project-v2-cpp-02-3.json",
+            "sha256": "77d44e244556a74ac294f0b7183716ff4270fc7176bb0d9ff57128fb52d101f1"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-3-v3/raw/real-project-v2-cpp-02-3/anthropic-claude-fable-5.json",
+            "sha256": "af4b18707445ed1ae85d4e24b13df7f4c07ea6767cd0e9188aa40aea2a785ed4"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-03-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:5f154e2c-23d3-4336-b795-2f65117934e9",
+            "executedAt": "2026-08-12T12:52:32.050Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-java-03-1.json",
+            "sha256": "8fb5dc6fa4a9685a52c2fc299ba5b5481fa87ad7b796060272f56a00e14cccd2"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-java-03-1/anthropic-claude-fable-5.json",
+            "sha256": "c4922831a592d1ce53b0fbb8356db19349d2b71b9a1e986f8d6caf720a78f766"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-03-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:a784f194-eaa5-4cb6-8018-71ca23ad922b",
+            "executedAt": "2026-08-12T12:52:47.513Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-java-03-2.json",
+            "sha256": "c54c7175aee7e29563496e906658ba68a29d91dd3cac39f54057a5bad788e542"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-java-03-2/anthropic-claude-fable-5.json",
+            "sha256": "20b8d2507434a9321500b0734ff1dcab6236b00caeb745018ef4710bd1148f04"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-03-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:4ff43d6f-a80b-42a5-a524-c9b775b5dccc",
+            "executedAt": "2026-08-12T12:51:35.287Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-rust-03-1.json",
+            "sha256": "d01fb7d7b1d57ffd306985f0bf9622493849429cad93bd01754c8d05366e87aa"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-rust-03-1/anthropic-claude-fable-5.json",
+            "sha256": "8ffbc52d2912a340e69c5801769bfc3e3d735b149218e15a5b1c01cd6639836a"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-03-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:262b00fa-94f2-40d7-b0bd-e018e0abc996",
+            "executedAt": "2026-08-12T12:56:48.168Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-rust-03-2.json",
+            "sha256": "4a3b2cb9f71104045c04156518c9f2acac37a4fa94e75f3d474bb8070e250b8f"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-rust-03-2/anthropic-claude-fable-5.json",
+            "sha256": "ee7409161cdcb34037b02bf884060a63c1ada86fb3dc4ba04414044d22802dc6"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-03-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:0d776e45-aa7d-41f8-8c3c-acf5e9067cc6",
+            "executedAt": "2026-08-12T12:57:43.018Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-cpp-03-1.json",
+            "sha256": "c5261d0f5402eb66c71ccb602a44365fc75b1d44d7955b8b49e0f7e046030099"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-cpp-03-1/anthropic-claude-fable-5.json",
+            "sha256": "60fd7a2ed4952e1d8bff817631b058716135f5de201688a29fd846fa04745038"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-03-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:34d096ba-c7d1-4399-8181-cb9b8c413560",
+            "executedAt": "2026-08-12T12:55:46.445Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/packets/real-project-v2-cpp-03-2.json",
+            "sha256": "bd3ebeb18a4e29142334a236b0c6d0b237d3894e2a960360790eea9f06d0b873"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-4-v3/raw/real-project-v2-cpp-03-2/anthropic-claude-fable-5.json",
+            "sha256": "484ed2f7195d06b743f218cee72b8a9942bd077e01608f38d9154150befc79ef"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-03-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:c25809fd-a907-4fb7-b09b-2b868e637d37",
+            "executedAt": "2026-08-12T13:11:35.166Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-java-03-3.json",
+            "sha256": "76bb3d2184ae6fd4555d97c3e4d73263b02f198677c1fc0fc1a1014fafe80586"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-java-03-3/anthropic-claude-fable-5.json",
+            "sha256": "2474c896ac0725e6d43a449a75b262a53a2dc733caecd0c24fedd4586f2e85e1"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-04-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:507da4ef-674c-46b2-ad54-c3e9d5a831df",
+            "executedAt": "2026-08-12T13:07:41.875Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-java-04-1.json",
+            "sha256": "dacbeca27254a814dfd93bdde383f941774912ecbb5cf02051b066f043234296"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-java-04-1/anthropic-claude-fable-5.json",
+            "sha256": "737eefd194b395172ea5be6b68020087fdd6520ed460eed6151bd0fd5ec3cb1e"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-03-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:16aeaffb-9ed8-4088-bb9d-0370fc1d8514",
+            "executedAt": "2026-08-12T13:07:27.283Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-rust-03-3.json",
+            "sha256": "ba91c92633ac6a0143f5dcd649a39d5a0d358f32611420244517388f5a243c3f"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-rust-03-3/anthropic-claude-fable-5.json",
+            "sha256": "7f29bfd3c051318cc0dda21bb9cd574451aa2340aec0a9dc0be18cc0b17e837b"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-04-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:83b35562-b534-4b92-a2c5-41d0ad8cf1e5",
+            "executedAt": "2026-08-12T13:23:12.491Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-rust-04-1.json",
+            "sha256": "820403ac9e75f5ee1d945c9192592827e14b08cf8bae91da211d968536c9b545"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-rust-04-1/anthropic-claude-fable-5.json",
+            "sha256": "c1c98b01bf11b5b49c16675f5824cd07b70cbc02e800e806a62bc7cb277cbf9a"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-03-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:6bd025af-bedf-4e11-8690-b17b1bc2ddd7",
+            "executedAt": "2026-08-12T13:23:19.769Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-cpp-03-3.json",
+            "sha256": "44e7bbdc2fed57cb76a465bac968b3f0e5e91df71270adb6aec3b4deda7c5116"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-cpp-03-3/anthropic-claude-fable-5.json",
+            "sha256": "2ed492d4f07055a8c00afad740a9074c63bb7e8a082067f7d06c85a271dcc875"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-04-1",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:29c45da4-74ff-4264-841c-39f215b8519f",
+            "executedAt": "2026-08-12T13:22:50.097Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/packets/real-project-v2-cpp-04-1.json",
+            "sha256": "709108487686cdbaf55076f0c0a87c14b0a56bfbb2938d9abe8b8956931db15b"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-5-v3/raw/real-project-v2-cpp-04-1/anthropic-claude-fable-5.json",
+            "sha256": "45a466fcb14ed58ffe35c6c1d3f248dee444f9cdf3829a18bda816d073ead2d2"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-04-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:1cadb9f8-5689-4882-aaf4-41d39bc71a87",
+            "executedAt": "2026-08-12T13:29:43.759Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-java-04-2.json",
+            "sha256": "e34d4b0be0fcc24cb7891f231dc338c16da25ecfe63e584c90639b78e66265c3"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-java-04-2/anthropic-claude-fable-5.json",
+            "sha256": "ce0dd46a10b2b86c0d2f41a4bb79ea22f2c5d7dbf765fc891007c8f703fdb99c"
+          }
+        },
+        {
+          "caseId": "real-project-v2-java-04-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:da12a8fa-94a5-47a9-b2f1-1976f8c3339d",
+            "executedAt": "2026-08-12T13:30:23.062Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-java-04-3.json",
+            "sha256": "a2a9575b42bee86e71eec09fc3cd2e3d69dc0e797db85073f939ad64e935b644"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-java-04-3/anthropic-claude-fable-5.json",
+            "sha256": "1231164bcb27d866749256575c42c51e1f312814b46640988a9e67b1ce7e90d6"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-04-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:1cb8f7b7-54da-4654-bbfa-009aed356416",
+            "executedAt": "2026-08-12T13:30:09.836Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-rust-04-2.json",
+            "sha256": "17136b924d313d6d00306d45469d9a713df33a73d5fe790672e95d7de0a8ec23"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-rust-04-2/anthropic-claude-fable-5.json",
+            "sha256": "f8effad34ef76d1c889eacb9de8354b01a6a5d11952051b24a3b13c5a11a44f2"
+          }
+        },
+        {
+          "caseId": "real-project-v2-rust-04-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:2eb78745-d296-4907-ab07-12b7ba32bede",
+            "executedAt": "2026-08-12T13:34:57.720Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-rust-04-3.json",
+            "sha256": "46bc472b0111eec9db4cd747eac7cac3b92df1f4ebf7e3b1901a5030abd11b54"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-rust-04-3/anthropic-claude-fable-5.json",
+            "sha256": "cbe37b329e62e3a6dc020c7ce6805359fbf1f0f31f4e71486a432785f31f46b2"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-04-2",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:68072fac-923e-49e0-b967-a8ab2351ec27",
+            "executedAt": "2026-08-12T13:37:37.797Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-cpp-04-2.json",
+            "sha256": "6602800ec5aed748b2d2d98dfcb1b0912b929ea17fd835b0fd8f13f530c29aa7"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-cpp-04-2/anthropic-claude-fable-5.json",
+            "sha256": "fc45549df5e911c92cb86446a10a054127608f967742e17e83df745a12f1f234"
+          }
+        },
+        {
+          "caseId": "real-project-v2-cpp-04-3",
+          "participant": {
+            "kind": "agent",
+            "provider": "anthropic",
+            "model": "claude-fable-5",
+            "executionId": "claude-code-session:80d6f87a-b906-4432-bf99-a7d3479b5673",
+            "executedAt": "2026-08-12T13:34:06.594Z"
+          },
+          "packet": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/packets/real-project-v2-cpp-04-3.json",
+            "sha256": "dbb2bfcfee3198bd4eb457eb49ef84a737fa9f9b8f47d6ba35b627df337e7a66"
+          },
+          "prompt": {
+            "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+            "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+          },
+          "responseSchema": {
+            "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+            "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+          },
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/real-project-v2-agent-panel-milestone-6-v3/raw/real-project-v2-cpp-04-3/anthropic-claude-fable-5.json",
+            "sha256": "941920118aac84e8989dd932e495e2e43bbb4e226e15122dbb33027a6d0a3470"
+          }
+        }
+      ]
+    }
+  ],
+  "adjudication": {
+    "id": "real-project-v2-human-adjudication",
+    "file": "benchmarks/evaluation/real-project-v2/reviews/adjudication.json",
+    "sha256": "726076c0759eb88a836185f9430dc1ff4f6fb7fbe67d9d7fdabe686423bc59db",
+    "participant": {
+      "kind": "human",
+      "identity": "DavidBakerEffendi",
+      "executedAt": "2026-08-12T13:52:21Z",
+      "attestation": "I approve the five shared semantic contracts, including acceptance of the two cases whose Anthropic replace labels proposed no substantive replacement. For EmulatorSettingsImpl, exclude the four constructor and destructor declarator-name tokens; retain the separate class qualifiers and ordinary type references as required. Do not consult analyzer output for this adjudication. I approve all six milestone 2 consensus contracts after reviewing the reported exact cross-provider agreements, high confidence, and absence of ambiguities. I approve the five exact consensus contracts and the recommended entity-specific resolution for real-project-v2-java-02-2: constructor invocation and type uses remain required class usages, while the constructor declarator name is excluded as a separate procedure declaration. I approve the four shared required-location contracts and resolve their non-substantive Anthropic replace labels to accept. For both Java cases, exclude the three constructor declarator-name tokens under the established entity-specific rule while retaining constructor invocations and ordinary class uses as required. I approve continuation to the next milestone, applying the established entity-specific exclusion to the CacheMemoryUtils constructor declarator and accepting the five shared required-location contracts, including two non-substantive replace labels. I approve the five shared required-location contracts and resolve their non-substantive replace labels to accept. For UtilMount, the matching util.h function prototype is required because it redeclares the same function entity; optional remains limited to explicit import, re-export, and export binding tokens. Ground truth may now be frozen before analyzer execution."
+    }
+  }
+}

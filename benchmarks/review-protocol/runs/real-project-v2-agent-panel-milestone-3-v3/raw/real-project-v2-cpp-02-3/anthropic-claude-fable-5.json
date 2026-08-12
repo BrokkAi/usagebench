@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:e1c8f4fe-1eeb-4b36-987f-682b3d7cd70a",
+    "executedAt": "2026-08-12T12:18:10.153Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-02-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/api/capi.cpp",
+        "range": {
+          "start": {
+            "line": 656,
+            "character": 5
+          },
+          "end": {
+            "line": 656,
+            "character": 40
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/include/tesseract/capi.h",
+            "range": {
+              "start": {
+                "line": 597,
+                "character": 0
+              },
+              "end": {
+                "line": 597,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Function prototype in the public C API header; the exact identifier token redeclares and semantically resolves to the same external C function defined at the query declaration in src/api/capi.cpp."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/include/tesseract/capi.h",
+        "range": {
+          "start": {
+            "line": 597,
+            "character": 0
+          },
+          "end": {
+            "line": 597,
+            "character": 35
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "src/api/capi.cpp",
+        "include/tesseract/capi.h",
+        "include/tesseract/ltrresultiterator.h",
+        "src/ccmain/ltrresultiterator.cpp",
+        "unittest/resultiterator_test.cc"
+      ],
+      "rationale": "Verified pinned commit 25e4fb2e3d17e1a82a0c27950335573b50f8693e and the declaration token TessResultIteratorSymbolIsSubscript at capi.cpp 0-based line 656, characters 5-40 (definition 'BOOL TessResultIteratorSymbolIsSubscript(...)'). A repository-wide exact-token search found exactly one occurrence outside the declaration range: the TESS_API prototype in include/tesseract/capi.h at 0-based line 597, characters 0-35, which redeclares the same C function and is required. All other textual hits (include/tesseract/ltrresultiterator.h, src/ccmain/ltrresultiterator.cpp, unittest/resultiterator_test.cc, and the call handle->SymbolIsSubscript() inside the definition body) are the shorter C++ method identifier SymbolIsSubscript, a different symbol and only a substring relation, so they are omitted per rule 3. No import/export binding tokens exist for this C symbol under bindings_optional, and no unresolved ambiguity affects the required set. The lines involved are ASCII, so UTF-16 character offsets equal byte columns. definitionUsage is the sole required location by the deterministic sort."
+    }
+  ]
+}

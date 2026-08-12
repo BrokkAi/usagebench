@@ -1,0 +1,547 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:68072fac-923e-49e0-b967-a8ab2351ec27",
+    "executedAt": "2026-08-12T13:37:37.797Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-04-2",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/linux/init/util.cpp",
+        "range": {
+          "start": {
+            "line": 1756,
+            "character": 4
+          },
+          "end": {
+            "line": 1756,
+            "character": 13
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 729,
+                "character": 32
+              },
+              "end": {
+                "line": 729,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(source, target, type, ...) inside THROW_LAST_ERROR_IF; resolves to the util.h prototype whose definition is the selected declaration in util.cpp."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1082,
+                "character": 8
+              },
+              "end": {
+                "line": 1082,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, \"/dev\", \"devtmpfs\", ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1087,
+                "character": 8
+              },
+              "end": {
+                "line": 1087,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, \"/proc\", \"proc\", ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1092,
+                "character": 8
+              },
+              "end": {
+                "line": 1092,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, \"/sys\", \"sysfs\", ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1097,
+                "character": 8
+              },
+              "end": {
+                "line": 1097,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, \"/dev/pts\", \"devpts\", ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+            "range": {
+              "start": {
+                "line": 1102,
+                "character": 8
+              },
+              "end": {
+                "line": 1102,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, \"/sys/fs/cgroup\", \"cgroup2\", ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 153,
+                "character": 12
+              },
+              "end": {
+                "line": 153,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(m_mountPath, Target, nullptr, (MS_MOVE | MS_REC), nullptr); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 885,
+                "character": 32
+              },
+              "end": {
+                "line": 885,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(UserMountTarget.c_str(), RUN_FOLDER ...) inside THROW_LAST_ERROR_IF; resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 1856,
+                "character": 12
+              },
+              "end": {
+                "line": 1856,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(CGROUP2_DEVICE, Target, CGROUP2_DEVICE, ...) on the continuation line of THROW_LAST_ERROR_IF; resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/config.cpp",
+            "range": {
+              "start": {
+                "line": 1895,
+                "character": 12
+              },
+              "end": {
+                "line": 1895,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(CGROUP_DEVICE, Target.c_str(), CGROUP_DEVICE, ...) on the continuation line of THROW_LAST_ERROR_IF; resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 457,
+                "character": 17
+              },
+              "end": {
+                "line": 457,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call Result = UtilMount(Source, Target, FsType, ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1275,
+                "character": 8
+              },
+              "end": {
+                "line": 1275,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, CROSS_DISTRO_SHARE_PATH, \"tmpfs\", ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1295,
+                "character": 8
+              },
+              "end": {
+                "line": 1295,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, BINFMT_PATH, \"binfmt_misc\", ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1883,
+                "character": 8
+              },
+              "end": {
+                "line": 1883,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(DevicePath.c_str(), MountPoint.c_str(), FsType, ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1945,
+                "character": 11
+              },
+              "end": {
+                "line": 1945,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call return UtilMount(Name, Target, PLAN9_FS_TYPE, ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 1998,
+                "character": 12
+              },
+              "end": {
+                "line": 1998,
+                "character": 21
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(Source, Target.c_str(), nullptr, (MS_MOVE | MS_REC), nullptr); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2148,
+                "character": 11
+              },
+              "end": {
+                "line": 2148,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call return UtilMount(partitionPath.c_str(), Target, Type, ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2310,
+                "character": 36
+              },
+              "end": {
+                "line": 2310,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, WSLG_PATH, \"tmpfs\", ...) inside THROW_LAST_ERROR_IF; resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2325,
+                "character": 36
+              },
+              "end": {
+                "line": 2325,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(DISTRO_PATH, WSLG_PATH DISTRO_PATH, nullptr, (MS_BIND | MS_RDONLY), nullptr) inside THROW_LAST_ERROR_IF; resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2327,
+                "character": 36
+              },
+              "end": {
+                "line": 2327,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, WSLG_PATH DISTRO_PATH, nullptr, (MS_RDONLY | MS_REMOUNT | MS_BIND), nullptr) inside THROW_LAST_ERROR_IF; resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 2731,
+                "character": 29
+              },
+              "end": {
+                "line": 2731,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call Result = UtilMount( with arguments on the following line; resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3685,
+                "character": 28
+              },
+              "end": {
+                "line": 3685,
+                "character": 37
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(\"none\", \"/sys/kernel/debug\", \"debugfs\", ...) inside THROW_LAST_ERROR_IF; resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3884,
+                "character": 17
+              },
+              "end": {
+                "line": 3884,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call int Result = UtilMount(nullptr, DEVFS_PATH, \"devtmpfs\", ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3980,
+                "character": 8
+              },
+              "end": {
+                "line": 3980,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, PROCFS_PATH, \"proc\", ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 3985,
+                "character": 8
+              },
+              "end": {
+                "line": 3985,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, SYSFS_PATH, \"sysfs\", ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/main.cpp",
+            "range": {
+              "start": {
+                "line": 4040,
+                "character": 8
+              },
+              "end": {
+                "line": 4040,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, CGROUP_MOUNTPOINT, CGROUP2_DEVICE, ...); resolves to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.cpp",
+            "range": {
+              "start": {
+                "line": 1909,
+                "character": 8
+              },
+              "end": {
+                "line": 1909,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, Path.c_str(), \"tmpfs\", 0, nullptr) inside UtilMountOverlayFs in the same translation unit as the definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.cpp",
+            "range": {
+              "start": {
+                "line": 1932,
+                "character": 8
+              },
+              "end": {
+                "line": 1932,
+                "character": 17
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call UtilMount(nullptr, Target, \"overlay\", MountFlags, ...) inside UtilMountOverlayFs in the same translation unit as the definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/util.h",
+            "range": {
+              "start": {
+                "line": 268,
+                "character": 4
+              },
+              "end": {
+                "line": 268,
+                "character": 13
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Non-defining function prototype in util.h that redeclares the same entity; it is the header binding token through which other translation units bind to the symbol, so under bindings_optional it is classified optional rather than required."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/linux/init/WSLCInit.cpp",
+        "range": {
+          "start": {
+            "line": 729,
+            "character": 32
+          },
+          "end": {
+            "line": 729,
+            "character": 41
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "src/linux/init/util.cpp",
+        "src/linux/init/util.h",
+        "src/linux/init/main.cpp",
+        "src/linux/init/drvfs.cpp",
+        "src/linux/init/WSLCInit.cpp",
+        "src/linux/init/config.cpp"
+      ],
+      "rationale": "The selected declaration is the definition of the free function int UtilMount(const char*, const char*, const char*, unsigned long, const char*, std::optional<std::chrono::seconds>) at src/linux/init/util.cpp line 1756 (0-based). A repository-wide search for the exact identifier token UtilMount found matches only under src/linux/init. The function is a single non-overloaded external-linkage entity declared once in util.h (line 268), so every exact-token call site resolves to it unambiguously: 28 required call references across WSLCInit.cpp (6), config.cpp (4), drvfs.cpp (1), main.cpp (15), and util.cpp (2, inside UtilMountOverlayFs). The util.h prototype token is classified optional under the bindings_optional policy as the header binding declaration. Nearby identifiers UtilMountFile and UtilMountOverlayFs are distinct symbols and only substring matches, so they are omitted per rule 3. The definition's own name token at util.cpp 1756 is the selected declaration and is not a usage. definitionUsage is the first required location after sorting by URI, then start line, then start character (byte-wise URI ordering places WSLCInit.cpp before the lowercase filenames): WSLCInit.cpp line 729 character 32. All lines involved are pure ASCII, so UTF-16 character offsets equal byte offsets."
+    }
+  ]
+}

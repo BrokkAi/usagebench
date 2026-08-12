@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-cpp-03-1",
+  "language": "cpp",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/hyprwm/Hyprland",
+    "commit": "2effd2da48e8e7bd1485eac589329e8f82f13c41",
+    "archiveSha256": "5e4dedd63773400c39f58982592874d01e6c8bd3a2c83842225275ccc412a262"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/SharedDefs.hpp",
+    "range": {
+      "start": {
+        "line": 8,
+        "character": 5
+      },
+      "end": {
+        "line": 8,
+        "character": 11
+      }
+    }
+  },
+  "displayName": "eIcons"
+}

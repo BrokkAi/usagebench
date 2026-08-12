@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "/root/m4_rust_03_2",
+    "executedAt": "2026-08-12T12:55:15Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-03-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+        "range": {
+          "start": {
+            "line": 1191,
+            "character": 14
+          },
+          "end": {
+            "line": 1191,
+            "character": 30
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/forward.rs",
+            "range": {
+              "start": {
+                "line": 168,
+                "character": 4
+              },
+              "end": {
+                "line": 168,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This call resolves through the child module's `use super::*` wildcard import to the selected parent-module function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3031,
+                "character": 18
+              },
+              "end": {
+                "line": 3031,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call to the selected function from the parent module's test module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3058,
+                "character": 18
+              },
+              "end": {
+                "line": 3058,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call to the selected function from the parent module's test module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3076,
+                "character": 18
+              },
+              "end": {
+                "line": 3076,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call to the selected function from the parent module's test module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3090,
+                "character": 18
+              },
+              "end": {
+                "line": 3090,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call to the selected function from the parent module's test module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3786,
+                "character": 18
+              },
+              "end": {
+                "line": 3786,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call to the selected function from the parent module's test module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3820,
+                "character": 18
+              },
+              "end": {
+                "line": 3820,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call to the selected function from the parent module's test module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3840,
+                "character": 18
+              },
+              "end": {
+                "line": 3840,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call to the selected function from the parent module's test module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3925,
+                "character": 18
+              },
+              "end": {
+                "line": 3925,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call to the selected function from the parent module's test module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/reply.rs",
+            "range": {
+              "start": {
+                "line": 370,
+                "character": 4
+              },
+              "end": {
+                "line": 370,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This call resolves through the child module's `use super::*` wildcard import to the selected parent-module function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/send.rs",
+            "range": {
+              "start": {
+                "line": 69,
+                "character": 4
+              },
+              "end": {
+                "line": 69,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This call resolves through the child module's `use super::*` wildcard import to the selected parent-module function."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/forward.rs",
+        "range": {
+          "start": {
+            "line": 168,
+            "character": 4
+          },
+          "end": {
+            "line": 168,
+            "character": 20
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+        "crates/google-workspace-cli/src/helpers/gmail/forward.rs",
+        "crates/google-workspace-cli/src/helpers/gmail/reply.rs",
+        "crates/google-workspace-cli/src/helpers/gmail/send.rs"
+      ],
+      "rationale": "The selected declaration is the sole `finalize_message` function declaration in the project. Whole-snapshot exact-name search found eleven executable identifier uses: eight direct calls in the declaring module's tests and one call in each of the forward, reply, and send child modules. Each child module imports parent-module names with `use super::*`; because the wildcard binding has no explicit `finalize_message` token, it contributes no optional location under `bindings_optional`. Documentation and comment occurrences were omitted. The required set is complete, and the lexicographically first required location is the call in `forward.rs`."
+    }
+  ]
+}

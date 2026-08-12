@@ -1,1 +1,2 @@
 benchmarks/evaluation/real-project-v1/sources/*.tar.gz filter=lfs diff=lfs merge=lfs -text
+benchmarks/evaluation/real-project-v2/sources/*.tar.gz filter=lfs diff=lfs merge=lfs -text

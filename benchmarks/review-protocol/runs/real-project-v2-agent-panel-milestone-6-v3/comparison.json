@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v2-agent-panel-milestone-6-v3",
+  "status": "human_adjudicated",
+  "summary": {"caseCount":6,"requiredLocationAgreementCount":5,"automaticConsensusCount":0,"decisionDisagreementCount":6,"classificationDisagreementCount":1,"highConfidenceNoAmbiguityCount":6,"humanEscalationCount":6,"humanAdjudicatedCount":6,"unresolvedEscalationCount":0},
+  "cases": [
+    {"caseId":"real-project-v2-java-04-2","requiredLocationsAgree":true,"allClassificationsAgree":true,"definitionUsageAgrees":true,"decisionAgrees":false,"openaiDecision":"accept","anthropicDecision":"replace","hasAmbiguity":false,"automaticConsensus":false,"recommendedAdjudication":"accept_panel_contract_and_resolve_anthropic_replace"},
+    {"caseId":"real-project-v2-java-04-3","requiredLocationsAgree":true,"allClassificationsAgree":true,"definitionUsageAgrees":true,"decisionAgrees":false,"openaiDecision":"accept","anthropicDecision":"replace","hasAmbiguity":false,"automaticConsensus":false,"recommendedAdjudication":"accept_panel_contract_and_resolve_anthropic_replace"},
+    {"caseId":"real-project-v2-rust-04-2","requiredLocationsAgree":true,"allClassificationsAgree":true,"definitionUsageAgrees":true,"decisionAgrees":false,"openaiDecision":"accept","anthropicDecision":"replace","hasAmbiguity":false,"automaticConsensus":false,"recommendedAdjudication":"accept_panel_contract_and_resolve_anthropic_replace"},
+    {"caseId":"real-project-v2-rust-04-3","requiredLocationsAgree":true,"allClassificationsAgree":true,"definitionUsageAgrees":true,"decisionAgrees":false,"openaiDecision":"accept","anthropicDecision":"replace","hasAmbiguity":false,"automaticConsensus":false,"recommendedAdjudication":"accept_panel_contract_and_resolve_anthropic_replace"},
+    {"caseId":"real-project-v2-cpp-04-2","requiredLocationsAgree":false,"allClassificationsAgree":false,"definitionUsageAgrees":true,"decisionAgrees":false,"openaiDecision":"accept","anthropicDecision":"replace","hasAmbiguity":false,"automaticConsensus":false,"disagreement":{"kind":"matching_function_redeclaration_classification","openai":"required","anthropic":"optional","locationCount":1},"recommendedAdjudication":"accept_openai_contract_and_require_matching_redeclaration"},
+    {"caseId":"real-project-v2-cpp-04-3","requiredLocationsAgree":true,"allClassificationsAgree":true,"definitionUsageAgrees":true,"decisionAgrees":false,"openaiDecision":"accept","anthropicDecision":"replace","hasAmbiguity":false,"automaticConsensus":false,"recommendedAdjudication":"accept_panel_contract_and_resolve_anthropic_replace"}
+  ]
+}

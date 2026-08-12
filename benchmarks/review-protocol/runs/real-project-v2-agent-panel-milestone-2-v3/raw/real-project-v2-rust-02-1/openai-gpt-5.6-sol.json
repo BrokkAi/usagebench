@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m2_rust_02_1",
+    "executedAt": "2026-08-12T12:01:03Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-02-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/posting_list/src/value_handler.rs",
+        "range": {
+          "start": {
+            "line": 75,
+            "character": 11
+          },
+          "end": {
+            "line": 75,
+            "character": 25
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/lib.rs",
+            "range": {
+              "start": {
+                "line": 48,
+                "character": 52
+              },
+              "end": {
+                "line": 48,
+                "character": 66
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "This token explicitly re-exports the declared type from value_handler and is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/tests.rs",
+            "range": {
+              "start": {
+                "line": 7,
+                "character": 66
+              },
+              "end": {
+                "line": 7,
+                "character": 80
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "This token is an explicit import binding from the crate root and is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/tests.rs",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 19
+              },
+              "end": {
+                "line": 14,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This associated-type assignment uses the declared handler type for TestString."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/value_handler.rs",
+            "range": {
+              "start": {
+                "line": 77,
+                "character": 39
+              },
+              "end": {
+                "line": 77,
+                "character": 53
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This impl self type names the declared UnsizedHandler type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/segment/src/index/field_index/full_text_index/inverted_index/positions.rs",
+            "range": {
+              "start": {
+                "line": 0,
+                "character": 33
+              },
+              "end": {
+                "line": 0,
+                "character": 47
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "This token is an explicit import binding from the posting_list crate and is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/segment/src/index/field_index/full_text_index/inverted_index/positions.rs",
+            "range": {
+              "start": {
+                "line": 30,
+                "character": 19
+              },
+              "end": {
+                "line": 30,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This associated-type assignment uses the declared handler type for Positions."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/posting_list/src/tests.rs",
+        "range": {
+          "start": {
+            "line": 14,
+            "character": 19
+          },
+          "end": {
+            "line": 14,
+            "character": 33
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "Cargo.toml",
+        "lib/posting_list/Cargo.toml",
+        "lib/posting_list/src/lib.rs",
+        "lib/posting_list/src/posting_list.rs",
+        "lib/posting_list/src/tests.rs",
+        "lib/posting_list/src/value_handler.rs",
+        "lib/segment/Cargo.toml",
+        "lib/segment/src/index/field_index/full_text_index/inverted_index/positions.rs"
+      ],
+      "rationale": "A complete exact-token search of the pinned snapshot found the declaration, three semantic references, three explicit binding tokens, and two documentation-only mentions. The declaration and documentation mentions are omitted by policy. The impl target and both associated-type assignments resolve to the declaration and are required; the re-export and imports are optional. No unresolved alias, wildcard-token, or required-contract ambiguity remains."
+    }
+  ]
+}

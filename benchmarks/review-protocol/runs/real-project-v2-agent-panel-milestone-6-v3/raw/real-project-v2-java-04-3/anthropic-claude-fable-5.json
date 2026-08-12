@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:da12a8fa-94a5-47a9-b2f1-1976f8c3339d",
+    "executedAt": "2026-08-12T13:30:23.062Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-04-3",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/bean/auth/MaAuthSubmitResult.java",
+        "range": {
+          "start": {
+            "line": 18,
+            "character": 13
+          },
+          "end": {
+            "line": 18,
+            "character": 31
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/WxOpenMaAuthService.java",
+            "range": {
+              "start": {
+                "line": 47,
+                "character": 2
+              },
+              "end": {
+                "line": 47,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of WxOpenMaAuthService.submit; resolves to me.chanjar.weixin.open.bean.auth.MaAuthSubmitResult via the wildcard import of that package."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/WxOpenMaAuthService.java",
+            "range": {
+              "start": {
+                "line": 72,
+                "character": 2
+              },
+              "end": {
+                "line": 72,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of WxOpenMaAuthService.resubmit; resolves to the declared class via the wildcard import of me.chanjar.weixin.open.bean.auth."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 27,
+                "character": 9
+              },
+              "end": {
+                "line": 27,
+                "character": 27
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of the overriding WxOpenMaAuthServiceImpl.submit; resolves to the declared class via the wildcard import of me.chanjar.weixin.open.bean.auth."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 29,
+                "character": 55
+              },
+              "end": {
+                "line": 29,
+                "character": 73
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class literal MaAuthSubmitResult.class passed to Gson fromJson in submit; resolves to the declared class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 9
+              },
+              "end": {
+                "line": 45,
+                "character": 27
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of the overriding WxOpenMaAuthServiceImpl.resubmit; resolves to the declared class via the wildcard import of me.chanjar.weixin.open.bean.auth."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java",
+            "range": {
+              "start": {
+                "line": 47,
+                "character": 55
+              },
+              "end": {
+                "line": 47,
+                "character": 73
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class literal MaAuthSubmitResult.class passed to Gson fromJson in resubmit; resolves to the declared class."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/WxOpenMaAuthService.java",
+        "range": {
+          "start": {
+            "line": 47,
+            "character": 2
+          },
+          "end": {
+            "line": 47,
+            "character": 20
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/weixin-java-open/src/main/java/me/chanjar/weixin/open/bean/auth/MaAuthSubmitResult.java",
+        "source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/WxOpenMaAuthService.java",
+        "source/weixin-java-open/src/main/java/me/chanjar/weixin/open/api/impl/WxOpenMaAuthServiceImpl.java"
+      ],
+      "rationale": "A whole-repository exact-token search for MaAuthSubmitResult produced seven hits: the class declaration itself and six identifier tokens in two files. The interface WxOpenMaAuthService uses it as the return type of submit and resubmit; WxOpenMaAuthServiceImpl uses it as the return type of the two overriding methods and twice as a class literal in Gson deserialization calls. Both files import me.chanjar.weixin.open.bean.auth.* via wildcard, so the type binds without any explicit import identifier token; per the reference policy no location is invented for the implicit wildcard binding, leaving no optional binding tokens. No other declaration of the name exists anywhere in the snapshot and neither referencing package contains a shadowing type, so all six tokens resolve unambiguously to the selected declaration. All lines are pure ASCII, so UTF-16 character offsets equal byte/column offsets. The deterministic definitionUsage is the first required location after sorting by URI, line, character: WxOpenMaAuthService.java line 47 sorts before the impl file because 'W' precedes 'i' in the path comparison after the shared 'api/' prefix."
+    }
+  ]
+}

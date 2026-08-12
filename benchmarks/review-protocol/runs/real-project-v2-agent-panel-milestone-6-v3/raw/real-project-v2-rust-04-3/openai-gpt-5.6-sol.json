@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m6r_rust_04_3_clean",
+    "executedAt": "2026-08-12T14:17:44Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-04-3",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+        "range": {
+          "start": {
+            "line": 20,
+            "character": 11
+          },
+          "end": {
+            "line": 20,
+            "character": 23
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+            "range": {
+              "start": {
+                "line": 25,
+                "character": 22
+              },
+              "end": {
+                "line": 25,
+                "character": 34
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding for the declared ServerEvents type; bindings_optional classifies this token as optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+            "range": {
+              "start": {
+                "line": 64,
+                "character": 40
+              },
+              "end": {
+                "line": 64,
+                "character": 52
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return-type reference resolves through the explicit import to the declared ServerEvents type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 7
+              },
+              "end": {
+                "line": 67,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Associated-function receiver resolves through the explicit import to the declared ServerEvents type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 34,
+                "character": 26
+              },
+              "end": {
+                "line": 34,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Inherent implementation receiver names the declared ServerEvents type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 56,
+                "character": 8
+              },
+              "end": {
+                "line": 56,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Inherent implementation receiver names the declared ServerEvents type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 65,
+                "character": 37
+              },
+              "end": {
+                "line": 65,
+                "character": 49
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Stream trait implementation receiver names the declared ServerEvents type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 90,
+                "character": 25
+              },
+              "end": {
+                "line": 90,
+                "character": 37
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "FromResponse trait implementation receiver names the declared ServerEvents type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 269,
+                "character": 21
+              },
+              "end": {
+                "line": 269,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Nested server implementation's inherent implementation receiver names the declared ServerEvents type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/fullstack/src/payloads/sse.rs",
+            "range": {
+              "start": {
+                "line": 350,
+                "character": 29
+              },
+              "end": {
+                "line": 350,
+                "character": 41
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "IntoResponse trait implementation receiver names the declared ServerEvents type."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/examples/07-fullstack/server_sent_events.rs",
+        "range": {
+          "start": {
+            "line": 64,
+            "character": 40
+          },
+          "end": {
+            "line": 64,
+            "character": 52
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "examples/07-fullstack/server_sent_events.rs",
+        "packages/fullstack/src/lib.rs",
+        "packages/fullstack/src/payloads/sse.rs"
+      ],
+      "rationale": "The declaration is valid and all exact identifier tokens in code that resolve to it were identified. The example's explicit import binding is optional under bindings_optional, while its two semantic references and the six implementation receivers are required. Wildcard re-exports contain no ServerEvents identifier token, and documentation occurrences are omitted."
+    }
+  ]
+}

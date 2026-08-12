@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:899873f0-f30a-401d-a7b4-1e93a1b3eac0",
+    "executedAt": "2026-08-12T12:01:01.841Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-02-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/posting_list/src/value_handler.rs",
+        "range": {
+          "start": {
+            "line": 75,
+            "character": 11
+          },
+          "end": {
+            "line": 75,
+            "character": 25
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/value_handler.rs",
+            "range": {
+              "start": {
+                "line": 77,
+                "character": 39
+              },
+              "end": {
+                "line": 77,
+                "character": 53
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type reference in the impl header `impl<V: UnsizedValue> ValueHandler for UnsizedHandler<V>`; resolves to the selected struct declaration in the same module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/tests.rs",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 19
+              },
+              "end": {
+                "line": 14,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Associated-type assignment `type Handler = UnsizedHandler<TestString>` in `impl PostingValue for TestString`; resolves via the `use crate::{..., UnsizedHandler, ...}` import to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/segment/src/index/field_index/full_text_index/inverted_index/positions.rs",
+            "range": {
+              "start": {
+                "line": 30,
+                "character": 19
+              },
+              "end": {
+                "line": 30,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Associated-type assignment `type Handler = UnsizedHandler<Self>` in `impl PostingValue for Positions`; resolves via `use posting_list::{..., UnsizedHandler, ...}` through the crate re-export to the selected declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/tests.rs",
+            "range": {
+              "start": {
+                "line": 7,
+                "character": 66
+              },
+              "end": {
+                "line": 7,
+                "character": 80
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit import binding token in `use crate::{CHUNK_LEN, PostingBuilder, PostingList, PostingValue, UnsizedHandler, UnsizedValue};`; optional under the bindings_optional policy."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/posting_list/src/lib.rs",
+            "range": {
+              "start": {
+                "line": 48,
+                "character": 52
+              },
+              "end": {
+                "line": 48,
+                "character": 66
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit re-export binding token in `pub use value_handler::{PostingValue, SizedHandler, UnsizedHandler, ValueHandler};`; optional under the bindings_optional policy."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/segment/src/index/field_index/full_text_index/inverted_index/positions.rs",
+            "range": {
+              "start": {
+                "line": 0,
+                "character": 33
+              },
+              "end": {
+                "line": 0,
+                "character": 47
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "Explicit cross-crate import binding token in `use posting_list::{PostingValue, UnsizedHandler, UnsizedValue};`; optional under the bindings_optional policy."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/posting_list/src/tests.rs",
+        "range": {
+          "start": {
+            "line": 14,
+            "character": 19
+          },
+          "end": {
+            "line": 14,
+            "character": 33
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/lib/posting_list/src/value_handler.rs",
+        "source/lib/posting_list/src/lib.rs",
+        "source/lib/posting_list/src/tests.rs",
+        "source/lib/posting_list/src/posting_list.rs",
+        "source/lib/segment/src/index/field_index/full_text_index/inverted_index/positions.rs"
+      ],
+      "rationale": "Declaration verified as the struct `UnsizedHandler` at value_handler.rs line 75 (0-based), chars 11-25, in `pub struct UnsizedHandler<V: UnsizedValue>(PhantomData<V>);`. A repository-wide exact-token search found nine occurrences of `UnsizedHandler`. Excluding the declaration token itself, the required semantic usages are: the trait impl header at value_handler.rs line 77, the associated-type reference in the test-only `TestString` impl at tests.rs line 14, and the associated-type reference in the `Positions` impl at positions.rs line 30. Three explicit binding tokens (imports in tests.rs and positions.rs, crate re-export in lib.rs) are classified optional under bindings_optional. Two remaining occurrences are rustdoc comment text and an intra-doc link at posting_list.rs lines 19 and 22 (0-based), omitted as documentation text per the protocol. All affected lines are ASCII, so UTF-16 columns equal byte columns. definitionUsage is the first required location after sorting by URI then position (lib/posting_list/src/tests.rs sorts before value_handler.rs and lib/segment/...)."
+    }
+  ]
+}

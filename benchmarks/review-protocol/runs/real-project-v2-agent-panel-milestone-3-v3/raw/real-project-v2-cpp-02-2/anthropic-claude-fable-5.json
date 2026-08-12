@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:6addb7b2-7fe7-407a-9d49-ccef6b99b743",
+    "executedAt": "2026-08-12T12:17:32.042Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-02-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/cutil/bitvec.h",
+        "range": {
+          "start": {
+            "line": 36,
+            "character": 19
+          },
+          "end": {
+            "line": 36,
+            "character": 32
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptive.cpp",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 2
+              },
+              "end": {
+                "line": 67,
+                "character": 15
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call in ADAPT_CLASS_STRUCT constructor zeroing PermProtos; resolves to the sole global-scope static inline zero_all_bits from bitvec.h, transitively included via adaptive.h -> intproto.h -> protos.h -> bitvec.h."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptive.cpp",
+            "range": {
+              "start": {
+                "line": 68,
+                "character": 2
+              },
+              "end": {
+                "line": 68,
+                "character": 15
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call in ADAPT_CLASS_STRUCT constructor zeroing PermConfigs; same resolution to bitvec.h zero_all_bits."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptive.cpp",
+            "range": {
+              "start": {
+                "line": 131,
+                "character": 2
+              },
+              "end": {
+                "line": 131,
+                "character": 15
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call in TEMP_CONFIG_STRUCT constructor zeroing Protos; same resolution to bitvec.h zero_all_bits."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptmatch.cpp",
+            "range": {
+              "start": {
+                "line": 566,
+                "character": 2
+              },
+              "end": {
+                "line": 566,
+                "character": 15
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call zeroing AllConfigsOff in Classify initialization; adaptmatch.cpp includes bitvec.h directly at line 27; no other zero_all_bits declaration exists."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/adaptmatch.cpp",
+            "range": {
+              "start": {
+                "line": 1704,
+                "character": 2
+              },
+              "end": {
+                "line": 1704,
+                "character": 15
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call zeroing TempProtoMask in MakeNewTemporaryConfig; same direct include and unique resolution to bitvec.h zero_all_bits."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/classify/protos.cpp",
+            "range": {
+              "start": {
+                "line": 67,
+                "character": 2
+              },
+              "end": {
+                "line": 67,
+                "character": 15
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified call zeroing the new Config bit vector in AddConfigToClass; protos.cpp includes protos.h which includes bitvec.h at line 22; resolves to the header's zero_all_bits."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/classify/adaptive.cpp",
+        "range": {
+          "start": {
+            "line": 67,
+            "character": 2
+          },
+          "end": {
+            "line": 67,
+            "character": 15
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/cutil/bitvec.h",
+        "source/src/classify/adaptive.cpp",
+        "source/src/classify/adaptmatch.cpp",
+        "source/src/classify/protos.cpp",
+        "source/src/classify/adaptive.h",
+        "source/src/classify/intproto.h",
+        "source/src/classify/protos.h",
+        "source/src/classify/classify.h"
+      ],
+      "rationale": "zero_all_bits is a global-scope static inline function whose only declaration/definition is src/cutil/bitvec.h line 37 (0-indexed 36), matching the query token. A repository-wide exact-token search yields exactly seven occurrences: the declaration itself (query metadata, excluded from the set) and six call sites, all unqualified calls inside namespace tesseract with no shadowing declaration, each in a translation unit that includes bitvec.h (adaptmatch.cpp directly; protos.cpp via protos.h; adaptive.cpp via adaptive.h -> intproto.h -> protos.h). All six therefore semantically resolve to the selected declaration and are required. C++ has no import/export binding tokens for this reference policy, so no optional binding locations exist; no other exact-name candidates were found, so no excluded inventory is needed. All lines are ASCII, so UTF-16 columns equal byte columns; each call token starts at character 2 (two-space indent) and spans 13 characters. definitionUsage is the deterministic first required location after sorting by URI then position: adaptive.cpp (sorts before adaptmatch.cpp and protos.cpp) line 67 character 2."
+    }
+  ]
+}

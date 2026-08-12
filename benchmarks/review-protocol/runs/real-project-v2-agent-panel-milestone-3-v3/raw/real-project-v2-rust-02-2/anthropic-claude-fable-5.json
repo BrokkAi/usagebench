@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:b35ff224-d63e-439d-b0e7-16cc6f73475a",
+    "executedAt": "2026-08-12T12:13:45.544Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-02-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+        "range": {
+          "start": {
+            "line": 75,
+            "character": 7
+          },
+          "end": {
+            "line": 75,
+            "character": 22
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 63,
+                "character": 16
+              },
+              "end": {
+                "line": 63,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call `read_disk_usage(path)?` inside `disk_usage` in the same module; resolves directly to the selected free function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 88,
+                "character": 20
+              },
+              "end": {
+                "line": 88,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in test `read_returns_sensible_values_for_tempdir`; resolves to the declaration via `use super::*` in the `tests` module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 116,
+                "character": 29
+              },
+              "end": {
+                "line": 116,
+                "character": 44
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in test `missing_path_does_not_panic`; resolves to the declaration via `use super::*` in the `tests` module."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+        "range": {
+          "start": {
+            "line": 63,
+            "character": 16
+          },
+          "end": {
+            "line": 63,
+            "character": 31
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/lib/common/common/src/disk_usage.rs"
+      ],
+      "rationale": "The selected declaration is `pub fn read_disk_usage(path: &Path) -> Option<DiskUsage>` at disk_usage.rs line 75 (0-indexed), chars 7-22. A repository-wide exact-token search for `read_disk_usage` over the pinned snapshot (verified at commit db8fa43fcb6aedec1e739487e17a99731b74590a) yields exactly four occurrences, all in lib/common/common/src/disk_usage.rs: the declaration itself plus three call sites, each of which semantically resolves to this free function (one in `disk_usage` in the same module scope, two in the `#[cfg(test)] mod tests` submodule via wildcard `use super::*`). The wildcard import has no identifier token for this symbol, so per the bindings_optional policy no binding location is recorded. No other module imports, re-exports, or path-qualified references to the function exist, and no exact-name token elsewhere required an excluded classification. All content is ASCII, so UTF-8 and UTF-16 character offsets coincide. `definitionUsage` is the first required location after sorting by URI, start line, start character."
+    }
+  ]
+}

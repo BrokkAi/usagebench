@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "/root/m4_java_03_1",
+    "executedAt": "2026-08-12T12:50:09Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-03-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+        "range": {
+          "start": {
+            "line": 18,
+            "character": 13
+          },
+          "end": {
+            "line": 18,
+            "character": 29
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/BaseFloatView.java",
+            "range": {
+              "start": {
+                "line": 70,
+                "character": 8
+              },
+              "end": {
+                "line": 70,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The static method receiver resolves to the declared FloatViewManager class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/BaseFloatView.java",
+            "range": {
+              "start": {
+                "line": 74,
+                "character": 8
+              },
+              "end": {
+                "line": 74,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The static method receiver resolves to the declared FloatViewManager class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+            "range": {
+              "start": {
+                "line": 23,
+                "character": 12
+              },
+              "end": {
+                "line": 23,
+                "character": 28
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the class constructor, a distinct procedure declaration rather than a usage of the class declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+            "range": {
+              "start": {
+                "line": 26,
+                "character": 18
+              },
+              "end": {
+                "line": 26,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The method return type resolves to the declared FloatViewManager class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+            "range": {
+              "start": {
+                "line": 31,
+                "character": 29
+              },
+              "end": {
+                "line": 31,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The static field's declared type resolves to the declared FloatViewManager class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+            "range": {
+              "start": {
+                "line": 31,
+                "character": 61
+              },
+              "end": {
+                "line": 31,
+                "character": 77
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The object-creation type token resolves to the declared FloatViewManager class."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/BaseFloatView.java",
+        "range": {
+          "start": {
+            "line": 70,
+            "character": 8
+          },
+          "end": {
+            "line": 70,
+            "character": 24
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "lib/utildebug/src/main/java/com/blankj/utildebug/base/view/BaseFloatView.java",
+        "lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java"
+      ],
+      "rationale": "All exact source occurrences were inspected. Five tokens semantically use the selected class declaration; the selected declaration itself is omitted and the constructor declarator is explicitly excluded as a distinct procedure declaration. No import or export binding token exists for this package-local reference set."
+    }
+  ]
+}

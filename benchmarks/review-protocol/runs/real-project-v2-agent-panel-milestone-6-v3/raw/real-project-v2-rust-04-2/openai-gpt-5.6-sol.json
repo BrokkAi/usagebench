@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "019ff64c-d109-7b72-9c75-03158e22b452",
+    "executedAt": "2026-08-12T14:09:51Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-04-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+        "range": {
+          "start": {
+            "line": 526,
+            "character": 3
+          },
+          "end": {
+            "line": 526,
+            "character": 17
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+            "range": {
+              "start": {
+                "line": 130,
+                "character": 41
+              },
+              "end": {
+                "line": 130,
+                "character": 55
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This call resolves to the module-local find_component function selected by the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+            "range": {
+              "start": {
+                "line": 164,
+                "character": 51
+              },
+              "end": {
+                "line": 164,
+                "character": 65
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This call resolves to the module-local find_component function selected by the declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/packages/cli/src/cli/component.rs",
+        "range": {
+          "start": {
+            "line": 130,
+            "character": 41
+          },
+          "end": {
+            "line": 130,
+            "character": 55
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "packages/cli/src/cli/component.rs"
+      ],
+      "rationale": "A project-wide exact-identifier search found only the supplied declaration and these two call sites. Both calls are in the same Rust module and unambiguously resolve to the selected private free function. There are no explicit import, re-export, or export binding tokens for this declaration. The required set is complete, and the lexicographically first required location is the call on line 130."
+    }
+  ]
+}

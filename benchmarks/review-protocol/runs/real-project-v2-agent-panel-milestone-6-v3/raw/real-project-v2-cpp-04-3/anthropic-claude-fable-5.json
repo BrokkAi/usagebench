@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:80d6f87a-b906-4432-bf99-a7d3479b5673",
+    "executedAt": "2026-08-12T13:34:06.594Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-04-3",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+        "range": {
+          "start": {
+            "line": 357,
+            "character": 4
+          },
+          "end": {
+            "line": 357,
+            "character": 19
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 45,
+                "character": 4
+              },
+              "end": {
+                "line": 45,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Forward declaration token of the same global-namespace 5-parameter MountFilesystem function; a redeclaration outside the supplied declaration range that semantically resolves to the queried entity."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 499,
+                "character": 15
+              },
+              "end": {
+                "line": 499,
+                "character": 30
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified 5-argument call in MountDrvfs; unqualified lookup finds the file-scope global-namespace declaration (mountutil::MountFilesystem is not visible unqualified and takes 4 parameters)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+            "range": {
+              "start": {
+                "line": 598,
+                "character": 15
+              },
+              "end": {
+                "line": 598,
+                "character": 30
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Unqualified 5-argument call in the Plan9 mount path; resolves to the same global-namespace MountFilesystem for the same lookup and arity reasons as the call on line 499."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/mountutil/mountutilcpp.h",
+            "range": {
+              "start": {
+                "line": 81,
+                "character": 4
+              },
+              "end": {
+                "line": 81,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Declaration of mountutil::MountFilesystem(source, target, type, options) inside namespace mountutil (lines 8-84); a distinct entity with a different enclosing namespace and 4-parameter signature."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/linux/mountutil/mountflags.cpp",
+            "range": {
+              "start": {
+                "line": 177,
+                "character": 4
+              },
+              "end": {
+                "line": 177,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "Definition of mountutil::MountFilesystem inside the namespace mountutil block (lines 136-201 of mountflags.cpp); resolves to the distinct mountutil-namespace function, not the queried global-namespace function."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/linux/init/drvfs.cpp",
+        "range": {
+          "start": {
+            "line": 45,
+            "character": 4
+          },
+          "end": {
+            "line": 45,
+            "character": 19
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "src/linux/init/drvfs.cpp",
+        "src/linux/mountutil/mountutilcpp.h",
+        "src/linux/mountutil/mountflags.cpp"
+      ],
+      "rationale": "A repository-wide exact-token search for MountFilesystem yields six occurrences. The supplied declaration is the definition at drvfs.cpp line 357 (0-based) of the global-namespace int MountFilesystem(FsType, Source, Target, Options, ExitCode). Required usages: the forward declaration at drvfs.cpp 0-based line 45 and the two unqualified 5-argument calls at 0-based lines 499 and 598, which unqualified lookup binds to that global declaration (drvfs.cpp contains no using-directive for mountutil, and the mountutil overload has only 4 parameters). The remaining two tokens are the declaration and definition of the unrelated mountutil::MountFilesystem and are excluded with evidence. No import/export binding tokens exist for this C++ case. Deterministic definitionUsage is the lexicographically first required location: drvfs.cpp line 45, character 4. All lines are pure ASCII, so UTF-16 columns equal byte columns."
+    }
+  ]
+}

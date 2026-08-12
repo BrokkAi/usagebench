@@ -1,0 +1,1276 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:796e7365-3d29-46a3-aeb1-10e7890a058d",
+    "executedAt": "2026-08-12T11:49:23.283Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/core/emulator_settings.h",
+        "range": {
+          "start": {
+            "line": 483,
+            "character": 6
+          },
+          "end": {
+            "line": 483,
+            "character": 26
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 20,
+                "character": 16
+              },
+              "end": {
+                "line": 20,
+                "character": 36
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::shared_ptr in static data member s_instance out-of-line definition type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 20,
+                "character": 38
+              },
+              "end": {
+                "line": 20,
+                "character": 58
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of static member s_instance."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 21,
+                "character": 11
+              },
+              "end": {
+                "line": 21,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of static member s_mutex."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 89,
+                "character": 5
+              },
+              "end": {
+                "line": 89,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of PrintChangedSummary."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 99,
+                "character": 0
+              },
+              "end": {
+                "line": 99,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line defaulted constructor definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 99,
+                "character": 22
+              },
+              "end": {
+                "line": 99,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor name token in out-of-line defaulted constructor definition resolves to the class name."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 101,
+                "character": 0
+              },
+              "end": {
+                "line": 101,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line destructor definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 101,
+                "character": 23
+              },
+              "end": {
+                "line": 101,
+                "character": 43
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Destructor name token (after ~) in out-of-line destructor definition resolves to the class name."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 106,
+                "character": 16
+              },
+              "end": {
+                "line": 106,
+                "character": 36
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::shared_ptr in GetInstance return type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 106,
+                "character": 38
+              },
+              "end": {
+                "line": 106,
+                "character": 58
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of GetInstance."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 109,
+                "character": 38
+              },
+              "end": {
+                "line": 109,
+                "character": 58
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared constructing the singleton instance."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 113,
+                "character": 5
+              },
+              "end": {
+                "line": 113,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of SetInstance."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 113,
+                "character": 55
+              },
+              "end": {
+                "line": 113,
+                "character": 75
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::shared_ptr in SetInstance parameter type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 5
+              },
+              "end": {
+                "line": 121,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of AddGameInstallDir."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 129,
+                "character": 35
+              },
+              "end": {
+                "line": 129,
+                "character": 55
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of GetGameInstallDirs."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 35
+              },
+              "end": {
+                "line": 137,
+                "character": 55
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of GetAllGameInstallDirs."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 141,
+                "character": 5
+              },
+              "end": {
+                "line": 141,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of SetAllGameInstallDirs."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 145,
+                "character": 5
+              },
+              "end": {
+                "line": 145,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of RemoveGameInstallDir."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 154,
+                "character": 5
+              },
+              "end": {
+                "line": 154,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of SetGameInstallDirEnabled."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 164,
+                "character": 5
+              },
+              "end": {
+                "line": 164,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of SetGameInstallDirs."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 172,
+                "character": 24
+              },
+              "end": {
+                "line": 172,
+                "character": 44
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of GetGameInstallDirsEnabled."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 180,
+                "character": 22
+              },
+              "end": {
+                "line": 180,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of GetHomeDir."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 187,
+                "character": 5
+              },
+              "end": {
+                "line": 187,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of SetHomeDir."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 191,
+                "character": 22
+              },
+              "end": {
+                "line": 191,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of GetSysModulesDir."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 198,
+                "character": 5
+              },
+              "end": {
+                "line": 198,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of SetSysModulesDir."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 202,
+                "character": 22
+              },
+              "end": {
+                "line": 202,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of GetFontsDir."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 209,
+                "character": 5
+              },
+              "end": {
+                "line": 209,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of SetFontsDir."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 213,
+                "character": 22
+              },
+              "end": {
+                "line": 213,
+                "character": 42
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of GetAddonInstallDir."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 220,
+                "character": 5
+              },
+              "end": {
+                "line": 220,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of SetAddonInstallDir."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 225,
+                "character": 5
+              },
+              "end": {
+                "line": 225,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of ClearGameSpecificOverrides."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 235,
+                "character": 5
+              },
+              "end": {
+                "line": 235,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of ResetGameSpecificValue."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 263,
+                "character": 5
+              },
+              "end": {
+                "line": 263,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of Save."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 358,
+                "character": 5
+              },
+              "end": {
+                "line": 358,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of Load."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 476,
+                "character": 5
+              },
+              "end": {
+                "line": 476,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of SetDefaultValues."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 486,
+                "character": 5
+              },
+              "end": {
+                "line": 486,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of TransferSettings."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 729,
+                "character": 25
+              },
+              "end": {
+                "line": 729,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier in out-of-line definition of GetAllOverrideableKeys."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 17,
+                "character": 27
+              },
+              "end": {
+                "line": 17,
+                "character": 47
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Identifier token in the EmulatorSettings macro replacement list; at every expansion it resolves to this class for the qualified GetInstance call."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 485,
+                "character": 4
+              },
+              "end": {
+                "line": 485,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor declaration name token inside the class body resolves to the class name."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 486,
+                "character": 5
+              },
+              "end": {
+                "line": 486,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Destructor declaration name token (after ~) resolves to the class name."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 488,
+                "character": 27
+              },
+              "end": {
+                "line": 488,
+                "character": 47
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::shared_ptr in GetInstance declaration return type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 489,
+                "character": 44
+              },
+              "end": {
+                "line": 489,
+                "character": 64
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::shared_ptr in SetInstance declaration parameter type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/core/emulator_settings.h",
+            "range": {
+              "start": {
+                "line": 548,
+                "character": 27
+              },
+              "end": {
+                "line": 548,
+                "character": 47
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::shared_ptr in in-class declaration of static member s_instance."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 20
+              },
+              "end": {
+                "line": 137,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::shared_ptr in emu_settings local variable type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 137,
+                "character": 74
+              },
+              "end": {
+                "line": 137,
+                "character": 94
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared constructing the settings instance."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 138,
+                "character": 4
+              },
+              "end": {
+                "line": 138,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 101,
+                "character": 41
+              },
+              "end": {
+                "line": 101,
+                "character": 61
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in fixture SetUp."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 102,
+                "character": 8
+              },
+              "end": {
+                "line": 102,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in fixture SetUp."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 106,
+                "character": 8
+              },
+              "end": {
+                "line": 106,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in fixture TearDown."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 121,
+                "character": 20
+              },
+              "end": {
+                "line": 121,
+                "character": 40
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::shared_ptr in fixture member temp_settings type."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 301,
+                "character": 34
+              },
+              "end": {
+                "line": 301,
+                "character": 54
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 302,
+                "character": 4
+              },
+              "end": {
+                "line": 302,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 315,
+                "character": 30
+              },
+              "end": {
+                "line": 315,
+                "character": 50
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 316,
+                "character": 4
+              },
+              "end": {
+                "line": 316,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 340,
+                "character": 30
+              },
+              "end": {
+                "line": 340,
+                "character": 50
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 341,
+                "character": 4
+              },
+              "end": {
+                "line": 341,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 355,
+                "character": 30
+              },
+              "end": {
+                "line": 355,
+                "character": 50
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 356,
+                "character": 4
+              },
+              "end": {
+                "line": 356,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 500,
+                "character": 34
+              },
+              "end": {
+                "line": 500,
+                "character": 54
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 501,
+                "character": 8
+              },
+              "end": {
+                "line": 501,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 509,
+                "character": 34
+              },
+              "end": {
+                "line": 509,
+                "character": 54
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 510,
+                "character": 8
+              },
+              "end": {
+                "line": 510,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 661,
+                "character": 30
+              },
+              "end": {
+                "line": 661,
+                "character": 50
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 662,
+                "character": 4
+              },
+              "end": {
+                "line": 662,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 776,
+                "character": 30
+              },
+              "end": {
+                "line": 776,
+                "character": 50
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 777,
+                "character": 4
+              },
+              "end": {
+                "line": 777,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 789,
+                "character": 30
+              },
+              "end": {
+                "line": 789,
+                "character": 50
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 790,
+                "character": 4
+              },
+              "end": {
+                "line": 790,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 818,
+                "character": 42
+              },
+              "end": {
+                "line": 818,
+                "character": 62
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 831,
+                "character": 34
+              },
+              "end": {
+                "line": 831,
+                "character": 54
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 832,
+                "character": 8
+              },
+              "end": {
+                "line": 832,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 838,
+                "character": 35
+              },
+              "end": {
+                "line": 838,
+                "character": 55
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Template argument to std::make_shared in test body."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/tests/test_emulator_settings.cpp",
+            "range": {
+              "start": {
+                "line": 839,
+                "character": 4
+              },
+              "end": {
+                "line": 839,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class qualifier for static SetInstance call in test body."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/core/emulator_settings.cpp",
+        "range": {
+          "start": {
+            "line": 20,
+            "character": 16
+          },
+          "end": {
+            "line": 20,
+            "character": 36
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/core/emulator_settings.h",
+        "source/src/core/emulator_settings.cpp",
+        "source/src/main.cpp",
+        "source/tests/test_emulator_settings.cpp"
+      ],
+      "rationale": "The declaration range covers the class-name token of 'class EmulatorSettingsImpl' at emulator_settings.h line 484 (0-based 483, chars 6-26). A whole-project exhaustive search (including hidden and ignored files) found exactly 74 occurrences of the exact token 'EmulatorSettingsImpl', all in four files, all in ASCII-only lines (UTF-16 columns equal byte columns), and all in code (none in comments or strings). The single occurrence inside the declaration range is the selected declaration token and is excluded from the usage set. The remaining 73 tokens all resolve unambiguously to this class (it is the only entity with that name in the snapshot; both main.cpp and the test file include core/emulator_settings.h): out-of-line member/static-member definition qualifiers and constructor/destructor name tokens in emulator_settings.cpp, in-class constructor/destructor declaration names and shared_ptr template arguments in the header, the identifier in the EmulatorSettings macro replacement list (which resolves to the class at every expansion), and shared_ptr/make_shared template arguments in main.cpp and the tests. The bindings_optional policy adds no entries because C++ here has no import/export binding tokens. definitionUsage is the deterministic first required location after sorting by URI, then line, then character: emulator_settings.cpp (sorts before the .h) line 20 character 16."
+    }
+  ]
+}

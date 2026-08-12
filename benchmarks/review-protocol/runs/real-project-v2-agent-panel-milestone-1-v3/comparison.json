@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "real-project-v2-agent-panel-milestone-1-v3",
+  "status": "human_adjudicated",
+  "summary": {
+    "caseCount": 6,
+    "requiredLocationAgreementCount": 5,
+    "automaticConsensusCount": 3,
+    "decisionDisagreementCount": 2,
+    "classificationDisagreementCount": 1,
+    "highConfidenceNoAmbiguityCount": 6,
+    "humanEscalationCount": 6,
+    "humanAdjudicatedCount": 6,
+    "unresolvedEscalationCount": 0
+  },
+  "cases": [
+    {
+      "caseId": "real-project-v2-java-01-1",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "openaiDecision": "accept",
+      "anthropicDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "recommendedAdjudication": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-java-01-2",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": false,
+      "openaiDecision": "accept",
+      "anthropicDecision": "replace",
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "recommendedAdjudication": "accept_panel_contract_and_resolve_anthropic_replace"
+    },
+    {
+      "caseId": "real-project-v2-rust-01-1",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "openaiDecision": "accept",
+      "anthropicDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "recommendedAdjudication": "accept_consensus_contract"
+    },
+    {
+      "caseId": "real-project-v2-rust-01-2",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": false,
+      "openaiDecision": "accept",
+      "anthropicDecision": "replace",
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "recommendedAdjudication": "accept_panel_contract_and_resolve_anthropic_replace"
+    },
+    {
+      "caseId": "real-project-v2-cpp-01-1",
+      "requiredLocationsAgree": false,
+      "allClassificationsAgree": false,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "openaiDecision": "accept",
+      "anthropicDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": false,
+      "disagreement": {
+        "kind": "constructor_destructor_declarator_classification",
+        "openai": "excluded",
+        "anthropic": "required",
+        "locationCount": 4
+      },
+      "recommendedAdjudication": "accept_openai_contract_and_exclude_special_member_declarators"
+    },
+    {
+      "caseId": "real-project-v2-cpp-01-2",
+      "requiredLocationsAgree": true,
+      "allClassificationsAgree": true,
+      "definitionUsageAgrees": true,
+      "decisionAgrees": true,
+      "openaiDecision": "accept",
+      "anthropicDecision": "accept",
+      "hasAmbiguity": false,
+      "automaticConsensus": true,
+      "recommendedAdjudication": "accept_consensus_contract"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:90e76fdc-899a-4fa1-ac5f-484ea4bde622",
+    "executedAt": "2026-08-12T11:46:49.123Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-01-2",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/modules/azure.rs",
+        "range": {
+          "start": {
+            "line": 18,
+            "character": 7
+          },
+          "end": {
+            "line": 18,
+            "character": 11
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/modules/azure.rs",
+            "range": {
+              "start": {
+                "line": 26,
+                "character": 10
+              },
+              "end": {
+                "line": 26,
+                "character": 14
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type reference in the `user: User` field of `struct Subscription`; resolves to the private `struct User` declared at line 18 of the same module."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/modules/azure.rs",
+        "range": {
+          "start": {
+            "line": 26,
+            "character": 10
+          },
+          "end": {
+            "line": 26,
+            "character": 14
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "src/modules/azure.rs",
+        "src/modules/pulumi.rs"
+      ],
+      "rationale": "`struct User` in src/modules/azure.rs has no `pub` visibility, so it is only nameable within the `azure` module (including its `tests` child module). A whole-repository sweep for the exact token `User` yielded only: the declaration itself (never a usage), the `user: User` field type at line 26 (0-indexed) which is the sole required semantic usage, a prose comment in src/modules/pulumi.rs referring to a serde doc example (comment text, omitted per rule 3), and occurrences in documentation/markdown/wxs/robots.txt files that are not Rust identifier tokens. No `use`, re-export, or other binding tokens reference this private struct, so no optional binding locations exist. The required set is complete with no unresolved ambiguity; definitionUsage is the single required location."
+    }
+  ]
+}

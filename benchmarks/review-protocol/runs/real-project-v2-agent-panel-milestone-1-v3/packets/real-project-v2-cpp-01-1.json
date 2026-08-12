@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "caseId": "real-project-v2-cpp-01-1",
+  "language": "cpp",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "repo": "https://github.com/shadps4-emu/shadPS4",
+    "commit": "65c9463c6a2f7a5bb3cb0ad02f5f3edbaeb3e49a",
+    "archiveSha256": "53313b509b781863cdab49ac54c2c02f6b0727e943317638aab51fd9c2a41c2b"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/core/emulator_settings.h",
+    "range": {
+      "start": {
+        "line": 483,
+        "character": 6
+      },
+      "end": {
+        "line": 483,
+        "character": 26
+      }
+    }
+  },
+  "displayName": "EmulatorSettingsImpl"
+}

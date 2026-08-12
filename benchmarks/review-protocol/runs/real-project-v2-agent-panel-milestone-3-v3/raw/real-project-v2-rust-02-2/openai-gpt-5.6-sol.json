@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m3_rust_02_2",
+    "executedAt": "2026-08-12T12:13:50Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-02-2",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+        "range": {
+          "start": {
+            "line": 75,
+            "character": 7
+          },
+          "end": {
+            "line": 75,
+            "character": 22
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 63,
+                "character": 16
+              },
+              "end": {
+                "line": 63,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Direct call from disk_usage in the same module resolves to the selected read_disk_usage function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 88,
+                "character": 20
+              },
+              "end": {
+                "line": 88,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in the nested tests module resolves through use super::* to the selected parent-module function."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+            "range": {
+              "start": {
+                "line": 116,
+                "character": 29
+              },
+              "end": {
+                "line": 116,
+                "character": 44
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in the nested tests module resolves through use super::* to the selected parent-module function."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/common/common/src/disk_usage.rs",
+        "range": {
+          "start": {
+            "line": 63,
+            "character": 16
+          },
+          "end": {
+            "line": 63,
+            "character": 31
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "lib/common/common/src/disk_usage.rs",
+        "lib/common/common/src/lib.rs"
+      ],
+      "rationale": "An exhaustive exact-identifier search found only the selected declaration and these three calls. The enclosing-module call resolves lexically, while both test calls resolve via the nested module's wildcard parent import. The wildcard import has no explicit read_disk_usage binding token, so it adds no optional location. The required set is complete and unambiguous."
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "fresh_cpp_01_1",
+    "executedAt": "2026-08-12T11:32:37Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-cpp-01-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/core/emulator_settings.h",
+        "range": {
+          "start": { "line": 483, "character": 6 },
+          "end": { "line": 483, "character": 26 }
+        }
+      },
+      "locations": [
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 20, "character": 16 }, "end": { "line": 20, "character": 36 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 20, "character": 38 }, "end": { "line": 20, "character": 58 } } }, "classification": "required", "rationale": "Qualified receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 21, "character": 11 }, "end": { "line": 21, "character": 31 } } }, "classification": "required", "rationale": "Qualified receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 89, "character": 5 }, "end": { "line": 89, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 99, "character": 0 }, "end": { "line": 99, "character": 20 } } }, "classification": "required", "rationale": "Constructor definition qualifier names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 99, "character": 22 }, "end": { "line": 99, "character": 42 } } }, "classification": "excluded", "rationale": "This declarator token declares the constructor entity rather than referring to the class entity." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 101, "character": 0 }, "end": { "line": 101, "character": 20 } } }, "classification": "required", "rationale": "Destructor definition qualifier names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 101, "character": 23 }, "end": { "line": 101, "character": 43 } } }, "classification": "excluded", "rationale": "This declarator token declares the destructor entity rather than referring to the class entity." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 106, "character": 16 }, "end": { "line": 106, "character": 36 } } }, "classification": "required", "rationale": "Return type names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 106, "character": 38 }, "end": { "line": 106, "character": 58 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 109, "character": 38 }, "end": { "line": 109, "character": 58 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 113, "character": 5 }, "end": { "line": 113, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 113, "character": 55 }, "end": { "line": 113, "character": 75 } } }, "classification": "required", "rationale": "Parameter type names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 121, "character": 5 }, "end": { "line": 121, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 129, "character": 35 }, "end": { "line": 129, "character": 55 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 137, "character": 35 }, "end": { "line": 137, "character": 55 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 141, "character": 5 }, "end": { "line": 141, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 145, "character": 5 }, "end": { "line": 145, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 154, "character": 5 }, "end": { "line": 154, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 164, "character": 5 }, "end": { "line": 164, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 172, "character": 24 }, "end": { "line": 172, "character": 44 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 180, "character": 22 }, "end": { "line": 180, "character": 42 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 187, "character": 5 }, "end": { "line": 187, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 191, "character": 22 }, "end": { "line": 191, "character": 42 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 198, "character": 5 }, "end": { "line": 198, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 202, "character": 22 }, "end": { "line": 202, "character": 42 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 209, "character": 5 }, "end": { "line": 209, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 213, "character": 22 }, "end": { "line": 213, "character": 42 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 220, "character": 5 }, "end": { "line": 220, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 225, "character": 5 }, "end": { "line": 225, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 235, "character": 5 }, "end": { "line": 235, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 263, "character": 5 }, "end": { "line": 263, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 358, "character": 5 }, "end": { "line": 358, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 476, "character": 5 }, "end": { "line": 476, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 486, "character": 5 }, "end": { "line": 486, "character": 25 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.cpp", "range": { "start": { "line": 729, "character": 25 }, "end": { "line": 729, "character": 45 } } }, "classification": "required", "rationale": "Out-of-class member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.h", "range": { "start": { "line": 17, "character": 27 }, "end": { "line": 17, "character": 47 } } }, "classification": "required", "rationale": "Macro replacement token is the class qualifier for GetInstance." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.h", "range": { "start": { "line": 485, "character": 4 }, "end": { "line": 485, "character": 24 } } }, "classification": "excluded", "rationale": "This declarator token declares the constructor entity rather than referring to the class entity." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.h", "range": { "start": { "line": 486, "character": 5 }, "end": { "line": 486, "character": 25 } } }, "classification": "excluded", "rationale": "This declarator token declares the destructor entity rather than referring to the class entity." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.h", "range": { "start": { "line": 488, "character": 27 }, "end": { "line": 488, "character": 47 } } }, "classification": "required", "rationale": "Return type names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.h", "range": { "start": { "line": 489, "character": 44 }, "end": { "line": 489, "character": 64 } } }, "classification": "required", "rationale": "Parameter type names the declared class." },
+        { "location": { "uri": "benchmark://source/src/core/emulator_settings.h", "range": { "start": { "line": 548, "character": 27 }, "end": { "line": 548, "character": 47 } } }, "classification": "required", "rationale": "Static data-member type names the declared class." },
+        { "location": { "uri": "benchmark://source/src/main.cpp", "range": { "start": { "line": 137, "character": 20 }, "end": { "line": 137, "character": 40 } } }, "classification": "required", "rationale": "Variable type names the declared class." },
+        { "location": { "uri": "benchmark://source/src/main.cpp", "range": { "start": { "line": 137, "character": 74 }, "end": { "line": 137, "character": 94 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/src/main.cpp", "range": { "start": { "line": 138, "character": 4 }, "end": { "line": 138, "character": 24 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 101, "character": 41 }, "end": { "line": 101, "character": 61 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 102, "character": 8 }, "end": { "line": 102, "character": 28 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 106, "character": 8 }, "end": { "line": 106, "character": 28 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 121, "character": 20 }, "end": { "line": 121, "character": 40 } } }, "classification": "required", "rationale": "Data-member type names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 301, "character": 34 }, "end": { "line": 301, "character": 54 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 302, "character": 4 }, "end": { "line": 302, "character": 24 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 315, "character": 30 }, "end": { "line": 315, "character": 50 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 316, "character": 4 }, "end": { "line": 316, "character": 24 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 340, "character": 30 }, "end": { "line": 340, "character": 50 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 341, "character": 4 }, "end": { "line": 341, "character": 24 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 355, "character": 30 }, "end": { "line": 355, "character": 50 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 356, "character": 4 }, "end": { "line": 356, "character": 24 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 500, "character": 34 }, "end": { "line": 500, "character": 54 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 501, "character": 8 }, "end": { "line": 501, "character": 28 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 509, "character": 34 }, "end": { "line": 509, "character": 54 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 510, "character": 8 }, "end": { "line": 510, "character": 28 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 661, "character": 30 }, "end": { "line": 661, "character": 50 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 662, "character": 4 }, "end": { "line": 662, "character": 24 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 776, "character": 30 }, "end": { "line": 776, "character": 50 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 777, "character": 4 }, "end": { "line": 777, "character": 24 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 789, "character": 30 }, "end": { "line": 789, "character": 50 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 790, "character": 4 }, "end": { "line": 790, "character": 24 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 818, "character": 42 }, "end": { "line": 818, "character": 62 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 831, "character": 34 }, "end": { "line": 831, "character": 54 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 832, "character": 8 }, "end": { "line": 832, "character": 28 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 838, "character": 35 }, "end": { "line": 838, "character": 55 } } }, "classification": "required", "rationale": "Template type argument names the declared class." },
+        { "location": { "uri": "benchmark://source/tests/test_emulator_settings.cpp", "range": { "start": { "line": 839, "character": 4 }, "end": { "line": 839, "character": 24 } } }, "classification": "required", "rationale": "Qualified static-member receiver names the declared class." }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/core/emulator_settings.cpp",
+        "range": {
+          "start": { "line": 20, "character": 16 },
+          "end": { "line": 20, "character": 36 }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "src/core/emulator_settings.cpp",
+        "src/core/emulator_settings.h",
+        "src/main.cpp",
+        "tests/test_emulator_settings.cpp"
+      ],
+      "rationale": "An exhaustive exact-identifier search of the source snapshot found 71 candidate tokens outside the selected declaration. Sixty-seven are semantic type references or qualified class receivers and are required. Four constructor or destructor declarator tokens denote their own special-member entities and are excluded. There are no imports, exports, unresolved candidates, or required-contract ambiguities."
+    }
+  ]
+}

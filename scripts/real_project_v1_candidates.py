@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministically enumerate the real-project-v1 declaration draw.
+"""Deterministically enumerate a real-project declaration draw.
 
 This is intentionally a source-only tool. It reads extracted, pinned source
 archives and never invokes Bifrost or a language server.
@@ -18,16 +18,18 @@ from pathlib import Path
 from typing import Iterable
 
 
-PREFIX = b"usagebench-real-project-v1\0"
-ALGORITHM = "real-project-v1-source-syntax-v1"
+ALGORITHM_VERSION = "source-syntax-v1"
 EXCLUDED_PARTS = {
     ".git",
     "benchmark",
     "benchmarks",
     "build",
     "dist",
+    "deps",
     "example",
     "examples",
+    "external",
+    "externals",
     "fixtures",
     "generated",
     "node_modules",
@@ -60,11 +62,21 @@ def utf16_column(text: str) -> int:
     return len(text.encode("utf-16-le")) // 2
 
 
+def utf8_text(path: Path) -> str | None:
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return None
+
+
 def source_files(root: Path, language: str) -> list[Path]:
     extensions = {
         "go": {".go"},
         "python": {".py"},
         "typescript": {".ts", ".tsx"},
+        "java": {".java"},
+        "rust": {".rs"},
+        "cpp": {".cc", ".cpp", ".cxx", ".h", ".hh", ".hpp", ".hxx"},
     }[language]
     result = []
     for path in root.rglob("*"):
@@ -110,7 +122,10 @@ def go_candidates(root: Path, files: Iterable[Path]) -> list[Candidate]:
     type_decl = re.compile(r"^type\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s+(?:\[[^]]+\]\s*)?(?:struct|interface)\b")
     result = []
     for path in files:
-        for line_index, line in enumerate(path.read_text(encoding="utf-8").splitlines()):
+        text = utf8_text(path)
+        if text is None:
+            continue
+        for line_index, line in enumerate(text.splitlines()):
             match = function.match(line)
             if match:
                 result.append(candidate_from_match(root, path, line_index, line, match, "method" if match.group("receiver") else "function"))
@@ -124,7 +139,9 @@ def go_candidates(root: Path, files: Iterable[Path]) -> list[Candidate]:
 def python_candidates(root: Path, files: Iterable[Path]) -> list[Candidate]:
     result = []
     for path in files:
-        text = path.read_text(encoding="utf-8")
+        text = utf8_text(path)
+        if text is None:
+            continue
         try:
             module = ast.parse(text, filename=str(path))
         except SyntaxError:
@@ -150,10 +167,88 @@ def typescript_candidates(root: Path, files: Iterable[Path]) -> list[Candidate]:
     result = []
     kind_map = {"type": "type", "interface": "interface", "enum": "enum", "class": "class", "function": "function"}
     for path in files:
-        for line_index, line in enumerate(path.read_text(encoding="utf-8").splitlines()):
+        text = utf8_text(path)
+        if text is None:
+            continue
+        for line_index, line in enumerate(text.splitlines()):
             match = declaration.match(line)
             if match:
                 result.append(candidate_from_match(root, path, line_index, line, match, kind_map[match.group("kind")]))
+    return result
+
+
+def java_candidates(root: Path, files: Iterable[Path]) -> list[Candidate]:
+    declaration = re.compile(
+        r"^(?:public\s+|protected\s+|private\s+|abstract\s+|final\s+|sealed\s+|non-sealed\s+|static\s+)*"
+        r"(?P<kind>class|interface|enum|record)\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    )
+    result = []
+    for path in files:
+        depth = 0
+        text = utf8_text(path)
+        if text is None:
+            continue
+        for line_index, line in enumerate(text.splitlines()):
+            stripped = line.strip()
+            if depth == 0:
+                match = declaration.match(stripped)
+                if match:
+                    kind = "class" if match.group("kind") in {"class", "record"} else match.group("kind")
+                    result.append(candidate_from_match(root, path, line_index, line, re.search(rf"(?P<name>{re.escape(match.group('name'))})", line), kind))
+            depth += line.count("{") - line.count("}")
+    return result
+
+
+def rust_candidates(root: Path, files: Iterable[Path]) -> list[Candidate]:
+    declaration = re.compile(
+        r"^(?:pub(?:\([^)]*\))?\s+)?(?:async\s+|unsafe\s+|const\s+)*"
+        r"(?P<kind>fn|struct|enum|trait|type)\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\b"
+    )
+    kind_map = {"fn": "function", "struct": "class", "enum": "enum", "trait": "interface", "type": "type"}
+    result = []
+    for path in files:
+        depth = 0
+        text = utf8_text(path)
+        if text is None:
+            continue
+        for line_index, line in enumerate(text.splitlines()):
+            stripped = line.strip()
+            if depth == 0:
+                match = declaration.match(stripped)
+                if match:
+                    result.append(candidate_from_match(root, path, line_index, line, re.search(rf"(?P<name>{re.escape(match.group('name'))})", line), kind_map[match.group("kind")]))
+            depth += line.count("{") - line.count("}")
+    return result
+
+
+def cpp_candidates(root: Path, files: Iterable[Path]) -> list[Candidate]:
+    type_decl = re.compile(
+        r"^(?:template\s*<[^;{}]*>\s*)?(?P<kind>class|struct|enum)\s+(?:class\s+)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)\b"
+    )
+    function = re.compile(
+        r"^(?:inline\s+|static\s+|constexpr\s+|consteval\s+|virtual\s+|extern\s+)*"
+        r"(?:[A-Za-z_][A-Za-z0-9_:<>,*&\s]*\s+)(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\([^;{}]*\)\s*(?:const\s*)?(?:noexcept\s*)?(?:\{|$)"
+    )
+    result = []
+    for path in files:
+        depth = 0
+        text = utf8_text(path)
+        if text is None:
+            continue
+        for line_index, line in enumerate(text.splitlines()):
+            stripped = line.strip()
+            if depth == 0 and not stripped.startswith(("#", "//")):
+                match = type_decl.match(stripped)
+                kind = None
+                if match:
+                    kind = "enum" if match.group("kind") == "enum" else "class"
+                else:
+                    match = function.match(stripped)
+                    if match:
+                        kind = "function"
+                if match and kind:
+                    result.append(candidate_from_match(root, path, line_index, line, re.search(rf"(?P<name>{re.escape(match.group('name'))})", line), kind))
+            depth += line.count("{") - line.count("}")
     return result
 
 
@@ -162,7 +257,10 @@ def occurrence_map(root: Path, files: Iterable[Path], names: set[str]) -> dict[s
     result: dict[str, list[dict[str, object]]] = {name: [] for name in names}
     for path in files:
         relative = path.relative_to(root).as_posix()
-        for line_index, line in enumerate(path.read_text(encoding="utf-8").splitlines()):
+        text = utf8_text(path)
+        if text is None:
+            continue
+        for line_index, line in enumerate(text.splitlines()):
             for match in token.finditer(line):
                 name = match.group(0)
                 if name not in names:
@@ -183,10 +281,10 @@ def occurrence_map(root: Path, files: Iterable[Path], names: set[str]) -> dict[s
     return result
 
 
-def digest(protocol_commit: str, language: str, candidate_id: str, candidate: Candidate) -> str:
+def digest(freeze_id: str, protocol_commit: str, language: str, candidate_id: str, candidate: Candidate) -> str:
     value = b"".join(
         [
-            PREFIX,
+            f"usagebench-{freeze_id}\0".encode(),
             protocol_commit.encode(),
             b"\0",
             language.encode(),
@@ -216,6 +314,7 @@ def main() -> None:
     args = parser.parse_args()
 
     selection = json.loads(args.selection.read_text())
+    freeze_id = selection["freezeId"]
     protocol_commit = selection["protocolCommit"]
     replacement_cases = set(args.replace_case)
     unknown_replacements = set(replacement_cases)
@@ -238,8 +337,16 @@ def main() -> None:
                 raw = go_candidates(root, files)
             elif language == "python":
                 raw = python_candidates(root, files)
-            else:
+            elif language == "typescript":
                 raw = typescript_candidates(root, files)
+            elif language == "java":
+                raw = java_candidates(root, files)
+            elif language == "rust":
+                raw = rust_candidates(root, files)
+            elif language == "cpp":
+                raw = cpp_candidates(root, files)
+            else:
+                raise SystemExit(f"unsupported language: {language}")
 
             name_counts = Counter(candidate.name for candidate in raw)
             sites_by_name = occurrence_map(root, files, set(name_counts))
@@ -250,7 +357,7 @@ def main() -> None:
                 sites = sites_by_name[candidate.name]
                 if len(sites) < 2:
                     continue
-                eligible.append((digest(protocol_commit, language, candidate_id, candidate), candidate, sites))
+                eligible.append((digest(freeze_id, protocol_commit, language, candidate_id, candidate), candidate, sites))
             eligible.sort(key=lambda item: item[0])
             if len(eligible) < len(repository["caseIds"]):
                 raise SystemExit(f"{repository['fullName']} has only {len(eligible)} eligible declarations")
@@ -316,7 +423,7 @@ def main() -> None:
                 chosen["sourceOnlyOccurrences"] = sites
                 selected.append(chosen)
             repository["declarationDraw"] = {
-                "algorithm": ALGORITHM,
+                "algorithm": f"{freeze_id}-{ALGORITHM_VERSION}",
                 "rules": {
                     "scope": "module/package-level named functions, Go methods, and nominal types",
                     "uniqueDeclarationName": True,

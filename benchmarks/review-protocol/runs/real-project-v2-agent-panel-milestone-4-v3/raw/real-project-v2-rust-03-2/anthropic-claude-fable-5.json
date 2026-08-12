@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:262b00fa-94f2-40d7-b0bd-e018e0abc996",
+    "executedAt": "2026-08-12T12:56:48.168Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-rust-03-2",
+      "decision": "replace",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+        "range": {
+          "start": {
+            "line": 1191,
+            "character": 14
+          },
+          "end": {
+            "line": 1191,
+            "character": 30
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/forward.rs",
+            "range": {
+              "start": {
+                "line": 168,
+                "character": 4
+              },
+              "end": {
+                "line": 168,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in build_forward_raw; resolves to gmail::finalize_message via `use super::*;` glob into the child module."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/reply.rs",
+            "range": {
+              "start": {
+                "line": 370,
+                "character": 4
+              },
+              "end": {
+                "line": 370,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in reply raw-message construction; resolves to gmail::finalize_message via `use super::*;`."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/send.rs",
+            "range": {
+              "start": {
+                "line": 69,
+                "character": 4
+              },
+              "end": {
+                "line": 69,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in send raw-message construction; resolves to gmail::finalize_message via `use super::*;`."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3031,
+                "character": 18
+              },
+              "end": {
+                "line": 3031,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in test_attachment_single_file inside the mod.rs tests module; only fn finalize_message in the crate, no shadowing."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3058,
+                "character": 18
+              },
+              "end": {
+                "line": 3058,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in test_attachment_multiple_files; resolves to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3076,
+                "character": 18
+              },
+              "end": {
+                "line": 3076,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in test_attachment_with_html_body; resolves to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3090,
+                "character": 18
+              },
+              "end": {
+                "line": 3090,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in test_attachment_empty_produces_no_multipart; resolves to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3786,
+                "character": 18
+              },
+              "end": {
+                "line": 3786,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in test_finalize_message_html_inline_creates_multipart_related; resolves to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3820,
+                "character": 18
+              },
+              "end": {
+                "line": 3820,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in test_finalize_message_html_inline_and_attachment; resolves to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3840,
+                "character": 18
+              },
+              "end": {
+                "line": 3840,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in test_finalize_message_plain_text_downgrades_inline_to_attachment; resolves to the declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+            "range": {
+              "start": {
+                "line": 3925,
+                "character": 18
+              },
+              "end": {
+                "line": 3925,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Call in test_finalize_message_html_multiple_inline_images; resolves to the declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/crates/google-workspace-cli/src/helpers/gmail/forward.rs",
+        "range": {
+          "start": {
+            "line": 168,
+            "character": 4
+          },
+          "end": {
+            "line": 168,
+            "character": 20
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/crates/google-workspace-cli/src/helpers/gmail/mod.rs",
+        "source/crates/google-workspace-cli/src/helpers/gmail/forward.rs",
+        "source/crates/google-workspace-cli/src/helpers/gmail/reply.rs",
+        "source/crates/google-workspace-cli/src/helpers/gmail/send.rs"
+      ],
+      "rationale": "Declaration is `pub(super) fn finalize_message` at mod.rs line 1191 (0-indexed), token at UTF-16 chars 14-30, matching the query. A repo-wide exact-token search found occurrences only in the gmail helper module: three production call sites (forward.rs 168, reply.rs 370, send.rs 69, each at column 4) reached via `use super::*;` glob imports, and eight direct calls in the #[cfg(test)] tests module of mod.rs (lines 3031, 3058, 3076, 3090, 3786, 3820, 3840, 3925, each at column 18 after `        let raw = `). This is the only `fn finalize_message` in the snapshot and no local shadowing exists, so every call token resolves to the declaration. Remaining textual matches are non-usages omitted per rule 3: a doc-comment mention (mod.rs 1288), two section comments (mod.rs 3773, 3904), and four substring matches inside `test_finalize_message_*` function identifiers (mod.rs 3776, 3802, 3830, 3907). The glob imports carry no `finalize_message` identifier token, so no optional binding locations exist under bindings_optional. All lines are ASCII, so UTF-16 columns equal byte columns. definitionUsage is the first required location after sorting by URI then position (forward.rs sorts before mod.rs, reply.rs, send.rs)."
+    }
+  ]
+}

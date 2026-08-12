@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "anthropic",
+    "model": "claude-fable-5",
+    "executionId": "claude-code-session:5f154e2c-23d3-4336-b795-2f65117934e9",
+    "executedAt": "2026-08-12T12:52:32.050Z"
+  },
+  "records": [
+    {
+      "caseId": "real-project-v2-java-03-1",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+        "range": {
+          "start": {
+            "line": 18,
+            "character": 13
+          },
+          "end": {
+            "line": 18,
+            "character": 29
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/BaseFloatView.java",
+            "range": {
+              "start": {
+                "line": 70,
+                "character": 8
+              },
+              "end": {
+                "line": 70,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type name qualifying the static call FloatViewManager.getInstance() in BaseFloatView.show(); resolves to the class (same package, no import needed)."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/BaseFloatView.java",
+            "range": {
+              "start": {
+                "line": 74,
+                "character": 8
+              },
+              "end": {
+                "line": 74,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Type name qualifying the static call FloatViewManager.getInstance() in BaseFloatView.dismiss(); resolves to the class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+            "range": {
+              "start": {
+                "line": 23,
+                "character": 12
+              },
+              "end": {
+                "line": 23,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Constructor declarator name; per JLS 8.8 this is a SimpleTypeName that must denote the enclosing class, so the token semantically resolves to the class declaration and is rename-linked to it."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+            "range": {
+              "start": {
+                "line": 26,
+                "character": 18
+              },
+              "end": {
+                "line": 26,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Return type of the static getInstance() factory method; resolves to the class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+            "range": {
+              "start": {
+                "line": 31,
+                "character": 29
+              },
+              "end": {
+                "line": 31,
+                "character": 45
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Field type of LazyHolder.INSTANCE; resolves to the class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+            "range": {
+              "start": {
+                "line": 31,
+                "character": 61
+              },
+              "end": {
+                "line": 31,
+                "character": 77
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Class instance creation expression new FloatViewManager(); the type token resolves to the class."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/lib/utildebug/src/main/java/com/blankj/utildebug/base/view/BaseFloatView.java",
+        "range": {
+          "start": {
+            "line": 70,
+            "character": 8
+          },
+          "end": {
+            "line": 70,
+            "character": 24
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "lib/utildebug/src/main/java/com/blankj/utildebug/base/view/FloatViewManager.java",
+        "lib/utildebug/src/main/java/com/blankj/utildebug/base/view/BaseFloatView.java"
+      ],
+      "rationale": "Repo-wide exact-token search (including ignored and hidden files) found FloatViewManager only in FloatViewManager.java and BaseFloatView.java. Excluding the supplied declaration token (line 18), all six remaining identifier tokens semantically resolve to the class: two static-call qualifiers in BaseFloatView (same package, so no import binding tokens exist anywhere), the constructor declarator SimpleTypeName, the getInstance() return type, the LazyHolder.INSTANCE field type, and the constructor invocation. All affected lines are pure ASCII, so UTF-16 columns equal byte columns. definitionUsage is the URI/position-sorted first required location (BaseFloatView.java sorts before FloatViewManager.java)."
+    }
+  ]
+}
