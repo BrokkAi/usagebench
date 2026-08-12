@@ -36,6 +36,13 @@ retrospectively_selected` plus `reviewTier: legacy_promoted`; it never changes
 their selection to `pre_registered`. Validate an authored overlay with `cargo
 run -- validate-legacy-promotion <manifest>`.
 
+The source-only cohort must be frozen before new independent review records
+exist. Use
+`cargo run -- generate-legacy-promotion-cohort` to create the 158-row inventory
+and balanced selection, then `cargo run -- validate-legacy-promotion-cohort
+benchmarks/promotion/legacy-v1/cohort.json` to verify its source hashes,
+denominators, membership, and deterministic replacement order.
+
 Expected locations should still be verified by reading the checked-in fixture
 source and recorded with `verification.method: manual_inspection`. Evaluation
 authoring additionally requires `selection: pre_registered`, a non-empty

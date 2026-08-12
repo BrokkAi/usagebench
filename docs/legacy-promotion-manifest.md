@@ -11,6 +11,13 @@ must contain exactly N cases. `overflow` and `control` membership are distinct;
 controls must state `unsupported` or `not_planned` and never enter the core
 denominator.
 
+The pre-review population, inventory, membership, and replacement ordering live
+in the separately validated `legacy-promotion-cohort` artifact. It contains no
+review or analyzer-run evidence. After review and human adjudication, its frozen
+membership feeds this publication manifest, whose per-case evidence links are
+then mandatory. This separation prevents placeholder or fabricated review
+records while keeping the selection fixed before reviewers begin.
+
 Each entry binds the historical YAML hash, exact case ID, raw independent
 review records, human adjudication, and balance strata. The validator rejects
 prospective provenance, analyzer-outcome use, changed source or evidence
