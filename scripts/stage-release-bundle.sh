@@ -57,7 +57,7 @@ if [[ -n "$freeze_evidence_directory" ]]; then
   cp "$freeze_evidence_directory"/*.json "$destination/evidence/"
   (
     cd "$destination/evidence"
-    sha256sum *.json > SHA256SUMS
+    shasum -a 256 *.json > SHA256SUMS
   )
 fi
 

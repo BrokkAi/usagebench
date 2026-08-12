@@ -168,9 +168,20 @@ jobs:
         run: cargo run --locked -- validate benchmarks/cases
 
       - name: Validate citation metadata
+        if: runner.os == 'Linux'
         uses: citation-file-format/cffconvert-github-action@4cf11baa70a673bfdf9dad0acc7ee33b3f4b6084 # 2.0.0
         with:
           args: '--validate'
+
+      - name: Install citation validator on macOS
+        if: runner.os == 'macOS'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/cffconvert"
+          "$RUNNER_TEMP/cffconvert/bin/python" -m pip install cffconvert==2.0.0
+
+      - name: Validate citation metadata on macOS
+        if: runner.os == 'macOS'
+        run: '"$RUNNER_TEMP/cffconvert/bin/cffconvert" --validate'
 
       - name: Run selected candidates and freeze manifest
         shell: bash
@@ -226,7 +237,7 @@ jobs:
           tar -C dist -czf "dist/$stage.tar.gz" "$stage"
           (
             cd dist
-            sha256sum "$stage.tar.gz" > "$stage.tar.gz.sha256"
+            shasum -a 256 "$stage.tar.gz" > "$stage.tar.gz.sha256"
           )
 
       - name: Upload immutable release evidence
