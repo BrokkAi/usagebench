@@ -156,7 +156,7 @@ fn load_snapshot(manifest_path: &Path) -> Result<Snapshot> {
         .with_context(|| format!("read freeze manifest {}", manifest_path.display()))?;
     let manifest: FreezeManifest = serde_json::from_slice(&manifest_bytes)
         .with_context(|| format!("parse freeze manifest {}", manifest_path.display()))?;
-    if manifest.schema_version != FREEZE_MANIFEST_SCHEMA_VERSION {
+    if !matches!(manifest.schema_version, 4 | FREEZE_MANIFEST_SCHEMA_VERSION) {
         bail!(
             "unsupported freeze manifest schema version {}",
             manifest.schema_version
@@ -257,15 +257,22 @@ fn load_snapshot(manifest_path: &Path) -> Result<Snapshot> {
 }
 
 fn validate_snapshot_audit(manifest_path: &Path, manifest: &FreezeManifest) -> Result<()> {
-    match (manifest.snapshot_kind, manifest.evaluation_audit.as_ref()) {
-        (crate::freeze::SnapshotKind::Development, None) => Ok(()),
-        (crate::freeze::SnapshotKind::Development, Some(_)) => {
+    match (
+        manifest.snapshot_kind,
+        manifest.evaluation_audit.as_ref(),
+        manifest.legacy_promotion_audit.as_ref(),
+    ) {
+        (crate::freeze::SnapshotKind::Development, None, None) => Ok(()),
+        (crate::freeze::SnapshotKind::Development, _, _) => {
             bail!("development snapshot must not contain an evaluation audit")
         }
-        (crate::freeze::SnapshotKind::Evaluation, None) => {
+        (crate::freeze::SnapshotKind::Evaluation, None, _) => {
             bail!("evaluation snapshot is missing its evaluation audit")
         }
-        (crate::freeze::SnapshotKind::Evaluation, Some(audit)) => {
+        (crate::freeze::SnapshotKind::Evaluation, Some(_), Some(_)) => bail!(
+            "snapshot cannot mix prospective evaluation and retrospective promotion provenance"
+        ),
+        (crate::freeze::SnapshotKind::Evaluation, Some(audit), None) => {
             let first_case = audit
                 .case_files
                 .first()
@@ -290,6 +297,29 @@ fn validate_snapshot_audit(manifest_path: &Path, manifest: &FreezeManifest) -> R
                     .context("verify evaluation audit evidence")?;
             validate_rebuilt_audit(audit, &rebuilt)
         }
+        (crate::freeze::SnapshotKind::LegacyPromoted, Some(_), _) => {
+            bail!("legacy-promoted snapshot cannot contain a prospective evaluation audit")
+        }
+        (crate::freeze::SnapshotKind::LegacyPromoted, None, None) => {
+            bail!("legacy-promoted snapshot is missing its promotion audit")
+        }
+        (crate::freeze::SnapshotKind::LegacyPromoted, None, Some(audit)) => {
+            if manifest.schema_version < 5 {
+                bail!("legacy-promoted snapshots require freeze manifest schema version 5");
+            }
+            let release_root = crate::find_repo_root_for_path(manifest_path)
+                .context("locate released UsageBench tree")?;
+            let promotion_path = release_root.join(crate::evaluation::safe_repo_relative_path(
+                &audit.manifest.file,
+                "promotion manifest",
+            )?);
+            let rebuilt = crate::promotion::build_promotion_audit(promotion_path)
+                .context("verify legacy promotion audit evidence")?;
+            if audit != &rebuilt {
+                bail!("legacy promotion audit does not match hash-verified release evidence");
+            }
+            Ok(())
+        }
     }
 }
 
@@ -307,7 +337,17 @@ fn validate_snapshot_partition(
     manifest: &FreezeManifest,
     reports: &BTreeMap<String, LoadedReport>,
 ) -> Result<()> {
-    if manifest.snapshot_kind != crate::freeze::SnapshotKind::Evaluation {
+    if manifest.snapshot_kind == crate::freeze::SnapshotKind::Development {
+        return Ok(());
+    }
+    if manifest.snapshot_kind == crate::freeze::SnapshotKind::LegacyPromoted {
+        let audit = manifest
+            .legacy_promotion_audit
+            .as_ref()
+            .expect("promotion audit presence was validated");
+        for loaded in reports.values() {
+            crate::promotion::validate_report_against_promotion(&loaded.report, audit)?;
+        }
         return Ok(());
     }
     let audit = manifest
@@ -653,6 +693,7 @@ fn required_scoreable(status: RequiredDestinationStatus) -> bool {
 fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> Result<String> {
     let mut output = provenance_header(snapshot);
     render_evaluation_audit(&mut output, snapshot)?;
+    render_legacy_promotion_audit(&mut output, snapshot);
     output.push_str("## Snapshot inputs\n\n");
     output.push_str(
         "| Candidate | Runner | Requested version | Profile | Environment | Report SHA-256 |\n",
@@ -780,6 +821,28 @@ fn render_results(snapshot: &Snapshot, comparisons: &[Comparison]) -> Result<Str
         ));
     }
     Ok(output)
+}
+
+fn render_legacy_promotion_audit(output: &mut String, snapshot: &Snapshot) {
+    let Some(audit) = snapshot.manifest.legacy_promotion_audit.as_ref() else {
+        return;
+    };
+    output.push_str("# Retrospectively reviewed legacy-corpus results\n\n");
+    output.push_str("> **Selection provenance:** `retrospectively_selected`; review tier: `legacy_promoted`. This is not preregistered evaluation evidence.\n\n");
+    output.push_str(&format!("- Promotion ID: `{}`\n- Corpus-bounded claim: {}\n- Balanced core: {} cases per language ({} total)\n- Separately reported overflow: {}\n- Separately reported unsupported/not-planned controls: {}\n\n", audit.promotion_id, audit.claim_scope, audit.balanced_core_per_language, audit.balanced_core_case_count, audit.overflow_case_count, audit.control_case_count));
+    output.push_str(
+        "### Equal-language denominators\n\n| Language | Balanced-core cases |\n|---|---:|\n",
+    );
+    for (language, count) in &audit.denominators {
+        output.push_str(&format!("| {language} | {count} |\n"));
+    }
+    output.push_str(&format!(
+        "\nManifest: [`{0}`](../{0}) (`{1}`). Eligibility policy: [`{2}`](../{2}) (`{3}`).\n\n",
+        audit.manifest.file,
+        audit.manifest.sha256,
+        audit.eligibility_policy.file,
+        audit.eligibility_policy.sha256
+    ));
 }
 
 fn render_evaluation_audit(output: &mut String, snapshot: &Snapshot) -> Result<()> {
@@ -1119,6 +1182,7 @@ mod tests {
             FreezeManifest, ManifestCandidate, ManifestDocument, ManifestReport, ScoringContract,
             SnapshotKind,
         },
+        promotion::{ArtifactLink as PromotionArtifactLink, LegacyPromotionAudit},
         runners::{
             ContainerProvenance, ExecutableProvenance, ExecutionEnvironment, ExecutionMode,
             PlatformScope, RangeQualityTotals, ReferenceEnvironmentProvenance,
@@ -1572,6 +1636,48 @@ mod tests {
     }
 
     #[test]
+    fn rejects_prospective_and_retrospective_provenance_mixing() {
+        let tempdir = tempdir().unwrap();
+        let manifest_path = write_snapshot(
+            tempdir.path(),
+            sample_report(
+                "bifrost",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+            sample_report(
+                "gopls",
+                vec![("case", CaseStatus::Passed, RequiredDestinationStatus::Found)],
+            ),
+        );
+        let mut manifest: FreezeManifest =
+            serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
+        manifest.snapshot_kind = SnapshotKind::Evaluation;
+        manifest.evaluation_audit = Some(sample_evaluation_audit());
+        manifest.legacy_promotion_audit = Some(LegacyPromotionAudit {
+            promotion_id: "legacy-v1".into(),
+            claim_scope: "corpus-bounded".into(),
+            manifest: PromotionArtifactLink {
+                file: "promotion.json".into(),
+                sha256: "0".repeat(64),
+            },
+            eligibility_policy: PromotionArtifactLink {
+                file: "policy.md".into(),
+                sha256: "0".repeat(64),
+            },
+            balanced_core_per_language: 10,
+            balanced_core_case_count: 110,
+            overflow_case_count: 0,
+            control_case_count: 0,
+            denominators: BTreeMap::new(),
+            case_ids_by_file: BTreeMap::new(),
+        });
+        let error = validate_snapshot_audit(&manifest_path, &manifest).unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("cannot mix prospective evaluation and retrospective promotion provenance"));
+    }
+
+    #[test]
     fn rejects_tampered_evaluation_audit_summary() {
         let expected = sample_evaluation_audit();
         let mut recorded = expected.clone();
@@ -1631,6 +1737,7 @@ mod tests {
                 ground_truth_status: GroundTruthReviewStatus::IndependentlyReviewed,
             }],
             evaluation_audit: Some(audit),
+            legacy_promotion_audit: None,
         };
         let reports = BTreeMap::from([
             (
@@ -1683,6 +1790,7 @@ mod tests {
             reports: Vec::new(),
             corpus: Vec::new(),
             evaluation_audit: Some(sample_evaluation_audit()),
+            legacy_promotion_audit: None,
         };
         manifest.evaluation_audit.as_mut().unwrap().target_profiles =
             vec![EvaluationTargetProfile {
@@ -1807,6 +1915,7 @@ mod tests {
                 ground_truth_status: GroundTruthReviewStatus::LegacyUnattributed,
             }],
             evaluation_audit: None,
+            legacy_promotion_audit: None,
         };
         let path = directory.join("freeze-manifest.json");
         fs::write(&path, serde_json::to_vec_pretty(&manifest).unwrap()).unwrap();

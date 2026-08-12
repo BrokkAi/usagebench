@@ -29,6 +29,13 @@ The metadata intentionally remains `legacy_unattributed`: a first review does
 not satisfy the second-reviewer, preregistration, and freeze requirements for
 evaluation promotion.
 
+Retrospective promotion uses a separate, versioned
+`schema/legacy-promotion.schema.json` overlay. It leaves these 158 historical
+documents byte-for-byte unchanged and records `selectionProvenance:
+retrospectively_selected` plus `reviewTier: legacy_promoted`; it never changes
+their selection to `pre_registered`. Validate an authored overlay with `cargo
+run -- validate-legacy-promotion <manifest>`.
+
 Expected locations should still be verified by reading the checked-in fixture
 source and recorded with `verification.method: manual_inspection`. Evaluation
 authoring additionally requires `selection: pre_registered`, a non-empty

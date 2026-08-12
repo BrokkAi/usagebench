@@ -13,6 +13,11 @@ its analyzer results are frozen in immutable release
 An analyzer may also expose a different public grouping policy without
 containing an implementation bug.
 
+Retrospectively re-reviewed legacy cases are reported under the structurally
+distinct `legacy_promoted` tier. Their claims are bounded to the named corpus
+and versioned promotion manifest. They are never pooled with `pre_registered`
+evaluation slices or described as language- or ecosystem-wide accuracy.
+
 ## Headline metric: required destinations found
 
 The user-facing metric counts a case when:

@@ -68,6 +68,8 @@ enum Command {
         /// Evaluation case file or directory to validate.
         path: PathBuf,
     },
+    /// Validate a retrospective legacy-promotion manifest and its hash-bound evidence.
+    ValidateLegacyPromotion { manifest: PathBuf },
     /// Print the JSON Schema generated from the Rust model.
     Schema,
     /// Print the JSON Schema generated for analyzer run reports.
@@ -108,6 +110,9 @@ enum Command {
         /// Promoted evaluation corpus to validate and bind into an evaluation snapshot.
         #[arg(long)]
         evaluation_corpus: Option<PathBuf>,
+        /// Versioned retrospective promotion manifest for a legacy-promoted snapshot.
+        #[arg(long)]
+        promotion_manifest: Option<PathBuf>,
         /// Destination for the machine-readable snapshot manifest.
         #[arg(long)]
         output: PathBuf,
@@ -248,6 +253,13 @@ fn main() -> Result<()> {
                 files.len()
             );
         }
+        Command::ValidateLegacyPromotion { manifest } => {
+            let audit = usagebench::promotion::build_promotion_audit(&manifest)?;
+            println!(
+                "validated legacy promotion {} with {} balanced-core cases",
+                audit.promotion_id, audit.balanced_core_case_count
+            );
+        }
         Command::Schema => {
             println!("{}", usagebench::generated_schema_json()?);
         }
@@ -286,6 +298,7 @@ fn main() -> Result<()> {
             candidates,
             report,
             evaluation_corpus,
+            promotion_manifest,
             output,
         } => {
             let manifest = create_manifest(FreezeManifestOptions {
@@ -296,6 +309,7 @@ fn main() -> Result<()> {
                 candidate_ids: candidates,
                 report_paths: report,
                 evaluation_corpus,
+                promotion_manifest,
             })?;
             usagebench::freeze::write_manifest(&output, &manifest)?;
             println!(

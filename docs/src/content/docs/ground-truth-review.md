@@ -42,7 +42,7 @@ through preregistration.
 | Can a case-level Bifrost/LSP disagreement be discussed? | **Yes.** The review log records the semantic decision, post-review analyzer checks, and notable policy differences. |
 | Do the headline scores reflect the reviewed contracts and hardened scorer? | **Yes, as development evidence.** The corrected 24 July native result headlines required-destination recall and reports exact ranges and strict singleton navigation separately, but it is not an independently reviewed evaluation result. |
 | Is this a general analyzer accuracy ranking? | **No.** The corpus is analyzer-informed, small, and still has known coverage gaps. |
-| Is this an independently reviewed evaluation set? | **No.** It still needs a second independent reviewer, preregistered selection, and an immutable freeze. |
+| Can re-review make this preregistered evaluation evidence? | **No.** Retrospective review may create a separately frozen `legacy_promoted` tier, but original analyzer-informed selection can never become `pre_registered`. |
 
 The practical result is a reviewed development benchmark, not a publishable
 leaderboard. Use it to reproduce a specific edge, guard a regression, or
@@ -109,10 +109,29 @@ The [historical development case comparison](../results/development-case-compari
 relates the qualitative
 adjudication notes to the corrected 24 July result.
 
-## Development corpus boundary
+## Retrospective legacy promotion boundary
 
-Promoting any development assertion into a future evaluation still requires a
-new evidence phase:
+Agentic re-review may strengthen the source contract of selected legacy cases.
+It does not bless the original selection process, erase the first-review
+history, or support language-wide accuracy claims. A publication-safe
+promotion is a hash-bound overlay with `retrospectively_selected` provenance;
+the original 158 cases remain development documents.
+
+Before review begins, the manifest freezes a source-only eligibility rubric,
+balance strata, and `N = min(10, lowest eligible count across all 11 legacy
+languages)`. The balanced core contains exactly N cases per language. Overflow
+and unsupported/not-planned controls have separate denominators. Bifrost and
+LSP outcomes may not select, reject, replace, or weight a case.
+
+Corrections create a new manifest that links the prior manifest. Raw review and
+adjudication artifacts and historical result pages are content-addressed and
+never rewritten. Rejected cases remain in the audit trail; replacements do not
+change the frozen N or silently enter the balanced core.
+
+## Prospective evaluation boundary
+
+Creating genuinely prospective evaluation evidence still requires a new
+evidence phase:
 
 1. preregister the selected cases and assertions;
 2. obtain a second independent review of every frozen assertion;
