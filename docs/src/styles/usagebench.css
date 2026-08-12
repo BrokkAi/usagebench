@@ -74,6 +74,47 @@ body {
   max-width: 24ch;
 }
 
+.verdict-panel {
+  background:
+    linear-gradient(115deg, rgb(255 107 74 / 0.18), transparent 52%),
+    rgb(255 255 255 / 0.035);
+  border: 1px solid rgb(255 107 74 / 0.45);
+  border-radius: 0.55rem;
+  margin-block: 1.25rem 1.5rem;
+  padding: clamp(1.15rem, 3vw, 1.7rem);
+}
+
+.verdict-panel > span {
+  color: var(--sl-color-accent-high);
+  display: block;
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.verdict-panel strong {
+  color: var(--sl-color-white);
+  display: block;
+  font-size: clamp(1.45rem, 3.3vw, 2.25rem);
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  margin-top: 0.55rem;
+  max-width: 30ch;
+}
+
+.verdict-panel p {
+  color: var(--sl-color-gray-2);
+  font-size: 1rem;
+  margin: 0.75rem 0 0;
+  max-width: 68ch;
+}
+
+.verdict-panel p b {
+  color: var(--sl-color-white);
+}
+
 .execution-contrast {
   background:
     linear-gradient(135deg, rgb(255 107 74 / 0.14), transparent 55%),
@@ -110,6 +151,76 @@ body {
   gap: 0.75rem;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 17.5rem), 1fr));
   margin-block: 2rem;
+}
+
+.result-summary--headline {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 2.75rem;
+}
+
+.profile-scorecard {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1rem;
+}
+
+.profile-result {
+  background: rgb(255 255 255 / 0.025);
+  border: 1px solid rgb(97 199 220 / 0.28);
+  border-top: 3px solid var(--usagebench-reference);
+  border-radius: 0.45rem;
+  padding: 1rem;
+}
+
+.profile-result--bifrost-leads {
+  border-color: rgb(255 134 107 / 0.3);
+  border-top-color: var(--usagebench-bifrost);
+}
+
+.profile-result > div {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.profile-result span {
+  color: var(--sl-color-white);
+  font-weight: 750;
+}
+
+.profile-result small {
+  color: var(--sl-color-gray-3);
+  font-size: 0.72rem;
+}
+
+.profile-result > strong {
+  color: var(--usagebench-reference);
+  display: block;
+  font-size: 2rem;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  margin-top: 0.7rem;
+}
+
+.profile-result--bifrost-leads > strong {
+  color: var(--usagebench-bifrost);
+}
+
+.profile-result > strong b {
+  color: var(--usagebench-bifrost);
+}
+
+.profile-result p,
+.scorecard-key {
+  color: var(--sl-color-gray-3);
+  font-size: 0.78rem;
+  margin: 0.45rem 0 0;
+}
+
+.scorecard-key b {
+  color: var(--usagebench-bifrost);
 }
 
 .result-metric {
@@ -214,6 +325,11 @@ body {
 }
 
 @media (max-width: 30rem) {
+  .result-summary--headline,
+  .profile-scorecard {
+    grid-template-columns: 1fr;
+  }
+
   .result-metric > span {
     min-height: auto;
   }

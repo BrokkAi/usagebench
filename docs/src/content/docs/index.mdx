@@ -1,12 +1,84 @@
 ---
-title: Bifrost LSP parity and regression
-description: Reviewed LSP-parity contracts and immutable evaluation evidence for Bifrost usage analysis.
+title: How good is Bifrost at finding usages?
+description: A direct, independently reviewed comparison of Bifrost usage analysis with established language servers.
 tableOfContents: false
 ---
 
 <p class="snapshot-kicker">IMMUTABLE EVALUATION · USAGEBENCH v0.2.0</p>
 
-<h2 class="landing-headline">Compare usage analysis against independently reviewed language-server behavior</h2>
+<div class="verdict-panel">
+  <span>Short answer</span>
+  <strong>Near parity on this sample. Strongest in TypeScript; behind in Go and Python.</strong>
+  <p>
+    Bifrost met the complete reviewed usage contract in <b>25 of 36 cases
+    (69.4%)</b>. The three established language servers met it in <b>26 of 36
+    (72.2%)</b>.
+  </p>
+</div>
+
+<div class="result-summary result-summary--headline" aria-label="Headline evaluation comparison">
+  <div class="result-metric">
+    <span>Full strict contract</span>
+    <div class="metric-comparison">
+      <div class="metric-side metric-side--bifrost">
+        <span>Bifrost</span>
+        <strong>25<small>/36</small></strong>
+      </div>
+      <div class="metric-side metric-side--reference">
+        <span>Reference servers</span>
+        <strong>26<small>/36</small></strong>
+      </div>
+    </div>
+    <p>Complete location set, exact token ranges, and no unallowed extras</p>
+  </div>
+  <div class="result-metric">
+    <span>All required destinations found</span>
+    <div class="metric-comparison">
+      <div class="metric-side metric-side--bifrost">
+        <span>Bifrost</span>
+        <strong>26<small>/36</small></strong>
+      </div>
+      <div class="metric-side metric-side--reference">
+        <span>Reference servers</span>
+        <strong>28<small>/36</small></strong>
+      </div>
+    </div>
+    <p>Required destinations reached, before range precision and extras</p>
+  </div>
+</div>
+
+## Where Bifrost leads—and where it trails
+
+<div class="profile-scorecard" aria-label="Strict contract results by language">
+  <div class="profile-result">
+    <div>
+      <span>Go</span>
+      <small>vs gopls</small>
+    </div>
+    <strong><b>8</b>–9</strong>
+    <p>Reference leads by 1 case</p>
+  </div>
+  <div class="profile-result">
+    <div>
+      <span>Python</span>
+      <small>vs Pyright</small>
+    </div>
+    <strong><b>7</b>–10</strong>
+    <p>Reference leads by 3 cases</p>
+  </div>
+  <div class="profile-result profile-result--bifrost-leads">
+    <div>
+      <span>TypeScript</span>
+      <small>vs TypeScript LS</small>
+    </div>
+    <strong><b>10</b>–7</strong>
+    <p>Bifrost leads by 3 cases</p>
+  </div>
+</div>
+
+<p class="scorecard-key"><b>Bold number is Bifrost.</b> Each language has 12 preregistered cases.</p>
+
+## What this result means
 
 UsageBench is Bifrost's recurring conformance and regression suite for source
 usages and navigation. Established language servers provide strong comparison
@@ -21,7 +93,7 @@ tools. UsageBench measures their overlapping References and Definition surface;
 it does not compare completion, diagnostics, refactoring, or either product's
 complete feature set.
 
-The current result is the independently reviewed, source-locked
+This result is the independently reviewed, source-locked
 `real-project-v1` partition published in immutable release
 [`v0.2.0`](https://github.com/BrokkAi/usagebench/releases/tag/v0.2.0). Its
 bounded claim covers only descriptive, per-profile comparisons for 12 sampled
