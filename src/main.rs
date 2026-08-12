@@ -70,6 +70,15 @@ enum Command {
     },
     /// Validate a retrospective legacy-promotion manifest and its hash-bound evidence.
     ValidateLegacyPromotion { manifest: PathBuf },
+    /// Generate the source-only pre-review cohort freeze for legacy promotion.
+    GenerateLegacyPromotionCohort {
+        #[arg(long, default_value = "benchmarks/cases")]
+        cases: PathBuf,
+        #[arg(long, default_value = "benchmarks/promotion/legacy-v1/cohort.json")]
+        output: PathBuf,
+    },
+    /// Validate a source-only pre-review legacy-promotion cohort freeze.
+    ValidateLegacyPromotionCohort { manifest: PathBuf },
     /// Print the JSON Schema generated from the Rust model.
     Schema,
     /// Print the JSON Schema generated for analyzer run reports.
@@ -258,6 +267,24 @@ fn main() -> Result<()> {
             println!(
                 "validated legacy promotion {} with {} balanced-core cases",
                 audit.promotion_id, audit.balanced_core_case_count
+            );
+        }
+        Command::GenerateLegacyPromotionCohort { cases, output } => {
+            let cohort = usagebench::promotion_cohort::generate(&cases, &output)?;
+            println!(
+                "wrote legacy promotion cohort {} with {} inventory rows to {}",
+                cohort.cohort_id,
+                cohort.inventory.len(),
+                output.display()
+            );
+        }
+        Command::ValidateLegacyPromotionCohort { manifest } => {
+            let cohort = usagebench::promotion_cohort::validate(&manifest)?;
+            println!(
+                "validated legacy promotion cohort {} with N={} and {} inventory rows",
+                cohort.cohort_id,
+                cohort.balanced_core_per_language,
+                cohort.inventory.len()
             );
         }
         Command::Schema => {
