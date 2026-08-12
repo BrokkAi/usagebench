@@ -158,7 +158,7 @@ jobs:
           chmod +x "$tools/bin/rust-analyzer"
           echo "$tools/bin" >> "$GITHUB_PATH"
           /usr/bin/clangd --version | grep -F 'Apple clangd version 21.0.0'
-          git clone --filter=blob:none https://github.com/BrokkAi/bifrost.git "$RUNNER_TEMP/bifrost"
+          git clone https://github.com/BrokkAi/bifrost.git "$RUNNER_TEMP/bifrost"
           git -C "$RUNNER_TEMP/bifrost" cat-file -e a54be9be9b08b9d9ddbab1c471e26d7f8bd932df^{commit}
 
       - name: Test harness
