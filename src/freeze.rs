@@ -7,6 +7,7 @@
 
 use crate::{
     evaluation::{validate_report_against_release_audit, EvaluationReleaseAudit},
+    promotion::{build_promotion_audit, validate_report_against_promotion, LegacyPromotionAudit},
     runners::{DocumentRunReport, ExecutionMode, PlatformScope, RunReport, RunnerMetadata},
     CorpusPartition, CorpusSelection, GroundTruthReviewStatus,
 };
@@ -20,13 +21,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub const FREEZE_MANIFEST_SCHEMA_VERSION: u32 = 4;
+pub const FREEZE_MANIFEST_SCHEMA_VERSION: u32 = 5;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ValueEnum)]
 #[serde(rename_all = "snake_case")]
 pub enum SnapshotKind {
     Development,
     Evaluation,
+    LegacyPromoted,
 }
 
 impl std::fmt::Display for SnapshotKind {
@@ -34,6 +36,7 @@ impl std::fmt::Display for SnapshotKind {
         formatter.write_str(match self {
             Self::Development => "development",
             Self::Evaluation => "evaluation",
+            Self::LegacyPromoted => "legacy_promoted",
         })
     }
 }
@@ -90,6 +93,7 @@ pub struct FreezeManifestOptions {
     pub candidate_ids: Vec<String>,
     pub report_paths: Vec<PathBuf>,
     pub evaluation_corpus: Option<PathBuf>,
+    pub promotion_manifest: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -105,6 +109,8 @@ pub struct FreezeManifest {
     pub corpus: Vec<ManifestDocument>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub evaluation_audit: Option<EvaluationReleaseAudit>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub legacy_promotion_audit: Option<LegacyPromotionAudit>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -169,13 +175,20 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
     if options.candidate_ids.is_empty() {
         bail!("at least one --candidates value is required");
     }
-    let evaluation_audit = match options.snapshot_kind {
-        SnapshotKind::Development => None,
+    let (evaluation_audit, legacy_promotion_audit) = match options.snapshot_kind {
+        SnapshotKind::Development => (None, None),
         SnapshotKind::Evaluation => {
             let corpus = options.evaluation_corpus.as_deref().context(
                 "evaluation snapshots require --evaluation-corpus pointing to the promoted corpus",
             )?;
-            Some(crate::evaluation::build_release_audit(corpus)?)
+            (Some(crate::evaluation::build_release_audit(corpus)?), None)
+        }
+        SnapshotKind::LegacyPromoted => {
+            let manifest = options
+                .promotion_manifest
+                .as_deref()
+                .context("legacy-promoted snapshots require --promotion-manifest")?;
+            (None, Some(build_promotion_audit(manifest)?))
         }
     };
     if options.candidate_ids.len() != options.report_paths.len() {
@@ -229,6 +242,9 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
         if let Some(audit) = &evaluation_audit {
             validate_report_against_release_audit(&report, audit, &candidate.id)?;
         }
+        if let Some(audit) = &legacy_promotion_audit {
+            validate_report_against_promotion(&report, audit)?;
+        }
         let report_contract = ScoringContract {
             benchmark_case_schema_version: 2,
             report_schema_version: crate::runners::RUN_REPORT_SCHEMA_VERSION,
@@ -268,26 +284,47 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
     if corpus.is_empty() {
         bail!("selected reports did not execute any benchmark documents");
     }
-    if options.snapshot_kind == SnapshotKind::Development {
-        validate_development_corpus(&corpus)?;
-    } else {
-        validate_evaluation_corpus(&corpus)?;
-        let expected_candidates = std::iter::once("bifrost".to_string())
-            .chain(
-                evaluation_audit
-                    .as_ref()
-                    .expect("evaluation audit was constructed")
-                    .target_profiles
-                    .iter()
-                    .map(|profile| profile.candidate_id.clone()),
-            )
-            .collect::<BTreeSet<_>>();
-        if selected_ids != expected_candidates {
-            bail!(
+    match options.snapshot_kind {
+        SnapshotKind::Development => validate_development_corpus(&corpus)?,
+        SnapshotKind::LegacyPromoted => {
+            validate_development_corpus(&corpus)?;
+            let audit = legacy_promotion_audit
+                .as_ref()
+                .expect("promotion audit was constructed");
+            let actual = corpus
+                .iter()
+                .map(|d| d.case_file.as_str())
+                .collect::<BTreeSet<_>>();
+            let expected = audit
+                .case_ids_by_file
+                .keys()
+                .map(String::as_str)
+                .collect::<BTreeSet<_>>();
+            if actual != expected {
+                bail!(
+                    "legacy-promoted reports must contain exactly the promotion manifest documents"
+                );
+            }
+        }
+        SnapshotKind::Evaluation => {
+            validate_evaluation_corpus(&corpus)?;
+            let expected_candidates = std::iter::once("bifrost".to_string())
+                .chain(
+                    evaluation_audit
+                        .as_ref()
+                        .expect("evaluation audit was constructed")
+                        .target_profiles
+                        .iter()
+                        .map(|profile| profile.candidate_id.clone()),
+                )
+                .collect::<BTreeSet<_>>();
+            if selected_ids != expected_candidates {
+                bail!(
                 "evaluation snapshot candidates must exactly match Bifrost plus protocol targets: expected {:?}, got {:?}",
                 expected_candidates,
                 selected_ids
             );
+            }
         }
     }
 
@@ -302,6 +339,7 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
         reports,
         corpus,
         evaluation_audit,
+        legacy_promotion_audit,
     })
 }
 
@@ -841,6 +879,7 @@ mod tests {
             candidate_ids: vec!["bifrost".to_string()],
             report_paths: vec![report],
             evaluation_corpus: None,
+            promotion_manifest: None,
         })
         .unwrap();
 
@@ -884,6 +923,7 @@ mod tests {
             candidate_ids: vec!["bifrost".to_string()],
             report_paths: vec![report],
             evaluation_corpus: None,
+            promotion_manifest: None,
         })
         .unwrap_err();
 

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BrokkAi/usagebench/schema/legacy-promotion.schema.json",
+  "title": "UsageBench Retrospective Legacy Promotion Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "promotionId", "claimScope", "selectionProvenance", "reviewTier", "selectionBasis", "analyzerOutcomeUse", "eligibilityPolicy", "balancePolicy", "documents"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "promotionId": { "type": "string", "minLength": 1 },
+    "supersedes": { "$ref": "#/$defs/artifactLink" },
+    "claimScope": { "type": "string", "minLength": 1 },
+    "selectionProvenance": { "const": "retrospectively_selected" },
+    "reviewTier": { "const": "legacy_promoted" },
+    "selectionBasis": { "const": "source_only" },
+    "analyzerOutcomeUse": { "const": "forbidden" },
+    "eligibilityPolicy": { "$ref": "#/$defs/artifactLink" },
+    "balancePolicy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["languageCount", "maximumPerLanguage", "eligibleCounts", "balancedCorePerLanguage", "requiredStrata"],
+      "properties": {
+        "languageCount": { "const": 11 },
+        "maximumPerLanguage": { "const": 10 },
+        "eligibleCounts": { "type": "object", "minProperties": 11, "maxProperties": 11, "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "balancedCorePerLanguage": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "requiredStrata": { "type": "array", "minItems": 6, "uniqueItems": true, "items": { "enum": ["operation", "symbol_kind", "semantic_feature", "source_complexity", "operation_status", "language"] } }
+      }
+    },
+    "documents": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/document" } }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "artifactLink": { "type": "object", "additionalProperties": false, "required": ["file", "sha256"], "properties": { "file": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" } } },
+    "document": {
+      "type": "object", "additionalProperties": false, "required": ["caseFile", "sourceSha256", "language", "cases"],
+      "properties": {
+        "caseFile": { "type": "string", "minLength": 1 }, "sourceSha256": { "$ref": "#/$defs/sha256" }, "language": { "type": "string", "minLength": 1 },
+        "cases": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/case" } }
+      }
+    },
+    "case": {
+      "type": "object", "additionalProperties": false, "required": ["id", "membership", "strata", "reviewRecords", "adjudication"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "membership": { "enum": ["balanced_core", "overflow", "control"] },
+        "controlStatus": { "enum": ["unsupported", "not_planned"] },
+        "strata": { "type": "object", "minProperties": 6, "additionalProperties": { "type": "string", "minLength": 1 } },
+        "reviewRecords": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/artifactLink" } },
+        "adjudication": { "$ref": "#/$defs/artifactLink" }
+      },
+      "allOf": [
+        { "if": { "properties": { "membership": { "const": "control" } }, "required": ["membership"] }, "then": { "required": ["controlStatus"] }, "else": { "not": { "required": ["controlStatus"] } } }
+      ]
+    }
+  }
+}

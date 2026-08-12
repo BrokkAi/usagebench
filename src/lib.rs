@@ -9,6 +9,7 @@ use url::Url;
 
 pub mod evaluation;
 pub mod freeze;
+pub mod promotion;
 pub mod real_project;
 pub mod results;
 pub mod runners;
