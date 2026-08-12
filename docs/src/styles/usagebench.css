@@ -170,6 +170,7 @@ body {
   border: 1px solid rgb(97 199 220 / 0.28);
   border-top: 3px solid var(--usagebench-reference);
   border-radius: 0.45rem;
+  margin-top: 0 !important;
   padding: 1rem;
 }
 
