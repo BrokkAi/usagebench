@@ -50,6 +50,15 @@ adjudication before the next selection order begins. It remains
 `retrospectively_selected`; review does not convert the analyzer-informed
 legacy selection into preregistered evidence.
 
+Cases with a declaration-centered References contract continue to use the
+retained v3 usage-review profile. Navigation-only cases use the separate
+`blinded-navigation-review-v1.json` profile. Its packet records one or more
+Declaration, Definition, or Type Definition queries without revealing authored
+targets. In particular, Type Definition reviewers derive the expression's type
+and its declaration target; they do not reinterpret the expression as a textual
+usage of the type name. Unsupported candidate capability remains an execution
+status and never changes this source-derived contract.
+
 Validate the first adjudicated milestone with:
 
 ```bash

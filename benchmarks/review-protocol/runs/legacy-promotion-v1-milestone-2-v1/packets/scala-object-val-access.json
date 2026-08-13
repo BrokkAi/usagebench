@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-2",
+  "caseId": "scala-object-val-access",
+  "language": "scala",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "048798870f3b1407d78aa7aca37be61b7648cd500ad9c7402407f7273bbb2348"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/main/scala/example/Service.scala",
+    "range": {
+      "start": {
+        "line": 3,
+        "character": 6
+      },
+      "end": {
+        "line": 3,
+        "character": 12
+      }
+    }
+  },
+  "displayName": "Prefix"
+}

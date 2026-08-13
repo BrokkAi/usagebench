@@ -69,7 +69,7 @@ def location_key(location: dict | None) -> tuple | None:
     return (location["uri"], *values)
 
 
-def validate_response(path: Path, provider: str, model: str, execution_id: str, case_id: str) -> dict:
+def validate_response(path: Path, provider: str, model: str, execution_id: str, case_id: str, profile: str) -> dict:
     value = load_json(path)
     if set(value) != {"schemaVersion", "reviewer", "records"} or value["schemaVersion"] != 1:
         fail(f"invalid response envelope: {path}")
@@ -83,8 +83,26 @@ def validate_response(path: Path, provider: str, model: str, execution_id: str, 
     if not isinstance(value["records"], list) or len(value["records"]) != 1:
         fail(f"response must contain exactly one record: {path}")
     record = value["records"][0]
+    if record.get("caseId") != case_id:
+        fail(f"invalid response record: {path}")
+    if profile == "navigation_v1":
+        required = {"caseId", "queries", "inspectedPaths", "rationale"}
+        if set(record) != required or not record["queries"]:
+            fail(f"invalid navigation response record: {path}")
+        for query in record["queries"]:
+            expected = {"queryId", "operation", "query", "decision", "confidence", "targets", "ambiguities", "rationale"}
+            if not expected.issubset(query) or set(query) - (expected | {"resolvedIdentity"}):
+                fail(f"invalid navigation query: {path}")
+            if query["operation"] not in {"declaration", "definition", "type_definition"}:
+                fail(f"invalid navigation operation: {path}")
+            location_key(query["query"])
+            for target in query["targets"]:
+                location_key(target)
+            if query["decision"] not in {"accept", "replace", "abstain"} or query["confidence"] not in {"high", "medium", "low"}:
+                fail(f"invalid navigation decision/confidence: {path}")
+        return record
     required = {"caseId", "decision", "confidence", "declaration", "locations", "definitionUsage", "ambiguities", "inspectedPaths", "rationale"}
-    if set(record) != required or record["caseId"] != case_id:
+    if set(record) != required:
         fail(f"invalid response record: {path}")
     if record["decision"] not in {"accept", "replace", "abstain"} or record["confidence"] not in {"high", "medium", "low"}:
         fail(f"invalid response decision/confidence: {path}")
@@ -101,6 +119,17 @@ def validate_response(path: Path, provider: str, model: str, execution_id: str, 
 
 def required_locations(record: dict) -> list[tuple]:
     return sorted(location_key(item["location"]) for item in record["locations"] if item["classification"] == "required")
+
+
+def navigation_fields(record: dict) -> dict:
+    queries = record["queries"]
+    return {
+        "identity": [(q["queryId"], q["operation"], location_key(q["query"])) for q in queries],
+        "decisions": [q["decision"] for q in queries],
+        "targets": [sorted(location_key(target) for target in q["targets"]) for q in queries],
+        "high": all(q["confidence"] == "high" for q in queries),
+        "clear": all(not q["ambiguities"] for q in queries),
+    }
 
 
 def tree_sha256(root: Path) -> str:
@@ -139,8 +168,12 @@ def main() -> None:
     cases = run.get("cases")
     if not isinstance(cases, list) or len(cases) != 11 or {case["language"] for case in cases} != LANGUAGES:
         fail("milestone must cover exactly one case in each legacy language")
-    if any(case.get("selectionOrder") != 1 for case in cases):
-        fail("milestone 1 may contain only selectionOrder 1 cases")
+    milestone_match = re.fullmatch(r"legacy-promotion-v1-milestone-(\d+)", run.get("milestoneId", ""))
+    if not milestone_match:
+        fail("invalid milestone identity")
+    selection_order = int(milestone_match.group(1))
+    if any(case.get("selectionOrder") != selection_order for case in cases):
+        fail(f"milestone may contain only selectionOrder {selection_order} cases")
     comparison_by_id = {case["caseId"]: case for case in comparison["cases"]}
     adjudication_by_id = {case["caseId"]: case for case in adjudication["cases"]}
     if len(comparison_by_id) != 11 or len(adjudication_by_id) != 11:
@@ -149,11 +182,14 @@ def main() -> None:
     for case in cases:
         case_id = case["caseId"]
         inventory = next((row for row in cohort["inventory"] if row["caseId"] == case_id), None)
-        if not inventory or inventory["language"] != case["language"] or inventory["decision"] != "balanced_core" or inventory["selectionOrder"] != 1:
-            fail(f"case is not the frozen milestone-1 selection: {case_id}")
+        if not inventory or inventory["language"] != case["language"] or inventory["decision"] != "balanced_core" or inventory["selectionOrder"] != selection_order:
+            fail(f"case is not the frozen milestone selection: {case_id}")
         packet_path = linked_path(root, case["packet"], f"packet {case_id}")
         packet = load_json(packet_path)
-        allowed_packet_keys = {"schemaVersion", "cohortId", "milestoneId", "caseId", "language", "referencePolicy", "positionEncoding", "source", "declaration", "displayName"}
+        profile = case.get("reviewProfile", "references_v3")
+        allowed_packet_keys = ({"schemaVersion", "cohortId", "milestoneId", "caseId", "language", "referencePolicy", "positionEncoding", "source", "declaration", "displayName"}
+                               if profile == "references_v3" else
+                               {"schemaVersion", "cohortId", "milestoneId", "caseId", "language", "referencePolicy", "positionEncoding", "source", "reviewProfile", "queries"})
         if set(packet) != allowed_packet_keys or packet["caseId"] != case_id or packet["language"] != case["language"]:
             fail(f"packet shape/identity mismatch: {case_id}")
         source_document = root / inventory["document"]
@@ -176,21 +212,32 @@ def main() -> None:
             seen_executions.add(provenance)
             response_field = "rawResponse" if provider == "openai" else "normalizedResponse"
             response_path = linked_path(root, session[response_field], f"review response {case_id}/{provider}")
-            records[provider] = validate_response(response_path, provider, PROVIDERS[provider], session["executionId"], case_id)
+            records[provider] = validate_response(response_path, provider, PROVIDERS[provider], session["executionId"], case_id, profile)
             if provider == "anthropic":
                 if "rawResponse" in session or "providerEnvelope" in session:
                     fail(f"Anthropic session must distinguish rawProviderEnvelope from normalizedResponse: {case_id}")
                 envelope = load_json(linked_path(root, session["rawProviderEnvelope"], f"raw provider envelope {case_id}"))
                 if envelope.get("is_error") or envelope.get("session_id") != session["executionId"] or envelope.get("modelUsage", {}).get("claude-fable-5", {}).get("canonicalModel") != "claude-fable-5":
                     fail(f"Anthropic provider envelope mismatch: {case_id}")
-        expected_fields = {
-            "decision": records["openai"]["decision"] == records["anthropic"]["decision"],
-            "declaration": location_key(records["openai"]["declaration"]) == location_key(records["anthropic"]["declaration"]),
-            "requiredLocations": required_locations(records["openai"]) == required_locations(records["anthropic"]),
-            "definitionUsage": location_key(records["openai"]["definitionUsage"]) == location_key(records["anthropic"]["definitionUsage"]),
-            "highConfidence": records["openai"]["confidence"] == records["anthropic"]["confidence"] == "high",
-            "noRequiredAmbiguity": not records["openai"]["ambiguities"] and not records["anthropic"]["ambiguities"],
-        }
+        if profile == "navigation_v1":
+            openai_navigation = navigation_fields(records["openai"])
+            anthropic_navigation = navigation_fields(records["anthropic"])
+            expected_fields = {
+                "queryIdentity": openai_navigation["identity"] == anthropic_navigation["identity"],
+                "decision": openai_navigation["decisions"] == anthropic_navigation["decisions"],
+                "targets": openai_navigation["targets"] == anthropic_navigation["targets"],
+                "highConfidence": openai_navigation["high"] and anthropic_navigation["high"],
+                "noRequiredAmbiguity": openai_navigation["clear"] and anthropic_navigation["clear"],
+            }
+        else:
+            expected_fields = {
+                "decision": records["openai"]["decision"] == records["anthropic"]["decision"],
+                "declaration": location_key(records["openai"]["declaration"]) == location_key(records["anthropic"]["declaration"]),
+                "requiredLocations": required_locations(records["openai"]) == required_locations(records["anthropic"]),
+                "definitionUsage": location_key(records["openai"]["definitionUsage"]) == location_key(records["anthropic"]["definitionUsage"]),
+                "highConfidence": records["openai"]["confidence"] == records["anthropic"]["confidence"] == "high",
+                "noRequiredAmbiguity": not records["openai"]["ambiguities"] and not records["anthropic"]["ambiguities"],
+            }
         compared = comparison_by_id.get(case_id)
         if not compared or compared["fields"] != expected_fields or compared["primaryConsensus"] != all(expected_fields.values()):
             fail(f"raw-to-comparison drift: {case_id}")
