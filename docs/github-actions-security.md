@@ -16,6 +16,12 @@ that must be configured in GitHub. The settings snapshot below was observed on
   runner label. The input accepts only `macos-26` or a random, one-job label
   matching `usagebench-ephemeral-macos-arm64-<32 lowercase hex characters>`;
   no pull-request workflow can select that label.
+- The trusted evaluation path validates its ref, corpus, protocol, and profiles
+  on GitHub-hosted Ubuntu before queuing exactly six macOS jobs. Those jobs are
+  read-only and cover Bifrost/Java, Bifrost/Rust, Bifrost/C++, JDT LS/Java,
+  rust-analyzer/Rust, and Apple clangd 21/C++ independently. GitHub-hosted
+  aggregation rejects missing, duplicate, stale, checksum-mismatched, or
+  incorrectly covered reports before the protected publisher can run.
 - `release.yml` accepts a verified release tag or a manual dispatch from
   `refs/heads/main`. The read-only build job must prove that the tag commit is
   reachable from `main` before the environment-gated job receives
@@ -111,3 +117,29 @@ repository-scoped until it is replaced. For the durable runner design:
 
 These restrictions concern execution trust only; they do not add a two-host
 benchmark evidence requirement.
+
+## Manually arm the six one-job runners
+
+The reviewed repository launcher is `scripts/usagebench-ephemeral-runner`. It
+does not install a service, persist a token, or alter an existing external
+launcher. To install or refresh it, inspect the merged file, then explicitly
+copy it to the operator-managed tools directory and make that copy executable.
+Set `USAGEBENCH_RUNNER_DIST` to a separately downloaded and checksum-verified,
+unpacked GitHub Actions runner distribution. Authenticate `gh` interactively;
+do not put a token in the script or command line.
+
+After merging, sync the launcher from the exact main checkout, choose one fresh
+random label, dispatch the trusted manual main workflow with that exact label,
+and arm exactly six registrations in a second terminal:
+
+```bash
+label="usagebench-ephemeral-macos-arm64-$(openssl rand -hex 16)"
+scripts/usagebench-ephemeral-runner batch 6 "$label"
+```
+
+The workflow matrix uses `max-parallel: 1`; each ephemeral registration takes
+one queued shard, deregisters, deletes its per-run directory, and only then
+registers the next. The launcher best-effort deregisters and cleans the active
+directory on interruption. Do not run it before the parent task has synced the
+merged launcher and is ready to dispatch; do not reuse the label for another
+run.

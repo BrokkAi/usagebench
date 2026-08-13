@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "usage: $0 batch COUNT usagebench-ephemeral-macos-arm64-<32 lowercase hex>" >&2
+  exit 2
+}
+
+[[ "${1:-}" == "batch" && "${2:-}" =~ ^[1-9][0-9]*$ ]] || usage
+count="$2"
+label="${3:-}"
+[[ "$label" =~ ^usagebench-ephemeral-macos-arm64-[0-9a-f]{32}$ ]] || {
+  echo "runner label must use the approved random-label format" >&2
+  exit 2
+}
+[[ "$count" -le 12 ]] || {
+  echo "batch count must not exceed 12" >&2
+  exit 2
+}
+
+runner_dist="${USAGEBENCH_RUNNER_DIST:-}"
+repo="${USAGEBENCH_RUNNER_REPOSITORY:-BrokkAi/usagebench}"
+if [[ "${USAGEBENCH_RUNNER_TEST_MODE:-0}" == "1" ]]; then
+  for ((index = 1; index <= count; index++)); do
+    echo "would register ephemeral runner $index/$count with label $label"
+  done
+  exit 0
+fi
+[[ -d "$runner_dist" && -x "$runner_dist/config.sh" && -x "$runner_dist/run.sh" ]] || {
+  echo "USAGEBENCH_RUNNER_DIST must identify an unpacked GitHub Actions runner" >&2
+  exit 2
+}
+command -v gh >/dev/null || { echo "gh is required" >&2; exit 2; }
+
+active_dir=""
+remove_runner() {
+  if [[ -n "$active_dir" && -x "$active_dir/config.sh" && -f "$active_dir/.runner" ]]; then
+    removal_token="$(gh api --method POST "repos/$repo/actions/runners/remove-token" --jq .token 2>/dev/null || true)"
+    if [[ -n "$removal_token" ]]; then
+      (cd "$active_dir" && ./config.sh remove --unattended --token "$removal_token") || true
+    fi
+  fi
+  if [[ -n "$active_dir" && -d "$active_dir" ]]; then
+    find "$active_dir" -mindepth 1 -delete
+    rmdir "$active_dir" 2>/dev/null || true
+  fi
+  active_dir=""
+}
+trap 'remove_runner; exit 130' INT TERM HUP
+trap remove_runner EXIT
+
+for ((index = 1; index <= count; index++)); do
+  active_dir="$(mktemp -d "${TMPDIR:-/tmp}/usagebench-runner.XXXXXX")"
+  cp -R "$runner_dist"/. "$active_dir/"
+  registration_token="$(gh api --method POST "repos/$repo/actions/runners/registration-token" --jq .token)"
+  runner_name="usagebench-shard-${index}-${label: -8}"
+  (
+    cd "$active_dir"
+    ./config.sh \
+      --url "https://github.com/$repo" \
+      --token "$registration_token" \
+      --name "$runner_name" \
+      --labels "$label" \
+      --ephemeral --disableupdate --no-default-labels --unattended
+    ./run.sh
+  )
+  remove_runner
+done

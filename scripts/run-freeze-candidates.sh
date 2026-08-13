@@ -69,12 +69,17 @@ for candidate_id in "${candidate_ids[@]}"; do
   if [[ "$candidate_id" == "bifrost" && -n "${NATIVE_BIFROST_REPO:-}" ]]; then
     bifrost_revision="$(jq -er '.revision' <<< "$candidate")"
     set +e
-    cargo run --locked --manifest-path "$corpus_root/Cargo.toml" -- \
-      run-bifrost "$case_directory" \
-      --bifrost-repo "$NATIVE_BIFROST_REPO" \
-      --bifrost-commit "$bifrost_revision" \
-      --work-dir "$output_directory/$candidate_id-work" \
+    bifrost_args=(
+      run-bifrost "$case_directory"
+      --bifrost-repo "$NATIVE_BIFROST_REPO"
+      --bifrost-commit "$bifrost_revision"
+      --work-dir "$output_directory/$candidate_id-work"
       --output "$output_directory/$candidate_id.json"
+    )
+    if [[ -n "${FREEZE_SHARD_LANGUAGE:-}" ]]; then
+      bifrost_args+=(--language "$FREEZE_SHARD_LANGUAGE")
+    fi
+    cargo run --locked --manifest-path "$corpus_root/Cargo.toml" -- "${bifrost_args[@]}"
     status=$?
     set -e
     [[ -f "$output_directory/$candidate_id.json" ]] || {
@@ -132,6 +137,10 @@ for candidate_id in "${candidate_ids[@]}"; do
     report_paths+=("$output_directory/$candidate_id.json")
   fi
 done
+
+if [[ "${FREEZE_SHARD_ONLY:-0}" == "1" ]]; then
+  exit 0
+fi
 
 report_args=()
 for index in "${!candidate_ids[@]}"; do

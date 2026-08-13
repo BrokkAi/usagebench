@@ -178,6 +178,9 @@ enum Command {
         /// Run only the matching case ID.
         #[arg(long)]
         case_id: Option<String>,
+        /// Run only benchmark documents for this language.
+        #[arg(long)]
+        language: Option<String>,
     },
     /// Run benchmark cases against a versioned language-server profile.
     RunLsp {
@@ -376,6 +379,7 @@ fn main() -> Result<()> {
             scan_usages_max_duration_secs,
             keep_worktrees,
             case_id,
+            language,
         } => {
             let mut options = RunBifrostOptions::with_defaults(path);
             options.bifrost_repo = bifrost_repo;
@@ -389,6 +393,7 @@ fn main() -> Result<()> {
             options.scan_usages_max_duration_secs = scan_usages_max_duration_secs;
             options.keep_worktrees = keep_worktrees;
             options.case_id = case_id;
+            options.language = language;
             let report = run_bifrost(options)?;
             println!(
                 "ran {} planned case(s) ({} development, {} evaluation): {} passed, {} near miss(es), {} position-unverified, {} improved, {} failed, {} expected failure(s), {} not planned, {} unsupported, {} skipped, {} error(s)",
