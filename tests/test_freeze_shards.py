@@ -12,6 +12,18 @@ SPEC.loader.exec_module(MODULE)
 
 
 class FreezeShardTests(unittest.TestCase):
+    def test_v030_registry_preserves_historical_bifrost_identity(self):
+        active = json.loads((ROOT / "adapters/candidates.json").read_text())
+        frozen = json.loads(
+            (ROOT / "benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json").read_text()
+        )
+        active_bifrost = next(item for item in active["candidates"] if item["id"] == "bifrost")
+        frozen_bifrost = next(item for item in frozen["candidates"] if item["id"] == "bifrost")
+        self.assertEqual(active_bifrost["requestedVersion"], "v0.9.3")
+        self.assertEqual(active_bifrost["revision"], "30dacd4778b9e042bf55ed5e519e8780293f07a1")
+        self.assertEqual(frozen_bifrost["requestedVersion"], "v0.8.8")
+        self.assertEqual(frozen_bifrost["revision"], "a54be9be9b08b9d9ddbab1c471e26d7f8bd932df")
+
     def test_plan_is_exactly_six_candidate_language_pairs(self):
         self.assertEqual(len(MODULE.SHARDS), 6)
         self.assertEqual(set(MODULE.SHARDS.values()), {

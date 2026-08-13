@@ -82,6 +82,12 @@ protocol. It executes Bifrost plus `eclipse-jdtls`, `rust-analyzer`, and
 `apple-clangd-21`; the Apple profile runs on the registered macOS/Xcode host
 and does not introduce a second-host evidence gate.
 
+The v0.3.0 execution identities are frozen separately in
+`candidates-v0.3.0.json`. In particular, that historical release remains bound
+to Bifrost v0.8.8 at `a54be9be9b08b9d9ddbab1c471e26d7f8bd932df` even after the
+active development candidate advances. A newer Bifrost run is evidence for a
+subsequent snapshot or release, never a replacement for v0.3.0 evidence.
+
 The v1 selection is hash-linked by the v2 protocol. Every v1-selected
 repository is ineligible even if it appears in a v2 GitHub language frame.
 Capture, rank, and replacement decisions use public source metadata only.

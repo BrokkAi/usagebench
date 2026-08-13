@@ -54,6 +54,7 @@ jobs:
       release_name: ${{ steps.identity.outputs.release_name }}
       case_path: ${{ steps.identity.outputs.case_path }}
       candidates: ${{ steps.identity.outputs.candidates }}
+      candidate_registry: ${{ steps.identity.outputs.candidate_registry }}
     steps:
       - name: Validate inputs before checkout
         shell: bash
@@ -104,6 +105,7 @@ jobs:
           release_name="$SNAPSHOT_VERSION"
           case_path="benchmarks/cases"
           candidates="$REQUESTED_CANDIDATES"
+          candidate_registry="adapters/candidates.json"
           [[ "$candidates" =~ ^[a-z0-9][a-z0-9-]*(,[a-z0-9][a-z0-9-]*)*$ ]]
           if [[ "$SNAPSHOT_KIND" == "evaluation" ]]; then
             [[ "$EVALUATION_FREEZE" == "real-project-v2" ]] || { echo "only real-project-v2 uses the sharded evaluation path" >&2; exit 1; }
@@ -111,11 +113,12 @@ jobs:
             case_path="$(jq -er .casePath <<< "$scope")"
             candidates="$(jq -er '.candidates | join(",")' <<< "$scope")"
             [[ "$REQUESTED_CANDIDATES" == "$candidates" ]]
+            candidate_registry="benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json"
           else
             release_name="$SNAPSHOT_VERSION development snapshot"
           fi
-          printf 'tag=%s\nrevision=%s\nsnapshot_kind=%s\nrelease_name=%s\ncase_path=%s\ncandidates=%s\n' \
-            "$SNAPSHOT_VERSION" "$revision" "$SNAPSHOT_KIND" "$release_name" "$case_path" "$candidates" >> "$GITHUB_OUTPUT"
+          printf 'tag=%s\nrevision=%s\nsnapshot_kind=%s\nrelease_name=%s\ncase_path=%s\ncandidates=%s\ncandidate_registry=%s\n' \
+            "$SNAPSHOT_VERSION" "$revision" "$SNAPSHOT_KIND" "$release_name" "$case_path" "$candidates" "$candidate_registry" >> "$GITHUB_OUTPUT"
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
       - name: Validate harness, corpus, and frozen evidence
         run: |
@@ -177,7 +180,9 @@ jobs:
             /usr/bin/clangd --version | grep -F 'Apple clangd version 21.0.0'
           else
             git clone https://github.com/BrokkAi/bifrost.git "$RUNNER_TEMP/bifrost"
-            git -C "$RUNNER_TEMP/bifrost" cat-file -e a54be9be9b08b9d9ddbab1c471e26d7f8bd932df^{commit}
+            bifrost_revision="$(jq -er '.candidates[] | select(.id == "bifrost") | .revision' \
+              "${{ needs.preflight.outputs.candidate_registry }}")"
+            git -C "$RUNNER_TEMP/bifrost" cat-file -e "$bifrost_revision^{commit}"
           fi
           echo "$tools/bin" >> "$GITHUB_PATH"
       - name: Run bounded candidate shard
@@ -196,7 +201,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/shard"
           scripts/stage-release-bundle.sh . "$RUNNER_TEMP/freeze-corpus" "$SNAPSHOT_VERSION" "$REVISION"
           echo "starting $CANDIDATE/$LANGUAGE at $(date -u +%FT%TZ)" | tee "$RUNNER_TEMP/shard/progress.log"
-          scripts/run-freeze-candidates.sh . adapters/candidates.json "$CANDIDATE" "$RUNNER_TEMP/freeze-corpus" \
+          scripts/run-freeze-candidates.sh . "${{ needs.preflight.outputs.candidate_registry }}" "$CANDIDATE" "$RUNNER_TEMP/freeze-corpus" \
             benchmarks/cases/evaluation/real-project-v2 "$RUNNER_TEMP/shard-output" "$REVISION" 2>&1 | tee -a "$RUNNER_TEMP/shard/progress.log"
           python3 scripts/freeze-shards.py metadata --version "$SNAPSHOT_VERSION" --revision "$REVISION" \
             --shard "${{ matrix.shard }}" --report "$RUNNER_TEMP/shard-output/$CANDIDATE.json" \
@@ -289,7 +294,7 @@ jobs:
             --artifacts "$RUNNER_TEMP/shards" --output "$RUNNER_TEMP/freeze-evidence"
           scripts/stage-release-bundle.sh . "$RUNNER_TEMP/freeze-corpus" "$SNAPSHOT_VERSION" "$REVISION"
           cargo run --locked -- freeze-manifest --snapshot-kind evaluation --version "$SNAPSHOT_VERSION" --revision "$REVISION" \
-            --candidates-file adapters/candidates.json --candidates bifrost,eclipse-jdtls,rust-analyzer,apple-clangd-21 \
+            --candidates-file "${{ needs.preflight.outputs.candidate_registry }}" --candidates bifrost,eclipse-jdtls,rust-analyzer,apple-clangd-21 \
             --report "$RUNNER_TEMP/freeze-evidence/bifrost.json" --report "$RUNNER_TEMP/freeze-evidence/eclipse-jdtls.json" \
             --report "$RUNNER_TEMP/freeze-evidence/rust-analyzer.json" --report "$RUNNER_TEMP/freeze-evidence/apple-clangd-21.json" \
             --evaluation-corpus "$RUNNER_TEMP/freeze-corpus/benchmarks/cases/evaluation/real-project-v2" \
