@@ -141,11 +141,14 @@ docker_args=(
   --mount "type=bind,src=$corpus_root,dst=/corpus,readonly"
   --mount "type=bind,src=$output_staging,dst=/output"
   --env "USAGEBENCH_REFERENCE_ENVIRONMENT=$environment_descriptor"
-  "$loaded_image_id"
 )
 
 if [[ "$runner_id" == "bifrost" ]]; then
   bifrost_revision="$(jq -r '.candidates[] | select(.id == "bifrost") | .revision' "$candidate_registry")"
+  # The released corpus is intentionally read-only. Bifrost v0.9.3 persists its
+  # analyzer cache by default, so keep that generated state on the writable,
+  # container-private work tmpfs instead of weakening the corpus mount.
+  docker_args+=(--env "BIFROST_CACHE_DIR=/work/bifrost-cache")
   command_args=(
     run-bifrost "/corpus/$case_path" \
     --bifrost-binary /usr/local/bin/bifrost \
@@ -160,7 +163,7 @@ if [[ "$runner_id" == "bifrost" ]]; then
     command_args+=(--include-unsupported)
   fi
   set +e
-  docker "${docker_args[@]}" "${command_args[@]}"
+  docker "${docker_args[@]}" "$loaded_image_id" "${command_args[@]}"
   run_status=$?
   set -e
 elif [[ "$runner_id" == "gopls" ]]; then
@@ -178,7 +181,7 @@ elif [[ "$runner_id" == "gopls" ]]; then
     command_args+=(--include-unsupported)
   fi
   set +e
-  docker "${docker_args[@]}" "${command_args[@]}"
+  docker "${docker_args[@]}" "$loaded_image_id" "${command_args[@]}"
   run_status=$?
   set -e
 else

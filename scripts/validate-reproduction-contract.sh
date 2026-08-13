@@ -137,6 +137,15 @@ grep -Fq -- '--manifest-path "$corpus_root/Cargo.toml"' \
   echo "native LSP candidates are not executed from the staged release corpus" >&2
   exit 1
 }
+grep -Fq -- '--mount "type=bind,src=$corpus_root,dst=/corpus,readonly"' \
+  "$repo_root/scripts/run-reference.sh" || {
+  echo "reference execution no longer protects the released corpus with a read-only mount" >&2
+  exit 1
+}
+grep -Fq 'BIFROST_CACHE_DIR=/work/bifrost-cache' "$repo_root/scripts/run-reference.sh" || {
+  echo "Bifrost reference execution does not relocate generated cache state to writable tmpfs" >&2
+  exit 1
+}
 
 while IFS=$'\t' read -r candidate_id profile expected_sha256; do
   actual_sha256="$(shasum -a 256 "$repo_root/$profile" | awk '{print $1}')"

@@ -24,6 +24,12 @@ class FreezeShardTests(unittest.TestCase):
         self.assertEqual(frozen_bifrost["requestedVersion"], "v0.8.8")
         self.assertEqual(frozen_bifrost["revision"], "a54be9be9b08b9d9ddbab1c471e26d7f8bd932df")
 
+    def test_bifrost_reference_cache_stays_off_read_only_corpus(self):
+        runner = (ROOT / "scripts/run-reference.sh").read_text()
+        self.assertIn('--mount "type=bind,src=$corpus_root,dst=/corpus,readonly"', runner)
+        self.assertIn('docker_args+=(--env "BIFROST_CACHE_DIR=/work/bifrost-cache")', runner)
+        self.assertIn('docker "${docker_args[@]}" "$loaded_image_id" "${command_args[@]}"', runner)
+
     def test_plan_is_exactly_six_candidate_language_pairs(self):
         self.assertEqual(len(MODULE.SHARDS), 6)
         self.assertEqual(set(MODULE.SHARDS.values()), {
