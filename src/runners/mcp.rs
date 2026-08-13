@@ -77,6 +77,7 @@ pub(crate) struct McpSession {
     stdout_lines: Receiver<Result<String, String>>,
     next_id: u64,
     snapshot_not_ready: Option<McpResponseError>,
+    workspace_readiness_duration: Duration,
 }
 
 impl McpSession {
@@ -142,6 +143,7 @@ impl McpSession {
             stdout_lines,
             next_id: 1,
             snapshot_not_ready: None,
+            workspace_readiness_duration: Duration::ZERO,
         })
     }
 
@@ -224,10 +226,13 @@ impl ToolClient for McpSession {
         if let Some(error) = &self.snapshot_not_ready {
             return Err(error.clone().into());
         }
+        let mut readiness_duration = Duration::ZERO;
         let result = retry_snapshot_not_ready(
             || self.call_tool_once(name, arguments.clone()),
             thread::sleep,
+            |duration| readiness_duration += duration,
         );
+        self.workspace_readiness_duration += readiness_duration;
         if let Err(error) = &result {
             self.snapshot_not_ready = error.chain().find_map(|cause| {
                 cause
@@ -241,6 +246,10 @@ impl ToolClient for McpSession {
 }
 
 impl McpSession {
+    pub(crate) fn take_workspace_readiness_duration(&mut self) -> Duration {
+        std::mem::take(&mut self.workspace_readiness_duration)
+    }
+
     pub(crate) fn take_snapshot_not_ready_error(&mut self) -> Option<anyhow::Error> {
         self.snapshot_not_ready.take().map(Into::into)
     }
@@ -301,10 +310,16 @@ impl McpSession {
 fn retry_snapshot_not_ready<T>(
     mut operation: impl FnMut() -> Result<T>,
     mut sleep: impl FnMut(Duration),
+    mut record_readiness: impl FnMut(Duration),
 ) -> Result<T> {
     for delay in SNAPSHOT_NOT_READY_RETRY_DELAYS {
+        let attempt_started = Instant::now();
         match operation() {
-            Err(error) if is_snapshot_not_ready_error(&error) => sleep(delay),
+            Err(error) if is_snapshot_not_ready_error(&error) => {
+                let attempt_duration = attempt_started.elapsed();
+                sleep(delay);
+                record_readiness(attempt_duration.saturating_add(delay));
+            }
             result => return result,
         }
     }
@@ -389,6 +404,7 @@ mod tests {
                 }
             },
             |delay| delays.push(delay),
+            |_| {},
         )
         .unwrap();
 
@@ -426,10 +442,12 @@ mod tests {
             stdout_lines: receiver,
             next_id: 1,
             snapshot_not_ready: None,
+            workspace_readiness_duration: Duration::ZERO,
         };
 
         let result = retry_snapshot_not_ready(
             || session.call_tool_once("search_symbols", json!({})),
+            |_| {},
             |_| {},
         )
         .unwrap();
@@ -447,6 +465,7 @@ mod tests {
                 attempts += 1;
                 Err::<(), _>(snapshot_not_ready_error())
             },
+            |_| {},
             |_| {},
         )
         .unwrap_err();
@@ -481,6 +500,7 @@ mod tests {
                     Err::<(), _>(error.clone().into())
                 },
                 |_| panic!("non-readiness errors must not sleep"),
+                |_| {},
             );
             assert!(result.is_err());
             assert_eq!(attempts, 1);

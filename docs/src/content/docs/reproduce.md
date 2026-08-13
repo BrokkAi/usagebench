@@ -101,6 +101,14 @@ Checkpoints identify themselves with `completed: false`, retain the full
 `requestedCaseFiles` scope, and cannot be used as completed snapshot or release
 evidence.
 
+Keep `--work-dir` stable across focused profiling invocations to reuse an exact
+Bifrost build and its verified executable digest. Reuse is invalidated by a
+different resolved revision, toolchain, build plan/environment, or executable
+metadata/content change. Each report still contains the exact resolved commit
+and executable SHA-256. Its `timings` object separates checkout/setup, build,
+provenance hashing, workspace readiness, and analyzer query work; timing fields
+are diagnostic and do not participate in semantic report comparison.
+
 These commands preserve analyzer and host provenance but do not use the
 canonical container environment.
 

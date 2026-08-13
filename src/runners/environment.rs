@@ -10,6 +10,7 @@ use std::{
     io::Read,
     path::{Path, PathBuf},
     process::{Command, Stdio},
+    time::{Duration, Instant, UNIX_EPOCH},
 };
 
 const REFERENCE_ENVIRONMENT_VARIABLE: &str = "USAGEBENCH_REFERENCE_ENVIRONMENT";
@@ -97,6 +98,140 @@ struct EmbeddedReferenceEnvironment {
 
 pub(crate) fn executable_provenance(command: &Command) -> Result<ExecutableProvenance> {
     executable_provenance_for(command.get_program(), command.get_current_dir())
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ProvenanceCacheEntry {
+    version: u32,
+    resolved_path: String,
+    fingerprint: ExecutableFingerprint,
+    sha256: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct ExecutableFingerprint {
+    len: u64,
+    modified_nanos: u128,
+    #[cfg(unix)]
+    changed_nanos: i128,
+    #[cfg(unix)]
+    device: u64,
+    #[cfg(unix)]
+    inode: u64,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct TimedExecutableProvenance {
+    pub provenance: ExecutableProvenance,
+    pub hashing_duration: Duration,
+    pub cache_hit: bool,
+}
+
+pub(crate) fn cached_executable_provenance(
+    command: &Command,
+    cache_path: &Path,
+) -> Result<TimedExecutableProvenance> {
+    let program = command.get_program();
+    let command_text = program.to_string_lossy().into_owned();
+    let Some(path) = resolve_executable(program, command.get_current_dir()) else {
+        return Ok(TimedExecutableProvenance {
+            provenance: unresolved_executable(program),
+            hashing_duration: Duration::ZERO,
+            cache_hit: false,
+        });
+    };
+    let canonical_path = fs::canonicalize(&path)
+        .with_context(|| format!("canonicalize analyzer executable {}", path.display()))?;
+    let fingerprint = executable_fingerprint(&canonical_path)?;
+    let resolved_path = canonical_path.to_string_lossy().into_owned();
+    let cached = fs::read(cache_path)
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<ProvenanceCacheEntry>(&bytes).ok())
+        .filter(|entry| {
+            entry.version == 1
+                && entry.resolved_path == resolved_path
+                && entry.fingerprint == fingerprint
+                && is_sha256_hex(&entry.sha256)
+        });
+    if let Some(entry) = cached {
+        return Ok(TimedExecutableProvenance {
+            provenance: ExecutableProvenance {
+                command: command_text,
+                resolved_path: Some(resolved_path),
+                sha256: Some(entry.sha256),
+            },
+            hashing_duration: Duration::ZERO,
+            cache_hit: true,
+        });
+    }
+
+    let hashing_started = Instant::now();
+    let sha256 = sha256_file(&canonical_path)
+        .with_context(|| format!("checksum analyzer executable {}", canonical_path.display()))?;
+    let hashing_duration = hashing_started.elapsed();
+    let fingerprint_after = executable_fingerprint(&canonical_path)?;
+    if fingerprint != fingerprint_after {
+        bail!(
+            "analyzer executable {} changed while its SHA-256 was computed",
+            canonical_path.display()
+        );
+    }
+    let entry = ProvenanceCacheEntry {
+        version: 1,
+        resolved_path: resolved_path.clone(),
+        fingerprint,
+        sha256: sha256.clone(),
+    };
+    if let Some(parent) = cache_path.parent() {
+        fs::create_dir_all(parent).with_context(|| format!("create {}", parent.display()))?;
+    }
+    fs::write(cache_path, serde_json::to_vec_pretty(&entry)?)
+        .with_context(|| format!("write executable provenance cache {}", cache_path.display()))?;
+    Ok(TimedExecutableProvenance {
+        provenance: ExecutableProvenance {
+            command: command_text,
+            resolved_path: Some(resolved_path),
+            sha256: Some(sha256),
+        },
+        hashing_duration,
+        cache_hit: false,
+    })
+}
+
+pub(crate) fn executable_fingerprint(path: &Path) -> Result<ExecutableFingerprint> {
+    let metadata = fs::metadata(path)
+        .with_context(|| format!("inspect analyzer executable {}", path.display()))?;
+    let modified_nanos = metadata
+        .modified()
+        .context("read analyzer executable modification time")?
+        .duration_since(UNIX_EPOCH)
+        .context("analyzer executable modification time predates Unix epoch")?
+        .as_nanos();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        Ok(ExecutableFingerprint {
+            len: metadata.len(),
+            modified_nanos,
+            changed_nanos: i128::from(metadata.ctime()) * 1_000_000_000
+                + i128::from(metadata.ctime_nsec()),
+            device: metadata.dev(),
+            inode: metadata.ino(),
+        })
+    }
+    #[cfg(not(unix))]
+    {
+        Ok(ExecutableFingerprint {
+            len: metadata.len(),
+            modified_nanos,
+        })
+    }
+}
+
+fn is_sha256_hex(value: &str) -> bool {
+    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 pub(crate) fn unresolved_executable(command: &OsStr) -> ExecutableProvenance {
@@ -332,6 +467,26 @@ fn is_sha256_digest(value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn executable_provenance_cache_reuses_and_invalidates_verified_digest() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let executable = tempdir.path().join("analyzer");
+        let cache = tempdir.path().join("provenance.json");
+        fs::write(&executable, b"first-artifact").unwrap();
+        let command = Command::new(&executable);
+
+        let first = cached_executable_provenance(&command, &cache).unwrap();
+        let warm = cached_executable_provenance(&command, &cache).unwrap();
+        assert!(!first.cache_hit);
+        assert!(warm.cache_hit);
+        assert_eq!(first.provenance.sha256, warm.provenance.sha256);
+
+        fs::write(&executable, b"other-artifact").unwrap();
+        let changed = cached_executable_provenance(&command, &cache).unwrap();
+        assert!(!changed.cache_hit);
+        assert_ne!(first.provenance.sha256, changed.provenance.sha256);
+    }
 
     #[test]
     fn validates_sha256_digests() {

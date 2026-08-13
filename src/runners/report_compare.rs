@@ -82,6 +82,7 @@ fn semantic_value(mut value: Value) -> Value {
     };
     root.remove("startedAtUnixSeconds");
     root.remove("finishedAtUnixSeconds");
+    root.remove("timings");
     root.remove("bifrostRepo");
     root.remove("bifrostCommit");
 
@@ -319,6 +320,8 @@ mod tests {
             format!("sha256:{}", "d".repeat(64));
         actual.environment.analyzer_executable.resolved_path =
             Some("/another/bin/bifrost".to_string());
+        actual.timings.analyzer_query_millis = 42;
+        actual.timings.measured_total_millis = 42;
 
         assert!(compare_reports(&expected, &actual).is_empty());
     }
@@ -440,6 +443,7 @@ mod tests {
                 profile_sha256: None,
                 case_id: None,
             },
+            timings: Default::default(),
             completed: true,
             requested_case_files: vec!["benchmarks/cases/rust-baseline.yaml".to_string()],
             requested_totals: super::super::RequestedRunTotals {
