@@ -261,14 +261,15 @@ The workflow:
 * publishes a GitHub step summary
 * optionally posts a payload to Slack
 
-Scheduled runs use Bifrost `master`. Manual `workflow_dispatch` runs can set a
-specific `bifrost_ref` and can opt into cases marked `unsupported`.
+Scheduled runs use Bifrost `master`. Manual `workflow_dispatch` runs from the
+default UsageBench branch can set a specific `bifrost_ref` and can opt into
+cases marked `unsupported`.
 
 Without `--bifrost-working-tree`, `run-bifrost` creates an isolated checkout
 under `target/usagebench` and checks out `--bifrost-commit`.
 
-If the default `GITHUB_TOKEN` cannot read `BrokkAi/bifrost`, configure a
-repository secret named `BIFROST_CHECKOUT_TOKEN` with read access to that repo.
+The Bifrost checkout is public and does not use a separate checkout secret.
+Checkout credentials are removed before repository-controlled commands run.
 
 Slack delivery is best-effort and does not change the benchmark result. To
 enable it, configure the repository secret
@@ -294,3 +295,6 @@ payload with:
 * `unsupported_count`
 * `skipped_count`
 * `errors_count`
+
+Repository-enforced controls and the required administrative settings are
+documented in [GitHub Actions security operations](docs/github-actions-security.md).

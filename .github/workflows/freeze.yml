@@ -30,8 +30,7 @@ on:
         required: true
         default: 'real-project-v2'
         type: string
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: usagebench-freeze-${{ inputs.version }}
@@ -40,7 +39,11 @@ concurrency:
 jobs:
   prepare:
     name: validate and freeze evidence
+    if: github.ref == 'refs/heads/main'
     runs-on: ${{ inputs.snapshot_kind == 'evaluation' && inputs.evaluation_freeze == 'real-project-v2' && 'macos-26' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    timeout-minutes: 360
     outputs:
       tag: ${{ steps.identity.outputs.tag }}
       revision: ${{ steps.identity.outputs.revision }}
@@ -49,6 +52,17 @@ jobs:
       case_path: ${{ steps.identity.outputs.case_path }}
       candidates: ${{ steps.identity.outputs.candidates }}
     steps:
+      - name: Validate source revision input
+        shell: bash
+        env:
+          SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_REVISION" == "main" || "$SOURCE_REVISION" =~ ^[0-9a-fA-F]{7,40}$ ]] || {
+            echo "source revision must be main or a hexadecimal commit prefix" >&2
+            exit 1
+          }
+
       - name: Checkout requested revision
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
@@ -257,6 +271,7 @@ jobs:
     permissions:
       contents: write
     environment: release
+    timeout-minutes: 20
     steps:
       - name: Checkout frozen revision
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
@@ -271,6 +286,20 @@ jobs:
         with:
           name: freeze-release-assets
           path: dist
+
+      - name: Verify release assets before tagging
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t checksum_files < <(find dist -maxdepth 1 -type f -name '*.sha256' -print)
+          [[ "${#checksum_files[@]}" -eq 1 ]] || {
+            echo "expected exactly one freeze checksum file" >&2
+            exit 1
+          }
+          (
+            cd dist
+            sha256sum --check "$(basename "${checksum_files[0]}")"
+          )
 
       - name: Recheck and create immutable annotated tag
         shell: bash

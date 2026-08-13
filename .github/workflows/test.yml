@@ -6,26 +6,34 @@ on:
   pull_request:
     branches: [ "main" ]
 
-permissions:
-  contents: read
+permissions: {}
+
+concurrency:
+  group: usagebench-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   usagebench:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          fetch-depth: 1
           lfs: true
           persist-credentials: false
       - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
           toolchain: stable
       - name: Run Rust tests
-        run: cargo test
+        run: cargo test --locked
       - name: Validate benchmark cases
-        run: cargo run -- validate benchmarks/cases
+        run: cargo run --locked -- validate benchmarks/cases
       - name: Validate citation metadata
-        uses: citation-file-format/cffconvert-github-action@2.0.0
+        uses: citation-file-format/cffconvert-github-action@4cf11baa70a673bfdf9dad0acc7ee33b3f4b6084 # 2.0.0
         with:
           args: '--validate'

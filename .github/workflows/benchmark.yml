@@ -21,8 +21,7 @@ on:
         default: false
         type: boolean
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: usagebench-${{ github.ref }}
@@ -30,7 +29,10 @@ concurrency:
 
 jobs:
   benchmark:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     # Keep an explicit overall ceiling while reserving 130 minutes around the
     # benchmark step for cold checkout/build work and post-timeout artifact
     # publication.
@@ -42,14 +44,23 @@ jobs:
 
     steps:
       - name: Checkout usagebench
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           lfs: true
           persist-credentials: false
 
+      - name: Validate Bifrost ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          git check-ref-format --allow-onelevel "$BIFROST_REF" >/dev/null || {
+            echo "Bifrost ref is not a valid Git ref: $BIFROST_REF" >&2
+            exit 1
+          }
+
       - name: Checkout Bifrost
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: BrokkAi/bifrost
           # This path is already ignored by UsageBench, so the analyzer checkout
@@ -57,16 +68,16 @@ jobs:
           path: .bifrost
           ref: ${{ env.BIFROST_REF }}
           fetch-depth: 0
+          lfs: false
           persist-credentials: false
-          token: ${{ secrets.BIFROST_CHECKOUT_TOKEN || github.token }}
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
           toolchain: stable
 
       - name: Cache cargo + target
-        uses: swatinem/rust-cache@v2
+        uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
       - name: Build usagebench
         run: cargo build --locked --bin usagebench
@@ -157,7 +168,7 @@ jobs:
 
       - name: Upload benchmark artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: usagebench-${{ steps.usagebench_provenance.outputs.artifact_label }}-${{ github.run_id }}
           path: benchmark-output
@@ -410,23 +421,11 @@ jobs:
       (github.event_name == 'schedule' || inputs.notify_slack)
     runs-on: ubuntu-latest
     permissions: {}
+    timeout-minutes: 5
     steps:
-      - name: Check Slack configuration
-        id: slack_config
-        shell: bash
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_DAILY_USAGEBENCH_WEBHOOK_URL }}
-        run: |
-          if [ -n "$SLACK_WEBHOOK" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Send benchmark data to Slack Workflow
-        if: steps.slack_config.outputs.enabled == 'true'
         continue-on-error: true
-        uses: slackapi/slack-github-action@v2.1.1
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_DAILY_USAGEBENCH_WEBHOOK_URL }}
         with:
