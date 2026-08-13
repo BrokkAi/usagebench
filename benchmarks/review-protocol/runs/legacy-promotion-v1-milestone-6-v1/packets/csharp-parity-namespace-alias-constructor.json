@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-6",
+  "caseId": "csharp-parity-namespace-alias-constructor",
+  "language": "csharp",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "3fa1b9808c0afdb48a0fee99bb0d174e5236e56a4bcf348195dd5bc30850605b"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/Handlers.cs",
+    "range": {
+      "start": {
+        "line": 29,
+        "character": 20
+      },
+      "end": {
+        "line": 29,
+        "character": 34
+      }
+    }
+  },
+  "displayName": "ConsoleHandler"
+}

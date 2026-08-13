@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-6",
+  "caseId": "ruby-parity-module-function-call",
+  "language": "ruby",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "1a684a903156ff15a14b21788c1444cf603daad1b4fccc344d2edb683e5740a8"
+  },
+  "declaration": {
+    "uri": "benchmark://source/lib/shop/pricing.rb",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 8
+      },
+      "end": {
+        "line": 4,
+        "character": 16
+      }
+    }
+  },
+  "displayName": "tax_rate"
+}

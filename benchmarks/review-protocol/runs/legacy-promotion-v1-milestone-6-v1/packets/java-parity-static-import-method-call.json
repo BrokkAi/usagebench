@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-6",
+  "caseId": "java-parity-static-import-method-call",
+  "language": "java",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "2a1c703ceb43de7f7f89023d69a9128206c3d57e1ca16f7540b97d213d0a4501"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/main/java/example/parity/Names.java",
+    "range": {
+      "start": {
+        "line": 6,
+        "character": 25
+      },
+      "end": {
+        "line": 6,
+        "character": 34
+      }
+    }
+  },
+  "displayName": "normalize"
+}
