@@ -84,9 +84,19 @@ grep -Fq '^usagebench-ephemeral-macos-arm64-[0-9a-f]{32}$' "$freeze_workflow" ||
   echo "evaluation freeze does not constrain one-job repository runner labels" >&2
   exit 1
 }
-grep -Fq 'rm -rf -- "$RUNNER_TEMP/freeze-corpus/benchmarks/cases/evaluation"' \
-  "$freeze_workflow" || {
-  echo "development freeze does not exclude the evaluation partition" >&2
+[[ "$(grep -c 'shard: bifrost-' "$freeze_workflow")" -eq 3 ]] || {
+  echo "evaluation freeze must contain three language-bounded Bifrost shards" >&2
+  exit 1
+}
+for shard in eclipse-jdtls-java rust-analyzer-rust apple-clangd-21-cpp; do
+  grep -Fq "shard: $shard" "$freeze_workflow" || {
+    echo "evaluation freeze lacks shard $shard" >&2
+    exit 1
+  }
+done
+grep -Fq 'permissions:' "$freeze_workflow"
+grep -Fq 'python3 scripts/freeze-shards.py aggregate' "$freeze_workflow" || {
+  echo "freeze workflow does not verify shard identity and coverage before aggregation" >&2
   exit 1
 }
 grep -Fq -- '--manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.json"' \

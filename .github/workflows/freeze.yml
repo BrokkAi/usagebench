@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'New immutable benchmark version (for example v0.2.0)'
+        description: 'New immutable benchmark version (for example v0.3.0)'
         required: true
         type: string
       source_revision:
@@ -17,9 +17,7 @@ on:
         required: true
         default: 'development'
         type: choice
-        options:
-          - development
-          - evaluation
+        options: [development, evaluation]
       candidates:
         description: 'Comma-separated candidate IDs from adapters/candidates.json'
         required: true
@@ -31,24 +29,24 @@ on:
         default: 'real-project-v2'
         type: string
       evaluation_runner:
-        description: 'Exact runner label for real-project-v2 (macos-26 or an approved one-job repository label)'
+        description: 'Exact runner label (macos-26 or an approved one-job repository label)'
         required: true
         default: 'macos-26'
         type: string
-permissions: {}
 
+permissions: {}
 concurrency:
   group: usagebench-freeze-${{ inputs.version }}
   cancel-in-progress: false
 
 jobs:
-  prepare:
-    name: validate and freeze evidence
+  preflight:
+    name: validate immutable freeze inputs
     if: github.ref == 'refs/heads/main'
-    runs-on: ${{ inputs.snapshot_kind == 'evaluation' && inputs.evaluation_freeze == 'real-project-v2' && inputs.evaluation_runner || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-    timeout-minutes: 360
+    timeout-minutes: 20
     outputs:
       tag: ${{ steps.identity.outputs.tag }}
       revision: ${{ steps.identity.outputs.revision }}
@@ -57,38 +55,25 @@ jobs:
       case_path: ${{ steps.identity.outputs.case_path }}
       candidates: ${{ steps.identity.outputs.candidates }}
     steps:
-      - name: Validate evaluation runner label
-        if: inputs.snapshot_kind == 'evaluation' && inputs.evaluation_freeze == 'real-project-v2'
+      - name: Validate inputs before checkout
         shell: bash
         env:
+          SOURCE_REVISION: ${{ inputs.source_revision }}
           EVALUATION_RUNNER: ${{ inputs.evaluation_runner }}
         run: |
           set -euo pipefail
+          [[ "$SOURCE_REVISION" == "main" || "$SOURCE_REVISION" =~ ^[0-9a-fA-F]{7,40}$ ]]
           [[ "$EVALUATION_RUNNER" == "macos-26" || "$EVALUATION_RUNNER" =~ ^usagebench-ephemeral-macos-arm64-[0-9a-f]{32}$ ]] || {
             echo "evaluation runner must be macos-26 or an approved one-job repository label" >&2
             exit 1
           }
-
-      - name: Validate source revision input
-        shell: bash
-        env:
-          SOURCE_REVISION: ${{ inputs.source_revision }}
-        run: |
-          set -euo pipefail
-          [[ "$SOURCE_REVISION" == "main" || "$SOURCE_REVISION" =~ ^[0-9a-fA-F]{7,40}$ ]] || {
-            echo "source revision must be main or a hexadecimal commit prefix" >&2
-            exit 1
-          }
-
-      - name: Checkout requested revision
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           ref: ${{ inputs.source_revision }}
           fetch-depth: 0
           lfs: true
           persist-credentials: false
-
-      - name: Resolve immutable source identity
+      - name: Resolve and validate immutable identity
         id: identity
         shell: bash
         env:
@@ -100,179 +85,223 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          [[ "$SOURCE_REVISION" == "main" || "$SOURCE_REVISION" =~ ^[0-9a-fA-F]{7,40}$ ]] || {
-            echo "source revision must be main or a hexadecimal commit prefix" >&2
-            exit 1
-          }
-          [[ "$SNAPSHOT_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
-            echo "version must match vMAJOR.MINOR.PATCH" >&2
-            exit 1
-          }
+          [[ "$SNAPSHOT_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
           revision="$(git rev-parse --verify HEAD^{commit})"
-          git merge-base --is-ancestor "$revision" refs/remotes/origin/main || {
-            echo "source revision $revision is not reachable from origin/main" >&2
-            exit 1
-          }
+          git merge-base --is-ancestor "$revision" refs/remotes/origin/main
+          [[ "$(sed -n 's/^version: "\([^"\]*\)"/\1/p' CITATION.cff)" == "${SNAPSHOT_VERSION#v}" ]]
           existing_tag_commit="$(git ls-remote origin "refs/tags/$SNAPSHOT_VERSION^{}" | awk '{print $1}')"
           if [[ -z "$existing_tag_commit" ]]; then
             existing_tag_commit="$(git ls-remote origin "refs/tags/$SNAPSHOT_VERSION" | awk '{print $1}')"
           fi
           if [[ -n "$existing_tag_commit" ]]; then
-            [[ "$existing_tag_commit" == "$revision" ]] || {
-              echo "existing tag $SNAPSHOT_VERSION does not identify $revision" >&2
+            [[ "$existing_tag_commit" == "$revision" ]] || { echo "existing tag identifies another revision" >&2; exit 1; }
+            gh release view "$SNAPSHOT_VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 && {
+              echo "release already exists and will not be replaced" >&2
               exit 1
             }
-            if gh release view "$SNAPSHOT_VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-              echo "release $SNAPSHOT_VERSION already exists and will not be replaced" >&2
-              exit 1
-            fi
-          fi
-          cff_version="$(sed -n 's/^version: "\([^"\]*\)"/\1/p' CITATION.cff)"
-          if [[ "$cff_version" != "${SNAPSHOT_VERSION#v}" ]]; then
-            echo "CITATION.cff version $cff_version does not match $SNAPSHOT_VERSION" >&2
-            exit 1
           fi
           release_name="$SNAPSHOT_VERSION"
           case_path="benchmarks/cases"
           candidates="$REQUESTED_CANDIDATES"
-          [[ "$candidates" =~ ^[a-z0-9][a-z0-9-]*(,[a-z0-9][a-z0-9-]*)*$ ]] || {
-            echo "candidates must be a comma-separated list of candidate IDs without whitespace" >&2
-            exit 1
-          }
-          if [[ "$SNAPSHOT_KIND" == "development" ]]; then
-            release_name="$SNAPSHOT_VERSION development snapshot"
-          else
+          [[ "$candidates" =~ ^[a-z0-9][a-z0-9-]*(,[a-z0-9][a-z0-9-]*)*$ ]]
+          if [[ "$SNAPSHOT_KIND" == "evaluation" ]]; then
+            [[ "$EVALUATION_FREEZE" == "real-project-v2" ]] || { echo "only real-project-v2 uses the sharded evaluation path" >&2; exit 1; }
             scope="$(bash scripts/resolve-freeze-scope.sh evaluation "$EVALUATION_FREEZE")"
-            case_path="$(jq -er '.casePath' <<< "$scope")"
+            case_path="$(jq -er .casePath <<< "$scope")"
             candidates="$(jq -er '.candidates | join(",")' <<< "$scope")"
-            [[ "$REQUESTED_CANDIDATES" == "$candidates" ]] || {
-              echo "evaluation candidates must exactly match the Bifrost baseline plus protocol targets: $candidates" >&2
-              exit 1
-            }
+            [[ "$REQUESTED_CANDIDATES" == "$candidates" ]]
+          else
+            release_name="$SNAPSHOT_VERSION development snapshot"
           fi
-          {
-            echo "tag=$SNAPSHOT_VERSION"
-            echo "revision=$revision"
-            echo "snapshot_kind=$SNAPSHOT_KIND"
-            echo "release_name=$release_name"
-            echo "case_path=$case_path"
-            echo "candidates=$candidates"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
-        with:
-          toolchain: stable
-
-      - name: Cache cargo + target
-        uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
-
-      - name: Install exact real-project-v2 candidate tools
-        if: inputs.snapshot_kind == 'evaluation' && inputs.evaluation_freeze == 'real-project-v2'
-        shell: bash
+          printf 'tag=%s\nrevision=%s\nsnapshot_kind=%s\nrelease_name=%s\ncase_path=%s\ncandidates=%s\n' \
+            "$SNAPSHOT_VERSION" "$revision" "$SNAPSHOT_KIND" "$release_name" "$case_path" "$candidates" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - name: Validate harness, corpus, and frozen evidence
         run: |
-          set -euo pipefail
-          tools="$RUNNER_TEMP/usagebench-tools"
-          mkdir -p "$tools/bin" "$tools/jdtls"
-          curl --fail --location --silent --show-error \
-            https://download.eclipse.org/jdtls/snapshots/jdt-language-server-1.61.0-202607142124.tar.gz \
-            --output "$tools/jdtls.tar.gz"
-          echo '4dc0747f22fb86dfada4c9214d3ef94c94f1e84eb57ce52126c26ecf2f17dce4  '"$tools/jdtls.tar.gz" | shasum -a 256 --check
-          tar -xzf "$tools/jdtls.tar.gz" -C "$tools/jdtls"
-          ln -s "$tools/jdtls/bin/jdtls" "$tools/bin/jdtls"
-          curl --fail --location --silent --show-error \
-            https://github.com/rust-lang/rust-analyzer/releases/download/2026-07-13/rust-analyzer-aarch64-apple-darwin.gz \
-            --output "$tools/rust-analyzer.gz"
-          echo '9c6b3ebf06480e2c95a7b01750fa68d77834bffa34da81e4eb00cef3cdff4613  '"$tools/rust-analyzer.gz" | shasum -a 256 --check
-          gzip -dc "$tools/rust-analyzer.gz" > "$tools/bin/rust-analyzer"
-          chmod +x "$tools/bin/rust-analyzer"
-          echo "$tools/bin" >> "$GITHUB_PATH"
-          /usr/bin/clangd --version | grep -F 'Apple clangd version 21.0.0'
-          git clone https://github.com/BrokkAi/bifrost.git "$RUNNER_TEMP/bifrost"
-          git -C "$RUNNER_TEMP/bifrost" cat-file -e a54be9be9b08b9d9ddbab1c471e26d7f8bd932df^{commit}
-
-      - name: Test harness
-        run: cargo test --locked
-
-      - name: Validate benchmark cases
-        run: cargo run --locked -- validate benchmarks/cases
-
-      - name: Validate citation metadata
-        if: runner.os == 'Linux'
-        uses: citation-file-format/cffconvert-github-action@4cf11baa70a673bfdf9dad0acc7ee33b3f4b6084 # 2.0.0
+          cargo test --locked
+          cargo run --locked -- validate benchmarks/cases
+          cargo run --locked -- validate-evaluation benchmarks/cases/evaluation/real-project-v2
+          bash scripts/validate-reproduction-contract.sh
+          python3 -m unittest tests/test_freeze_shards.py
+      - uses: citation-file-format/cffconvert-github-action@4cf11baa70a673bfdf9dad0acc7ee33b3f4b6084 # 2.0.0
         with:
           args: '--validate'
 
-      - name: Install citation validator on macOS
-        if: runner.os == 'macOS'
-        run: |
-          python3 -m venv "$RUNNER_TEMP/cffconvert"
-          "$RUNNER_TEMP/cffconvert/bin/python" -m pip install cffconvert==2.0.0
-
-      - name: Validate citation metadata on macOS
-        if: runner.os == 'macOS'
-        run: '"$RUNNER_TEMP/cffconvert/bin/cffconvert" --validate'
-
-      - name: Run selected candidates and freeze manifest
+  candidate:
+    name: candidate ${{ matrix.shard }}
+    needs: preflight
+    if: needs.preflight.outputs.snapshot_kind == 'evaluation'
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - {shard: bifrost-java, candidate: bifrost, language: java}
+          - {shard: bifrost-rust, candidate: bifrost, language: rust}
+          - {shard: bifrost-cpp, candidate: bifrost, language: cpp}
+          - {shard: eclipse-jdtls-java, candidate: eclipse-jdtls, language: java}
+          - {shard: rust-analyzer-rust, candidate: rust-analyzer, language: rust}
+          - {shard: apple-clangd-21-cpp, candidate: apple-clangd-21, language: cpp}
+    runs-on: ${{ inputs.evaluation_runner }}
+    permissions:
+      contents: read
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ needs.preflight.outputs.revision }}
+          lfs: true
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - name: Install exact candidate tool
         shell: bash
         env:
-          SNAPSHOT_KIND: ${{ steps.identity.outputs.snapshot_kind }}
-          SNAPSHOT_VERSION: ${{ steps.identity.outputs.tag }}
-          CANDIDATES: ${{ steps.identity.outputs.candidates }}
-          CASE_PATH: ${{ steps.identity.outputs.case_path }}
-          REVISION: ${{ steps.identity.outputs.revision }}
-          NATIVE_BIFROST_REPO: ${{ inputs.snapshot_kind == 'evaluation' && inputs.evaluation_freeze == 'real-project-v2' && format('{0}/bifrost', runner.temp) || '' }}
+          CANDIDATE: ${{ matrix.candidate }}
         run: |
           set -euo pipefail
-          scripts/stage-release-bundle.sh \
-            "$GITHUB_WORKSPACE" \
-            "$RUNNER_TEMP/freeze-corpus" \
-            "$SNAPSHOT_VERSION" \
-            "$REVISION"
-          if [[ "$SNAPSHOT_KIND" == "evaluation" ]]; then
-            cargo run --locked -- validate-evaluation "$RUNNER_TEMP/freeze-corpus/$CASE_PATH"
+          tools="$RUNNER_TEMP/usagebench-tools"
+          mkdir -p "$tools/bin"
+          if [[ "$CANDIDATE" == "eclipse-jdtls" ]]; then
+            mkdir -p "$tools/jdtls"
+            curl --fail --location --silent --show-error https://download.eclipse.org/jdtls/snapshots/jdt-language-server-1.61.0-202607142124.tar.gz --output "$tools/jdtls.tar.gz"
+            echo '4dc0747f22fb86dfada4c9214d3ef94c94f1e84eb57ce52126c26ecf2f17dce4  '"$tools/jdtls.tar.gz" | shasum -a 256 --check
+            tar -xzf "$tools/jdtls.tar.gz" -C "$tools/jdtls"
+            ln -s "$tools/jdtls/bin/jdtls" "$tools/bin/jdtls"
+          elif [[ "$CANDIDATE" == "rust-analyzer" ]]; then
+            curl --fail --location --silent --show-error https://github.com/rust-lang/rust-analyzer/releases/download/2026-07-13/rust-analyzer-aarch64-apple-darwin.gz --output "$tools/rust-analyzer.gz"
+            echo '9c6b3ebf06480e2c95a7b01750fa68d77834bffa34da81e4eb00cef3cdff4613  '"$tools/rust-analyzer.gz" | shasum -a 256 --check
+            gzip -dc "$tools/rust-analyzer.gz" > "$tools/bin/rust-analyzer"
+            chmod +x "$tools/bin/rust-analyzer"
+          elif [[ "$CANDIDATE" == "apple-clangd-21" ]]; then
+            /usr/bin/clangd --version | grep -F 'Apple clangd version 21.0.0'
           else
-            rm -rf -- "$RUNNER_TEMP/freeze-corpus/benchmarks/cases/evaluation"
+            git clone https://github.com/BrokkAi/bifrost.git "$RUNNER_TEMP/bifrost"
+            git -C "$RUNNER_TEMP/bifrost" cat-file -e a54be9be9b08b9d9ddbab1c471e26d7f8bd932df^{commit}
           fi
-          scripts/run-freeze-candidates.sh \
-            "$GITHUB_WORKSPACE" \
-            "$GITHUB_WORKSPACE/adapters/candidates.json" \
-            "$CANDIDATES" \
-            "$RUNNER_TEMP/freeze-corpus" \
-            "$CASE_PATH" \
-            "$RUNNER_TEMP/freeze-evidence" \
-            "$REVISION"
-
-      - name: Generate public result fragments from frozen reports
+          echo "$tools/bin" >> "$GITHUB_PATH"
+      - name: Run bounded candidate shard
         shell: bash
+        env:
+          SNAPSHOT_KIND: evaluation
+          SNAPSHOT_VERSION: ${{ needs.preflight.outputs.tag }}
+          REVISION: ${{ needs.preflight.outputs.revision }}
+          CANDIDATE: ${{ matrix.candidate }}
+          LANGUAGE: ${{ matrix.language }}
+          NATIVE_BIFROST_REPO: ${{ matrix.candidate == 'bifrost' && format('{0}/bifrost', runner.temp) || '' }}
+          FREEZE_SHARD_ONLY: '1'
+          FREEZE_SHARD_LANGUAGE: ${{ matrix.language }}
         run: |
           set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shard"
+          scripts/stage-release-bundle.sh . "$RUNNER_TEMP/freeze-corpus" "$SNAPSHOT_VERSION" "$REVISION"
+          echo "starting $CANDIDATE/$LANGUAGE at $(date -u +%FT%TZ)" | tee "$RUNNER_TEMP/shard/progress.log"
+          scripts/run-freeze-candidates.sh . adapters/candidates.json "$CANDIDATE" "$RUNNER_TEMP/freeze-corpus" \
+            benchmarks/cases/evaluation/real-project-v2 "$RUNNER_TEMP/shard-output" "$REVISION" 2>&1 | tee -a "$RUNNER_TEMP/shard/progress.log"
+          python3 scripts/freeze-shards.py metadata --version "$SNAPSHOT_VERSION" --revision "$REVISION" \
+            --shard "${{ matrix.shard }}" --report "$RUNNER_TEMP/shard-output/$CANDIDATE.json" \
+            --output "$RUNNER_TEMP/shard/metadata.json"
+      - name: Upload checksum-bound shard
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: freeze-shard-${{ matrix.shard }}
+          path: ${{ runner.temp }}/shard
+          if-no-files-found: warn
+          retention-days: 90
+
+  development:
+    name: run development snapshot
+    needs: preflight
+    if: needs.preflight.outputs.snapshot_kind == 'development'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ needs.preflight.outputs.revision }}
+          lfs: true
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - name: Run existing development freeze path
+        shell: bash
+        env:
+          SNAPSHOT_KIND: development
+          SNAPSHOT_VERSION: ${{ needs.preflight.outputs.tag }}
+          REVISION: ${{ needs.preflight.outputs.revision }}
+          CANDIDATES: ${{ needs.preflight.outputs.candidates }}
+        run: |
+          set -euo pipefail
+          scripts/stage-release-bundle.sh . "$RUNNER_TEMP/freeze-corpus" "$SNAPSHOT_VERSION" "$REVISION"
+          rm -rf -- "$RUNNER_TEMP/freeze-corpus/benchmarks/cases/evaluation"
+          scripts/run-freeze-candidates.sh . adapters/candidates.json "$CANDIDATES" "$RUNNER_TEMP/freeze-corpus" \
+            benchmarks/cases "$RUNNER_TEMP/freeze-evidence" "$REVISION"
           mkdir -p "$RUNNER_TEMP/freeze-corpus/evidence"
           cp "$RUNNER_TEMP/freeze-evidence"/*.json "$RUNNER_TEMP/freeze-corpus/evidence/"
-          cargo run --locked -- generate-results \
-            --manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.json" \
-            --output-directory "$RUNNER_TEMP/freeze-results"
+          cargo run --locked -- generate-results --manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.json" --output-directory "$RUNNER_TEMP/freeze-results"
+          stage="usagebench-$SNAPSHOT_VERSION"
+          scripts/stage-release-bundle.sh . "dist/$stage" "$SNAPSHOT_VERSION" "$REVISION" "$RUNNER_TEMP/freeze-evidence" "$RUNNER_TEMP/freeze-results"
+          tar -C dist -czf "dist/$stage.tar.gz" "$stage"
+          (cd dist && shasum -a 256 "$stage.tar.gz" > "$stage.tar.gz.sha256")
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: freeze-release-assets
+          path: |
+            dist/*.tar.gz
+            dist/*.sha256
+          if-no-files-found: error
+          retention-days: 90
 
-      - name: Stage release evidence bundle
+  aggregate:
+    name: verify and aggregate six candidate shards
+    needs: [preflight, candidate]
+    if: needs.preflight.outputs.snapshot_kind == 'evaluation'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    outputs:
+      tag: ${{ needs.preflight.outputs.tag }}
+      revision: ${{ needs.preflight.outputs.revision }}
+      snapshot_kind: ${{ needs.preflight.outputs.snapshot_kind }}
+      release_name: ${{ needs.preflight.outputs.release_name }}
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ needs.preflight.outputs.revision }}
+          lfs: true
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: freeze-shard-*
+          path: ${{ runner.temp }}/shards
+      - name: Reject partial, duplicate, stale, or mismatched evidence
         shell: bash
         env:
-          RELEASE_TAG: ${{ steps.identity.outputs.tag }}
-          RELEASE_COMMIT: ${{ steps.identity.outputs.revision }}
+          SNAPSHOT_VERSION: ${{ needs.preflight.outputs.tag }}
+          REVISION: ${{ needs.preflight.outputs.revision }}
         run: |
           set -euo pipefail
-          stage="usagebench-${RELEASE_TAG}"
-          scripts/stage-release-bundle.sh \
-            . "dist/$stage" "$RELEASE_TAG" "$RELEASE_COMMIT" \
-            "$RUNNER_TEMP/freeze-evidence" "$RUNNER_TEMP/freeze-results"
+          python3 scripts/freeze-shards.py aggregate --version "$SNAPSHOT_VERSION" --revision "$REVISION" \
+            --artifacts "$RUNNER_TEMP/shards" --output "$RUNNER_TEMP/freeze-evidence"
+          scripts/stage-release-bundle.sh . "$RUNNER_TEMP/freeze-corpus" "$SNAPSHOT_VERSION" "$REVISION"
+          cargo run --locked -- freeze-manifest --snapshot-kind evaluation --version "$SNAPSHOT_VERSION" --revision "$REVISION" \
+            --candidates-file adapters/candidates.json --candidates bifrost,eclipse-jdtls,rust-analyzer,apple-clangd-21 \
+            --report "$RUNNER_TEMP/freeze-evidence/bifrost.json" --report "$RUNNER_TEMP/freeze-evidence/eclipse-jdtls.json" \
+            --report "$RUNNER_TEMP/freeze-evidence/rust-analyzer.json" --report "$RUNNER_TEMP/freeze-evidence/apple-clangd-21.json" \
+            --evaluation-corpus "$RUNNER_TEMP/freeze-corpus/benchmarks/cases/evaluation/real-project-v2" \
+            --output "$RUNNER_TEMP/freeze-evidence/freeze-manifest.json"
+          mkdir -p "$RUNNER_TEMP/freeze-corpus/evidence"
+          cp "$RUNNER_TEMP/freeze-evidence"/*.json "$RUNNER_TEMP/freeze-corpus/evidence/"
+          cargo run --locked -- generate-results --manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.json" --output-directory "$RUNNER_TEMP/freeze-results"
+          stage="usagebench-$SNAPSHOT_VERSION"
+          scripts/stage-release-bundle.sh . "dist/$stage" "$SNAPSHOT_VERSION" "$REVISION" "$RUNNER_TEMP/freeze-evidence" "$RUNNER_TEMP/freeze-results"
           tar -C dist -czf "dist/$stage.tar.gz" "$stage"
-          (
-            cd dist
-            shasum -a 256 "$stage.tar.gz" > "$stage.tar.gz.sha256"
-          )
-
-      - name: Upload immutable release evidence
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+          (cd dist && shasum -a 256 "$stage.tar.gz" > "$stage.tar.gz.sha256")
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: freeze-release-assets
           path: |
@@ -283,81 +312,52 @@ jobs:
 
   publish:
     name: approve, tag, and publish
-    needs: prepare
+    needs: [preflight, development, aggregate]
+    if: always() && (needs.development.result == 'success' || needs.aggregate.result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     environment: release
     timeout-minutes: 20
     steps:
-      - name: Checkout frozen revision
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
-          ref: ${{ needs.prepare.outputs.revision }}
+          ref: ${{ needs.preflight.outputs.revision }}
           fetch-depth: 0
           lfs: true
           persist-credentials: false
-
-      - name: Download release assets before tagging
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: freeze-release-assets
-          path: dist
-
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with: {name: freeze-release-assets, path: dist}
       - name: Verify release assets before tagging
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t checksum_files < <(find dist -maxdepth 1 -type f -name '*.sha256' -print)
-          [[ "${#checksum_files[@]}" -eq 1 ]] || {
-            echo "expected exactly one freeze checksum file" >&2
-            exit 1
-          }
-          (
-            cd dist
-            sha256sum --check "$(basename "${checksum_files[0]}")"
-          )
-
-      - name: Recheck and create immutable annotated tag
+          mapfile -t sums < <(find dist -maxdepth 1 -type f -name '*.sha256' -print)
+          [[ "${#sums[@]}" -eq 1 ]]
+          (cd dist && sha256sum --check "$(basename "${sums[0]}")")
+      - name: Create immutable annotated tag
         shell: bash
         env:
-          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
-          RELEASE_REVISION: ${{ needs.prepare.outputs.revision }}
-          SNAPSHOT_KIND: ${{ needs.prepare.outputs.snapshot_kind }}
+          RELEASE_TAG: ${{ needs.preflight.outputs.tag }}
+          RELEASE_REVISION: ${{ needs.preflight.outputs.revision }}
+          SNAPSHOT_KIND: ${{ needs.preflight.outputs.snapshot_kind }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          existing_tag_commit="$(git ls-remote origin "refs/tags/$RELEASE_TAG^{}" | awk '{print $1}')"
-          if [[ -z "$existing_tag_commit" ]]; then
-            existing_tag_commit="$(git ls-remote origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')"
-          fi
-          if [[ -n "$existing_tag_commit" ]]; then
-            [[ "$existing_tag_commit" == "$RELEASE_REVISION" ]] || {
-              echo "existing tag $RELEASE_TAG does not identify the frozen revision" >&2
-              exit 1
-            }
+          [[ "$(git rev-parse HEAD)" == "$RELEASE_REVISION" ]]
+          existing="$(git ls-remote origin "refs/tags/$RELEASE_TAG^{}" | awk '{print $1}')"
+          if [[ -z "$existing" ]]; then existing="$(git ls-remote origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')"; fi
+          if [[ -n "$existing" ]]; then
+            [[ "$existing" == "$RELEASE_REVISION" ]] || { echo "tag identifies another revision" >&2; exit 1; }
             echo "reusing verified recovery tag $RELEASE_TAG"
             exit 0
           fi
-          [[ "$(git rev-parse HEAD)" == "$RELEASE_REVISION" ]] || {
-            echo "checkout does not match frozen revision" >&2
-            exit 1
-          }
-          tag_object="$(gh api --method POST "repos/$GITHUB_REPOSITORY/git/tags" \
-            -f tag="$RELEASE_TAG" \
-            -f message="UsageBench $SNAPSHOT_KIND snapshot $RELEASE_TAG" \
-            -f object="$RELEASE_REVISION" \
-            -f type=commit \
-            --jq .sha)"
-          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
-            -f ref="refs/tags/$RELEASE_TAG" \
-            -f sha="$tag_object" >/dev/null
-
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3
+          object="$(gh api --method POST "repos/$GITHUB_REPOSITORY/git/tags" -f tag="$RELEASE_TAG" -f message="UsageBench $SNAPSHOT_KIND snapshot $RELEASE_TAG" -f object="$RELEASE_REVISION" -f type=commit --jq .sha)"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$RELEASE_TAG" -f sha="$object" >/dev/null
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3
         with:
-          tag_name: ${{ needs.prepare.outputs.tag }}
-          name: ${{ needs.prepare.outputs.release_name }}
+          tag_name: ${{ needs.preflight.outputs.tag }}
+          name: ${{ needs.preflight.outputs.release_name }}
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |

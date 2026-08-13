@@ -57,6 +57,7 @@ pub struct RunBifrostOptions {
     pub scan_usages_max_duration_secs: u64,
     pub keep_worktrees: bool,
     pub case_id: Option<String>,
+    pub language: Option<String>,
 }
 
 impl RunBifrostOptions {
@@ -75,6 +76,7 @@ impl RunBifrostOptions {
             scan_usages_max_duration_secs: DEFAULT_SCAN_USAGES_MAX_DURATION_SECS,
             keep_worktrees: false,
             case_id: None,
+            language: None,
         }
     }
 }
@@ -113,7 +115,15 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         })
         .collect::<Result<Vec<_>>>()?;
     let requested_totals = requested_run_totals(
-        benchmark_documents.iter().map(|(_, document)| document),
+        benchmark_documents
+            .iter()
+            .filter(|(_, document)| {
+                options
+                    .language
+                    .as_ref()
+                    .is_none_or(|language| &document.language == language)
+            })
+            .map(|(_, document)| document),
         options.include_unsupported,
         options.case_id.as_deref(),
     );
@@ -192,9 +202,15 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         bifrost_resolved_commit.clone(),
         bifrost_source.clone(),
     );
-    let requested_case_files = case_files
+    let requested_case_files = benchmark_documents
         .iter()
-        .map(|path| report_case_path(path, &repo_root))
+        .filter(|(_, document)| {
+            options
+                .language
+                .as_ref()
+                .is_none_or(|language| &document.language == language)
+        })
+        .map(|(path, _)| report_case_path(path, &repo_root))
         .collect();
 
     let mut report = BifrostRunReport {
@@ -228,6 +244,13 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         write_report_atomic(&partial_report_path(output), &report)?;
     }
     for (case_file, document) in &benchmark_documents {
+        if options
+            .language
+            .as_ref()
+            .is_some_and(|language| &document.language != language)
+        {
+            continue;
+        }
         let source_root =
             match crate::evaluation::materialized_source_root(document, &repo_root, &work_dir)? {
                 Some(source_root) => source_root,
