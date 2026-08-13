@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-3",
+  "caseId": "ts-parity-type-only-interface-import",
+  "language": "typescript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "eb2392e236c01ee453711d48f26d6591e21cbe36dd10be07279f509b55e36716"
+  },
+  "reviewProfile": "navigation_v1",
+  "queries": [
+    {
+      "queryId": "query-1",
+      "operation": "type_definition",
+      "query": {
+        "uri": "benchmark://source/src/app.ts",
+        "range": {
+          "start": {
+            "line": 4,
+            "character": 6
+          },
+          "end": {
+            "line": 4,
+            "character": 10
+          }
+        }
+      },
+      "displayName": "user",
+      "kind": "variable"
+    }
+  ]
+}
