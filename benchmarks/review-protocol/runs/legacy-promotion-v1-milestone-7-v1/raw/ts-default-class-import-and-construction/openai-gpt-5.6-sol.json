@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m7_openai_typescript",
+    "executedAt": "2026-08-13T14:13:35Z"
+  },
+  "records": [
+    {
+      "caseId": "ts-default-class-import-and-construction",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/components.tsx",
+        "range": {
+          "start": { "line": 10, "character": 21 },
+          "end": { "line": 10, "character": 28 }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/app.tsx",
+            "range": {
+              "start": { "line": 0, "character": 7 },
+              "end": { "line": 0, "character": 14 }
+            }
+          },
+          "classification": "optional",
+          "rationale": "This default import binding explicitly binds the declared class and is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/app.tsx",
+            "range": {
+              "start": { "line": 4, "character": 20 },
+              "end": { "line": 4, "character": 27 }
+            }
+          },
+          "classification": "required",
+          "rationale": "This constructor expression directly instantiates the imported default Greeter class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/components.tsx",
+            "range": {
+              "start": { "line": 23, "character": 22 },
+              "end": { "line": 23, "character": 29 }
+            }
+          },
+          "classification": "required",
+          "rationale": "This constructor expression directly instantiates the declared Greeter class within the declaring module."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/app.tsx",
+        "range": {
+          "start": { "line": 4, "character": 20 },
+          "end": { "line": 4, "character": 27 }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/app.tsx",
+        "source/src/components.tsx",
+        "source/src/http.ts"
+      ],
+      "rationale": "The complete fixture contains two constructor references to the default-exported Greeter class. The explicit default import binding is optional by policy; no other identifier token resolves to this declaration."
+    }
+  ]
+}

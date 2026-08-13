@@ -59,9 +59,17 @@ and its declaration target; they do not reinterpret the expression as a textual
 usage of the type name. Unsupported candidate capability remains an execution
 status and never changes this source-derived contract.
 
-Validate the first adjudicated milestone with:
+The currently completed tranche contains milestones 1 through 7: 77 balanced-core
+cases, 154 fresh provider-native sessions, mechanical comparison, and accountable
+human adjudication. Milestones 8 through 10 remain part of the frozen cohort but
+are deferred to a follow-up execution issue. This tranche is mergeable reviewed
+evidence; it is not the final 110-case `legacy_promoted` manifest and does not
+change the immutable `N = 10` denominator.
+
+Validate each adjudicated milestone with:
 
 ```bash
-python3 scripts/validate-legacy-promotion-milestone.py \
-  benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/run.json
+for run in benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-*/run.json; do
+  python3 scripts/validate-legacy-promotion-milestone.py "$run"
+done
 ```
