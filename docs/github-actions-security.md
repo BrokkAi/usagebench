@@ -12,6 +12,10 @@ that must be configured in GitHub. The settings snapshot below was observed on
 - `benchmark.yml`, `docs.yml`, and `freeze.yml` accept manual or scheduled work
   only from `refs/heads/main`. User inputs are passed through action inputs or
   environment variables rather than interpolated into shell programs.
+- The `real-project-v2` freeze may select an explicitly approved repository
+  runner label. The input accepts only `macos-26` or a random, one-job label
+  matching `usagebench-ephemeral-macos-arm64-<32 lowercase hex characters>`;
+  no pull-request workflow can select that label.
 - `release.yml` accepts a verified release tag or a manual dispatch from
   `refs/heads/main`. The read-only build job must prove that the tag commit is
   reachable from `main` before the environment-gated job receives
@@ -37,23 +41,29 @@ token fallback.
 As of the snapshot date:
 
 - Actions are enabled with `allowed_actions: selected`. The allowlist contains
-  only the action families currently referenced by the workflows, but
-  `sha_pinning_required` is `false`.
-- The default workflow token permission is `write`; workflows do not have
+  only the action families currently referenced by the workflows, and
+  `sha_pinning_required` is `true`.
+- The default workflow token permission is `read`; workflows do not have
   permission to approve pull-request reviews.
 - All external contributors require approval before their pull-request
   workflows run.
-- The repository has no registered self-hosted runners. Organization runner
-  groups were not observable with the available `read:org`/repository token;
-  the API required organization-runner administration permission.
-- The `release` environment has no protection rules or deployment branch/tag
-  policy, and administrators may bypass it.
+- The repository has one manually launched, repository-scoped, ephemeral
+  macOS ARM64 runner. It has no generic `self-hosted` label, uses a random
+  one-job label, and is not installed as a service. Organization runner groups
+  remain unavailable to the current repository administrator; moving this
+  workload to a dedicated organization group or AWS-backed ephemeral runners
+  remains the intended follow-up.
+- The `release` environment requires review by `DavidBakerEffendi`, permits
+  that sole reviewer to approve their own deployment, rejects all refs except
+  `main` and `v*.*.*` tags, and does not allow administrator bypass.
 - The `github-pages` environment allows only the `main` branch through a custom
-  deployment policy. It has no required reviewer and administrators may bypass
-  it.
+  deployment policy. It has no required reviewer and does not allow
+  administrator bypass.
 - The active default-branch ruleset prevents deletion and non-fast-forward
-  updates, but does not require pull requests or status checks. Organization
-  administrators and the configured repository role may bypass it.
+  updates; requires a pull request, one approval, dismissal of stale approvals,
+  and resolved review threads; and requires the four current check contexts.
+  Organization administrators and the configured repository role may bypass
+  only through a pull request.
 - The repository exposes one Actions secret name,
   `SLACK_DAILY_USAGEBENCH_WEBHOOK_URL`; neither environment exposes an
   environment-secret name. Secret values are never observable through the API.
@@ -62,30 +72,22 @@ As of the snapshot date:
 
 ## Recommended administrative settings
 
-These changes affect collaborator or release authority and require an explicit
-owner decision before they are applied:
+The remaining changes affect collaborator or release authority and require an
+explicit owner decision before they are applied:
 
-1. Set **Workflow permissions** to **Read repository contents and packages**;
-   keep **Allow GitHub Actions to create and approve pull requests** disabled.
-2. Keep **Allow select actions** and enable **Require actions to be pinned to a
-   full-length commit SHA**. Retain only action families referenced by the
-   repository workflows.
-3. Protect the `release` environment with at least one maintainer reviewer who
-   is not the deployment initiator, disable administrator bypass, and add
-   custom deployment policies for branch `main` and tag pattern `v*.*.*`.
-4. Retain the `github-pages` `main`-only branch policy; add a maintainer reviewer
-   and disable administrator bypass if Pages publication needs independent
-   approval.
-5. Extend the `main` ruleset to require pull requests and the exact current
-   check contexts `usagebench`, `validate reproduction contract`,
-   `bifrost reference image`, and `gopls reference image`. Require dismissal of
-   stale approvals and conversation resolution, and limit bypass to a narrowly
-   held emergency role.
+1. Move the temporary repository runner into a dedicated organization runner
+   group, or replace it with AWS-backed ephemeral runners, with access limited
+   to this repository and trusted workflow paths.
+2. Add an independent `github-pages` reviewer if Pages publication needs a
+   second approval boundary.
+3. Revisit the deliberate sole-reviewer/self-review release policy when another
+   maintainer is available.
 
 ## Future self-hosted runners
 
-Do not register or route a runner as part of workflow maintenance alone. Before
-introducing one:
+The temporary repository runner is a deliberate, manually authorized exception
+for the trusted `real-project-v2` freeze. It must remain single-job and
+repository-scoped until it is replaced. For the durable runner design:
 
 1. Create a dedicated organization runner group with repository access limited
    to `BrokkAi/usagebench`. If the GitHub plan supports workflow restrictions,

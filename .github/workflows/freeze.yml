@@ -30,6 +30,11 @@ on:
         required: true
         default: 'real-project-v2'
         type: string
+      evaluation_runner:
+        description: 'Exact runner label for real-project-v2 (macos-26 or an approved one-job repository label)'
+        required: true
+        default: 'macos-26'
+        type: string
 permissions: {}
 
 concurrency:
@@ -40,7 +45,7 @@ jobs:
   prepare:
     name: validate and freeze evidence
     if: github.ref == 'refs/heads/main'
-    runs-on: ${{ inputs.snapshot_kind == 'evaluation' && inputs.evaluation_freeze == 'real-project-v2' && 'macos-26' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.snapshot_kind == 'evaluation' && inputs.evaluation_freeze == 'real-project-v2' && inputs.evaluation_runner || 'ubuntu-latest' }}
     permissions:
       contents: read
     timeout-minutes: 360
@@ -52,6 +57,18 @@ jobs:
       case_path: ${{ steps.identity.outputs.case_path }}
       candidates: ${{ steps.identity.outputs.candidates }}
     steps:
+      - name: Validate evaluation runner label
+        if: inputs.snapshot_kind == 'evaluation' && inputs.evaluation_freeze == 'real-project-v2'
+        shell: bash
+        env:
+          EVALUATION_RUNNER: ${{ inputs.evaluation_runner }}
+        run: |
+          set -euo pipefail
+          [[ "$EVALUATION_RUNNER" == "macos-26" || "$EVALUATION_RUNNER" =~ ^usagebench-ephemeral-macos-arm64-[0-9a-f]{32}$ ]] || {
+            echo "evaluation runner must be macos-26 or an approved one-job repository label" >&2
+            exit 1
+          }
+
       - name: Validate source revision input
         shell: bash
         env:

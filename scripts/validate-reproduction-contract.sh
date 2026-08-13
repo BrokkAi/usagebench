@@ -6,6 +6,7 @@ registry="$repo_root/adapters/candidates.json"
 reference_manifest="$repo_root/containers/reference/v1/manifest.json"
 workflow="$repo_root/.github/workflows/reference-environments.yml"
 scope_resolver="$repo_root/scripts/resolve-freeze-scope.sh"
+freeze_workflow="$repo_root/.github/workflows/freeze.yml"
 
 python3 "$repo_root/scripts/build-real-project-v1-publication-review.py" --check
 python3 "$repo_root/scripts/build-real-project-v2-publication-review.py" --check
@@ -71,17 +72,25 @@ development_candidates="$(jq -c '.candidates' <<< "$development_scope")"
   echo "evaluation v2 candidate scope does not match Bifrost plus protocol targets" >&2
   exit 1
 }
-grep -Fq 'scripts/resolve-freeze-scope.sh evaluation' "$repo_root/.github/workflows/freeze.yml" || {
+grep -Fq 'scripts/resolve-freeze-scope.sh evaluation' "$freeze_workflow" || {
   echo "freeze workflow does not consume the shared scope resolver" >&2
   exit 1
 }
+grep -Fq "default: 'macos-26'" "$freeze_workflow" || {
+  echo "evaluation freeze does not default to the GitHub-hosted macOS 26 runner" >&2
+  exit 1
+}
+grep -Fq '^usagebench-ephemeral-macos-arm64-[0-9a-f]{32}$' "$freeze_workflow" || {
+  echo "evaluation freeze does not constrain one-job repository runner labels" >&2
+  exit 1
+}
 grep -Fq 'rm -rf -- "$RUNNER_TEMP/freeze-corpus/benchmarks/cases/evaluation"' \
-  "$repo_root/.github/workflows/freeze.yml" || {
+  "$freeze_workflow" || {
   echo "development freeze does not exclude the evaluation partition" >&2
   exit 1
 }
 grep -Fq -- '--manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.json"' \
-  "$repo_root/.github/workflows/freeze.yml" || {
+  "$freeze_workflow" || {
   echo "result generation does not validate against the staged release root" >&2
   exit 1
 }
