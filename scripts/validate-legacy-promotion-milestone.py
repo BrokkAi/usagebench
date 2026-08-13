@@ -193,7 +193,10 @@ def main() -> None:
         if set(packet) != allowed_packet_keys or packet["caseId"] != case_id or packet["language"] != case["language"]:
             fail(f"packet shape/identity mismatch: {case_id}")
         source_document = root / inventory["document"]
-        fixture_match = re.search(r"(?m)^  path: (fixtures/[^\n]+)$", source_document.read_text())
+        fixture_match = re.search(
+            r"(?m)(?:^  path: |\bpath:\s*)(fixtures/[^\s,}]+)",
+            source_document.read_text(),
+        )
         if not fixture_match:
             fail(f"cannot resolve fixture source for {case_id}")
         actual_tree = tree_sha256(root / fixture_match.group(1))

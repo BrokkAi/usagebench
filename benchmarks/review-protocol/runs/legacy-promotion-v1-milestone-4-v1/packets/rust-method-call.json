@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-4",
+  "caseId": "rust-method-call",
+  "language": "rust",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "c5ad5ddcfa6b358fd40561655d775b54f318747dc7d671524396dffd03b1ac8e"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/service.rs",
+    "range": {
+      "start": {
+        "line": 23,
+        "character": 11
+      },
+      "end": {
+        "line": 23,
+        "character": 18
+      }
+    }
+  },
+  "displayName": "execute"
+}
