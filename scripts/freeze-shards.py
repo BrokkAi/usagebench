@@ -23,7 +23,7 @@ FROZEN_FILES = [
     "benchmarks/evaluation/real-project-v2/review.json",
     "benchmarks/evaluation/real-project-v2/sources.json",
     "benchmarks/evaluation/real-project-v2/declarations.json",
-    "adapters/candidates.json",
+    "benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json",
 ]
 
 
@@ -45,7 +45,9 @@ def identity(root, version, revision, shard):
     hashes = {name: digest(root / name) for name in FROZEN_FILES}
     for name in expected_files(root, language):
         hashes[name] = digest(root / name)
-    registry = json.loads((root / "adapters/candidates.json").read_text())
+    registry = json.loads(
+        (root / "benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json").read_text()
+    )
     profile = next(item for item in registry["candidates"] if item["id"] == candidate)
     return {
         "schemaVersion": 1,

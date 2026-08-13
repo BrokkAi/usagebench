@@ -7,11 +7,35 @@ reference_manifest="$repo_root/containers/reference/v1/manifest.json"
 workflow="$repo_root/.github/workflows/reference-environments.yml"
 scope_resolver="$repo_root/scripts/resolve-freeze-scope.sh"
 freeze_workflow="$repo_root/.github/workflows/freeze.yml"
+v030_registry="$repo_root/benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json"
 
 python3 "$repo_root/scripts/build-real-project-v1-publication-review.py" --check
 python3 "$repo_root/scripts/build-real-project-v2-publication-review.py" --check
 
 jq -e '.schemaVersion == 3' "$registry" >/dev/null
+jq -e '.schemaVersion == 3' "$v030_registry" >/dev/null
+jq -e '
+  [.candidates[] | select(.id == "bifrost")]
+  == [{
+    "id": "bifrost",
+    "runner": "bifrost",
+    "name": "Bifrost",
+    "requestedVersion": "v0.8.8",
+    "source": "https://github.com/BrokkAi/bifrost",
+    "revision": "a54be9be9b08b9d9ddbab1c471e26d7f8bd932df",
+    "advertised": true,
+    "referenceRunner": "bifrost",
+    "runtimeNetworking": "disabled",
+    "projectHydration": "fixture sources are staged in the released corpus"
+  }]
+' "$v030_registry" >/dev/null
+jq -e '
+  [.candidates[] | select(
+    .id == "bifrost"
+    and .requestedVersion == "v0.9.3"
+    and .revision == "30dacd4778b9e042bf55ed5e519e8780293f07a1"
+  )] | length == 1
+' "$registry" >/dev/null
 
 while IFS=$'\t' read -r candidate_id reference_runner; do
   [[ -n "$reference_runner" ]] || {
@@ -99,6 +123,10 @@ grep -Fq 'python3 scripts/freeze-shards.py aggregate' "$freeze_workflow" || {
   echo "freeze workflow does not verify shard identity and coverage before aggregation" >&2
   exit 1
 }
+grep -Fq 'benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json' "$freeze_workflow" || {
+  echo "v0.3.0 evaluation freeze is not bound to its historical candidate registry" >&2
+  exit 1
+}
 grep -Fq -- '--manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.json"' \
   "$freeze_workflow" || {
   echo "result generation does not validate against the staged release root" >&2
@@ -107,6 +135,15 @@ grep -Fq -- '--manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.jso
 grep -Fq -- '--manifest-path "$corpus_root/Cargo.toml"' \
   "$repo_root/scripts/run-freeze-candidates.sh" || {
   echo "native LSP candidates are not executed from the staged release corpus" >&2
+  exit 1
+}
+grep -Fq -- '--mount "type=bind,src=$corpus_root,dst=/corpus,readonly"' \
+  "$repo_root/scripts/run-reference.sh" || {
+  echo "reference execution no longer protects the released corpus with a read-only mount" >&2
+  exit 1
+}
+grep -Fq 'BIFROST_CACHE_DIR=/work/bifrost-cache' "$repo_root/scripts/run-reference.sh" || {
+  echo "Bifrost reference execution does not relocate generated cache state to writable tmpfs" >&2
   exit 1
 }
 

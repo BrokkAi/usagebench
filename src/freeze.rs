@@ -858,7 +858,7 @@ mod tests {
                 "id": "bifrost",
                 "runner": "bifrost",
                 "name": "Bifrost",
-                "requestedVersion": "v0.8.8",
+                "requestedVersion": "v0.9.3",
                 "source": "https://github.com/BrokkAi/bifrost",
                 "revision": "0123456789abcdef0123456789abcdef01234567",
                 "advertised": true,
@@ -902,7 +902,7 @@ mod tests {
                 "id": "bifrost",
                 "runner": "bifrost",
                 "name": "Bifrost",
-                "requestedVersion": "v0.8.8",
+                "requestedVersion": "v0.9.3",
                 "source": "https://github.com/BrokkAi/bifrost",
                 "revision": "0123456789abcdef0123456789abcdef01234567",
                 "advertised": true,
@@ -1015,6 +1015,39 @@ mod tests {
         }
     }
 
+    #[test]
+    fn v030_evaluation_registry_preserves_frozen_candidate_identities() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let registry = load_registry(
+            &root.join("benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json"),
+        )
+        .unwrap();
+        let bifrost = registry
+            .candidates
+            .iter()
+            .find(|candidate| candidate.id == "bifrost")
+            .unwrap();
+
+        assert_eq!(bifrost.requested_version, "v0.8.8");
+        assert_eq!(
+            bifrost.revision.as_deref(),
+            Some("a54be9be9b08b9d9ddbab1c471e26d7f8bd932df")
+        );
+        assert_eq!(
+            registry
+                .candidates
+                .iter()
+                .map(|candidate| candidate.id.as_str())
+                .collect::<BTreeSet<_>>(),
+            BTreeSet::from([
+                "apple-clangd-21",
+                "bifrost",
+                "eclipse-jdtls",
+                "rust-analyzer",
+            ])
+        );
+    }
+
     fn sample_report() -> serde_json::Value {
         json!({
             "usagebenchVersion": "0.1.0",
@@ -1101,7 +1134,7 @@ mod tests {
             id: "bifrost".to_string(),
             runner: CandidateRunner::Bifrost,
             name: "Bifrost".to_string(),
-            requested_version: "v0.8.8".to_string(),
+            requested_version: "v0.9.3".to_string(),
             source: "https://github.com/BrokkAi/bifrost".to_string(),
             revision: Some("0123456789abcdef0123456789abcdef01234567".to_string()),
             module_checksum: None,
