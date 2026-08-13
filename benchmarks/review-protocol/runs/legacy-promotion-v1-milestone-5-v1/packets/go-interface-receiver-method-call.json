@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-5",
+  "caseId": "go-interface-receiver-method-call",
+  "language": "go",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "93ae84197b0997e75b8a16ed7ce0bbdc2748091d0f2c53c82cc862cc5b94d6c1"
+  },
+  "declaration": {
+    "uri": "benchmark://source/worker/worker.go",
+    "range": {
+      "start": {
+        "line": 7,
+        "character": 1
+      },
+      "end": {
+        "line": 7,
+        "character": 7
+      }
+    }
+  },
+  "displayName": "Record"
+}

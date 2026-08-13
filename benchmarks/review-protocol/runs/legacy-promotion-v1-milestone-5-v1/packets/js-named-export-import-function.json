@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-5",
+  "caseId": "js-named-export-import-function",
+  "language": "javascript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "5e9e3e645e71e74c04c5b9df7f9e6e0a8c429c18755467fc05f0bac4e1ab6056"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/components.js",
+    "range": {
+      "start": {
+        "line": 12,
+        "character": 16
+      },
+      "end": {
+        "line": 12,
+        "character": 26
+      }
+    }
+  },
+  "displayName": "formatName"
+}
