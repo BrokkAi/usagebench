@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m3_openai_javascript",
+    "executedAt": "2026-08-13T08:43:48Z"
+  },
+  "records": [
+    {
+      "caseId": "js-commonjs-exported-member-usage",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/commonjs-request.js",
+        "range": {
+          "start": {
+            "line": 0,
+            "character": 8
+          },
+          "end": {
+            "line": 0,
+            "character": 15
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/commonjs-consumer.js",
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 28
+              },
+              "end": {
+                "line": 2,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The property access request.accepts resolves to the accepts member exported by commonjs-request.js."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/commonjs-consumer.js",
+            "range": {
+              "start": {
+                "line": 5,
+                "character": 17
+              },
+              "end": {
+                "line": 5,
+                "character": 24
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The second property access on the required module object resolves to the same exported accepts member."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/commonjs-request.js",
+            "range": {
+              "start": {
+                "line": 0,
+                "character": 27
+              },
+              "end": {
+                "line": 0,
+                "character": 34
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the name of the assigned function expression; it does not reference the selected exported property declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/commonjs-consumer.js",
+        "range": {
+          "start": {
+            "line": 2,
+            "character": 28
+          },
+          "end": {
+            "line": 2,
+            "character": 35
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/app.js",
+        "source/src/commonjs-consumer.js",
+        "source/src/commonjs-request.js",
+        "source/src/components.js"
+      ],
+      "rationale": "The complete fixture contains two calls through the CommonJS module object to the selected exported member. The same-spelled function-expression name is a separate declaration and has no references in its body."
+    }
+  ]
+}

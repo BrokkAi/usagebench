@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-7",
+  "caseId": "csharp-source-generator-partial-method-call",
+  "language": "csharp",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "e33964249c5905ff18df7851b88ac66618a78496150403d480eae2959324ab45"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/GeneratedConsumer.cs",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 26
+      },
+      "end": {
+        "line": 4,
+        "character": 39
+      }
+    }
+  },
+  "displayName": "GeneratedName"
+}

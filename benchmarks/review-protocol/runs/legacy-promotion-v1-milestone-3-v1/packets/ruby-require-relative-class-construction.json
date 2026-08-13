@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-3",
+  "caseId": "ruby-require-relative-class-construction",
+  "language": "ruby",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "5f22110a5c333e5bb94b123bd9037439988013dd9cdd513e4616550ee3efe7a6"
+  },
+  "declaration": {
+    "uri": "benchmark://source/lib/billing/invoice.rb",
+    "range": {
+      "start": {
+        "line": 6,
+        "character": 8
+      },
+      "end": {
+        "line": 6,
+        "character": 15
+      }
+    }
+  },
+  "displayName": "Invoice"
+}

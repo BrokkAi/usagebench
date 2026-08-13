@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-4",
+  "caseId": "scala-parity-case-class-generated-component-access",
+  "language": "scala",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "eaec09a60c94a478f87086b3b3b2fe5dcf2cc829e3e86824ad32056b25034cd0"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/main/scala/example/Workflow.scala",
+    "range": {
+      "start": {
+        "line": 31,
+        "character": 25
+      },
+      "end": {
+        "line": 31,
+        "character": 30
+      }
+    }
+  },
+  "displayName": "value"
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-7",
+  "caseId": "php-property-access",
+  "language": "php",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "0156af5888015a3ca78aa2d97d4ce6b9d1692b4df8d2987b4abbadc1a9c3fce6"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/Service.php",
+    "range": {
+      "start": {
+        "line": 11,
+        "character": 18
+      },
+      "end": {
+        "line": 11,
+        "character": 23
+      }
+    }
+  },
+  "displayName": "$last"
+}

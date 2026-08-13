@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-4",
+  "caseId": "php-function-import-call",
+  "language": "php",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "f0d4c9036f16689670b170fff8639615a7632642e5396985c3a1da219b246e77"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/Support.php",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 9
+      },
+      "end": {
+        "line": 4,
+        "character": 15
+      }
+    }
+  },
+  "displayName": "format"
+}

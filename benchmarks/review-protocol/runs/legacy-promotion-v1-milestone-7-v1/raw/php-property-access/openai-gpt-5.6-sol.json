@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m7_openai_php",
+    "executedAt": "2026-08-13T14:07:55Z"
+  },
+  "records": [
+    {
+      "caseId": "php-property-access",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/Service.php",
+        "range": {
+          "start": { "line": 11, "character": 18 },
+          "end": { "line": 11, "character": 23 }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/Consumer.php",
+            "range": {
+              "start": { "line": 11, "character": 57 },
+              "end": { "line": 11, "character": 61 }
+            }
+          },
+          "classification": "required",
+          "rationale": "The property fetch on the Repository instance resolves to the declared public Repository::$last property."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/Service.php",
+            "range": {
+              "start": { "line": 15, "character": 15 },
+              "end": { "line": 15, "character": 19 }
+            }
+          },
+          "classification": "required",
+          "rationale": "The assignment through $this writes the declared Repository::$last property."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/Service.php",
+            "range": {
+              "start": { "line": 16, "character": 22 },
+              "end": { "line": 16, "character": 26 }
+            }
+          },
+          "classification": "required",
+          "rationale": "The property fetch through $this reads the declared Repository::$last property."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/Consumer.php",
+        "range": {
+          "start": { "line": 11, "character": 57 },
+          "end": { "line": 11, "character": 61 }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/Consumer.php",
+        "source/src/Service.php"
+      ],
+      "rationale": "The complete fixture has three accesses to Repository::$last: an assignment and read within Repository::save, and a read from Consumer::run. PHP property-access tokens omit the declaration's leading dollar sign."
+    }
+  ]
+}

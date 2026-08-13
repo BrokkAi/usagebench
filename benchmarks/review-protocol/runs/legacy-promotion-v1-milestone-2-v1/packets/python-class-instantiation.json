@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-2",
+  "caseId": "python-class-instantiation",
+  "language": "python",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "6990d8a5b09660e450b96a0be530309e287a0a031ad2085cd33029a537bbb4c2"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/example/service.py",
+    "range": {
+      "start": {
+        "line": 10,
+        "character": 6
+      },
+      "end": {
+        "line": 10,
+        "character": 13
+      }
+    }
+  },
+  "displayName": "Service"
+}

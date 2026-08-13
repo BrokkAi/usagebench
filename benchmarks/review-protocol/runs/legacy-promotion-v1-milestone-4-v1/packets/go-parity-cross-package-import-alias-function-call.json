@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-4",
+  "caseId": "go-parity-cross-package-import-alias-function-call",
+  "language": "go",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "2192d3d68c22e00224a79a586eb34c9745605720ee3bfd9b001cdff71e9c7eaa"
+  },
+  "declaration": {
+    "uri": "benchmark://source/pkg/service/service.go",
+    "range": {
+      "start": {
+        "line": 15,
+        "character": 5
+      },
+      "end": {
+        "line": 15,
+        "character": 14
+      }
+    }
+  },
+  "displayName": "NewWorker"
+}

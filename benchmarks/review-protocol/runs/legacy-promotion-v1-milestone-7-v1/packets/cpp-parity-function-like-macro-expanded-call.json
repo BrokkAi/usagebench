@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-7",
+  "caseId": "cpp-parity-function-like-macro-expanded-call",
+  "language": "cpp",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "274c58a48738994470c62a3a111a5b12c33467e2ef60ffca71a290048631266c"
+  },
+  "declaration": {
+    "uri": "benchmark://source/include/parity.h",
+    "range": {
+      "start": {
+        "line": 44,
+        "character": 19
+      },
+      "end": {
+        "line": 44,
+        "character": 33
+      }
+    }
+  },
+  "displayName": "expanded_label"
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-3",
+  "caseId": "java-service-method-call",
+  "language": "java",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "d9c80a238bbdac0b72ec4264ca00ea0a57990baea4ffc405222818bd40b514fc"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/main/java/example/Service.java",
+    "range": {
+      "start": {
+        "line": 11,
+        "character": 18
+      },
+      "end": {
+        "line": 11,
+        "character": 25
+      }
+    }
+  },
+  "displayName": "execute"
+}

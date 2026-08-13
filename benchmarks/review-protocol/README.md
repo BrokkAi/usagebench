@@ -40,3 +40,36 @@ provenance has not drifted with:
 ```bash
 python3 scripts/build-real-project-v1-publication-review.py --check
 ```
+
+## Retrospective legacy-promotion milestones
+
+Legacy-promotion review proceeds one frozen case per language at a time. Each
+milestone retains the 11 blinded packets, 22 provider-native raw responses,
+provider execution metadata, mechanical comparison, and accountable human
+adjudication before the next selection order begins. It remains
+`retrospectively_selected`; review does not convert the analyzer-informed
+legacy selection into preregistered evidence.
+
+Cases with a declaration-centered References contract continue to use the
+retained v3 usage-review profile. Navigation-only cases use the separate
+`blinded-navigation-review-v1.json` profile. Its packet records one or more
+Declaration, Definition, or Type Definition queries without revealing authored
+targets. In particular, Type Definition reviewers derive the expression's type
+and its declaration target; they do not reinterpret the expression as a textual
+usage of the type name. Unsupported candidate capability remains an execution
+status and never changes this source-derived contract.
+
+The currently completed tranche contains milestones 1 through 7: 77 balanced-core
+cases, 154 fresh provider-native sessions, mechanical comparison, and accountable
+human adjudication. Milestones 8 through 10 remain part of the frozen cohort but
+are deferred to a follow-up execution issue. This tranche is mergeable reviewed
+evidence; it is not the final 110-case `legacy_promoted` manifest and does not
+change the immutable `N = 10` denominator.
+
+Validate each adjudicated milestone with:
+
+```bash
+for run in benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-*/run.json; do
+  python3 scripts/validate-legacy-promotion-milestone.py "$run"
+done
+```

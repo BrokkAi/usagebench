@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-agent:/root/m1_openai_cpp",
+    "executedAt": "2026-08-12T12:10:44Z"
+  },
+  "records": [
+    {
+      "caseId": "cpp-parity-using-alias-constructor",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/include/parity.h",
+        "range": {
+          "start": {
+            "line": 17,
+            "character": 6
+          },
+          "end": {
+            "line": 17,
+            "character": 20
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/include/parity.h",
+            "range": {
+              "start": {
+                "line": 19,
+                "character": 13
+              },
+              "end": {
+                "line": 19,
+                "character": 27
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the ConsoleHandler constructor rather than referring to the ConsoleHandler class declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/include/parity.h",
+            "range": {
+              "start": {
+                "line": 26,
+                "character": 21
+              },
+              "end": {
+                "line": 26,
+                "character": 35
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The type-id on the right side of HandlerAlias directly names the ConsoleHandler class."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/parity.cpp",
+            "range": {
+              "start": {
+                "line": 8,
+                "character": 0
+              },
+              "end": {
+                "line": 8,
+                "character": 14
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The nested-name qualifier selects the ConsoleHandler class scope for the out-of-class constructor definition."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/parity.cpp",
+            "range": {
+              "start": {
+                "line": 8,
+                "character": 16
+              },
+              "end": {
+                "line": 8,
+                "character": 30
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token defines the ConsoleHandler constructor and denotes that constructor rather than the class declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/parity.cpp",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 12
+              },
+              "end": {
+                "line": 10,
+                "character": 26
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The nested-name qualifier directly names the ConsoleHandler class as the scope containing handle."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/include/parity.h",
+        "range": {
+          "start": {
+            "line": 26,
+            "character": 21
+          },
+          "end": {
+            "line": 26,
+            "character": 35
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/include/parity.h",
+        "source/src/main.cpp",
+        "source/src/parity.cpp"
+      ],
+      "rationale": "The complete source contains three identifier tokens outside the selected declaration that refer directly to the ConsoleHandler class: the alias target and two out-of-class member qualifiers. Constructor declaration and definition name tokens denote the distinct constructor, while HandlerAlias uses resolve to the alias declaration rather than directly to ConsoleHandler. No import, re-export, or export binding requires optional classification."
+    }
+  ]
+}

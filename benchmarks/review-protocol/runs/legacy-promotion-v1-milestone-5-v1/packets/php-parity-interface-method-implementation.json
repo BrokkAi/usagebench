@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-5",
+  "caseId": "php-parity-interface-method-implementation",
+  "language": "php",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "06350d541cc55c46e55603d8ced7a566effe7cfb06253cfde0139911f2813d70"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/Contracts/Notifier.php",
+    "range": {
+      "start": {
+        "line": 6,
+        "character": 20
+      },
+      "end": {
+        "line": 6,
+        "character": 26
+      }
+    }
+  },
+  "displayName": "notify"
+}

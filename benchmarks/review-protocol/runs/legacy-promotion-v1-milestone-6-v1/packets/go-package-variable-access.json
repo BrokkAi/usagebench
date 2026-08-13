@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-6",
+  "caseId": "go-package-variable-access",
+  "language": "go",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "bef5919a2228ee57c86b307c18cf27f1da18e36099449b7b80e15e424a128c43"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/example/service.go",
+    "range": {
+      "start": {
+        "line": 8,
+        "character": 4
+      },
+      "end": {
+        "line": 8,
+        "character": 21
+      }
+    }
+  },
+  "displayName": "DefaultRepository"
+}

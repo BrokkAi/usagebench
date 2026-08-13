@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-7",
+  "caseId": "rust-parity-ufcs-trait-method-definition",
+  "language": "rust",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "b1588580ae528637d39b36e4a0294a8f4e78b3e5ae9d1e2e67febdaa3429ec9f"
+  },
+  "reviewProfile": "navigation_v1",
+  "queries": [
+    {
+      "queryId": "query-1",
+      "operation": "definition",
+      "query": {
+        "uri": "benchmark://source/src/lib.rs",
+        "range": {
+          "start": {
+            "line": 19,
+            "character": 17
+          },
+          "end": {
+            "line": 19,
+            "character": 20
+          }
+        }
+      },
+      "displayName": "run",
+      "kind": "method"
+    }
+  ]
+}

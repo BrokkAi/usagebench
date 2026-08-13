@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-5",
+  "caseId": "ts-parity-interface-property-access",
+  "language": "typescript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "eb2392e236c01ee453711d48f26d6591e21cbe36dd10be07279f509b55e36716"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/api.ts",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 2
+      },
+      "end": {
+        "line": 2,
+        "character": 6
+      }
+    }
+  },
+  "displayName": "name"
+}

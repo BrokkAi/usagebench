@@ -1,0 +1,592 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "legacy-promotion-v1-milestone-5",
+  "adjudicator": {
+    "identity": "DavidBakerEffendi",
+    "adjudicatedAt": "2026-08-13T10:25:54Z",
+    "attestation": "Approved all M5 recommendations after review of provider agreements, disagreements, authored-contract context, and reasoned recommendations in Codex task 019fd639-253c-7d70-b052-162306154b5d."
+  },
+  "cases": [
+    {
+      "caseId": "cpp-parity-concrete-override-method-call",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "openai_with_semantic_boundary",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/include/parity.h",
+        "range": {
+          "start": {
+            "line": 20,
+            "character": 16
+          },
+          "end": {
+            "line": 20,
+            "character": 22
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/main.cpp",
+          "range": {
+            "start": {
+              "line": 9,
+              "character": 26
+            },
+            "end": {
+              "line": 9,
+              "character": 32
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/main.cpp",
+        "range": {
+          "start": {
+            "line": 9,
+            "character": 26
+          },
+          "end": {
+            "line": 9,
+            "character": 32
+          }
+        }
+      },
+      "rationale": "The out-of-line override body is a definition, not a usage; retain only the concrete call."
+    },
+    {
+      "caseId": "csharp-method-call",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "anthropic_with_source_range_verification",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/Service.cs",
+        "range": {
+          "start": {
+            "line": 27,
+            "character": 18
+          },
+          "end": {
+            "line": 27,
+            "character": 25
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/Consumer.cs",
+          "range": {
+            "start": {
+              "line": 8,
+              "character": 29
+            },
+            "end": {
+              "line": 8,
+              "character": 36
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/Consumer.cs",
+        "range": {
+          "start": {
+            "line": 8,
+            "character": 29
+          },
+          "end": {
+            "line": 8,
+            "character": 36
+          }
+        }
+      },
+      "rationale": "Both providers found the sole call; Anthropic and source inspection place Execute at characters 29-36."
+    },
+    {
+      "caseId": "go-interface-receiver-method-call",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "anthropic_with_static_receiver_verification",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/worker/worker.go",
+        "range": {
+          "start": {
+            "line": 7,
+            "character": 1
+          },
+          "end": {
+            "line": 7,
+            "character": 7
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/cmd/app/main.go",
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 10
+            },
+            "end": {
+              "line": 10,
+              "character": 16
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/cmd/app/main.go",
+        "range": {
+          "start": {
+            "line": 10,
+            "character": 10
+          },
+          "end": {
+            "line": 10,
+            "character": 16
+          }
+        }
+      },
+      "rationale": "The recorder receiver has static type Recorder, so recorder.Record resolves to the selected interface method. Concrete Worker calls remain separate implementation-family candidates."
+    },
+    {
+      "caseId": "java-service-class-construction",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "openai_with_semantic_boundary",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/main/java/example/Service.java",
+        "range": {
+          "start": {
+            "line": 2,
+            "character": 13
+          },
+          "end": {
+            "line": 2,
+            "character": 20
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/test/java/example/ServiceTest.java",
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 8
+            },
+            "end": {
+              "line": 4,
+              "character": 15
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/test/java/example/ServiceTest.java",
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 44
+            },
+            "end": {
+              "line": 4,
+              "character": 51
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/test/java/example/ServiceTest.java",
+          "range": {
+            "start": {
+              "line": 5,
+              "character": 8
+            },
+            "end": {
+              "line": 5,
+              "character": 15
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/test/java/example/ServiceTest.java",
+          "range": {
+            "start": {
+              "line": 5,
+              "character": 30
+            },
+            "end": {
+              "line": 5,
+              "character": 37
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/test/java/example/ServiceTest.java",
+          "range": {
+            "start": {
+              "line": 7,
+              "character": 27
+            },
+            "end": {
+              "line": 7,
+              "character": 34
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/test/java/example/ServiceTest.java",
+        "range": {
+          "start": {
+            "line": 5,
+            "character": 30
+          },
+          "end": {
+            "line": 5,
+            "character": 37
+          }
+        }
+      },
+      "rationale": "A constructor declaration denotes the constructor rather than an ordinary usage of the class declaration; retain the five authored class usages."
+    },
+    {
+      "caseId": "js-named-export-import-function",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/components.js",
+        "range": {
+          "start": {
+            "line": 12,
+            "character": 16
+          },
+          "end": {
+            "line": 12,
+            "character": 26
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/components.js",
+          "range": {
+            "start": {
+              "line": 8,
+              "character": 29
+            },
+            "end": {
+              "line": 8,
+              "character": 39
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/app.js",
+          "range": {
+            "start": {
+              "line": 6,
+              "character": 14
+            },
+            "end": {
+              "line": 6,
+              "character": 24
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/app.js",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 14
+          },
+          "end": {
+            "line": 6,
+            "character": 24
+          }
+        }
+      },
+      "rationale": "The two blinded providers agreed exactly on the primary consensus contract."
+    },
+    {
+      "caseId": "php-parity-interface-method-implementation",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "authored_interface_family_boundary",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/Contracts/Notifier.php",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 20
+          },
+          "end": {
+            "line": 6,
+            "character": 26
+          }
+        }
+      },
+      "finalRequiredLocations": [
+
+      ],
+      "finalDefinitionUsage": null,
+      "rationale": "The implementation declaration is not an ordinary usage of the interface member, and the concrete-receiver call remains unproven interface-family evidence rather than a required usage."
+    },
+    {
+      "caseId": "python-module-import",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "authored_bindings_optional_policy",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/example/service.py",
+        "range": {
+          "start": {
+            "line": 0,
+            "character": 0
+          },
+          "end": {
+            "line": 0,
+            "character": 0
+          }
+        }
+      },
+      "finalRequiredLocations": [
+
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/tests/test_service.py",
+        "range": {
+          "start": {
+            "line": 1,
+            "character": 13
+          },
+          "end": {
+            "line": 1,
+            "character": 20
+          }
+        }
+      },
+      "rationale": "Both module-path occurrences remain optional under bindings_optional; ordinary required usage lookup has an empty required set."
+    },
+    {
+      "caseId": "ruby-parity-alias-method-call",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/lib/shop/product.rb",
+        "range": {
+          "start": {
+            "line": 10,
+            "character": 18
+          },
+          "end": {
+            "line": 10,
+            "character": 23
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/lib/shop/product.rb",
+          "range": {
+            "start": {
+              "line": 13,
+              "character": 6
+            },
+            "end": {
+              "line": 13,
+              "character": 11
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/app/catalog.rb",
+          "range": {
+            "start": {
+              "line": 7,
+              "character": 8
+            },
+            "end": {
+              "line": 7,
+              "character": 13
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/app/catalog.rb",
+        "range": {
+          "start": {
+            "line": 7,
+            "character": 8
+          },
+          "end": {
+            "line": 7,
+            "character": 13
+          }
+        }
+      },
+      "rationale": "The two blinded providers agreed exactly on the primary consensus contract."
+    },
+    {
+      "caseId": "rust-parity-module-declaration-definition",
+      "reviewProfile": "navigation_v1",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalTargets": [
+        {
+          "uri": "benchmark://source/src/lib.rs",
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 16
+            }
+          }
+        }
+      ],
+      "rationale": "The two blinded providers agreed exactly on every navigation query's primary consensus contract."
+    },
+    {
+      "caseId": "scala-parity-concrete-override-method-call",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/main/scala/example/Workflow.scala",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 15
+          },
+          "end": {
+            "line": 6,
+            "character": 21
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/main/scala/example/Workflow.scala",
+          "range": {
+            "start": {
+              "line": 28,
+              "character": 24
+            },
+            "end": {
+              "line": 28,
+              "character": 30
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/main/scala/example/Workflow.scala",
+        "range": {
+          "start": {
+            "line": 28,
+            "character": 24
+          },
+          "end": {
+            "line": 28,
+            "character": 30
+          }
+        }
+      },
+      "rationale": "The two blinded providers agreed exactly on the primary consensus contract."
+    },
+    {
+      "caseId": "ts-parity-interface-property-access",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/api.ts",
+        "range": {
+          "start": {
+            "line": 2,
+            "character": 2
+          },
+          "end": {
+            "line": 2,
+            "character": 6
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/api.ts",
+          "range": {
+            "start": {
+              "line": 13,
+              "character": 17
+            },
+            "end": {
+              "line": 13,
+              "character": 21
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/api.ts",
+          "range": {
+            "start": {
+              "line": 18,
+              "character": 14
+            },
+            "end": {
+              "line": 18,
+              "character": 18
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/app.ts",
+          "range": {
+            "start": {
+              "line": 6,
+              "character": 18
+            },
+            "end": {
+              "line": 6,
+              "character": 22
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/app.ts",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 18
+          },
+          "end": {
+            "line": 6,
+            "character": 22
+          }
+        }
+      },
+      "rationale": "The two blinded providers agreed exactly on the primary consensus contract."
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BrokkAi/usagebench/benchmarks/review-protocol/navigation-response-v1.schema.json",
+  "title": "UsageBench blinded navigation review response v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reviewer", "records"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model", "executionId", "executedAt"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "executionId": { "type": "string", "minLength": 1 },
+        "executedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/record" }
+    }
+  },
+  "$defs": {
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["line", "character"],
+      "properties": {
+        "line": { "type": "integer", "minimum": 0 },
+        "character": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uri", "range"],
+      "properties": {
+        "uri": { "type": "string", "pattern": "^benchmark://source/" },
+        "range": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["start", "end"],
+          "properties": {
+            "start": { "$ref": "#/$defs/position" },
+            "end": { "$ref": "#/$defs/position" }
+          }
+        }
+      }
+    },
+    "queryResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["queryId", "operation", "query", "decision", "confidence", "targets", "ambiguities", "rationale"],
+      "properties": {
+        "queryId": { "type": "string", "minLength": 1 },
+        "operation": { "enum": ["declaration", "definition", "type_definition"] },
+        "query": { "$ref": "#/$defs/location" },
+        "decision": { "enum": ["accept", "replace", "abstain"] },
+        "confidence": { "enum": ["high", "medium", "low"] },
+        "resolvedIdentity": { "type": ["string", "null"] },
+        "targets": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/location" }
+        },
+        "ambiguities": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caseId", "queries", "inspectedPaths", "rationale"],
+      "properties": {
+        "caseId": { "type": "string", "minLength": 1 },
+        "queries": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/queryResult" }
+        },
+        "inspectedPaths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

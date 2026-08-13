@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-6",
+  "caseId": "python-parity-classmethod-call",
+  "language": "python",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "a378f2b7a3e8040928293adea3c7d28be7ff75448b22a69d577917be914b006c"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/shop/models.py",
+    "range": {
+      "start": {
+        "line": 12,
+        "character": 8
+      },
+      "end": {
+        "line": 12,
+        "character": 13
+      }
+    }
+  },
+  "displayName": "guest"
+}

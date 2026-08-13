@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-2",
+  "caseId": "ts-class-method-call",
+  "language": "typescript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "b4ff19c2b5ee813c673f28d9da2fb25989852cbd4226d7d38ed19fc2250f80d1"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/components.tsx",
+    "range": {
+      "start": {
+        "line": 17,
+        "character": 2
+      },
+      "end": {
+        "line": 17,
+        "character": 7
+      }
+    }
+  },
+  "displayName": "greet"
+}

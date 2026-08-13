@@ -1,0 +1,665 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "legacy-promotion-v1-milestone-2",
+  "status": "pending_human_adjudication",
+  "cases": [
+    {
+      "caseId": "cpp-constructor-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/service.cpp",
+            9,
+            9,
+            9,
+            16
+          ],
+          [
+            "benchmark://source/src/service.cpp",
+            17,
+            11,
+            17,
+            18
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/service.cpp",
+          9,
+          9,
+          9,
+          16
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/service.cpp",
+            9,
+            9,
+            9,
+            16
+          ],
+          [
+            "benchmark://source/src/service.cpp",
+            17,
+            11,
+            17,
+            18
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/service.cpp",
+          9,
+          9,
+          9,
+          16
+        ]
+      }
+    },
+    {
+      "caseId": "csharp-class-reference",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": false,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": false,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/Consumer.cs",
+            7,
+            8,
+            7,
+            15
+          ],
+          [
+            "benchmark://source/src/Consumer.cs",
+            7,
+            30,
+            7,
+            37
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/Consumer.cs",
+          7,
+          8,
+          7,
+          15
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/Consumer.cs",
+            7,
+            8,
+            7,
+            15
+          ],
+          [
+            "benchmark://source/src/Consumer.cs",
+            7,
+            30,
+            7,
+            37
+          ],
+          [
+            "benchmark://source/src/Service.cs",
+            22,
+            11,
+            22,
+            18
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/Consumer.cs",
+          7,
+          8,
+          7,
+          15
+        ]
+      }
+    },
+    {
+      "caseId": "go-package-function-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/example/service_test.go",
+            4,
+            15,
+            4,
+            25
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/example/service_test.go",
+          4,
+          15,
+          4,
+          25
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/example/service_test.go",
+            4,
+            15,
+            4,
+            25
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/example/service_test.go",
+          4,
+          15,
+          4,
+          25
+        ]
+      }
+    },
+    {
+      "caseId": "java-parity-interface-local-type-lookup",
+      "reviewProfile": "navigation_v1",
+      "primaryConsensus": true,
+      "fields": {
+        "queryIdentity": true,
+        "decision": true,
+        "targets": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decisions": [
+          "accept"
+        ],
+        "targets": [
+          [
+            [
+              "benchmark://source/src/main/java/example/parity/Handler.java",
+              2,
+              17,
+              2,
+              24
+            ]
+          ]
+        ]
+      },
+      "anthropic": {
+        "decisions": [
+          "accept"
+        ],
+        "targets": [
+          [
+            [
+              "benchmark://source/src/main/java/example/parity/Handler.java",
+              2,
+              17,
+              2,
+              24
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "caseId": "js-class-construction",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/app.js",
+            4,
+            19,
+            4,
+            26
+          ],
+          [
+            "benchmark://source/src/components.js",
+            17,
+            13,
+            17,
+            20
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/app.js",
+          4,
+          19,
+          4,
+          26
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/app.js",
+            4,
+            19,
+            4,
+            26
+          ],
+          [
+            "benchmark://source/src/components.js",
+            17,
+            13,
+            17,
+            20
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/app.js",
+          4,
+          19,
+          4,
+          26
+        ]
+      }
+    },
+    {
+      "caseId": "php-class-construction",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": false,
+      "fields": {
+        "decision": false,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/Consumer.php",
+            9,
+            23,
+            9,
+            30
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/Consumer.php",
+          9,
+          23,
+          9,
+          30
+        ]
+      },
+      "anthropic": {
+        "decision": "replace",
+        "required": [
+          [
+            "benchmark://source/src/Consumer.php",
+            9,
+            23,
+            9,
+            30
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/Consumer.php",
+          9,
+          23,
+          9,
+          30
+        ]
+      }
+    },
+    {
+      "caseId": "python-class-instantiation",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": false,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": false,
+        "definitionUsage": false,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/example/service.py",
+            18,
+            11,
+            18,
+            18
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/example/service.py",
+          18,
+          11,
+          18,
+          18
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/example/service.py",
+            19,
+            11,
+            19,
+            18
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/example/service.py",
+          19,
+          11,
+          19,
+          18
+        ]
+      }
+    },
+    {
+      "caseId": "ruby-extend-and-include-method-lookup",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/app/report.rb",
+            10,
+            20,
+            10,
+            24
+          ],
+          [
+            "benchmark://source/app/report.rb",
+            11,
+            30,
+            11,
+            34
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/app/report.rb",
+          10,
+          20,
+          10,
+          24
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/app/report.rb",
+            10,
+            20,
+            10,
+            24
+          ],
+          [
+            "benchmark://source/app/report.rb",
+            11,
+            30,
+            11,
+            34
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/app/report.rb",
+          10,
+          20,
+          10,
+          24
+        ]
+      }
+    },
+    {
+      "caseId": "rust-explicit-local-and-parameter-type-lookup",
+      "reviewProfile": "navigation_v1",
+      "primaryConsensus": true,
+      "fields": {
+        "queryIdentity": true,
+        "decision": true,
+        "targets": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decisions": [
+          "accept",
+          "accept"
+        ],
+        "targets": [
+          [
+            [
+              "benchmark://source/src/service.rs",
+              36,
+              11,
+              36,
+              21
+            ]
+          ],
+          [
+            [
+              "benchmark://source/src/service.rs",
+              40,
+              11,
+              40,
+              21
+            ]
+          ]
+        ]
+      },
+      "anthropic": {
+        "decisions": [
+          "accept",
+          "accept"
+        ],
+        "targets": [
+          [
+            [
+              "benchmark://source/src/service.rs",
+              36,
+              11,
+              36,
+              21
+            ]
+          ],
+          [
+            [
+              "benchmark://source/src/service.rs",
+              40,
+              11,
+              40,
+              21
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "caseId": "scala-object-val-access",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main/scala/example/Consumer.scala",
+            7,
+            13,
+            7,
+            19
+          ],
+          [
+            "benchmark://source/src/main/scala/example/Service.scala",
+            18,
+            17,
+            18,
+            23
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main/scala/example/Consumer.scala",
+          7,
+          13,
+          7,
+          19
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main/scala/example/Consumer.scala",
+            7,
+            13,
+            7,
+            19
+          ],
+          [
+            "benchmark://source/src/main/scala/example/Service.scala",
+            18,
+            17,
+            18,
+            23
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main/scala/example/Consumer.scala",
+          7,
+          13,
+          7,
+          19
+        ]
+      }
+    },
+    {
+      "caseId": "ts-class-method-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": false,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": false,
+        "definitionUsage": false,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/app.tsx",
+            5,
+            23,
+            5,
+            28
+          ],
+          [
+            "benchmark://source/src/components.tsx",
+            24,
+            27,
+            24,
+            32
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/app.tsx",
+          5,
+          23,
+          5,
+          28
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/app.tsx",
+            5,
+            24,
+            5,
+            29
+          ],
+          [
+            "benchmark://source/src/components.tsx",
+            24,
+            27,
+            24,
+            32
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/app.tsx",
+          5,
+          24,
+          5,
+          29
+        ]
+      }
+    }
+  ]
+}

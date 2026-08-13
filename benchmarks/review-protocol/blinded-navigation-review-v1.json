@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "methodology": {
+    "file": "benchmarks/review-protocol/per-case-navigation-methodology-v1.md",
+    "sha256": "b5cd32544f7e2b2fc983d0d5bd1c5ea49ef6aa9d0052b1153367f47cc9701b65"
+  },
+  "prompt": {
+    "file": "benchmarks/review-protocol/per-case-blinded-navigation-prompt-v1.md",
+    "sha256": "1297d55223c1fd202518afedd4524c1e7352a8cfac56f839d765de2b52b71f33"
+  },
+  "responseSchema": {
+    "file": "benchmarks/review-protocol/navigation-response-v1.schema.json",
+    "sha256": "fbc7dbba2dfa8ae72c433a8e2b6d26d3a4f2b8cd72206622b0be836944dd2b7e"
+  }
+}

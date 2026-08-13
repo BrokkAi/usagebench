@@ -1,0 +1,666 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "legacy-promotion-v1-milestone-7",
+  "status": "pending_human_adjudication",
+  "cases": [
+    {
+      "caseId": "cpp-parity-function-like-macro-expanded-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main.cpp",
+            14,
+            32,
+            14,
+            46
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main.cpp",
+          14,
+          32,
+          14,
+          46
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main.cpp",
+            14,
+            32,
+            14,
+            46
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main.cpp",
+          14,
+          32,
+          14,
+          46
+        ]
+      }
+    },
+    {
+      "caseId": "csharp-source-generator-partial-method-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/GeneratedConsumer.cs",
+            8,
+            15,
+            8,
+            28
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/GeneratedConsumer.cs",
+          8,
+          15,
+          8,
+          28
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/GeneratedConsumer.cs",
+            8,
+            15,
+            8,
+            28
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/GeneratedConsumer.cs",
+          8,
+          15,
+          8,
+          28
+        ]
+      }
+    },
+    {
+      "caseId": "go-struct-field-access",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/example/service.go",
+            15,
+            6,
+            15,
+            10
+          ],
+          [
+            "benchmark://source/src/example/service_test.go",
+            9,
+            19,
+            9,
+            23
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/example/service.go",
+          15,
+          6,
+          15,
+          10
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/example/service.go",
+            15,
+            6,
+            15,
+            10
+          ],
+          [
+            "benchmark://source/src/example/service_test.go",
+            9,
+            19,
+            9,
+            23
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/example/service.go",
+          15,
+          6,
+          15,
+          10
+        ]
+      }
+    },
+    {
+      "caseId": "java-parity-concrete-implementation-method-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main/java/example/parity/Runner.java",
+            6,
+            54,
+            6,
+            60
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main/java/example/parity/Runner.java",
+          6,
+          54,
+          6,
+          60
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main/java/example/parity/Runner.java",
+            6,
+            54,
+            6,
+            60
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main/java/example/parity/Runner.java",
+          6,
+          54,
+          6,
+          60
+        ]
+      }
+    },
+    {
+      "caseId": "js-parity-commonjs-destructured-function-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": false,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": false,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/consumer.js",
+            2,
+            19,
+            2,
+            28
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/consumer.js",
+          2,
+          19,
+          2,
+          28
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/consumer.js",
+            2,
+            19,
+            2,
+            28
+          ],
+          [
+            "benchmark://source/src/library.js",
+            20,
+            20,
+            20,
+            29
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/consumer.js",
+          2,
+          19,
+          2,
+          28
+        ]
+      }
+    },
+    {
+      "caseId": "php-property-access",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/Consumer.php",
+            11,
+            57,
+            11,
+            61
+          ],
+          [
+            "benchmark://source/src/Service.php",
+            15,
+            15,
+            15,
+            19
+          ],
+          [
+            "benchmark://source/src/Service.php",
+            16,
+            22,
+            16,
+            26
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/Consumer.php",
+          11,
+          57,
+          11,
+          61
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/Consumer.php",
+            11,
+            57,
+            11,
+            61
+          ],
+          [
+            "benchmark://source/src/Service.php",
+            15,
+            15,
+            15,
+            19
+          ],
+          [
+            "benchmark://source/src/Service.php",
+            16,
+            22,
+            16,
+            26
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/Consumer.php",
+          11,
+          57,
+          11,
+          61
+        ]
+      }
+    },
+    {
+      "caseId": "python-parity-property-getter-access",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/tests/test_models.py",
+            5,
+            5,
+            5,
+            20
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/tests/test_models.py",
+          5,
+          5,
+          5,
+          20
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/tests/test_models.py",
+            5,
+            5,
+            5,
+            20
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/tests/test_models.py",
+          5,
+          5,
+          5,
+          20
+        ]
+      }
+    },
+    {
+      "caseId": "ruby-factory-return-member-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/app/run.rb",
+            3,
+            8,
+            3,
+            15
+          ],
+          [
+            "benchmark://source/app/run.rb",
+            6,
+            7,
+            6,
+            14
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/app/run.rb",
+          3,
+          8,
+          3,
+          15
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/app/run.rb",
+            3,
+            8,
+            3,
+            15
+          ],
+          [
+            "benchmark://source/app/run.rb",
+            6,
+            7,
+            6,
+            14
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/app/run.rb",
+          3,
+          8,
+          3,
+          15
+        ]
+      }
+    },
+    {
+      "caseId": "rust-parity-ufcs-trait-method-definition",
+      "reviewProfile": "navigation_v1",
+      "primaryConsensus": true,
+      "fields": {
+        "queryIdentity": true,
+        "decision": true,
+        "targets": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decisions": [
+          "accept"
+        ],
+        "targets": [
+          [
+            [
+              "benchmark://source/src/lib.rs",
+              7,
+              7,
+              7,
+              10
+            ]
+          ]
+        ]
+      },
+      "anthropic": {
+        "decisions": [
+          "accept"
+        ],
+        "targets": [
+          [
+            [
+              "benchmark://source/src/lib.rs",
+              7,
+              7,
+              7,
+              10
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "caseId": "scala-var-field-access",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main/scala/example/Consumer.scala",
+            7,
+            42,
+            7,
+            46
+          ],
+          [
+            "benchmark://source/src/main/scala/example/Service.scala",
+            10,
+            4,
+            10,
+            8
+          ],
+          [
+            "benchmark://source/src/main/scala/example/Service.scala",
+            11,
+            4,
+            11,
+            8
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main/scala/example/Consumer.scala",
+          7,
+          42,
+          7,
+          46
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main/scala/example/Consumer.scala",
+            7,
+            42,
+            7,
+            46
+          ],
+          [
+            "benchmark://source/src/main/scala/example/Service.scala",
+            10,
+            4,
+            10,
+            8
+          ],
+          [
+            "benchmark://source/src/main/scala/example/Service.scala",
+            11,
+            4,
+            11,
+            8
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main/scala/example/Consumer.scala",
+          7,
+          42,
+          7,
+          46
+        ]
+      }
+    },
+    {
+      "caseId": "ts-default-class-import-and-construction",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/app.tsx",
+            4,
+            20,
+            4,
+            27
+          ],
+          [
+            "benchmark://source/src/components.tsx",
+            23,
+            22,
+            23,
+            29
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/app.tsx",
+          4,
+          20,
+          4,
+          27
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/app.tsx",
+            4,
+            20,
+            4,
+            27
+          ],
+          [
+            "benchmark://source/src/components.tsx",
+            23,
+            22,
+            23,
+            29
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/app.tsx",
+          4,
+          20,
+          4,
+          27
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,442 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "legacy-promotion-v1-milestone-7",
+  "sourceRevision": "962afc76d49be39c4a9ccb2e0a9249033c9138c0",
+  "selectionProvenance": "retrospectively_selected",
+  "selectionBasis": "source_only",
+  "analyzerOutcomeUse": "forbidden",
+  "status": "human_adjudicated",
+  "protocolArtifacts": [
+    {
+      "file": "benchmarks/review-protocol/blinded-agent-review-v3.json",
+      "sha256": "66c04354b88aa1f3cf442345a92bfa24de1a596d2ac107d678b107ba648b2ea8"
+    },
+    {
+      "file": "benchmarks/review-protocol/per-case-methodology-v3.md",
+      "sha256": "9118710fdccc4f6d12aa546b03d8985adf8e04d42fe4c0ad4e46e4ebbd1b6ed3"
+    },
+    {
+      "file": "benchmarks/review-protocol/per-case-blinded-agent-prompt-v3.md",
+      "sha256": "361beb29c8838dd80d6831edfd2bd76ed16bce949ddf3e1ac50b541a4a512156"
+    },
+    {
+      "file": "benchmarks/review-protocol/agent-response-v1.schema.json",
+      "sha256": "1c74caef6156a8c29b1086845ca8f6e1475a152218275bbbdb0c3b8b7332921e"
+    },
+    {
+      "file": "benchmarks/review-protocol/blinded-navigation-review-v1.json",
+      "sha256": "153075888826a446aab45ddaac330c2053c88281d6ae808bf4e0dbb0dd91e463"
+    },
+    {
+      "file": "benchmarks/review-protocol/per-case-navigation-methodology-v1.md",
+      "sha256": "b5cd32544f7e2b2fc983d0d5bd1c5ea49ef6aa9d0052b1153367f47cc9701b65"
+    },
+    {
+      "file": "benchmarks/review-protocol/per-case-blinded-navigation-prompt-v1.md",
+      "sha256": "1297d55223c1fd202518afedd4524c1e7352a8cfac56f839d765de2b52b71f33"
+    },
+    {
+      "file": "benchmarks/review-protocol/navigation-response-v1.schema.json",
+      "sha256": "fbc7dbba2dfa8ae72c433a8e2b6d26d3a4f2b8cd72206622b0be836944dd2b7e"
+    },
+    {
+      "file": "benchmarks/promotion/legacy-v1/cohort.json",
+      "sha256": "dc86fe0086d4ba81188258736658d6a79ddd64da9d9e59746fa19bc2be642e1d"
+    }
+  ],
+  "comparison": {
+    "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/comparison.json",
+    "sha256": "21ddff65f3296e03a77d0341a421d2465dc0589ea36fdbe908db799cca7cd54e"
+  },
+  "adjudication": {
+    "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+    "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+  },
+  "cases": [
+    {
+      "caseId": "cpp-parity-function-like-macro-expanded-call",
+      "language": "cpp",
+      "selectionOrder": 7,
+      "reviewProfile": "references_v3",
+      "packet": {
+        "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/packets/cpp-parity-function-like-macro-expanded-call.json",
+        "sha256": "a1f1b5163557c8271c8ea482e2f1ba6ff00c18060f83de050a22b35842fb7333"
+      },
+      "sourceTreeSha256": "274c58a48738994470c62a3a111a5b12c33467e2ef60ffca71a290048631266c",
+      "sessions": [
+        {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "executionId": "codex-task:/root/m7_openai_cpp",
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/cpp-parity-function-like-macro-expanded-call/openai-gpt-5.6-sol.json",
+            "sha256": "ea8354ee08df31d7c6278b0c92cc57e58b1e2ebc9b838a13ee9df79f9a1acfe1"
+          }
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-fable-5",
+          "executionId": "fcab2262-ae89-435b-a275-1adf99b84a95",
+          "normalizedResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/cpp-parity-function-like-macro-expanded-call/anthropic-claude-fable-5.json",
+            "sha256": "ffea746d1bdff92c5b89b1426962f87dc4cd5743ffb0a77fe01eb642ac5b5762"
+          },
+          "rawProviderEnvelope": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/provider-envelopes/cpp-parity-function-like-macro-expanded-call/anthropic-claude-fable-5.json",
+            "sha256": "0b7683ba161d5fce89a2f1d5e70700e2af3f1e0e1f06c12c0397ed54f630f94e"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "csharp-source-generator-partial-method-call",
+      "language": "csharp",
+      "selectionOrder": 7,
+      "reviewProfile": "references_v3",
+      "packet": {
+        "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/packets/csharp-source-generator-partial-method-call.json",
+        "sha256": "e30900d1b156d23c02885b0cfb6ad5872f9bdca7d0c6692a17d7e838afeffda7"
+      },
+      "sourceTreeSha256": "e33964249c5905ff18df7851b88ac66618a78496150403d480eae2959324ab45",
+      "sessions": [
+        {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "executionId": "codex-task:/root/m7_openai_csharp",
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/csharp-source-generator-partial-method-call/openai-gpt-5.6-sol.json",
+            "sha256": "9ab117e4af4265433c54f90eab9777b1c7f5751fba2b1a958f575e214a4348a5"
+          }
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-fable-5",
+          "executionId": "772fd6e6-3f26-4b02-a0a7-1e13aec5225b",
+          "normalizedResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/csharp-source-generator-partial-method-call/anthropic-claude-fable-5.json",
+            "sha256": "4474dabdb33e128d79f8a9440f687520d6249658d1f910111f7480d8947ecb1c"
+          },
+          "rawProviderEnvelope": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/provider-envelopes/csharp-source-generator-partial-method-call/anthropic-claude-fable-5.json",
+            "sha256": "a3a2c4a4a4147d86896d466299e7d2addc28814da0875f5ffbda0fc7e95280a7"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "go-struct-field-access",
+      "language": "go",
+      "selectionOrder": 7,
+      "reviewProfile": "references_v3",
+      "packet": {
+        "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/packets/go-struct-field-access.json",
+        "sha256": "7231def92300bc4789b384986d3a15433448f319041c60a687355148f1e71a00"
+      },
+      "sourceTreeSha256": "bef5919a2228ee57c86b307c18cf27f1da18e36099449b7b80e15e424a128c43",
+      "sessions": [
+        {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "executionId": "codex-task:/root/m7_openai_go",
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/go-struct-field-access/openai-gpt-5.6-sol.json",
+            "sha256": "7b944d50975afa6e884f5afcb1d5419a0cd46b5b6974e48dd632cacbdca612a6"
+          }
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-fable-5",
+          "executionId": "75651b4b-8427-44f2-8f0a-eded6f1ad8a0",
+          "normalizedResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/go-struct-field-access/anthropic-claude-fable-5.json",
+            "sha256": "a499c0a36aee5c9ae839b4b663c61a2f4cc13373642f8390860d49429f12b3f5"
+          },
+          "rawProviderEnvelope": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/provider-envelopes/go-struct-field-access/anthropic-claude-fable-5.json",
+            "sha256": "822c6c218d39a2b9d85917f8b700db296c25e55caa2c0d5a1ee39ca16944ac7f"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "java-parity-concrete-implementation-method-call",
+      "language": "java",
+      "selectionOrder": 7,
+      "reviewProfile": "references_v3",
+      "packet": {
+        "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/packets/java-parity-concrete-implementation-method-call.json",
+        "sha256": "c6110f2a7e690be86e937a2ff5d2af0d91bd274b492b79fa47abb5eceb37930d"
+      },
+      "sourceTreeSha256": "2a1c703ceb43de7f7f89023d69a9128206c3d57e1ca16f7540b97d213d0a4501",
+      "sessions": [
+        {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "executionId": "codex-task:/root/m7_openai_java",
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/java-parity-concrete-implementation-method-call/openai-gpt-5.6-sol.json",
+            "sha256": "53eae5c2a231bee3f93d4a38adc47935325630e63cf3ea6748ee068f2f167560"
+          }
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-fable-5",
+          "executionId": "ade5bf3d-c9a6-42e7-8871-a03435c68c87",
+          "normalizedResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/java-parity-concrete-implementation-method-call/anthropic-claude-fable-5.json",
+            "sha256": "e41e9b6bc67556fce6c1878649eee9ca2ded9841be1757926d94198479d6897c"
+          },
+          "rawProviderEnvelope": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/provider-envelopes/java-parity-concrete-implementation-method-call/anthropic-claude-fable-5.json",
+            "sha256": "74e016541b048d2466e6ba89fbbd07aaf1a4e031810a3dd600ac0f37494a5cf3"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "js-parity-commonjs-destructured-function-call",
+      "language": "javascript",
+      "selectionOrder": 7,
+      "reviewProfile": "references_v3",
+      "packet": {
+        "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/packets/js-parity-commonjs-destructured-function-call.json",
+        "sha256": "2b2257f617905b5ea6e8258e5f502676456a5128a6415843ae94f4a6396c21bd"
+      },
+      "sourceTreeSha256": "f1c4e26e5d7ebfa1c05745fb6bd8ce586992b6b5794455dfdb2de1e028a1c444",
+      "sessions": [
+        {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "executionId": "codex-task:/root/m7_openai_javascript",
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/js-parity-commonjs-destructured-function-call/openai-gpt-5.6-sol.json",
+            "sha256": "5d07805664f0e6c84eff678d14e35e12b96b67884a3d16a7d3ccdd7ec31cbd69"
+          }
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-fable-5",
+          "executionId": "f233614e-1b94-4d86-80a3-37165fdff0e7",
+          "normalizedResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/js-parity-commonjs-destructured-function-call/anthropic-claude-fable-5.json",
+            "sha256": "a177784188df4755d16f915c2b734ff3607c7a5826ef682426f1f808a7ba01a5"
+          },
+          "rawProviderEnvelope": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/provider-envelopes/js-parity-commonjs-destructured-function-call/anthropic-claude-fable-5.json",
+            "sha256": "72963795421ae144240ae3949bcbbaed7830a6503bb47f61116267529704a5de"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "php-property-access",
+      "language": "php",
+      "selectionOrder": 7,
+      "reviewProfile": "references_v3",
+      "packet": {
+        "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/packets/php-property-access.json",
+        "sha256": "4f30796251dcf83613046c0c41ba6916d72f4fdd082a5ba7d26481735f70f851"
+      },
+      "sourceTreeSha256": "0156af5888015a3ca78aa2d97d4ce6b9d1692b4df8d2987b4abbadc1a9c3fce6",
+      "sessions": [
+        {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "executionId": "codex-task:/root/m7_openai_php",
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/php-property-access/openai-gpt-5.6-sol.json",
+            "sha256": "44c92d245fb5e90ec8092697a1c01aaf8e2ef8270655c667c4d357536c0e265c"
+          }
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-fable-5",
+          "executionId": "d246e7e5-dc9a-488c-9719-424e5b82f76d",
+          "normalizedResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/php-property-access/anthropic-claude-fable-5.json",
+            "sha256": "671b9a79e65c744fa548c53393c69838212a1faf83ce1320125b253baf17981c"
+          },
+          "rawProviderEnvelope": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/provider-envelopes/php-property-access/anthropic-claude-fable-5.json",
+            "sha256": "6091471919a7451abf5153b32934460e66bb8d9d53e94b682250e0ddf259f00f"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "python-parity-property-getter-access",
+      "language": "python",
+      "selectionOrder": 7,
+      "reviewProfile": "references_v3",
+      "packet": {
+        "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/packets/python-parity-property-getter-access.json",
+        "sha256": "436ea7f590b1cc52b369310c24419042c98f3d27b1b5379466984f65016fa8c3"
+      },
+      "sourceTreeSha256": "a378f2b7a3e8040928293adea3c7d28be7ff75448b22a69d577917be914b006c",
+      "sessions": [
+        {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "executionId": "codex-task:/root/m7_openai_python",
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/python-parity-property-getter-access/openai-gpt-5.6-sol.json",
+            "sha256": "96380e29374877629715809a068cd32904d2ba2e33a560d00797aa4476ebae1f"
+          }
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-fable-5",
+          "executionId": "23b24400-a727-42d0-801f-5528b5d8bb68",
+          "normalizedResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/python-parity-property-getter-access/anthropic-claude-fable-5.json",
+            "sha256": "d610273b0025840f345f9a5a230d08b8f848eca2f99f751cbf0ca5af70eb6f3e"
+          },
+          "rawProviderEnvelope": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/provider-envelopes/python-parity-property-getter-access/anthropic-claude-fable-5.json",
+            "sha256": "8c5ce6256ba3d1a37e3a27fab826ad50e7eff362d714de4c6b00b7416ee5746a"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "ruby-factory-return-member-call",
+      "language": "ruby",
+      "selectionOrder": 7,
+      "reviewProfile": "references_v3",
+      "packet": {
+        "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/packets/ruby-factory-return-member-call.json",
+        "sha256": "a06f92db3c19a8d0dbed9e29ea0910b204f70db2e0ba33e796c9227ae1b2702f"
+      },
+      "sourceTreeSha256": "a99298caa0cfbbb92c0a7f4b38ba6067a9ab09af157418df0df8a06c551e979c",
+      "sessions": [
+        {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "executionId": "codex-task:/root/m7_openai_ruby",
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/ruby-factory-return-member-call/openai-gpt-5.6-sol.json",
+            "sha256": "6040124630f4cabd7782e14d6bd1226fc87ecd03b807c6bd7f4d2929e54c8612"
+          }
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-fable-5",
+          "executionId": "b0464d00-7ef9-480d-966e-4e206faec648",
+          "normalizedResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/ruby-factory-return-member-call/anthropic-claude-fable-5.json",
+            "sha256": "616e7558af4b2c104867a446347e4e6176002656848882e4bb8df96122f5669e"
+          },
+          "rawProviderEnvelope": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/provider-envelopes/ruby-factory-return-member-call/anthropic-claude-fable-5.json",
+            "sha256": "4e44afff8dc23a19571d5c45a2da6c0e0264292f8a4a88ac18bea94b13f6dff5"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "rust-parity-ufcs-trait-method-definition",
+      "language": "rust",
+      "selectionOrder": 7,
+      "reviewProfile": "navigation_v1",
+      "packet": {
+        "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/packets/rust-parity-ufcs-trait-method-definition.json",
+        "sha256": "cadf52cc7f4446ca372c8a9f14614798718a4132b7d704b5c26edc44ee9c8166"
+      },
+      "sourceTreeSha256": "b1588580ae528637d39b36e4a0294a8f4e78b3e5ae9d1e2e67febdaa3429ec9f",
+      "sessions": [
+        {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "executionId": "codex-task:/root/m7_openai_rust",
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/rust-parity-ufcs-trait-method-definition/openai-gpt-5.6-sol.json",
+            "sha256": "e1c78d553a82b48009989239f6ef8431a588f75fb994f66359b97825533650b6"
+          }
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-fable-5",
+          "executionId": "345c00f3-eb9f-4f10-8025-e30e5e1c6871",
+          "normalizedResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/rust-parity-ufcs-trait-method-definition/anthropic-claude-fable-5.json",
+            "sha256": "54f7c3908e664ba3141459efac3e9ee86c32505ef5707a78318ab285b6a62f39"
+          },
+          "rawProviderEnvelope": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/provider-envelopes/rust-parity-ufcs-trait-method-definition/anthropic-claude-fable-5.json",
+            "sha256": "8b092721765db924e8f86851391ae3f325695a3a56619313195ab156cb9bc959"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "scala-var-field-access",
+      "language": "scala",
+      "selectionOrder": 7,
+      "reviewProfile": "references_v3",
+      "packet": {
+        "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/packets/scala-var-field-access.json",
+        "sha256": "ab8852604eef695343b3a226c8a6f59bb9f8455add1a32587885a187bde02532"
+      },
+      "sourceTreeSha256": "048798870f3b1407d78aa7aca37be61b7648cd500ad9c7402407f7273bbb2348",
+      "sessions": [
+        {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "executionId": "codex-task:/root/m7_openai_scala",
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/scala-var-field-access/openai-gpt-5.6-sol.json",
+            "sha256": "39157664d7d8256414e8019533ad97d0ee333bc7b48562b6f93472a22147ac81"
+          }
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-fable-5",
+          "executionId": "c7c61ec3-da9f-4304-b9eb-5a49edd441b8",
+          "normalizedResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/scala-var-field-access/anthropic-claude-fable-5.json",
+            "sha256": "b458a4764f1761ca4d13da63256254be2d4195dfc1afae34ffda79dd55094305"
+          },
+          "rawProviderEnvelope": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/provider-envelopes/scala-var-field-access/anthropic-claude-fable-5.json",
+            "sha256": "14cf5f6d15340f9ad906f64dd38781803e2c3b3eca43751af98b831bb359fee0"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "ts-default-class-import-and-construction",
+      "language": "typescript",
+      "selectionOrder": 7,
+      "reviewProfile": "references_v3",
+      "packet": {
+        "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/packets/ts-default-class-import-and-construction.json",
+        "sha256": "2386636c270636382bf02c1c6705f77d00d449a12daff38397b2739e80d80380"
+      },
+      "sourceTreeSha256": "b4ff19c2b5ee813c673f28d9da2fb25989852cbd4226d7d38ed19fc2250f80d1",
+      "sessions": [
+        {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "executionId": "codex-task:/root/m7_openai_typescript",
+          "rawResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/ts-default-class-import-and-construction/openai-gpt-5.6-sol.json",
+            "sha256": "8934aaf11b687339cc8a8d96d816435fdf21d0818b193f716826954c16b29edc"
+          }
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-fable-5",
+          "executionId": "7163ACE3-6EB7-497F-B68A-E5854F23B6E7",
+          "normalizedResponse": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/ts-default-class-import-and-construction/anthropic-claude-fable-5.json",
+            "sha256": "fb44b9236e9d6947dda78470591d1561adecb7ed1c7260d67fb09184a3048f46"
+          },
+          "rawProviderEnvelope": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/provider-envelopes/ts-default-class-import-and-construction/anthropic-claude-fable-5.json",
+            "sha256": "5d5e77edd925def83f6ba7d430103911e5e6bafedc806eca1f15f586711bfb2f"
+          }
+        }
+      ]
+    }
+  ]
+}

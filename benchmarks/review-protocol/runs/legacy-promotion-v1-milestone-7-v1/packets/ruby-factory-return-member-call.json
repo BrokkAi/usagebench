@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-7",
+  "caseId": "ruby-factory-return-member-call",
+  "language": "ruby",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "a99298caa0cfbbb92c0a7f4b38ba6067a9ab09af157418df0df8a06c551e979c"
+  },
+  "declaration": {
+    "uri": "benchmark://source/lib/precision/base.rb",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 8
+      },
+      "end": {
+        "line": 2,
+        "character": 15
+      }
+    }
+  },
+  "displayName": "execute"
+}
