@@ -7,17 +7,25 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
+
+concurrency:
+  group: usagebench-reference-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   contract:
     name: validate reproduction contract
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 15
     steps:
       - name: Checkout source
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
+          fetch-depth: 1
+          lfs: false
           persist-credentials: false
 
       - name: Validate candidate classes and smoke coverage
@@ -27,6 +35,8 @@ jobs:
     name: ${{ matrix.runner }} reference image
     needs: contract
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -42,6 +52,8 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
+          fetch-depth: 1
+          lfs: false
           persist-credentials: false
 
       - name: Stage release-shaped corpus
