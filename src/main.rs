@@ -413,6 +413,7 @@ fn main() -> Result<()> {
             );
             print_required_destination_totals(&report);
             print_location_metrics(&report);
+            print_run_timings(&report);
             print_run_details(&report);
             if report.totals.failed > 0
                 || report.totals.position_unverified > 0
@@ -525,6 +526,21 @@ fn print_location_metrics(report: &BifrostRunReport) {
         metrics.exact_set_cases,
         metrics.cases,
         metrics.queries,
+    );
+}
+
+fn print_run_timings(report: &BifrostRunReport) {
+    let timings = &report.timings;
+    println!(
+        "timings (ms): checkout/setup={}, build={} (cache_hit={}), provenance_hashing={} (cache_hit={}), workspace_readiness={}, analyzer_query={}, measured_total={}",
+        timings.checkout_setup_millis,
+        timings.build_millis,
+        timings.build_cache_hit,
+        timings.provenance_hashing_millis,
+        timings.provenance_cache_hit,
+        timings.workspace_readiness_millis,
+        timings.analyzer_query_millis,
+        timings.measured_total_millis,
     );
 }
 

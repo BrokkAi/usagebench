@@ -4,7 +4,8 @@ use super::{
     normalize_symbol_location, path_to_slash, report_case_path, requested_run_totals,
     required_destination_status, resolve_usagebench_provenance, runner_failure_case,
     score_declaration_locations, score_navigation_response, symbol_kind_name, CapabilitySupport,
-    LocationMatch, RunInvocation, RunReport, RunnerCapability, RunnerMetadata, RunnerOperation,
+    LocationMatch, RunInvocation, RunReport, RunTimings, RunnerCapability, RunnerMetadata,
+    RunnerOperation,
 };
 pub use super::{
     CaseRunReport, CaseStatus, CompatibleUsageDefinitionReport, DeclarationUsageReport,
@@ -17,12 +18,12 @@ use crate::{
     SymbolKind, SymbolLocation,
 };
 use anyhow::{anyhow, bail, Context, Result};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::{
-    collections::{hash_map::DefaultHasher, BTreeSet},
-    fs,
+    collections::{hash_map::DefaultHasher, BTreeMap, BTreeSet},
+    env, fs,
     hash::{Hash, Hasher},
     io::{Read, Write},
     path::{Path, PathBuf},
@@ -150,6 +151,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     fs::create_dir_all(&work_dir).with_context(|| format!("create {}", work_dir.display()))?;
     let _source_cleanup = CleanupGuard::new(work_dir.join("sources"), !options.keep_worktrees);
 
+    let mut timings = RunTimings::default();
     let (bifrost_source, bifrost_resolved_commit, bifrost_binary) =
         if let Some(binary) = &options.bifrost_binary {
             if !binary.is_file() {
@@ -169,6 +171,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
                 binary.clone(),
             )
         } else {
+            let setup_started = Instant::now();
             let bifrost_source_repo =
                 resolve_bifrost_source_repo(&repo_root, options.bifrost_repo.as_ref())?;
             let bifrost_checkout = if options.bifrost_working_tree {
@@ -177,15 +180,29 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
                 prepare_bifrost_checkout(&bifrost_source_repo, &options.bifrost_commit, &work_dir)?
             };
             let resolved_commit = git_output(&bifrost_checkout, ["rev-parse", "HEAD"])?;
-            build_bifrost(&bifrost_checkout)?;
+            timings.checkout_setup_millis = duration_millis(setup_started.elapsed());
+            let build_started = Instant::now();
+            timings.build_cache_hit = build_bifrost_cached(
+                &bifrost_checkout,
+                &resolved_commit,
+                &work_dir.join("bifrost-build-cache.json"),
+                options.bifrost_working_tree,
+            )?;
+            timings.build_millis = duration_millis(build_started.elapsed());
             (
                 display_path(&bifrost_source_repo),
                 resolved_commit,
                 bifrost_binary_path(&bifrost_checkout),
             )
         };
+    let timed_provenance = super::environment::cached_executable_provenance(
+        &Command::new(&bifrost_binary),
+        &work_dir.join("bifrost-provenance-cache.json"),
+    )?;
+    timings.provenance_hashing_millis = duration_millis(timed_provenance.hashing_duration);
+    timings.provenance_cache_hit = timed_provenance.cache_hit;
     let environment = super::environment::capture_execution_environment(
-        super::environment::executable_provenance(&Command::new(&bifrost_binary))?,
+        timed_provenance.provenance,
         &["rustc", "cargo"],
         "bifrost",
         &usagebench_provenance.revision,
@@ -226,6 +243,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             profile_sha256: None,
             case_id: options.case_id.clone(),
         },
+        timings: timings.clone(),
         completed: false,
         requested_case_files,
         requested_totals,
@@ -280,7 +298,15 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
                     options.case_id.as_deref(),
                     semantic_pack.as_ref(),
                 ) {
-                    Ok(cases) => cases,
+                    Ok(document_run) => {
+                        timings.workspace_readiness_millis = timings
+                            .workspace_readiness_millis
+                            .saturating_add(document_run.workspace_readiness_millis);
+                        timings.analyzer_query_millis = timings
+                            .analyzer_query_millis
+                            .saturating_add(document_run.analyzer_query_millis);
+                        document_run.cases
+                    }
                     Err(error) => {
                         let kind = if is_snapshot_not_ready_error(&error) {
                             "workspace_snapshot_not_ready"
@@ -338,6 +364,8 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             .case_files
             .push(report_case_path(case_file, &repo_root));
         report.finished_at_unix_seconds = unix_seconds_now()?;
+        timings.refresh_total();
+        report.timings = timings.clone();
         report.totals = compute_totals(&report.documents);
         if let Some(output) = &output {
             write_report_atomic(&partial_report_path(output), &report)?;
@@ -345,6 +373,8 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     }
 
     report.completed = true;
+    timings.refresh_total();
+    report.timings = timings;
     if let Some(output) = &output {
         write_report_atomic(output, &report)?;
     }
@@ -438,6 +468,12 @@ fn remove_stale_report(path: &Path) -> Result<()> {
     }
 }
 
+struct TimedDocumentRun {
+    cases: Vec<CaseRunReport>,
+    workspace_readiness_millis: u64,
+    analyzer_query_millis: u64,
+}
+
 fn run_document_cases(
     document: &BenchmarkDocument,
     source_root: &Path,
@@ -447,7 +483,7 @@ fn run_document_cases(
     scan_usages_max_duration_secs: u64,
     case_id: Option<&str>,
     semantic_pack: Option<&PreparedSemanticPacks>,
-) -> Result<Vec<CaseRunReport>> {
+) -> Result<TimedDocumentRun> {
     let workspace_models = document
         .cases
         .iter()
@@ -492,8 +528,11 @@ fn run_document_cases(
                 &semantic_pack.evidence_json,
             );
     }
+    let readiness_started = Instant::now();
     let mut session = McpSession::start(&mut command, "Bifrost")?;
     session.initialize()?;
+    let initialization_duration = readiness_started.elapsed();
+    let query_started = Instant::now();
     if let Some(requirement) = document.semantic_packs.as_ref() {
         verify_semantic_pack_probes(requirement, &mut session)?;
     }
@@ -518,7 +557,17 @@ fn run_document_cases(
             return Err(error).context("Bifrost workspace readiness retries were exhausted");
         }
     }
-    Ok(reports)
+    let query_duration = query_started.elapsed();
+    let retry_readiness_duration = session.take_workspace_readiness_duration();
+    Ok(TimedDocumentRun {
+        cases: reports,
+        workspace_readiness_millis: duration_millis(
+            initialization_duration.saturating_add(retry_readiness_duration),
+        ),
+        analyzer_query_millis: duration_millis(
+            query_duration.saturating_sub(retry_readiness_duration),
+        ),
+    })
 }
 
 fn verify_semantic_pack_probes(
@@ -2168,6 +2217,154 @@ fn build_bifrost(repo: &Path) -> Result<()> {
     Ok(())
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct BifrostBuildCache {
+    version: u32,
+    identity: BifrostBuildIdentity,
+    executables: BTreeMap<String, super::environment::ExecutableFingerprint>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct BifrostBuildIdentity {
+    resolved_commit: String,
+    cargo_version: String,
+    rustc_verbose_version: String,
+    build_plan: Vec<String>,
+    build_environment: BTreeMap<String, String>,
+}
+
+fn build_bifrost_cached(
+    repo: &Path,
+    resolved_commit: &str,
+    cache_path: &Path,
+    working_tree: bool,
+) -> Result<bool> {
+    if working_tree {
+        build_bifrost(repo)?;
+        return Ok(false);
+    }
+    let identity = bifrost_build_identity(repo, resolved_commit)?;
+    let executables = bifrost_built_executables(repo);
+    let cached = fs::read(cache_path)
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<BifrostBuildCache>(&bytes).ok());
+    if let Some(entry) = cached {
+        if build_cache_matches(&entry, &identity, &executables)? {
+            return Ok(true);
+        }
+    }
+
+    build_bifrost(repo)?;
+    let entry = BifrostBuildCache {
+        version: 1,
+        identity,
+        executables: fingerprint_executables(&executables)?,
+    };
+    fs::write(cache_path, serde_json::to_vec_pretty(&entry)?)
+        .with_context(|| format!("write Bifrost build cache {}", cache_path.display()))?;
+    Ok(false)
+}
+
+fn build_cache_matches(
+    entry: &BifrostBuildCache,
+    identity: &BifrostBuildIdentity,
+    executables: &BTreeMap<String, PathBuf>,
+) -> Result<bool> {
+    let Ok(actual_executables) = fingerprint_executables(executables) else {
+        return Ok(false);
+    };
+    Ok(
+        entry.version == 1
+            && &entry.identity == identity
+            && entry.executables == actual_executables,
+    )
+}
+
+fn bifrost_built_executables(repo: &Path) -> BTreeMap<String, PathBuf> {
+    let mut executables = BTreeMap::from([("bifrost".to_string(), bifrost_binary_path(repo))]);
+    if repo
+        .join("crates/bifrost-semantic-packs/Cargo.toml")
+        .is_file()
+    {
+        executables.insert(
+            "bifrost-semantic-pack".to_string(),
+            repo.join("target").join("debug").join(if cfg!(windows) {
+                "bifrost-semantic-pack.exe"
+            } else {
+                "bifrost-semantic-pack"
+            }),
+        );
+    }
+    executables
+}
+
+fn fingerprint_executables(
+    executables: &BTreeMap<String, PathBuf>,
+) -> Result<BTreeMap<String, super::environment::ExecutableFingerprint>> {
+    executables
+        .iter()
+        .map(|(name, path)| {
+            super::environment::executable_fingerprint(path)
+                .map(|fingerprint| (name.clone(), fingerprint))
+        })
+        .collect()
+}
+
+fn bifrost_build_identity(repo: &Path, resolved_commit: &str) -> Result<BifrostBuildIdentity> {
+    let semantic_pack_manifest = repo.join("crates/bifrost-semantic-packs/Cargo.toml");
+    let mut build_plan = vec!["cargo build --bin bifrost".to_string()];
+    if semantic_pack_manifest.is_file() {
+        build_plan.push(
+            "cargo build -p brokk-bifrost-semantic-packs --features release-tooling --bin bifrost-semantic-pack"
+                .to_string(),
+        );
+    }
+    let build_environment = env::vars()
+        .filter(|(name, _)| {
+            name.starts_with("CARGO_")
+                || name.starts_with("RUST")
+                || matches!(
+                    name.as_str(),
+                    "AR" | "CC"
+                        | "CFLAGS"
+                        | "CXX"
+                        | "CXXFLAGS"
+                        | "MACOSX_DEPLOYMENT_TARGET"
+                        | "PATH"
+                        | "SDKROOT"
+                )
+        })
+        .collect();
+    Ok(BifrostBuildIdentity {
+        resolved_commit: resolved_commit.to_string(),
+        cargo_version: command_output(repo, "cargo", &["--version"])?,
+        rustc_verbose_version: command_output(repo, "rustc", &["-vV"])?,
+        build_plan,
+        build_environment,
+    })
+}
+
+fn command_output(repo: &Path, program: &str, arguments: &[&str]) -> Result<String> {
+    let output = Command::new(program)
+        .args(arguments)
+        .current_dir(repo)
+        .output()
+        .with_context(|| format!("run {program} {}", arguments.join(" ")))?;
+    if !output.status.success() {
+        bail!("{program} {} failed", arguments.join(" "));
+    }
+    Ok(String::from_utf8(output.stdout)
+        .context("toolchain version output was not UTF-8")?
+        .trim()
+        .to_string())
+}
+
+fn duration_millis(duration: Duration) -> u64 {
+    u64::try_from(duration.as_millis()).unwrap_or(u64::MAX)
+}
+
 fn bifrost_binary_path(repo: &Path) -> PathBuf {
     repo.join("target").join("debug").join(if cfg!(windows) {
         "bifrost.exe"
@@ -2447,6 +2644,68 @@ mod tests {
             options.scan_usages_max_duration_secs,
             DEFAULT_SCAN_USAGES_MAX_DURATION_SECS
         );
+    }
+
+    fn build_identity(commit: &str) -> BifrostBuildIdentity {
+        BifrostBuildIdentity {
+            resolved_commit: commit.to_string(),
+            cargo_version: "cargo 1.90.0".to_string(),
+            rustc_verbose_version: "rustc 1.90.0\nhost: test-target".to_string(),
+            build_plan: vec!["cargo build --bin bifrost".to_string()],
+            build_environment: BTreeMap::new(),
+        }
+    }
+
+    #[test]
+    fn build_cache_requires_exact_binary_revision_toolchain_and_inputs() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let executable = tempdir.path().join("bifrost");
+        fs::write(&executable, b"artifact-one").unwrap();
+        let executables = BTreeMap::from([("bifrost".to_string(), executable.clone())]);
+        let identity = build_identity("a1");
+        let entry = BifrostBuildCache {
+            version: 1,
+            identity: identity.clone(),
+            executables: fingerprint_executables(&executables).unwrap(),
+        };
+        assert!(build_cache_matches(&entry, &identity, &executables).unwrap());
+
+        fs::write(&executable, b"artifact-two").unwrap();
+        assert!(!build_cache_matches(&entry, &identity, &executables).unwrap());
+        fs::write(&executable, b"artifact-one").unwrap();
+        let entry = BifrostBuildCache {
+            version: 1,
+            identity: identity.clone(),
+            executables: fingerprint_executables(&executables).unwrap(),
+        };
+
+        let mut changed_revision = identity.clone();
+        changed_revision.resolved_commit = "b2".to_string();
+        assert!(!build_cache_matches(&entry, &changed_revision, &executables).unwrap());
+
+        let mut changed_toolchain = identity.clone();
+        changed_toolchain.rustc_verbose_version = "rustc 1.91.0\nhost: test-target".to_string();
+        assert!(!build_cache_matches(&entry, &changed_toolchain, &executables).unwrap());
+
+        let mut changed_inputs = identity;
+        changed_inputs
+            .build_environment
+            .insert("RUSTFLAGS".to_string(), "-C target-cpu=native".to_string());
+        assert!(!build_cache_matches(&entry, &changed_inputs, &executables).unwrap());
+    }
+
+    #[test]
+    fn run_timings_total_is_the_sum_of_non_overlapping_phases() {
+        let mut timings = RunTimings {
+            checkout_setup_millis: 2,
+            build_millis: 3,
+            provenance_hashing_millis: 5,
+            workspace_readiness_millis: 7,
+            analyzer_query_millis: 11,
+            ..Default::default()
+        };
+        timings.refresh_total();
+        assert_eq!(timings.measured_total_millis, 28);
     }
 
     #[test]
@@ -2745,6 +3004,7 @@ for line in sys.stdin:
                 profile_sha256: None,
                 case_id: None,
             },
+            timings: RunTimings::default(),
             completed: true,
             requested_case_files: vec!["benchmarks/cases/rust.yaml".to_string()],
             requested_totals: crate::runners::RequestedRunTotals {

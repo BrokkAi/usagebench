@@ -2046,6 +2046,7 @@ mod tests {
                 profile_sha256: None,
                 case_id: None,
             },
+            timings: Default::default(),
             completed: true,
             requested_case_files: vec!["benchmarks/cases/sample.yaml".to_string()],
             requested_totals: crate::runners::RequestedRunTotals {

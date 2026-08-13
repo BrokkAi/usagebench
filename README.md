@@ -166,6 +166,17 @@ benchmark document so interrupted batch runs retain valid evidence. Checkpoints
 record `completed: false` plus the full `requestedCaseFiles` scope and are
 rejected by snapshot and release tooling as completed evidence.
 
+Source-based runs also retain a Bifrost build cache in `--work-dir`. A build is
+reused only when the resolved commit, Cargo and rustc identity, build plan,
+target/profile/compiler environment, and cached executable metadata still
+match. The executable SHA-256 is verified on the first use and reused only
+while its size, modification/change time, device, and inode identity remain
+unchanged (with the portable metadata subset used off Unix). The same verified
+provenance cache applies to `--bifrost-binary`; the required
+`--bifrost-resolved-commit` remains report provenance and is not a caller-
+supplied digest. Reports and CLI output separate checkout/setup, build,
+provenance hashing, workspace readiness, and analyzer query milliseconds.
+
 The generic LSP adapter starts a versioned stdio language server, opens an
 isolated fixture workspace, and translates the protocol's native references,
 definition, and type-definition responses into the same report:

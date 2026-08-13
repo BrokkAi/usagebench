@@ -306,6 +306,7 @@ pub fn run_lsp(options: RunLspOptions) -> Result<RunReport> {
             profile_sha256: Some(profile_sha256),
             case_id: options.case_id.clone(),
         },
+        timings: Default::default(),
         completed: true,
         requested_case_files,
         requested_totals,

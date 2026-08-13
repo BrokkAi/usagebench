@@ -75,6 +75,10 @@ pub struct RunReport {
     pub usagebench_release: Option<String>,
     pub runner: RunnerMetadata,
     pub invocation: RunInvocation,
+    /// Non-overlapping harness/analyzer phase timings. These diagnostics do
+    /// not participate in scoring or semantic report comparison.
+    #[serde(default, skip_serializing_if = "RunTimings::is_empty")]
+    pub timings: RunTimings,
     /// False only for an interruption-safe checkpoint that does not cover the
     /// full requested document scope. Older reports predate checkpoints and
     /// therefore deserialize as complete.
@@ -103,6 +107,34 @@ pub struct RunReport {
     pub case_files: Vec<String>,
     pub totals: RunTotals,
     pub documents: Vec<DocumentRunReport>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct RunTimings {
+    pub checkout_setup_millis: u64,
+    pub build_millis: u64,
+    pub provenance_hashing_millis: u64,
+    pub workspace_readiness_millis: u64,
+    pub analyzer_query_millis: u64,
+    pub measured_total_millis: u64,
+    pub build_cache_hit: bool,
+    pub provenance_cache_hit: bool,
+}
+
+impl RunTimings {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+
+    pub(crate) fn refresh_total(&mut self) {
+        self.measured_total_millis = self
+            .checkout_setup_millis
+            .saturating_add(self.build_millis)
+            .saturating_add(self.provenance_hashing_millis)
+            .saturating_add(self.workspace_readiness_millis)
+            .saturating_add(self.analyzer_query_millis);
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
