@@ -8,11 +8,11 @@ description: Immutable v0.2.0 results for the independently reviewed real-projec
 > [UsageBench v0.2.0](https://github.com/BrokkAi/usagebench/releases/tag/v0.2.0).
 > It does not pool the broader analyzer-informed development corpus.
 
-The active development candidate is Bifrost v0.9.3 at immutable commit
-`30dacd4778b9e042bf55ed5e519e8780293f07a1`. No v0.9.3 result is published on
-this page: the tables below remain historical v0.2.0 evidence produced with
-Bifrost v0.8.8, and any upgraded result must be published as a subsequent
-snapshot or release with its own provenance.
+The active development candidate is an unreleased Bifrost build at immutable
+commit `43b986355bc767073921fac40f01b34d059ea564`. No result for that commit is
+published on this page: the tables below remain historical v0.2.0 evidence
+produced with Bifrost v0.8.8, and any upgraded result must be published as a
+subsequent snapshot or release with its own provenance.
 
 The first immutable UsageBench evaluation compares Bifrost with gopls,
 Pyright, and TypeScript language server across 12 source-only sampled public
