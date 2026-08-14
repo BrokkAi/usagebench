@@ -57,10 +57,23 @@ image_revision="$(jq -r '.usagebenchRevision' "$metadata")"
 environment_version="$(jq -r '.environmentVersion' "$metadata")"
 canonical_platform="$(jq -r '.canonicalPlatform' "$metadata")"
 definition_digest="$(jq -r '.definitionDigest' "$metadata")"
+identity_digest="$(jq -r '.identityDigest' "$metadata")"
+analyzer_identity="$(jq -r '.analyzerIdentity' "$metadata")"
+registry_digest="$(jq -r '.registryDigest // empty' "$metadata")"
 [[ "$image_release" == "$corpus_release" && "$image_revision" == "$corpus_revision" ]] || {
   echo "reference image metadata is for $image_release at $image_revision, not corpus $corpus_release at $corpus_revision" >&2
   exit 1
 }
+[[ "$identity_digest" =~ ^sha256:[0-9a-f]{64}$ && -n "$analyzer_identity" ]] || {
+  echo "reference image metadata lacks immutable identity fields" >&2
+  exit 1
+}
+if [[ -n "$registry_digest" ]]; then
+  [[ "$registry_digest" =~ ^sha256:[0-9a-f]{64}$ && "$image_reference" == *@"$registry_digest" ]] || {
+    echo "reference image registry metadata is not bound to an immutable digest" >&2
+    exit 1
+  }
+fi
 
 loaded_image_id="$(docker image inspect --format '{{.Id}}' "$image_reference")"
 [[ "$loaded_image_id" == "$image_digest" ]] || {
@@ -73,6 +86,8 @@ docker image inspect "$loaded_image_id" | jq -e \
   --arg revision "$corpus_revision" \
   --arg environmentVersion "$environment_version" \
   --arg definitionDigest "$definition_digest" \
+  --arg identityDigest "$identity_digest" \
+  --arg analyzerIdentity "$analyzer_identity" \
   '.[0]
    | .Os == "linux"
      and .Architecture == "amd64"
@@ -81,7 +96,10 @@ docker image inspect "$loaded_image_id" | jq -e \
      and .Config.Labels["ai.brokk.usagebench.release"] == $release
      and .Config.Labels["org.opencontainers.image.revision"] == $revision
      and .Config.Labels["ai.brokk.usagebench.environment.version"] == $environmentVersion
-     and .Config.Labels["ai.brokk.usagebench.environment.definition-digest"] == $definitionDigest' \
+     and .Config.Labels["ai.brokk.usagebench.environment.definition-digest"] == $definitionDigest
+     and .Config.Labels["ai.brokk.usagebench.environment.identity-digest"] == $identityDigest
+     and .Config.Labels["ai.brokk.usagebench.analyzer.identity"] == $analyzerIdentity
+     and .Config.Labels["ai.brokk.usagebench.canonical-platform"] == "linux/amd64"' \
   >/dev/null || {
     echo "loaded image labels or platform do not match the reference metadata" >&2
     exit 1

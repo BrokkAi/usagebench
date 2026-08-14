@@ -19,6 +19,7 @@ use std::{
     collections::{BTreeSet, HashMap},
     fs,
     path::{Path, PathBuf},
+    time::Instant,
 };
 
 pub const FREEZE_MANIFEST_SCHEMA_VERSION: u32 = 5;
@@ -96,6 +97,53 @@ pub struct FreezeManifestOptions {
     pub promotion_manifest: Option<PathBuf>,
 }
 
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FreezePhaseTimings {
+    pub schema_version: u32,
+    pub candidate_registry_validation_ms: Option<u64>,
+    pub corpus_hashing_and_validation_ms: Option<u64>,
+    pub report_validation_ms: Option<u64>,
+    pub manifest_writing_ms: Option<u64>,
+    pub total_ms: Option<u64>,
+    pub completed: bool,
+}
+
+impl FreezePhaseTimings {
+    pub fn new() -> Self {
+        Self {
+            schema_version: 1,
+            ..Self::default()
+        }
+    }
+}
+
+struct PhaseTimer<'a> {
+    started: Instant,
+    destination: Option<&'a mut Option<u64>>,
+    label: &'static str,
+}
+
+impl<'a> PhaseTimer<'a> {
+    fn new(destination: Option<&'a mut Option<u64>>, label: &'static str) -> Self {
+        Self {
+            started: Instant::now(),
+            destination,
+            label,
+        }
+    }
+}
+
+impl Drop for PhaseTimer<'_> {
+    fn drop(&mut self) {
+        let elapsed = self.started.elapsed().as_millis() as u64;
+        if let Some(destination) = self.destination.as_deref_mut() {
+            *destination = Some(elapsed);
+            eprintln!("phase timing: {} {} ms", self.label, elapsed);
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FreezeManifest {
@@ -170,11 +218,31 @@ pub struct ManifestDocument {
 }
 
 pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest> {
+    create_manifest_inner(options, None)
+}
+
+pub fn create_manifest_profiled(
+    options: FreezeManifestOptions,
+    timings: &mut FreezePhaseTimings,
+) -> Result<FreezeManifest> {
+    create_manifest_inner(options, Some(timings))
+}
+
+fn create_manifest_inner(
+    options: FreezeManifestOptions,
+    mut timings: Option<&mut FreezePhaseTimings>,
+) -> Result<FreezeManifest> {
     validate_release_tag(&options.version)?;
     validate_commit(&options.revision)?;
     if options.candidate_ids.is_empty() {
         bail!("at least one --candidates value is required");
     }
+    let corpus_timer = PhaseTimer::new(
+        timings
+            .as_deref_mut()
+            .map(|timings| &mut timings.corpus_hashing_and_validation_ms),
+        "corpus hashing and validation",
+    );
     let (evaluation_audit, legacy_promotion_audit) = match options.snapshot_kind {
         SnapshotKind::Development => (None, None),
         SnapshotKind::Evaluation => {
@@ -191,6 +259,7 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
             (None, Some(build_promotion_audit(manifest)?))
         }
     };
+    drop(corpus_timer);
     if options.candidate_ids.len() != options.report_paths.len() {
         bail!(
             "expected one --report for each selected candidate: {} candidate(s), {} report(s)",
@@ -198,7 +267,14 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
             options.report_paths.len()
         );
     }
+    let candidate_registry_timer = PhaseTimer::new(
+        timings
+            .as_deref_mut()
+            .map(|timings| &mut timings.candidate_registry_validation_ms),
+        "candidate registry validation",
+    );
     let registry = load_registry(&options.candidates_file)?;
+    drop(candidate_registry_timer);
     let mut known_candidates = HashMap::new();
     for candidate in registry.candidates {
         if known_candidates
@@ -215,6 +291,12 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
     let mut documents = Vec::new();
     let mut contract: Option<ScoringContract> = None;
 
+    let report_timer = PhaseTimer::new(
+        timings
+            .as_deref_mut()
+            .map(|timings| &mut timings.report_validation_ms),
+        "report validation",
+    );
     for (candidate_id, report_path) in options.candidate_ids.iter().zip(&options.report_paths) {
         if !selected_ids.insert(candidate_id.clone()) {
             bail!("candidate {candidate_id} was selected more than once");
@@ -278,6 +360,7 @@ pub fn create_manifest(options: FreezeManifestOptions) -> Result<FreezeManifest>
         });
         candidates.push(manifest_candidate(candidate));
     }
+    drop(report_timer);
 
     documents.sort_by(|left, right| left.case_file.cmp(&right.case_file));
     let corpus = documents;
@@ -348,6 +431,14 @@ pub fn write_manifest(output: &Path, manifest: &FreezeManifest) -> Result<()> {
         fs::create_dir_all(parent).with_context(|| format!("create {}", parent.display()))?;
     }
     let encoded = serde_json::to_vec_pretty(manifest).context("serialize freeze manifest")?;
+    fs::write(output, encoded).with_context(|| format!("write {}", output.display()))
+}
+
+pub fn write_phase_timings(output: &Path, timings: &FreezePhaseTimings) -> Result<()> {
+    if let Some(parent) = output.parent() {
+        fs::create_dir_all(parent).with_context(|| format!("create {}", parent.display()))?;
+    }
+    let encoded = serde_json::to_vec_pretty(timings).context("serialize freeze phase timings")?;
     fs::write(output, encoded).with_context(|| format!("write {}", output.display()))
 }
 
@@ -570,6 +661,17 @@ pub(crate) fn validate_canonical_environment(candidate_id: &str, report: &RunRep
     if container.image_reference.trim().is_empty() || !is_prefixed_sha256(&container.image_digest) {
         bail!(
             "candidate {} container provenance is incomplete",
+            candidate_id
+        );
+    }
+    if container.image_reference.starts_with("ghcr.io/")
+        && !container
+            .image_reference
+            .rsplit_once('@')
+            .is_some_and(|(_, digest)| is_prefixed_sha256(digest))
+    {
+        bail!(
+            "candidate {} registry image reference is not bound to an immutable digest",
             candidate_id
         );
     }
@@ -844,6 +946,21 @@ mod tests {
         assert!(error
             .to_string()
             .contains("must use the canonical linux/amd64 container"));
+    }
+
+    #[test]
+    fn canonical_registry_reference_requires_an_immutable_digest() {
+        let mut report: RunReport = serde_json::from_value(sample_report()).unwrap();
+        report
+            .environment
+            .container
+            .as_mut()
+            .unwrap()
+            .image_reference = "ghcr.io/brokkai/usagebench-reference:bifrost-latest".to_string();
+
+        let error = validate_canonical_environment("bifrost", &report).unwrap_err();
+
+        assert!(error.to_string().contains("immutable digest"));
     }
 
     #[test]

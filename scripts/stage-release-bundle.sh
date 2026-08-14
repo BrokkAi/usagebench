@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+stage_started_ns="$(python3 -c 'import time; print(time.time_ns())')"
+
 usage() {
   echo "usage: $0 SOURCE_ROOT DESTINATION RELEASE_TAG REVISION [FREEZE_EVIDENCE_DIRECTORY] [GENERATED_RESULTS_DIRECTORY]" >&2
   exit 2
@@ -71,3 +73,11 @@ if [[ -n "$generated_results_directory" ]]; then
   mkdir -p "$destination/results"
   cp "$generated_results_directory/results.md" "$generated_results_directory/case-comparison.md" "$destination/results/"
 fi
+
+stage_finished_ns="$(python3 -c 'import time; print(time.time_ns())')"
+release_staging_ms="$(( (stage_finished_ns - stage_started_ns) / 1000000 ))"
+python3 "$source_root/scripts/corpus-hashes.py" create \
+  --root "$destination" \
+  --output "$destination/.usagebench-corpus-hashes.json" \
+  --timings-output "$destination/.usagebench-stage-timings.json" \
+  --release-staging-ms "$release_staging_ms"

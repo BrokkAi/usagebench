@@ -146,6 +146,32 @@ grep -Fq 'BIFROST_CACHE_DIR=/work/bifrost-cache' "$repo_root/scripts/run-referen
   echo "Bifrost reference execution does not relocate generated cache state to writable tmpfs" >&2
   exit 1
 }
+jq -e '
+  .distribution == "checksum_addressed_registry"
+  and .registry == "ghcr.io/brokkai/usagebench-reference"
+' "$reference_manifest" >/dev/null
+grep -Fq 'USAGEBENCH_REFERENCE_IMAGE_FORCE_REBUILD' "$repo_root/scripts/reference-image.sh" || {
+  echo "reference image tooling lacks a forced recipe rebuild path" >&2
+  exit 1
+}
+for identity_label in \
+  ai.brokk.usagebench.environment.identity-digest \
+  ai.brokk.usagebench.environment.definition-digest \
+  ai.brokk.usagebench.analyzer.identity \
+  ai.brokk.usagebench.canonical-platform; do
+  grep -Fq "$identity_label" "$repo_root/scripts/reference-image.sh" || {
+    echo "reference image reuse does not verify $identity_label" >&2
+    exit 1
+  }
+done
+grep -Fq 'docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567' "$workflow" || {
+  echo "trusted reference workflow does not authenticate checksum-addressed publication" >&2
+  exit 1
+}
+grep -Fq 'scripts/corpus-hashes.py verify' "$freeze_workflow" || {
+  echo "freeze workflow does not verify the exact staged corpus" >&2
+  exit 1
+}
 
 while IFS=$'\t' read -r candidate_id profile expected_sha256; do
   actual_sha256="$(shasum -a 256 "$repo_root/$profile" | awk '{print $1}')"

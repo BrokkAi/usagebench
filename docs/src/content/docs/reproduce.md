@@ -30,12 +30,15 @@ revision provenance, environment definition, executable checksum, requested
 and resolved analyzer versions, capabilities, locations, diagnostics, case
 outcomes, and totals.
 
-## Build-only distribution
+## Checksum-addressed distribution
 
-UsageBench checks in the complete image definitions but does not publish
-ready-built images to GHCR. CI builds and smoke-tests both reference images
-ephemerally without a registry login, push, OCI export, or image artifact
-upload. A future archival release may place reviewed OCI archives on Zenodo.
+Trusted `main` CI publishes canonical images to
+`ghcr.io/brokkai/usagebench-reference`. The lookup tag is the SHA-256 of the
+runner, UsageBench release and revision, environment definition digest,
+analyzer identity, and canonical platform. The script resolves that tag to an
+immutable registry digest, pulls by digest, and verifies all identity labels
+plus the loaded image ID before reuse. A mutable tag is never publication
+evidence by itself.
 
 Image construction needs network access to retrieve digest-pinned bases and
 checksum-protected analyzer inputs. Benchmark execution itself uses
@@ -48,15 +51,24 @@ troubleshooting guidance are in the repository's `ARTIFACT.md`.
 
 ## Direct inspection
 
-Build either version 1 image using the release tag recorded in a report:
+Restore or build either version 1 image using the release tag recorded in a report:
 
 ```bash
 ./scripts/reference-image.sh bifrost vMAJOR.MINOR.PATCH
 ./scripts/reference-image.sh gopls vMAJOR.MINOR.PATCH
 ```
 
-The scripts write local metadata under `target/reference/` and never push an
-image. To run a selected gopls case against an extracted release bundle:
+The scripts write local metadata under `target/reference/`. To validate the
+recipe itself without local or registry reuse, run:
+
+```bash
+USAGEBENCH_REFERENCE_IMAGE_FORCE_REBUILD=1 \
+  ./scripts/reference-image.sh bifrost vMAJOR.MINOR.PATCH
+```
+
+Forced rebuilds cannot publish. Trusted CI publishes only after authenticating
+to GHCR and setting `USAGEBENCH_REFERENCE_IMAGE_PUBLISH=1`. To run a selected
+gopls case against an extracted release bundle:
 
 ```bash
 ./scripts/run-reference.sh \
@@ -72,6 +84,9 @@ Every canonical report records `executionMode: container`,
 image ID, the actual analyzer executable SHA-256, and declared toolchain
 versions. The wrapper binds that identity to the corpus release and revision
 before executing the immutable local image ID.
+Reference metadata also retains `imageResolutionMs`, `imageConstructionMs`,
+and `reuseStatus`, keeping local-cache, registry-restore, and actual build time
+distinct in freeze and reproduction logs.
 
 ## Native development runs
 

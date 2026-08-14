@@ -1,11 +1,11 @@
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Instant};
 use usagebench::bifrost_runner::{
     run_bifrost, BifrostRunReport, CaseStatus, NormalizedLocation, RunBifrostOptions,
     TypeLookupReport, UsageDefinitionReport, DEFAULT_SCAN_USAGES_MAX_DURATION_SECS,
 };
-use usagebench::freeze::{create_manifest, FreezeManifestOptions, SnapshotKind};
+use usagebench::freeze::{FreezeManifestOptions, SnapshotKind};
 use usagebench::real_project::{
     capture_population, draw_selection, require_committed_population, CapturePopulationOptions,
     DrawSelectionOptions,
@@ -125,6 +125,9 @@ enum Command {
         /// Destination for the machine-readable snapshot manifest.
         #[arg(long)]
         output: PathBuf,
+        /// Retained phase timings (defaults beside the manifest as *.timings.json).
+        #[arg(long)]
+        timings_output: Option<PathBuf>,
     },
     /// Generate public result fragments from a verified immutable snapshot.
     GenerateResults {
@@ -330,24 +333,59 @@ fn main() -> Result<()> {
             evaluation_corpus,
             promotion_manifest,
             output,
+            timings_output,
         } => {
-            let manifest = create_manifest(FreezeManifestOptions {
-                snapshot_kind,
-                version,
-                revision,
-                candidates_file,
-                candidate_ids: candidates,
-                report_paths: report,
-                evaluation_corpus,
-                promotion_manifest,
-            })?;
-            usagebench::freeze::write_manifest(&output, &manifest)?;
+            let total_started = Instant::now();
+            let mut timings = usagebench::freeze::FreezePhaseTimings::new();
+            if timings_output.as_ref().is_some_and(|path| path == &output) {
+                bail!("freeze manifest and phase timings require distinct output paths");
+            }
+            let manifest_result = usagebench::freeze::create_manifest_profiled(
+                FreezeManifestOptions {
+                    snapshot_kind,
+                    version,
+                    revision,
+                    candidates_file,
+                    candidate_ids: candidates,
+                    report_paths: report,
+                    evaluation_corpus,
+                    promotion_manifest,
+                },
+                &mut timings,
+            );
+            let timings_output = timings_output.unwrap_or_else(|| {
+                let file_name = output
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .unwrap_or("freeze-manifest.json");
+                output.with_file_name(format!("{file_name}.timings.json"))
+            });
+            let manifest = match manifest_result {
+                Ok(manifest) => manifest,
+                Err(error) => {
+                    timings.total_ms = Some(total_started.elapsed().as_millis() as u64);
+                    usagebench::freeze::write_phase_timings(&timings_output, &timings)?;
+                    return Err(error);
+                }
+            };
+            let write_started = Instant::now();
+            let write_result = usagebench::freeze::write_manifest(&output, &manifest);
+            timings.manifest_writing_ms = Some(write_started.elapsed().as_millis() as u64);
+            timings.total_ms = Some(total_started.elapsed().as_millis() as u64);
+            timings.completed = write_result.is_ok();
+            eprintln!(
+                "phase timing: manifest writing {} ms",
+                timings.manifest_writing_ms.unwrap_or(0)
+            );
+            usagebench::freeze::write_phase_timings(&timings_output, &timings)?;
+            write_result?;
             println!(
-                "wrote {} {} snapshot manifest for {} candidate(s) to {}",
+                "wrote {} {} snapshot manifest for {} candidate(s) to {} (timings: {})",
                 manifest.snapshot_kind,
                 manifest.version,
                 manifest.candidates.len(),
-                output.display()
+                output.display(),
+                timings_output.display()
             );
         }
         Command::GenerateResults {

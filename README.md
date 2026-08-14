@@ -55,6 +55,12 @@ The generator rejects missing, altered, mismatched, or non-snapshot reports
 before it writes a page. Evaluation pages additionally verify the freeze ID,
 bounded claim scope, artifact provenance, denominators, exclusions, and
 replacements, and cannot mix development documents into an evaluation claim.
+`freeze-manifest` writes a sibling `*.timings.json` even when validation fails;
+the freeze workflow retains it together with staging, corpus hashing,
+frozen-input hashing, report validation, and manifest-writing timings. Staged
+bundles also contain `.usagebench-corpus-hashes.json`, whose root digest binds
+the exact input file set and is independently reverified during shard
+aggregation before its per-file hashes are reused.
 Location-level precision, recall, and range-quality tables require reports
 produced by UsageBench 0.2.0 or newer; older reports remain readable for their
 existing strict and required-destination fields but are never interpreted as
@@ -239,10 +245,11 @@ the release bundle named by the report, and run one command:
 ./scripts/reproduce-report.sh report.json reproduced.json
 ```
 
-The command builds the recorded environment locally, reruns without network
-access, and compares the reports semantically. The project intentionally does
-not publish images to GHCR or promise a ready-built image; release bundles
-contain everything needed to build them. See [`ARTIFACT.md`](ARTIFACT.md) for
+The command restores the checksum-addressed image when its complete identity
+and immutable registry digest verify, otherwise builds the recorded environment
+locally, reruns without network access, and compares the reports semantically.
+Release bundles still contain everything needed for an independent forced
+rebuild. See [`ARTIFACT.md`](ARTIFACT.md) for
 the artifact-review procedure, security boundary, expected build cost, and
 manual commands. Native runner commands remain available for development but
 are labeled host-specific and are not the canonical reproducibility claim.

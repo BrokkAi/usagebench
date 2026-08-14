@@ -9,6 +9,7 @@
     "environmentVersion",
     "canonicalPlatform",
     "distribution",
+    "registry",
     "buildFrontend",
     "localTagTemplate",
     "runners"
@@ -17,7 +18,11 @@
     "schemaVersion": { "const": 1 },
     "environmentVersion": { "type": "string", "pattern": "^[1-9][0-9]*$" },
     "canonicalPlatform": { "const": "linux/amd64" },
-    "distribution": { "const": "build_only" },
+    "distribution": { "const": "checksum_addressed_registry" },
+    "registry": {
+      "type": "string",
+      "pattern": "^ghcr\\.io/[a-z0-9-]+/[a-z0-9-]+$"
+    },
     "buildFrontend": { "$ref": "#/$defs/pinnedImage" },
     "localTagTemplate": {
       "type": "string",

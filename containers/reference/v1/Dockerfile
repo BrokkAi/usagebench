@@ -52,12 +52,14 @@ ARG USAGEBENCH_RELEASE
 ARG USAGEBENCH_REVISION
 ARG ENVIRONMENT_VERSION
 ARG DEFINITION_DIGEST
+ARG IDENTITY_DIGEST
+ARG ANALYZER_IDENTITY
 ARG BIFROST_REVISION
 USER root
 COPY --from=bifrost-builder /src/bifrost/target/release/bifrost /usr/local/bin/bifrost
 RUN install -d /usr/local/share/usagebench \
     && printf '%s\n' \
-      "{\"version\":\"${ENVIRONMENT_VERSION}\",\"definitionDigest\":\"${DEFINITION_DIGEST}\",\"canonicalPlatform\":\"linux/amd64\",\"usagebenchRelease\":\"${USAGEBENCH_RELEASE}\",\"usagebenchRevision\":\"${USAGEBENCH_REVISION}\",\"runnerId\":\"bifrost\"}" \
+      "{\"version\":\"${ENVIRONMENT_VERSION}\",\"definitionDigest\":\"${DEFINITION_DIGEST}\",\"identityDigest\":\"${IDENTITY_DIGEST}\",\"analyzerIdentity\":\"${ANALYZER_IDENTITY}\",\"canonicalPlatform\":\"linux/amd64\",\"usagebenchRelease\":\"${USAGEBENCH_RELEASE}\",\"usagebenchRevision\":\"${USAGEBENCH_REVISION}\",\"runnerId\":\"bifrost\"}" \
       > /usr/local/share/usagebench/reference-environment.json
 LABEL org.opencontainers.image.title="UsageBench Bifrost reference environment" \
       org.opencontainers.image.source="https://github.com/BrokkAi/usagebench" \
@@ -67,6 +69,9 @@ LABEL org.opencontainers.image.title="UsageBench Bifrost reference environment" 
       ai.brokk.usagebench.runner.id="bifrost" \
       ai.brokk.usagebench.environment.version="${ENVIRONMENT_VERSION}" \
       ai.brokk.usagebench.environment.definition-digest="${DEFINITION_DIGEST}" \
+      ai.brokk.usagebench.environment.identity-digest="${IDENTITY_DIGEST}" \
+      ai.brokk.usagebench.canonical-platform="linux/amd64" \
+      ai.brokk.usagebench.analyzer.identity="${ANALYZER_IDENTITY}" \
       ai.brokk.usagebench.runner.revision="${BIFROST_REVISION}"
 USER 65532:65532
 
@@ -75,13 +80,15 @@ ARG USAGEBENCH_RELEASE
 ARG USAGEBENCH_REVISION
 ARG ENVIRONMENT_VERSION
 ARG DEFINITION_DIGEST
+ARG IDENTITY_DIGEST
+ARG ANALYZER_IDENTITY
 ARG GOPLS_VERSION
 USER root
 COPY --from=gopls-builder /usr/local/go /usr/local/go
 COPY --from=gopls-builder /out/gopls /usr/local/bin/gopls
 RUN install -d /usr/local/share/usagebench \
     && printf '%s\n' \
-      "{\"version\":\"${ENVIRONMENT_VERSION}\",\"definitionDigest\":\"${DEFINITION_DIGEST}\",\"canonicalPlatform\":\"linux/amd64\",\"usagebenchRelease\":\"${USAGEBENCH_RELEASE}\",\"usagebenchRevision\":\"${USAGEBENCH_REVISION}\",\"runnerId\":\"gopls\"}" \
+      "{\"version\":\"${ENVIRONMENT_VERSION}\",\"definitionDigest\":\"${DEFINITION_DIGEST}\",\"identityDigest\":\"${IDENTITY_DIGEST}\",\"analyzerIdentity\":\"${ANALYZER_IDENTITY}\",\"canonicalPlatform\":\"linux/amd64\",\"usagebenchRelease\":\"${USAGEBENCH_RELEASE}\",\"usagebenchRevision\":\"${USAGEBENCH_REVISION}\",\"runnerId\":\"gopls\"}" \
       > /usr/local/share/usagebench/reference-environment.json
 ENV PATH="/usr/local/go/bin:${PATH}" \
     GOTOOLCHAIN=local
@@ -93,5 +100,8 @@ LABEL org.opencontainers.image.title="UsageBench gopls reference environment" \
       ai.brokk.usagebench.runner.id="gopls" \
       ai.brokk.usagebench.environment.version="${ENVIRONMENT_VERSION}" \
       ai.brokk.usagebench.environment.definition-digest="${DEFINITION_DIGEST}" \
+      ai.brokk.usagebench.environment.identity-digest="${IDENTITY_DIGEST}" \
+      ai.brokk.usagebench.canonical-platform="linux/amd64" \
+      ai.brokk.usagebench.analyzer.identity="${ANALYZER_IDENTITY}" \
       ai.brokk.usagebench.runner.version="${GOPLS_VERSION}"
 USER 65532:65532

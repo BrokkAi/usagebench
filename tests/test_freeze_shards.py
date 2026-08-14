@@ -12,6 +12,42 @@ SPEC.loader.exec_module(MODULE)
 
 
 class FreezeShardTests(unittest.TestCase):
+    def test_staged_corpus_hashes_verify_exact_file_set_and_content(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            for name in ("adapters", "benchmarks", "containers", "fixtures", "schema", "scripts", "src"):
+                (root / name).mkdir()
+                (root / name / "input.txt").write_text(name)
+            for name in (
+                ".dockerignore", "ARTIFACT.md", "CITATION.cff", "Cargo.lock", "Cargo.toml",
+                "LICENSE.md", "README.md", "RELEASES.md",
+            ):
+                (root / name).write_text(name)
+            (root / ".usagebench-release.json").write_text(json.dumps({
+                "releaseTag": "v0.3.0", "revision": "a" * 40,
+            }))
+            manifest = root / ".usagebench-corpus-hashes.json"
+            timings = root / ".usagebench-stage-timings.json"
+            command = [
+                ROOT / "scripts/corpus-hashes.py", "create", "--root", root,
+                "--output", manifest, "--timings-output", timings,
+                "--release-staging-ms", "7",
+            ]
+            created = subprocess.run(command, text=True, capture_output=True)
+            self.assertEqual(created.returncode, 0, created.stderr)
+            verified = subprocess.run([
+                ROOT / "scripts/corpus-hashes.py", "verify", "--root", root,
+                "--manifest", manifest,
+            ], text=True, capture_output=True)
+            self.assertEqual(verified.returncode, 0, verified.stderr)
+            (root / "benchmarks/input.txt").write_text("changed")
+            rejected = subprocess.run([
+                ROOT / "scripts/corpus-hashes.py", "verify", "--root", root,
+                "--manifest", manifest,
+            ], text=True, capture_output=True)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("checksum mismatch", rejected.stderr)
+
     def test_v030_registry_preserves_historical_bifrost_identity(self):
         active = json.loads((ROOT / "adapters/candidates.json").read_text())
         frozen = json.loads(
@@ -41,6 +77,14 @@ class FreezeShardTests(unittest.TestCase):
             ("eclipse-jdtls", "java"), ("rust-analyzer", "rust"),
             ("apple-clangd-21", "cpp"),
         })
+
+    def test_shard_identity_reuses_checksum_bound_staged_hashes(self):
+        paths = MODULE.FROZEN_FILES + MODULE.expected_files(ROOT, "java")
+        hashes = {path: f"{index:064x}" for index, path in enumerate(paths, 1)}
+        corpus = ({"rootDigest": "sha256:" + "f" * 64}, hashes)
+        identity = MODULE.identity(ROOT, "v0.3.0", "a" * 40, "bifrost-java", corpus)
+        self.assertEqual(identity["stagedCorpusSha256"], "sha256:" + "f" * 64)
+        self.assertEqual(identity["frozenInputSha256"], hashes)
 
     def test_merge_rejects_invariant_mismatch(self):
         left = {"runner": {"name": "bifrost"}, "environment": {"analyzerExecutable": {}}}
