@@ -7,10 +7,16 @@
   "command": ["rust-analyzer"],
   "fileExtensions": [".rs"],
   "languageIds": {".rs": "rust"},
+  "clientCapabilities": {"experimental": {"serverStatusNotification": true}},
   "initializationOptions": {"checkOnSave": false},
   "configuration": {"rust-analyzer": {"checkOnSave": false}},
   "workspaceFiles": {
     "Cargo.toml": "[package]\nname = \"usagebench_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n"
   },
-  "settleMilliseconds": 8000
+  "readinessNotification": "experimental/serverStatus",
+  "readinessRequiresQuiescent": true,
+  "readinessTimeoutFallsBackToSettle": true,
+  "readinessTimeoutMilliseconds": 45000,
+  "settleMilliseconds": 8000,
+  "requestTimeoutMilliseconds": 120000
 }

@@ -83,6 +83,10 @@ struct LspProfile {
     #[serde(default)]
     document_open_strategy: DocumentOpenStrategy,
     document_readiness: Option<DocumentReadiness>,
+    #[serde(default)]
+    readiness_requires_quiescent: bool,
+    #[serde(default)]
+    readiness_timeout_falls_back_to_settle: bool,
     project_context_request: Option<String>,
     #[serde(default)]
     query_declaration: bool,
@@ -385,11 +389,32 @@ fn run_document(
         &profile.client_capabilities,
     )?;
     send_profile_notifications(profile, source_root, run_dir, &workspace_uri, &mut session)?;
+    let mut readiness_diagnostics = Vec::new();
     if let Some(notification) = &profile.readiness_notification {
-        session.wait_for_notification(
-            notification,
-            Duration::from_millis(profile.readiness_timeout_milliseconds.unwrap_or(120_000)),
-        )?;
+        let timeout =
+            Duration::from_millis(profile.readiness_timeout_milliseconds.unwrap_or(120_000));
+        if profile.readiness_requires_quiescent {
+            if profile.readiness_timeout_falls_back_to_settle {
+                if session
+                    .wait_for_quiescent_notification_or_timeout(notification, timeout)?
+                    .is_none()
+                {
+                    readiness_diagnostics.push(RunDiagnostic {
+                        kind: "lsp_workspace_quiescence_timeout".to_string(),
+                        message: format!(
+                            "{} did not report `{notification}` with params.quiescent=true within {:.1} seconds; continuing with the configured {} ms settle window and bounded ContentModified handling",
+                            profile.name,
+                            timeout.as_secs_f64(),
+                            profile.settle_milliseconds,
+                        ),
+                    });
+                }
+            } else {
+                session.wait_for_quiescent_notification(notification, timeout)?;
+            }
+        } else {
+            session.wait_for_notification(notification, timeout)?;
+        }
     }
     let capabilities = capabilities_from_initialize(&initialize.capabilities);
     let context = CaseRunContext {
@@ -418,7 +443,11 @@ fn run_document(
                 .as_ref()
                 .is_none_or(|case_id| case.id == *case_id)
         })
-        .map(|case| run_case(case, &context, &mut session, options.include_unsupported))
+        .map(|case| {
+            let mut report = run_case(case, &context, &mut session, options.include_unsupported);
+            report.diagnostics.extend(readiness_diagnostics.clone());
+            report
+        })
         .collect();
     Ok((cases, initialize))
 }
@@ -511,7 +540,7 @@ fn run_case(
     let declaration_to_usages = case
         .declaration
         .as_ref()
-        .map(|declaration| run_references(case, declaration, context, session));
+        .map(|declaration| run_references(case, declaration, context, session, &mut diagnostics));
     let mut status = combine_case_status(
         declaration_to_usages.as_ref(),
         &usage_to_declaration,
@@ -557,6 +586,7 @@ fn run_references(
     declaration: &SymbolLocation,
     context: &CaseRunContext<'_>,
     session: &mut LspSession,
+    diagnostics: &mut Vec<RunDiagnostic>,
 ) -> DeclarationUsageReport {
     if !context.capabilities.references {
         let mut report = failed_declaration_report(case, "references_not_advertised");
@@ -589,9 +619,17 @@ fn run_references(
             }
             Err(error) => return error_declaration_report(case, "invalid_declaration", error),
         };
+        let outcome = session.query_with_content_modified_retry("textDocument/references", params);
+        let succeeded = outcome.result.is_ok();
+        diagnostics.extend(content_modified_retry_diagnostics(
+            selector,
+            "textDocument/references",
+            outcome.content_modified_retries,
+            succeeded,
+        ));
         reference_results.push(
-            session
-                .query("textDocument/references", params)
+            outcome
+                .result
                 .and_then(|result| locations_from_response(&result, context.source_root)),
         );
     }
@@ -711,9 +749,19 @@ fn run_definition(
         .map(normalized_or_invalid)
         .collect::<Vec<_>>();
     let usage = normalized_or_invalid(&lookup.usage);
-    let result = position_params_with_context(&lookup.usage, profile, source_root, session)
-        .and_then(|params| session.query(method, params))
-        .and_then(|value| locations_from_response(&value, source_root));
+    let (result, content_modified_retries) =
+        match position_params_with_context(&lookup.usage, profile, source_root, session) {
+            Ok(params) => {
+                let outcome = session.query_with_content_modified_retry(method, params);
+                (
+                    outcome
+                        .result
+                        .and_then(|value| locations_from_response(&value, source_root)),
+                    outcome.content_modified_retries,
+                )
+            }
+            Err(error) => (Err(error), 0),
+        };
     match result {
         Ok(actual) => {
             let (status, raw_status) = score_navigation_response(
@@ -729,22 +777,59 @@ fn run_definition(
                 expected_declaration: expected.clone(),
                 raw_status: raw_status.to_string(),
                 actual_declarations: actual,
-                diagnostics: Vec::new(),
+                diagnostics: content_modified_retry_diagnostics(
+                    &lookup.usage,
+                    method,
+                    content_modified_retries,
+                    true,
+                ),
             }
         }
-        Err(error) => UsageDefinitionReport {
-            status: CaseStatus::Error,
-            operation: lookup.operation,
-            usage,
-            expected_declaration: expected,
-            actual_declarations: Vec::new(),
-            raw_status: "definition_failed".to_string(),
-            diagnostics: vec![RunDiagnostic {
+        Err(error) => {
+            let mut diagnostics = content_modified_retry_diagnostics(
+                &lookup.usage,
+                method,
+                content_modified_retries,
+                false,
+            );
+            diagnostics.push(RunDiagnostic {
                 kind: "definition_failed".to_string(),
                 message: format!("{error:#}"),
-            }],
-        },
+            });
+            UsageDefinitionReport {
+                status: CaseStatus::Error,
+                operation: lookup.operation,
+                usage,
+                expected_declaration: expected,
+                actual_declarations: Vec::new(),
+                raw_status: "definition_failed".to_string(),
+                diagnostics,
+            }
+        }
     }
+}
+
+fn content_modified_retry_diagnostics(
+    location: &SymbolLocation,
+    method: &str,
+    retries: usize,
+    succeeded: bool,
+) -> Vec<RunDiagnostic> {
+    if retries == 0 {
+        return Vec::new();
+    }
+    let start = &location.location.range.start;
+    vec![RunDiagnostic {
+        kind: "lsp_content_modified_retry".to_string(),
+        message: format!(
+            "{method} at {}:{}:{} {} after {retries} ContentModified retr{}; every attempt reused the original request location",
+            benchmark_path(location),
+            start.line,
+            start.character,
+            if succeeded { "succeeded" } else { "failed" },
+            if retries == 1 { "y" } else { "ies" },
+        ),
+    }]
 }
 
 fn run_type_definition(
@@ -766,9 +851,20 @@ fn run_type_definition(
             diagnostics: Vec::new(),
         };
     }
-    let result = position_params_with_context(&lookup.expression, profile, source_root, session)
-        .and_then(|params| session.query("textDocument/typeDefinition", params))
-        .and_then(|value| locations_from_response(&value, source_root));
+    let (result, content_modified_retries) =
+        match position_params_with_context(&lookup.expression, profile, source_root, session) {
+            Ok(params) => {
+                let outcome = session
+                    .query_with_content_modified_retry("textDocument/typeDefinition", params);
+                (
+                    outcome
+                        .result
+                        .and_then(|value| locations_from_response(&value, source_root)),
+                    outcome.content_modified_retries,
+                )
+            }
+            Err(error) => (Err(error), 0),
+        };
     match result {
         Ok(actual) => {
             let status = navigation_response_status(&actual, &expected_type, false);
@@ -792,20 +888,34 @@ fn run_type_definition(
                     "mismatched_type_definition".to_string()
                 },
                 actual_types: actual,
-                diagnostics: Vec::new(),
+                diagnostics: content_modified_retry_diagnostics(
+                    &lookup.expression,
+                    "textDocument/typeDefinition",
+                    content_modified_retries,
+                    true,
+                ),
             }
         }
-        Err(error) => TypeLookupReport {
-            status: CaseStatus::Error,
-            expression,
-            expected_type,
-            actual_types: Vec::new(),
-            raw_status: "type_definition_failed".to_string(),
-            diagnostics: vec![RunDiagnostic {
+        Err(error) => {
+            let mut diagnostics = content_modified_retry_diagnostics(
+                &lookup.expression,
+                "textDocument/typeDefinition",
+                content_modified_retries,
+                false,
+            );
+            diagnostics.push(RunDiagnostic {
                 kind: "type_definition_failed".to_string(),
                 message: format!("{error:#}"),
-            }],
-        },
+            });
+            TypeLookupReport {
+                status: CaseStatus::Error,
+                expression,
+                expected_type,
+                actual_types: Vec::new(),
+                raw_status: "type_definition_failed".to_string(),
+                diagnostics,
+            }
+        }
     }
 }
 
@@ -1324,6 +1434,18 @@ fn validate_profile(profile: &LspProfile) -> Result<()> {
     }
     if profile.file_extensions.is_empty() {
         bail!("LSP profile `{}` has no file extensions", profile.id);
+    }
+    if profile.readiness_requires_quiescent && profile.readiness_notification.is_none() {
+        bail!(
+            "LSP profile `{}` requires quiescence without a readinessNotification",
+            profile.id
+        );
+    }
+    if profile.readiness_timeout_falls_back_to_settle && !profile.readiness_requires_quiescent {
+        bail!(
+            "LSP profile `{}` enables readiness fallback without requiring quiescence",
+            profile.id
+        );
     }
     for extension in &profile.file_extensions {
         if !profile.language_ids.contains_key(extension) {
