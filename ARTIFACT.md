@@ -86,9 +86,13 @@ Use the release tag recorded in the report:
 ./scripts/reference-image.sh gopls vMAJOR.MINOR.PATCH
 ```
 
-Build metadata is written under `target/reference/`. It contains the local tag,
-canonical platform, stable definition digest, source release and revision, the
-loaded image ID, and BuildKit's output digest. No command pushes the image.
+Build metadata is written under `target/reference/`. It contains the canonical
+platform, stable definition and full identity digests, analyzer identity,
+source release and revision, loaded image ID, immutable registry digest when
+available, and BuildKit's output digest. The script restores by immutable
+digest only after verifying every identity label. Set
+`USAGEBENCH_REFERENCE_IMAGE_FORCE_REBUILD=1` to bypass reuse; forced rebuilds
+are deliberately incompatible with publication.
 
 To run one released case directly:
 
@@ -129,8 +133,8 @@ jq '{usagebenchRelease, usagebenchRevision, runner, invocation, environment}' \
 - Cargo lockfile checksums and the pinned Go module graph protect transitive
   build inputs.
 - Reports checksum the analyzer executable that actually ran.
-- The wrapper verifies the mutable local tag, then executes the immutable local
-  image ID recorded immediately after `docker buildx --load`.
+- The wrapper verifies the full identity envelope, resolves registry tags to an
+  immutable digest, and executes the verified immutable local image ID.
 
 Repeated cached builds during development produced identical image IDs for
 both version 1 images. Cross-builder byte identity is not the scientific claim:

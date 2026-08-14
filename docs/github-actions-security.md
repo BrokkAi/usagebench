@@ -9,6 +9,10 @@ that must be configured in GitHub. The settings snapshot below was observed on
 - `test.yml` and `reference-environments.yml` run pull-request code only on
   GitHub-hosted runners. They receive a read-only `contents` token, no repository
   secrets, non-persistent checkout credentials, and explicit time limits.
+- Reference-environment pull-request jobs force a non-publishing recipe rebuild.
+  A separate job runs only on trusted `main`/manual events, receives scoped
+  `packages: write`, publishes or restores a checksum-addressed GHCR image, and
+  verifies it with the same offline smoke/reproduction path.
 - `benchmark.yml`, `docs.yml`, and `freeze.yml` accept manual or scheduled work
   only from `refs/heads/main`. User inputs are passed through action inputs or
   environment variables rather than interpolated into shell programs.
@@ -29,6 +33,10 @@ that must be configured in GitHub. The settings snapshot below was observed on
 - Release and freeze artifacts are immutable within a workflow run. The
   publisher downloads the fixed-name artifact and verifies its SHA-256 sidecar
   before creating a tag or GitHub release.
+- The manual-main development freeze receives `packages: write` only to publish
+  the exact release/revision reference-image identity. Retries resolve its
+  lookup tag to an immutable registry digest and verify platform plus identity
+  labels before reuse; pull-request jobs never receive that authority.
 - Pages build and deployment are separate jobs. Only the deployment job has
   `pages: write` and `id-token: write`.
 - Third-party and GitHub-authored actions are pinned to full commit SHAs. The

@@ -29,15 +29,18 @@ jobs:
           persist-credentials: false
 
       - name: Validate candidate classes and smoke coverage
-        run: scripts/validate-reproduction-contract.sh
+        run: |
+          scripts/validate-reproduction-contract.sh
+          python3 -m unittest tests/test_reference_image.py
 
   build-and-smoke:
     name: ${{ matrix.runner }} reference image
     needs: contract
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    timeout-minutes: 30
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
@@ -56,78 +59,44 @@ jobs:
           lfs: false
           persist-credentials: false
 
-      - name: Stage release-shaped corpus
-        id: bundle
-        shell: bash
+      - name: Force recipe rebuild and run offline smoke
         env:
-          RELEASE_REVISION: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          corpus=target/usagebench-v0.0.0
-          scripts/stage-release-bundle.sh . "$corpus" v0.0.0 "$RELEASE_REVISION"
-          echo "root=$corpus" >> "$GITHUB_OUTPUT"
+          USAGEBENCH_REFERENCE_IMAGE_FORCE_REBUILD: '1'
+        run: scripts/reference-environment-ci.sh "${{ matrix.runner }}" "${{ matrix.case_path }}" "${{ matrix.case_id }}" v0.0.0 "${{ github.sha }}"
 
-      - name: Build local image
-        run: scripts/reference-image.sh "${{ matrix.runner }}" v0.0.0 "${{ github.sha }}"
+  publish-and-smoke:
+    name: publish ${{ matrix.runner }} reference image
+    needs: contract
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: bifrost
+            case_path: containers/reference/v1/smoke/bifrost-case.yaml
+            case_id: reference-bifrost-unused-function
+          - runner: gopls
+            case_path: benchmarks/cases/go-baseline.yaml
+            case_id: go-package-function-call
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
 
-      - name: Verify offline Git source validation
-        shell: bash
-        run: |
-          set -euo pipefail
-          image="usagebench-reference:v0.0.0-env1-${{ matrix.runner }}"
-          docker run --rm --network none --entrypoint /bin/sh "$image" -c '
-            set -eu
-            repository="$(mktemp -d)"
-            git init --bare --quiet "$repository"
-            printf "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor UsageBench <usagebench@example.invalid> 0 +0000\ncommitter UsageBench <usagebench@example.invalid> 0 +0000\n\n" \
-              | git hash-object -t commit --stdin >/dev/null
-            printf "feature done\ncommit refs/heads/archive\ncommitter UsageBench <usagebench@example.invalid> 0 +0000\ndata 0\n\ndone\n" \
-              | git --git-dir="$repository" fast-import --quiet
-            git --git-dir="$repository" rev-parse "refs/heads/archive^{tree}" >/dev/null
-          '
-
-      - name: Run exact offline smoke case
-        run: |
-          mkdir -p target/reference-smoke
-          scripts/run-reference.sh \
-            "${{ matrix.runner }}" \
-            "${{ steps.bundle.outputs.root }}" \
-            "target/reference-smoke/${{ matrix.runner }}.json" \
-            "${{ matrix.case_path }}" \
-            "${{ matrix.case_id }}"
-
-      - name: Verify provenance envelope
-        shell: bash
+      - name: Authenticate checksum-addressed image publication
         env:
-          RUNNER_ID: ${{ matrix.runner }}
-          RELEASE_REVISION: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          report="target/reference-smoke/$RUNNER_ID.json"
-          jq -e \
-            --arg runner "$RUNNER_ID" \
-            --arg revision "$RELEASE_REVISION" \
-            '.usagebenchRelease == "v0.0.0"
-             and .usagebenchRevision == $revision
-             and .runner.name == $runner
-             and .environment.executionMode == "container"
-             and .environment.platformScope == "canonical_reference"
-             and .environment.referenceEnvironment.version == "1"
-             and .environment.referenceEnvironment.canonicalPlatform == "linux/amd64"
-             and (.environment.referenceEnvironment.definitionDigest | test("^sha256:[0-9a-f]{64}$"))
-             and (.environment.container.imageDigest | test("^sha256:[0-9a-f]{64}$"))
-             and (.environment.analyzerExecutable.sha256 | test("^[0-9a-f]{64}$"))
-             and .totals.passed == 1
-             and .totals.failed == 0
-             and .totals.errors == 0' \
-            "$report"
+          GHCR_TOKEN: ${{ github.token }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
 
-      - name: Reproduce from extracted release bundle
-        run: |
-          chmod 0600 "target/reference-smoke/${{ matrix.runner }}.json"
-          "${{ steps.bundle.outputs.root }}/scripts/reproduce-report.sh" \
-            "target/reference-smoke/${{ matrix.runner }}.json" \
-            "target/reference-smoke/${{ matrix.runner }}-reproduced.json"
-
-      # Images stay in this ephemeral runner. This workflow intentionally has
-      # no registry login, push, OCI export, or artifact-upload step.
+      - name: Publish or restore image and run offline smoke
+        env:
+          USAGEBENCH_REFERENCE_IMAGE_PUBLISH: '1'
+        run: scripts/reference-environment-ci.sh "${{ matrix.runner }}" "${{ matrix.case_path }}" "${{ matrix.case_id }}" v0.0.0 "${{ github.sha }}"

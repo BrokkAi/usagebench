@@ -205,6 +205,8 @@ jobs:
             benchmarks/cases/evaluation/real-project-v2 "$RUNNER_TEMP/shard-output" "$REVISION" 2>&1 | tee -a "$RUNNER_TEMP/shard/progress.log"
           python3 scripts/freeze-shards.py metadata --version "$SNAPSHOT_VERSION" --revision "$REVISION" \
             --shard "${{ matrix.shard }}" --report "$RUNNER_TEMP/shard-output/$CANDIDATE.json" \
+            --corpus-hashes "$RUNNER_TEMP/freeze-corpus/.usagebench-corpus-hashes.json" \
+            --stage-timings "$RUNNER_TEMP/freeze-corpus/.usagebench-stage-timings.json" \
             --output "$RUNNER_TEMP/shard/metadata.json"
       - name: Upload checksum-bound shard
         if: always()
@@ -222,6 +224,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: write
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
@@ -230,6 +233,10 @@ jobs:
           lfs: true
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - name: Authenticate checksum-addressed image publication
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
       - name: Run existing development freeze path
         shell: bash
         env:
@@ -237,10 +244,18 @@ jobs:
           SNAPSHOT_VERSION: ${{ needs.preflight.outputs.tag }}
           REVISION: ${{ needs.preflight.outputs.revision }}
           CANDIDATES: ${{ needs.preflight.outputs.candidates }}
+          USAGEBENCH_REFERENCE_IMAGE_PUBLISH: '1'
         run: |
           set -euo pipefail
           scripts/stage-release-bundle.sh . "$RUNNER_TEMP/freeze-corpus" "$SNAPSHOT_VERSION" "$REVISION"
           rm -rf -- "$RUNNER_TEMP/freeze-corpus/benchmarks/cases/evaluation"
+          staging_ms="$(jq -r .releaseStagingMs "$RUNNER_TEMP/freeze-corpus/.usagebench-stage-timings.json")"
+          python3 scripts/corpus-hashes.py create --root "$RUNNER_TEMP/freeze-corpus" \
+            --output "$RUNNER_TEMP/freeze-corpus/.usagebench-corpus-hashes.json" \
+            --timings-output "$RUNNER_TEMP/freeze-corpus/.usagebench-stage-timings.json" \
+            --release-staging-ms "$staging_ms"
+          python3 scripts/corpus-hashes.py verify --root "$RUNNER_TEMP/freeze-corpus" \
+            --manifest "$RUNNER_TEMP/freeze-corpus/.usagebench-corpus-hashes.json"
           scripts/run-freeze-candidates.sh . adapters/candidates.json "$CANDIDATES" "$RUNNER_TEMP/freeze-corpus" \
             benchmarks/cases "$RUNNER_TEMP/freeze-evidence" "$REVISION"
           mkdir -p "$RUNNER_TEMP/freeze-corpus/evidence"
@@ -250,6 +265,16 @@ jobs:
           scripts/stage-release-bundle.sh . "dist/$stage" "$SNAPSHOT_VERSION" "$REVISION" "$RUNNER_TEMP/freeze-evidence" "$RUNNER_TEMP/freeze-results"
           tar -C dist -czf "dist/$stage.tar.gz" "$stage"
           (cd dist && shasum -a 256 "$stage.tar.gz" > "$stage.tar.gz.sha256")
+      - name: Retain development freeze phase timings
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: freeze-phase-timings-development
+          path: |
+            ${{ runner.temp }}/freeze-corpus/.usagebench-stage-timings.json
+            ${{ runner.temp }}/freeze-evidence/*timings*.json
+          if-no-files-found: warn
+          retention-days: 90
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: freeze-release-assets
@@ -290,9 +315,12 @@ jobs:
           REVISION: ${{ needs.preflight.outputs.revision }}
         run: |
           set -euo pipefail
-          python3 scripts/freeze-shards.py aggregate --version "$SNAPSHOT_VERSION" --revision "$REVISION" \
-            --artifacts "$RUNNER_TEMP/shards" --output "$RUNNER_TEMP/freeze-evidence"
           scripts/stage-release-bundle.sh . "$RUNNER_TEMP/freeze-corpus" "$SNAPSHOT_VERSION" "$REVISION"
+          python3 scripts/corpus-hashes.py verify --root "$RUNNER_TEMP/freeze-corpus" \
+            --manifest "$RUNNER_TEMP/freeze-corpus/.usagebench-corpus-hashes.json"
+          python3 scripts/freeze-shards.py aggregate --version "$SNAPSHOT_VERSION" --revision "$REVISION" \
+            --artifacts "$RUNNER_TEMP/shards" --output "$RUNNER_TEMP/freeze-evidence" \
+            --corpus-hashes "$RUNNER_TEMP/freeze-corpus/.usagebench-corpus-hashes.json"
           cargo run --locked -- freeze-manifest --snapshot-kind evaluation --version "$SNAPSHOT_VERSION" --revision "$REVISION" \
             --candidates-file "${{ needs.preflight.outputs.candidate_registry }}" --candidates bifrost,eclipse-jdtls,rust-analyzer,apple-clangd-21 \
             --report "$RUNNER_TEMP/freeze-evidence/bifrost.json" --report "$RUNNER_TEMP/freeze-evidence/eclipse-jdtls.json" \
@@ -306,6 +334,16 @@ jobs:
           scripts/stage-release-bundle.sh . "dist/$stage" "$SNAPSHOT_VERSION" "$REVISION" "$RUNNER_TEMP/freeze-evidence" "$RUNNER_TEMP/freeze-results"
           tar -C dist -czf "dist/$stage.tar.gz" "$stage"
           (cd dist && shasum -a 256 "$stage.tar.gz" > "$stage.tar.gz.sha256")
+      - name: Retain evaluation freeze phase timings
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: freeze-phase-timings-evaluation
+          path: |
+            ${{ runner.temp }}/freeze-corpus/.usagebench-stage-timings.json
+            ${{ runner.temp }}/freeze-evidence/*timings*.json
+          if-no-files-found: warn
+          retention-days: 90
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: freeze-release-assets

@@ -7,6 +7,7 @@ import json
 import pathlib
 import shutil
 import sys
+import time
 
 SHARDS = {
     "bifrost-java": ("bifrost", "java"),
@@ -38,18 +39,47 @@ def expected_files(root, language):
     return [str(path.relative_to(root)) for path in files]
 
 
-def identity(root, version, revision, shard):
+def load_corpus_hashes(path, version, revision):
+    document = json.loads(path.read_text())
+    if document.get("schemaVersion") != 1:
+        raise ValueError("unsupported staged corpus hash schema")
+    if document.get("usagebenchRelease") != version or document.get("usagebenchRevision") != revision:
+        raise ValueError("staged corpus hash identity does not match freeze identity")
+    files = {entry["path"]: entry["sha256"] for entry in document.get("files", [])}
+    if len(files) != len(document.get("files", [])):
+        raise ValueError("staged corpus hash manifest contains duplicate paths")
+    root_digest = document.get("rootDigest", "")
+    if not root_digest.startswith("sha256:") or len(root_digest) != 71:
+        raise ValueError("staged corpus hash manifest lacks a root digest")
+    return document, files
+
+
+def identity(root, version, revision, shard, corpus_hashes=None):
     if shard not in SHARDS:
         raise ValueError(f"unknown shard: {shard}")
     candidate, language = SHARDS[shard]
-    hashes = {name: digest(root / name) for name in FROZEN_FILES}
+    staged_corpus_sha256 = None
+    if corpus_hashes is None:
+        hashes = {name: digest(root / name) for name in FROZEN_FILES}
+    else:
+        document, staged_hashes = corpus_hashes
+        staged_corpus_sha256 = document["rootDigest"]
+        missing = [name for name in FROZEN_FILES if name not in staged_hashes]
+        if missing:
+            raise ValueError(f"staged corpus hashes omit frozen inputs: {missing}")
+        hashes = {name: staged_hashes[name] for name in FROZEN_FILES}
     for name in expected_files(root, language):
-        hashes[name] = digest(root / name)
+        if corpus_hashes is None:
+            hashes[name] = digest(root / name)
+        else:
+            if name not in staged_hashes:
+                raise ValueError(f"staged corpus hashes omit case file: {name}")
+            hashes[name] = staged_hashes[name]
     registry = json.loads(
         (root / "benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json").read_text()
     )
     profile = next(item for item in registry["candidates"] if item["id"] == candidate)
-    return {
+    result = {
         "schemaVersion": 1,
         "freezeId": "real-project-v2",
         "version": version,
@@ -65,12 +95,22 @@ def identity(root, version, revision, shard):
         "caseFiles": expected_files(root, language),
         "frozenInputSha256": hashes,
     }
+    if staged_corpus_sha256 is not None:
+        result["stagedCorpusSha256"] = staged_corpus_sha256
+    return result
 
 
 def write_metadata(args):
     root = pathlib.Path(args.root).resolve()
     report = pathlib.Path(args.report).resolve()
-    data = identity(root, args.version, args.revision, args.shard)
+    started = time.monotonic_ns()
+    corpus_hashes = None
+    if getattr(args, "corpus_hashes", None):
+        corpus_hashes = load_corpus_hashes(
+            pathlib.Path(args.corpus_hashes).resolve(), args.version, args.revision
+        )
+    data = identity(root, args.version, args.revision, args.shard, corpus_hashes)
+    frozen_input_hashing_ms = (time.monotonic_ns() - started) // 1_000_000
     parsed = json.loads(report.read_text())
     actual = sorted(parsed.get("caseFiles", []))
     if actual != data["caseFiles"]:
@@ -79,6 +119,14 @@ def write_metadata(args):
         raise ValueError("shard report is incomplete")
     data["reportFile"] = "report.json"
     data["reportSha256"] = digest(report)
+    stage_timings = {}
+    if args.stage_timings:
+        stage_timings = json.loads(pathlib.Path(args.stage_timings).read_text())
+    data["phaseTimings"] = {
+        "releaseStagingMs": stage_timings.get("releaseStagingMs"),
+        "corpusHashingMs": stage_timings.get("corpusHashingMs"),
+        "frozenInputHashingMs": frozen_input_hashing_ms,
+    }
     output = pathlib.Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(report, output.parent / "report.json")
@@ -133,7 +181,15 @@ def aggregate(args):
     root = pathlib.Path(args.root).resolve()
     artifacts = pathlib.Path(args.artifacts).resolve()
     output = pathlib.Path(args.output).resolve()
+    started = time.monotonic_ns()
+    corpus_hashes = None
+    if getattr(args, "corpus_hashes", None):
+        corpus_hashes = load_corpus_hashes(
+            pathlib.Path(args.corpus_hashes).resolve(), args.version, args.revision
+        )
+    frozen_input_hashing_ms = (time.monotonic_ns() - started) // 1_000_000
     seen = {}
+    shard_timings = {}
     for metadata_path in artifacts.rglob("metadata.json"):
         directory = metadata_path.parent
         sums = (directory / "SHA256SUMS").read_text().splitlines()
@@ -145,12 +201,14 @@ def aggregate(args):
         shard = metadata.get("shard")
         if shard in seen:
             raise ValueError(f"duplicate shard artifact: {shard}")
-        if metadata != {**identity(root, args.version, args.revision, shard), "reportFile": "report.json", "reportSha256": digest(directory / "report.json")}:
+        phase_timings = metadata.pop("phaseTimings", None)
+        if metadata != {**identity(root, args.version, args.revision, shard, corpus_hashes), "reportFile": "report.json", "reportSha256": digest(directory / "report.json")}:
             raise ValueError(f"stale or mismatched shard metadata: {shard}")
         report = json.loads((directory / "report.json").read_text())
         if sorted(report.get("caseFiles", [])) != metadata["caseFiles"] or not report.get("completed"):
             raise ValueError(f"invalid report coverage or completion: {shard}")
         seen[shard] = report
+        shard_timings[shard] = phase_timings
     if set(seen) != set(SHARDS):
         raise ValueError(f"shard set mismatch: expected {sorted(SHARDS)}, got {sorted(seen)}")
     output.mkdir(parents=True, exist_ok=False)
@@ -166,6 +224,16 @@ def aggregate(args):
         raise ValueError("merged Bifrost report does not exactly cover the frozen corpus")
     for candidate, report in reports.items():
         (output / f"{candidate}.json").write_text(json.dumps(report, indent=2) + "\n")
+    timing_document = {
+        "schemaVersion": 1,
+        "stagedCorpusSha256": corpus_hashes[0]["rootDigest"] if corpus_hashes else None,
+        "aggregationFrozenInputHashingMs": frozen_input_hashing_ms,
+        "shards": shard_timings,
+    }
+    (output / "phase-timings.json").write_text(
+        json.dumps(timing_document, indent=2, sort_keys=True) + "\n"
+    )
+    print(f"phase timing: frozen-input hashing {frozen_input_hashing_ms} ms", file=sys.stderr)
 
 
 def main():
@@ -178,6 +246,8 @@ def main():
     metadata.add_argument("--shard", required=True)
     metadata.add_argument("--report", required=True)
     metadata.add_argument("--output", required=True)
+    metadata.add_argument("--corpus-hashes")
+    metadata.add_argument("--stage-timings")
     metadata.set_defaults(func=write_metadata)
     combine = sub.add_parser("aggregate")
     combine.add_argument("--root", default=".")
@@ -185,6 +255,7 @@ def main():
     combine.add_argument("--revision", required=True)
     combine.add_argument("--artifacts", required=True)
     combine.add_argument("--output", required=True)
+    combine.add_argument("--corpus-hashes")
     combine.set_defaults(func=aggregate)
     args = parser.parse_args()
     try:

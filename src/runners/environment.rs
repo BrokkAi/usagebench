@@ -75,6 +75,8 @@ pub struct ExecutionEnvironment {
 struct ReferenceEnvironmentDescriptor {
     version: String,
     definition_digest: String,
+    identity_digest: String,
+    analyzer_identity: String,
     canonical_platform: String,
     image_reference: String,
     image_digest: String,
@@ -90,6 +92,8 @@ struct ReferenceEnvironmentDescriptor {
 struct EmbeddedReferenceEnvironment {
     version: String,
     definition_digest: String,
+    identity_digest: String,
+    analyzer_identity: String,
     canonical_platform: String,
     usagebench_release: String,
     usagebench_revision: String,
@@ -383,6 +387,7 @@ fn validate_descriptor(descriptor: &ReferenceEnvironmentDescriptor) -> Result<()
         bail!("reference image reference must not be empty");
     }
     if descriptor.runner_id.is_empty()
+        || descriptor.analyzer_identity.is_empty()
         || descriptor.usagebench_release.is_empty()
         || descriptor.usagebench_revision.is_empty()
     {
@@ -390,6 +395,7 @@ fn validate_descriptor(descriptor: &ReferenceEnvironmentDescriptor) -> Result<()
     }
     for (field, digest) in [
         ("definitionDigest", descriptor.definition_digest.as_str()),
+        ("identityDigest", descriptor.identity_digest.as_str()),
         ("imageDigest", descriptor.image_digest.as_str()),
     ] {
         if !is_sha256_digest(digest) {
@@ -432,6 +438,8 @@ fn validate_embedded_identity(
     let supplied = EmbeddedReferenceEnvironment {
         version: descriptor.version.clone(),
         definition_digest: descriptor.definition_digest.clone(),
+        identity_digest: descriptor.identity_digest.clone(),
+        analyzer_identity: descriptor.analyzer_identity.clone(),
         canonical_platform: descriptor.canonical_platform.clone(),
         usagebench_release: descriptor.usagebench_release.clone(),
         usagebench_revision: descriptor.usagebench_revision.clone(),
@@ -500,6 +508,8 @@ mod tests {
         let descriptor = ReferenceEnvironmentDescriptor {
             version: "1".to_string(),
             definition_digest: format!("sha256:{}", "a".repeat(64)),
+            identity_digest: format!("sha256:{}", "d".repeat(64)),
+            analyzer_identity: "gopls@v1.0.0:h1:checksum=".to_string(),
             canonical_platform: "linux/amd64".to_string(),
             image_reference: "usagebench-reference:v1.0.0-env1-gopls".to_string(),
             image_digest: format!("sha256:{}", "b".repeat(64)),
@@ -511,6 +521,8 @@ mod tests {
         let marker = EmbeddedReferenceEnvironment {
             version: descriptor.version.clone(),
             definition_digest: descriptor.definition_digest.clone(),
+            identity_digest: descriptor.identity_digest.clone(),
+            analyzer_identity: descriptor.analyzer_identity.clone(),
             canonical_platform: descriptor.canonical_platform.clone(),
             usagebench_release: descriptor.usagebench_release.clone(),
             usagebench_revision: descriptor.usagebench_revision.clone(),

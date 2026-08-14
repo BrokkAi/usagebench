@@ -47,7 +47,9 @@ only claimed if clean double-build validation demonstrates it.
 ### 1. Version the reference-environment contract
 
 Add this ExecPlan, a JSON Schema, and a versioned manifest declaring the
-canonical platform, local tag convention, and build-only distribution policy.
+canonical platform, local tag convention, and original build-only distribution
+policy. Issue #140 later replaced build-only distribution with verified,
+checksum-addressed GHCR reuse while retaining the complete rebuild contract.
 
 ### 2. Record invocation and execution provenance
 
@@ -128,6 +130,8 @@ pull request.
   reproduction page at a desktop viewport; staged and inspected a
   release-shaped archive containing the complete build contract.
 - [x] Milestone 6: CI, release packaging, and documentation.
+- [x] 2026-08-14: Added full-identity GHCR publication and restore, immutable
+  registry-digest verification, and a forced-rebuild path for recipe review.
 - [x] 2026-07-20: Passed Rust formatting, 92 library tests, 2 CLI tests,
   doctests, validation of all 34 benchmark documents and the Bifrost smoke
   document, report/schema generation, shell and workflow syntax checks, and
