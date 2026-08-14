@@ -145,7 +145,7 @@ docker_args=(
 
 if [[ "$runner_id" == "bifrost" ]]; then
   bifrost_revision="$(jq -r '.candidates[] | select(.id == "bifrost") | .revision' "$candidate_registry")"
-  # The released corpus is intentionally read-only. Bifrost v0.9.3 persists its
+  # The released corpus is intentionally read-only. Bifrost persists its
   # analyzer cache by default, so keep that generated state on the writable,
   # container-private work tmpfs instead of weakening the corpus mount.
   docker_args+=(--env "BIFROST_CACHE_DIR=/work/bifrost-cache")
