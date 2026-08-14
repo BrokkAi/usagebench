@@ -20,6 +20,11 @@ revision="${5:-}"
 corpus="target/usagebench-$release"
 scripts/stage-release-bundle.sh . "$corpus" "$release" "$revision"
 scripts/reference-image.sh "$runner_id" "$release" "$revision"
+# The workflow-level controls apply only to the explicit cold build or trusted
+# publication above. Reproduction must exercise the ordinary verified reuse
+# path against the image that operation produced.
+unset USAGEBENCH_REFERENCE_IMAGE_FORCE_REBUILD
+unset USAGEBENCH_REFERENCE_IMAGE_PUBLISH
 
 image="usagebench-reference:$release-env1-$runner_id"
 docker run --rm --network none --entrypoint /bin/sh "$image" -c '

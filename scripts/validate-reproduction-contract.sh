@@ -5,6 +5,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 registry="$repo_root/adapters/candidates.json"
 reference_manifest="$repo_root/containers/reference/v1/manifest.json"
 workflow="$repo_root/.github/workflows/reference-environments.yml"
+reference_ci="$repo_root/scripts/reference-environment-ci.sh"
 scope_resolver="$repo_root/scripts/resolve-freeze-scope.sh"
 freeze_workflow="$repo_root/.github/workflows/freeze.yml"
 v030_registry="$repo_root/benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json"
@@ -166,6 +167,14 @@ for identity_label in \
 done
 grep -Fq 'docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin' "$workflow" || {
   echo "trusted reference workflow does not authenticate checksum-addressed publication" >&2
+  exit 1
+}
+grep -Fq 'unset USAGEBENCH_REFERENCE_IMAGE_FORCE_REBUILD' "$reference_ci" || {
+  echo "reference smoke does not restore the ordinary reuse path after forced construction" >&2
+  exit 1
+}
+grep -Fq 'unset USAGEBENCH_REFERENCE_IMAGE_PUBLISH' "$reference_ci" || {
+  echo "reference smoke leaks trusted publication into reproduction" >&2
   exit 1
 }
 grep -Fq 'scripts/corpus-hashes.py verify' "$freeze_workflow" || {
