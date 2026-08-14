@@ -101,6 +101,17 @@ Every request logs its ID, method, elapsed time, and outcome. On timeout the
 adapter sends `$/cancelRequest` for that ID before returning the attributed
 runner error, so abandoned work is not silently left ahead of later cases.
 
+The rust-analyzer profile advertises its `experimental/serverStatus` extension
+and makes a bounded wait for `quiescent: true` before opening documents and
+starting the existing settle window. Some large valid workspaces remain busy;
+that bounded miss is recorded as `lsp_workspace_quiescence_timeout` rather than
+being mistaken for a semantic result. A semantic-query response with the LSP
+`ContentModified` code (`-32801`) is retried at most twice with short backoffs,
+reusing the exact original request parameters. Reports record any retry count;
+exhaustion and all other LSP errors remain execution errors. The profile gives
+large real-project requests a 120-second budget; reaching that bound is still
+an execution error, never an empty semantic result.
+
 Profiles record both a requested version and the server's `serverInfo.version`
 when available. Servers that omit it are reported as `not reported`; the
 adapter never substitutes the requested value. A command override is likewise

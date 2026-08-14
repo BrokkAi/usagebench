@@ -12,10 +12,26 @@ use std::{
     time::{Duration, Instant},
 };
 
+const CONTENT_MODIFIED_ERROR_CODE: i64 = -32801;
+const CONTENT_MODIFIED_RETRY_BACKOFFS: [Duration; 2] =
+    [Duration::from_millis(50), Duration::from_millis(100)];
+
 pub(crate) struct InitializeResult {
     pub(crate) capabilities: Value,
     pub(crate) server_name: Option<String>,
     pub(crate) server_version: Option<String>,
+}
+
+pub(crate) struct QueryOutcome {
+    pub(crate) result: Result<Value>,
+    pub(crate) content_modified_retries: usize,
+}
+
+trait QueryTransport {
+    fn request_raw(&mut self, method: &str, params: Value) -> Result<Value>;
+    fn wait_before_retry(&mut self, duration: Duration) -> Result<()>;
+    fn label(&self) -> &str;
+    fn stderr_snapshot(&self) -> String;
 }
 
 pub(crate) struct LspSession {
@@ -205,14 +221,15 @@ impl LspSession {
 
     pub(crate) fn query(&mut self, method: &str, params: Value) -> Result<Value> {
         let response = self.request(method, params)?;
-        if let Some(error) = response.get("error") {
-            bail!(
-                "{} `{method}` failed: {error}\nserver stderr:\n{}",
-                self.label,
-                self.stderr_snapshot()
-            );
-        }
-        Ok(response.get("result").cloned().unwrap_or(Value::Null))
+        query_result(&self.label, method, response, self.stderr_snapshot())
+    }
+
+    pub(crate) fn query_with_content_modified_retry(
+        &mut self,
+        method: &str,
+        params: Value,
+    ) -> QueryOutcome {
+        query_with_content_modified_retry(self, method, params)
     }
 
     pub(crate) fn wait_for_notification(
@@ -220,12 +237,48 @@ impl LspSession {
         method: &str,
         timeout: Duration,
     ) -> Result<Value> {
+        self.wait_for_notification_matching(method, timeout, false, false)
+            .map(Option::unwrap)
+    }
+
+    pub(crate) fn wait_for_quiescent_notification(
+        &mut self,
+        method: &str,
+        timeout: Duration,
+    ) -> Result<Value> {
+        self.wait_for_notification_matching(method, timeout, true, false)
+            .map(Option::unwrap)
+    }
+
+    pub(crate) fn wait_for_quiescent_notification_or_timeout(
+        &mut self,
+        method: &str,
+        timeout: Duration,
+    ) -> Result<Option<Value>> {
+        self.wait_for_notification_matching(method, timeout, true, true)
+    }
+
+    fn wait_for_notification_matching(
+        &mut self,
+        method: &str,
+        timeout: Duration,
+        require_quiescent: bool,
+        allow_timeout: bool,
+    ) -> Result<Option<Value>> {
         let deadline = Instant::now() + timeout;
+        let expectation = if require_quiescent {
+            " with params.quiescent=true"
+        } else {
+            ""
+        };
         loop {
             let remaining = deadline.saturating_duration_since(Instant::now());
             if remaining.is_zero() {
+                if allow_timeout {
+                    return Ok(None);
+                }
                 bail!(
-                    "timed out after {:.1} seconds waiting for {} `{method}` notification\nserver stderr:\n{}",
+                    "timed out after {:.1} seconds waiting for {} `{method}` notification{expectation}\nserver stderr:\n{}",
                     timeout.as_secs_f64(),
                     self.label,
                     self.stderr_snapshot()
@@ -233,16 +286,16 @@ impl LspSession {
             }
             let message = match self.messages.recv_timeout(remaining) {
                 Ok(Ok(message)) => message,
-                Ok(Err(message)) => bail!(
-                    "{message}\nserver stderr:\n{}",
-                    self.stderr_snapshot()
-                ),
-                Err(RecvTimeoutError::Timeout) => bail!(
-                    "timed out after {:.1} seconds waiting for {} `{method}` notification\nserver stderr:\n{}",
-                    timeout.as_secs_f64(),
-                    self.label,
-                    self.stderr_snapshot()
-                ),
+                Ok(Err(message)) => bail!("{message}\nserver stderr:\n{}", self.stderr_snapshot()),
+                Err(RecvTimeoutError::Timeout) if allow_timeout => return Ok(None),
+                Err(RecvTimeoutError::Timeout) => {
+                    bail!(
+                        "timed out after {:.1} seconds waiting for {} `{method}` notification{expectation}\nserver stderr:\n{}",
+                        timeout.as_secs_f64(),
+                        self.label,
+                        self.stderr_snapshot()
+                    )
+                }
                 Err(RecvTimeoutError::Disconnected) => bail!(
                     "{} response channel disconnected\nserver stderr:\n{}",
                     self.label,
@@ -256,7 +309,12 @@ impl LspSession {
             if message.get("id").is_none()
                 && message.get("method").and_then(Value::as_str) == Some(method)
             {
-                return Ok(message.get("params").cloned().unwrap_or(Value::Null));
+                let params = message.get("params").cloned().unwrap_or(Value::Null);
+                if !require_quiescent
+                    || params.get("quiescent").and_then(Value::as_bool) == Some(true)
+                {
+                    return Ok(Some(params));
+                }
             }
         }
     }
@@ -485,6 +543,79 @@ impl LspSession {
     }
 }
 
+impl QueryTransport for LspSession {
+    fn request_raw(&mut self, method: &str, params: Value) -> Result<Value> {
+        self.request(method, params)
+    }
+
+    fn wait_before_retry(&mut self, duration: Duration) -> Result<()> {
+        self.pump_for(duration)
+    }
+
+    fn label(&self) -> &str {
+        &self.label
+    }
+
+    fn stderr_snapshot(&self) -> String {
+        LspSession::stderr_snapshot(self)
+    }
+}
+
+fn query_with_content_modified_retry(
+    transport: &mut impl QueryTransport,
+    method: &str,
+    params: Value,
+) -> QueryOutcome {
+    let mut retries = 0;
+    loop {
+        let response = match transport.request_raw(method, params.clone()) {
+            Ok(response) => response,
+            Err(error) => {
+                return QueryOutcome {
+                    result: Err(error),
+                    content_modified_retries: retries,
+                };
+            }
+        };
+        let is_content_modified = response.pointer("/error/code").and_then(Value::as_i64)
+            == Some(CONTENT_MODIFIED_ERROR_CODE);
+        if is_content_modified && retries < CONTENT_MODIFIED_RETRY_BACKOFFS.len() {
+            let backoff = CONTENT_MODIFIED_RETRY_BACKOFFS[retries];
+            retries += 1;
+            if let Err(error) = transport.wait_before_retry(backoff) {
+                return QueryOutcome {
+                    result: Err(error.context(format!(
+                        "wait before ContentModified retry {retries} for `{method}`"
+                    ))),
+                    content_modified_retries: retries,
+                };
+            }
+            continue;
+        }
+        let stderr = transport.stderr_snapshot();
+        let result = query_result(transport.label(), method, response, stderr).map_err(|error| {
+            if is_content_modified {
+                error.context(format!(
+                    "exhausted {retries} ContentModified retries for `{method}`"
+                ))
+            } else {
+                error
+            }
+        });
+        return QueryOutcome {
+            result,
+            content_modified_retries: retries,
+        };
+    }
+}
+
+fn query_result(label: &str, method: &str, response: Value, stderr: String) -> Result<Value> {
+    if let Some(error) = response.get("error") {
+        bail!("{label} `{method}` failed: {error}\nserver stderr:\n{stderr}");
+    }
+    Ok(response.get("result").cloned().unwrap_or(Value::Null))
+}
+
 fn configuration_section(configuration: &Value, item: &Value) -> Value {
     let Some(section) = item.get("section").and_then(Value::as_str) else {
         return configuration.clone();
@@ -586,7 +717,7 @@ fn read_message(reader: &mut impl BufRead) -> Result<Option<Value>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{io::Cursor, sync::mpsc::Sender};
+    use std::{collections::VecDeque, io::Cursor, sync::mpsc::Sender};
 
     #[derive(Clone, Default)]
     struct SharedWriter(Arc<Mutex<Vec<u8>>>);
@@ -637,6 +768,137 @@ mod tests {
             messages.push(message);
         }
         messages
+    }
+
+    const DEFINITION_METHOD: &str = "textDocument/definition";
+
+    struct FakeQueryTransport {
+        responses: VecDeque<Result<Value>>,
+        requests: Vec<(String, Value)>,
+        waits: Vec<Duration>,
+    }
+
+    impl FakeQueryTransport {
+        fn new(responses: impl IntoIterator<Item = Value>) -> Self {
+            Self {
+                responses: responses.into_iter().map(Ok).collect(),
+                requests: Vec::new(),
+                waits: Vec::new(),
+            }
+        }
+    }
+
+    impl QueryTransport for FakeQueryTransport {
+        fn request_raw(&mut self, method: &str, params: Value) -> Result<Value> {
+            self.requests.push((method.to_string(), params));
+            self.responses
+                .pop_front()
+                .expect("test transport ran out of responses")
+        }
+
+        fn wait_before_retry(&mut self, duration: Duration) -> Result<()> {
+            self.waits.push(duration);
+            Ok(())
+        }
+
+        fn label(&self) -> &str {
+            "fake-server"
+        }
+
+        fn stderr_snapshot(&self) -> String {
+            String::new()
+        }
+    }
+
+    fn content_modified_response() -> Value {
+        json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "error": {"code": CONTENT_MODIFIED_ERROR_CODE, "message": "content modified"}
+        })
+    }
+
+    #[test]
+    fn retries_content_modified_definition_with_unchanged_params_then_succeeds() {
+        let params = json!({
+            "textDocument": {"uri": "file:///workspace/src/lib.rs"},
+            "position": {"line": 7, "character": 11}
+        });
+        let expected = json!([{
+            "uri": "file:///workspace/src/lib.rs",
+            "range": {
+                "start": {"line": 1, "character": 3},
+                "end": {"line": 1, "character": 9}
+            }
+        }]);
+        let mut transport = FakeQueryTransport::new([
+            content_modified_response(),
+            json!({"jsonrpc": "2.0", "id": 2, "result": expected}),
+        ]);
+
+        let outcome =
+            query_with_content_modified_retry(&mut transport, DEFINITION_METHOD, params.clone());
+
+        assert_eq!(outcome.content_modified_retries, 1);
+        assert_eq!(outcome.result.unwrap(), expected);
+        assert_eq!(transport.waits, vec![Duration::from_millis(50)]);
+        assert_eq!(transport.requests.len(), 2);
+        assert!(transport.requests.iter().all(|(method, request_params)| {
+            method == DEFINITION_METHOD && request_params == &params
+        }));
+    }
+
+    #[test]
+    fn content_modified_definition_exhaustion_remains_an_error() {
+        let params = json!({
+            "textDocument": {"uri": "file:///workspace/src/lib.rs"},
+            "position": {"line": 7, "character": 11}
+        });
+        let mut transport = FakeQueryTransport::new([
+            content_modified_response(),
+            content_modified_response(),
+            content_modified_response(),
+        ]);
+
+        let outcome =
+            query_with_content_modified_retry(&mut transport, DEFINITION_METHOD, params.clone());
+
+        assert_eq!(outcome.content_modified_retries, 2);
+        let error = format!("{:#}", outcome.result.unwrap_err());
+        assert!(
+            error.contains("exhausted 2 ContentModified retries"),
+            "{error}"
+        );
+        assert!(error.contains("\"code\":-32801"), "{error}");
+        assert_eq!(
+            transport.waits,
+            vec![Duration::from_millis(50), Duration::from_millis(100)]
+        );
+        assert_eq!(transport.requests.len(), 3);
+        assert!(transport
+            .requests
+            .iter()
+            .all(|(_, request_params)| request_params == &params));
+    }
+
+    #[test]
+    fn arbitrary_definition_error_is_not_retried() {
+        let mut transport = FakeQueryTransport::new([json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "error": {"code": -32603, "message": "internal error"}
+        })]);
+
+        let outcome = query_with_content_modified_retry(
+            &mut transport,
+            DEFINITION_METHOD,
+            json!({"position": {"line": 0, "character": 0}}),
+        );
+
+        assert_eq!(outcome.content_modified_retries, 0);
+        assert!(outcome.result.is_err());
+        assert!(transport.waits.is_empty());
+        assert_eq!(transport.requests.len(), 1);
     }
 
     #[test]

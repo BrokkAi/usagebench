@@ -32,7 +32,7 @@
       "requestedVersion": "2026-07-13",
       "source": "https://github.com/rust-lang/rust-analyzer/releases/tag/2026-07-13",
       "profile": "adapters/lsp/rust-analyzer.json",
-      "profileSha256": "6306d3997fb7d5b573e9f45a80a5a60c4e8783982ab5b4c78ecc98916814ad97",
+      "profileSha256": "ff3d13a0530ca57c0710931e7e6bee6cde3e842c4a72b078f34e0e69f0c6673f",
       "advertised": true,
       "runtimeNetworking": "not required after the requested rust-analyzer binary and Rust toolchain are installed",
       "projectHydration": "rust-analyzer loads the generated Cargo fixture workspace"

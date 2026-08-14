@@ -153,6 +153,10 @@ Profiles are JSON objects with these core fields:
 - `documentReadiness` waits after each `didOpen` for a matching document URI
   and ready state before another document is opened or any benchmark request is
   dispatched;
+- `readinessRequiresQuiescent` additionally requires that notification's
+  `params.quiescent` field to be `true`; when a server can remain busy during
+  valid queries, `readinessTimeoutFallsBackToSettle` records the bounded miss
+  in case diagnostics and continues through the configured settle window;
 - `settleMilliseconds` and `requestTimeoutMilliseconds` tune server startup;
 - `generateCompileCommands` creates a minimal C/C++ compilation database.
 
