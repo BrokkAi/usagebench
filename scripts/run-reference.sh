@@ -109,6 +109,8 @@ toolchains="$(jq -c --arg runner "$runner_id" '.runners[$runner].toolchains' "$m
 environment_descriptor="$(jq -cn \
   --arg version "$environment_version" \
   --arg definitionDigest "$definition_digest" \
+  --arg identityDigest "$identity_digest" \
+  --arg analyzerIdentity "$analyzer_identity" \
   --arg canonicalPlatform "$canonical_platform" \
   --arg imageReference "$image_reference" \
   --arg imageDigest "$image_digest" \
@@ -119,6 +121,8 @@ environment_descriptor="$(jq -cn \
   '{
     version: $version,
     definitionDigest: $definitionDigest,
+    identityDigest: $identityDigest,
+    analyzerIdentity: $analyzerIdentity,
     canonicalPlatform: $canonicalPlatform,
     imageReference: $imageReference,
     imageDigest: $imageDigest,
