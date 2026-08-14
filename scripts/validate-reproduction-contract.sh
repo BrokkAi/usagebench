@@ -164,7 +164,7 @@ for identity_label in \
     exit 1
   }
 done
-grep -Fq 'docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567' "$workflow" || {
+grep -Fq 'docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin' "$workflow" || {
   echo "trusted reference workflow does not authenticate checksum-addressed publication" >&2
   exit 1
 }
