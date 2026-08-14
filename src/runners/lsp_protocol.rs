@@ -3,7 +3,7 @@ use serde_json::{json, Value};
 use std::{
     io::{BufRead, BufReader, Write},
     path::Path,
-    process::{Child, ChildStdin, Command, Stdio},
+    process::{Child, Command, Stdio},
     sync::{
         mpsc::{self, Receiver, RecvTimeoutError},
         Arc, Mutex,
@@ -20,8 +20,8 @@ pub(crate) struct InitializeResult {
 
 pub(crate) struct LspSession {
     label: String,
-    child: Child,
-    stdin: ChildStdin,
+    child: Option<Child>,
+    stdin: Box<dyn Write + Send>,
     messages: Receiver<Result<Value, String>>,
     next_id: u64,
     configuration: Value,
@@ -90,8 +90,8 @@ impl LspSession {
         });
         Ok(Self {
             label,
-            child,
-            stdin,
+            child: Some(child),
+            stdin: Box::new(stdin),
             messages,
             next_id: 1,
             configuration,
@@ -261,6 +261,55 @@ impl LspSession {
         }
     }
 
+    pub(crate) fn wait_for_document_ready(
+        &mut self,
+        method: &str,
+        uri: &str,
+        ready_state: &str,
+        timeout: Duration,
+    ) -> Result<()> {
+        let deadline = Instant::now() + timeout;
+        loop {
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
+                bail!(
+                    "timed out after {:.1} seconds waiting for {} `{method}` readiness for {uri} (state `{ready_state}`)\nserver stderr:\n{}",
+                    timeout.as_secs_f64(),
+                    self.label,
+                    self.stderr_snapshot()
+                );
+            }
+            let message = match self.messages.recv_timeout(remaining) {
+                Ok(Ok(message)) => message,
+                Ok(Err(message)) => {
+                    bail!("{message}\nserver stderr:\n{}", self.stderr_snapshot())
+                }
+                Err(RecvTimeoutError::Timeout) => bail!(
+                    "timed out after {:.1} seconds waiting for {} `{method}` readiness for {uri} (state `{ready_state}`)\nserver stderr:\n{}",
+                    timeout.as_secs_f64(),
+                    self.label,
+                    self.stderr_snapshot()
+                ),
+                Err(RecvTimeoutError::Disconnected) => bail!(
+                    "{} response channel disconnected\nserver stderr:\n{}",
+                    self.label,
+                    self.stderr_snapshot()
+                ),
+            };
+            if is_server_request(&message) {
+                self.respond_to_server_request(&message)?;
+                continue;
+            }
+            if message.get("id").is_none()
+                && message.get("method").and_then(Value::as_str) == Some(method)
+                && message.pointer("/params/uri").and_then(Value::as_str) == Some(uri)
+                && message.pointer("/params/state").and_then(Value::as_str) == Some(ready_state)
+            {
+                return Ok(());
+            }
+        }
+    }
+
     pub(crate) fn pump_for(&mut self, duration: Duration) -> Result<()> {
         let deadline = Instant::now() + duration;
         loop {
@@ -287,6 +336,7 @@ impl LspSession {
     fn request(&mut self, method: &str, params: Value) -> Result<Value> {
         let id = self.next_id;
         self.next_id += 1;
+        let started = Instant::now();
         self.write_message(&json!({
             "jsonrpc": "2.0",
             "id": id,
@@ -298,35 +348,29 @@ impl LspSession {
         loop {
             let remaining = deadline.saturating_duration_since(Instant::now());
             if remaining.is_zero() {
-                bail!(
-                    "timed out after {:.1} seconds waiting for {} `{method}` response\nserver stderr:\n{}\nlast messages: {}",
-                    self.request_timeout.as_secs_f64(),
-                    self.label,
-                    self.stderr_snapshot(),
-                    observed_messages.join(", ")
-                );
+                return self.timed_out_request(id, method, started, &observed_messages);
             }
             let message = match self.messages.recv_timeout(remaining) {
                 Ok(Ok(message)) => message,
                 Ok(Err(message)) => {
+                    self.log_request(id, method, started, "failed");
                     let stderr = self.stderr_snapshot();
                     if stderr.is_empty() {
                         return Err(anyhow!(message));
                     }
                     bail!("{message}\nserver stderr:\n{stderr}");
                 }
-                Err(RecvTimeoutError::Timeout) => bail!(
-                    "timed out after {:.1} seconds waiting for {} `{method}` response\nserver stderr:\n{}\nlast messages: {}",
-                    self.request_timeout.as_secs_f64(),
-                    self.label,
-                    self.stderr_snapshot(),
-                    observed_messages.join(", ")
-                ),
-                Err(RecvTimeoutError::Disconnected) => bail!(
-                    "{} response channel disconnected\nserver stderr:\n{}",
-                    self.label,
-                    self.stderr_snapshot()
-                ),
+                Err(RecvTimeoutError::Timeout) => {
+                    return self.timed_out_request(id, method, started, &observed_messages)
+                }
+                Err(RecvTimeoutError::Disconnected) => {
+                    self.log_request(id, method, started, "failed");
+                    bail!(
+                        "{} response channel disconnected\nserver stderr:\n{}",
+                        self.label,
+                        self.stderr_snapshot()
+                    )
+                }
             };
             observed_messages.push(describe_message(&message));
             if observed_messages.len() > 20 {
@@ -337,9 +381,43 @@ impl LspSession {
                 continue;
             }
             if is_response_for(&message, id) {
+                self.log_request(id, method, started, "completed");
                 return Ok(message);
             }
         }
+    }
+
+    fn timed_out_request(
+        &mut self,
+        id: u64,
+        method: &str,
+        started: Instant,
+        observed_messages: &[String],
+    ) -> Result<Value> {
+        let cancellation = self
+            .notify("$/cancelRequest", json!({"id": id}))
+            .map(|()| "sent".to_string())
+            .unwrap_or_else(|error| format!("failed: {error:#}"));
+        self.log_request(id, method, started, "timed_out");
+        bail!(
+            "request id {id} `{method}` timed out after {:.3} seconds (configured timeout {:.1} seconds; cancellation {cancellation}) waiting for {} response\nserver stderr:\n{}\nlast messages: {}",
+            started.elapsed().as_secs_f64(),
+            self.request_timeout.as_secs_f64(),
+            self.label,
+            self.stderr_snapshot(),
+            observed_messages.join(", ")
+        )
+    }
+
+    fn log_request(&self, id: u64, method: &str, started: Instant, outcome: &str) {
+        eprintln!(
+            "LSP request {} id={} method={} elapsed={:.3}s outcome={}",
+            self.label,
+            id,
+            method,
+            started.elapsed().as_secs_f64(),
+            outcome
+        );
     }
 
     pub(crate) fn notify(&mut self, method: &str, params: Value) -> Result<()> {
@@ -468,8 +546,10 @@ impl Drop for LspSession {
             "method": "exit",
             "params": null
         }));
-        let _ = self.child.kill();
-        let _ = self.child.wait();
+        if let Some(child) = &mut self.child {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
     }
 }
 
@@ -506,7 +586,58 @@ fn read_message(reader: &mut impl BufRead) -> Result<Option<Value>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Cursor;
+    use std::{io::Cursor, sync::mpsc::Sender};
+
+    #[derive(Clone, Default)]
+    struct SharedWriter(Arc<Mutex<Vec<u8>>>);
+
+    impl Write for SharedWriter {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            self.0.lock().unwrap().extend_from_slice(bytes);
+            Ok(bytes.len())
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    fn test_session(
+        request_timeout: Duration,
+    ) -> (
+        LspSession,
+        Sender<Result<Value, String>>,
+        Arc<Mutex<Vec<u8>>>,
+    ) {
+        let (sender, messages) = mpsc::channel();
+        let written = Arc::new(Mutex::new(Vec::new()));
+        (
+            LspSession {
+                label: "test server".to_string(),
+                child: None,
+                stdin: Box::new(SharedWriter(Arc::clone(&written))),
+                messages,
+                next_id: 1,
+                configuration: Value::Null,
+                accept_first_action_requests: false,
+                workspace_uri: "file:///workspace".to_string(),
+                stderr_text: Arc::new(Mutex::new(String::new())),
+                request_timeout,
+            },
+            sender,
+            written,
+        )
+    }
+
+    fn written_messages(written: &Arc<Mutex<Vec<u8>>>) -> Vec<Value> {
+        let bytes = written.lock().unwrap().clone();
+        let mut reader = Cursor::new(bytes);
+        let mut messages = Vec::new();
+        while let Some(message) = read_message(&mut reader).unwrap() {
+            messages.push(message);
+        }
+        messages
+    }
 
     #[test]
     fn reads_content_length_framed_message() {
@@ -577,5 +708,88 @@ mod tests {
         );
         merge_json(&mut capabilities, &Value::Null);
         assert_eq!(capabilities["workspace"]["configuration"], true);
+    }
+
+    #[test]
+    fn waits_for_matching_document_ready_state() {
+        let (mut session, sender, _) = test_session(Duration::from_secs(1));
+        sender
+            .send(Ok(json!({
+                "jsonrpc": "2.0",
+                "method": "textDocument/clangd.fileStatus",
+                "params": {"uri": "file:///other.cpp", "state": "idle"}
+            })))
+            .unwrap();
+        sender
+            .send(Ok(json!({
+                "jsonrpc": "2.0",
+                "method": "textDocument/clangd.fileStatus",
+                "params": {"uri": "file:///query.cpp", "state": "building file"}
+            })))
+            .unwrap();
+        sender
+            .send(Ok(json!({
+                "jsonrpc": "2.0",
+                "method": "textDocument/clangd.fileStatus",
+                "params": {"uri": "file:///query.cpp", "state": "idle"}
+            })))
+            .unwrap();
+
+        session
+            .wait_for_document_ready(
+                "textDocument/clangd.fileStatus",
+                "file:///query.cpp",
+                "idle",
+                Duration::from_secs(1),
+            )
+            .unwrap();
+    }
+
+    #[test]
+    fn document_readiness_timeout_attributes_uri_and_state() {
+        let (mut session, _sender, _) = test_session(Duration::from_secs(1));
+
+        let error = session
+            .wait_for_document_ready(
+                "textDocument/clangd.fileStatus",
+                "file:///query.cpp",
+                "idle",
+                Duration::from_millis(10),
+            )
+            .unwrap_err();
+
+        let error = format!("{error:#}");
+        assert!(error.contains("textDocument/clangd.fileStatus"));
+        assert!(error.contains("file:///query.cpp"));
+        assert!(error.contains("idle"));
+    }
+
+    #[test]
+    fn timeout_cancels_request_and_late_response_does_not_delay_next_request() {
+        let (mut session, sender, written) = test_session(Duration::from_millis(10));
+
+        let error = session
+            .query("textDocument/definition", json!({}))
+            .unwrap_err();
+        let error = format!("{error:#}");
+        assert!(error.contains("request id 1 `textDocument/definition` timed out"));
+        assert!(error.contains("cancellation sent"));
+
+        let messages = written_messages(&written);
+        assert_eq!(messages[0]["id"], 1);
+        assert_eq!(messages[0]["method"], "textDocument/definition");
+        assert_eq!(messages[1]["method"], "$/cancelRequest");
+        assert_eq!(messages[1]["params"]["id"], 1);
+
+        sender
+            .send(Ok(json!({"jsonrpc": "2.0", "id": 1, "result": null})))
+            .unwrap();
+        sender
+            .send(Ok(json!({"jsonrpc": "2.0", "id": 2, "result": []})))
+            .unwrap();
+        assert_eq!(
+            session.query("textDocument/references", json!({})).unwrap(),
+            json!([])
+        );
     }
 }

@@ -80,6 +80,9 @@ struct LspProfile {
     post_initialize_notifications: Vec<ProfileNotification>,
     readiness_notification: Option<String>,
     readiness_timeout_milliseconds: Option<u64>,
+    #[serde(default)]
+    document_open_strategy: DocumentOpenStrategy,
+    document_readiness: Option<DocumentReadiness>,
     project_context_request: Option<String>,
     #[serde(default)]
     query_declaration: bool,
@@ -101,6 +104,22 @@ struct ProfileNotification {
     method: String,
     #[serde(default)]
     params: Value,
+}
+
+#[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum DocumentOpenStrategy {
+    #[default]
+    All,
+    QueryDocuments,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DocumentReadiness {
+    notification: String,
+    ready_state: String,
+    timeout_milliseconds: u64,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -380,7 +399,13 @@ fn run_document(
         source_root,
         capabilities: &capabilities,
     };
-    open_source_files(profile, source_root, &mut session)?;
+    open_source_files(
+        profile,
+        document,
+        options.case_id.as_deref(),
+        source_root,
+        &mut session,
+    )?;
     if profile.settle_milliseconds > 0 {
         session.pump_for(Duration::from_millis(profile.settle_milliseconds))?;
     }
@@ -1111,12 +1136,23 @@ fn is_declaration_or_definition(language: &str, line: &str) -> bool {
 
 fn open_source_files(
     profile: &LspProfile,
+    document: &BenchmarkDocument,
+    case_id: Option<&str>,
     source_root: &Path,
     session: &mut LspSession,
 ) -> Result<()> {
-    let mut files = Vec::new();
-    collect_source_files(source_root, &profile.file_extensions, &mut files)?;
+    let mut files = match profile.document_open_strategy {
+        DocumentOpenStrategy::All => {
+            let mut files = Vec::new();
+            collect_source_files(source_root, &profile.file_extensions, &mut files)?;
+            files
+        }
+        DocumentOpenStrategy::QueryDocuments => {
+            query_document_paths(document, case_id, source_root)?
+        }
+    };
     files.sort();
+    files.dedup();
     for file in files {
         let extension = file
             .extension()
@@ -1131,8 +1167,54 @@ fn open_source_files(
         let uri = Url::from_file_path(&file)
             .map_err(|_| anyhow::anyhow!("convert {} to file URI", file.display()))?;
         session.did_open(uri.as_str(), language_id, &text)?;
+        if let Some(readiness) = &profile.document_readiness {
+            session
+                .wait_for_document_ready(
+                    &readiness.notification,
+                    uri.as_str(),
+                    &readiness.ready_state,
+                    Duration::from_millis(readiness.timeout_milliseconds),
+                )
+                .with_context(|| {
+                    format!("wait for source document readiness {}", file.display())
+                })?;
+        }
     }
     Ok(())
+}
+
+fn query_document_paths(
+    document: &BenchmarkDocument,
+    case_id: Option<&str>,
+    source_root: &Path,
+) -> Result<Vec<PathBuf>> {
+    let mut relative_paths = BTreeSet::new();
+    for case in document
+        .cases
+        .iter()
+        .filter(|case| case_id.is_none_or(|case_id| case.id == case_id))
+    {
+        let mut add_location = |location: &SymbolLocation| -> Result<()> {
+            relative_paths.insert(benchmark_source_path(&location.location.uri)?);
+            Ok(())
+        };
+        if let Some(declaration) = &case.declaration {
+            add_location(declaration)?;
+        }
+        if let Some(reference_probe) = &case.reference_probe {
+            add_location(reference_probe)?;
+        }
+        for lookup in &case.usage_lookups {
+            add_location(&lookup.usage)?;
+        }
+        for lookup in &case.type_lookups {
+            add_location(&lookup.expression)?;
+        }
+    }
+    Ok(relative_paths
+        .into_iter()
+        .map(|relative| source_root.join(relative))
+        .collect())
 }
 
 fn collect_source_files(
@@ -1247,6 +1329,17 @@ fn validate_profile(profile: &LspProfile) -> Result<()> {
         if !profile.language_ids.contains_key(extension) {
             bail!(
                 "LSP profile `{}` has no languageIds entry for `{extension}`",
+                profile.id
+            );
+        }
+    }
+    if let Some(readiness) = &profile.document_readiness {
+        if readiness.notification.is_empty()
+            || readiness.ready_state.is_empty()
+            || readiness.timeout_milliseconds == 0
+        {
+            bail!(
+                "LSP profile {} documentReadiness requires a notification, readyState, and positive timeoutMilliseconds",
                 profile.id
             );
         }
@@ -2275,6 +2368,55 @@ referenceProbe:
             .into_iter()
             .map(str::to_string)
             .collect()
+        );
+    }
+
+    #[test]
+    fn apple_clangd_profile_requires_targeted_document_readiness() {
+        let repo_root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let profile = load_profile(&repo_root.join("adapters/lsp/apple-clangd-21.json")).unwrap();
+
+        assert_eq!(
+            profile.document_open_strategy,
+            DocumentOpenStrategy::QueryDocuments
+        );
+        assert_eq!(profile.initialization_options["clangdFileStatus"], true);
+        let readiness = profile.document_readiness.unwrap();
+        assert_eq!(readiness.notification, "textDocument/clangd.fileStatus");
+        assert_eq!(readiness.ready_state, "idle");
+        assert_eq!(readiness.timeout_milliseconds, 60_000);
+        assert_eq!(profile.request_timeout_milliseconds, None);
+    }
+
+    #[test]
+    fn query_document_strategy_opens_only_request_origins() {
+        let repo_root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let yaml = fs::read_to_string(
+            repo_root.join("benchmarks/cases/evaluation/real-project-v2/cpp-02.yaml"),
+        )
+        .unwrap();
+        let document = serde_yaml::from_str::<BenchmarkDocument>(&yaml).unwrap();
+
+        assert_eq!(
+            query_document_paths(&document, None, Path::new("/workspace")).unwrap(),
+            vec![
+                PathBuf::from("/workspace/include/tesseract/capi.h"),
+                PathBuf::from("/workspace/src/api/capi.cpp"),
+                PathBuf::from("/workspace/src/classify/adaptive.cpp"),
+                PathBuf::from("/workspace/src/cutil/bitvec.h"),
+            ]
+        );
+        assert_eq!(
+            query_document_paths(
+                &document,
+                Some("real-project-v2-cpp-02-1"),
+                Path::new("/workspace")
+            )
+            .unwrap(),
+            vec![
+                PathBuf::from("/workspace/include/tesseract/capi.h"),
+                PathBuf::from("/workspace/src/api/capi.cpp"),
+            ]
         );
     }
 

@@ -71,12 +71,14 @@ For every matching benchmark document the adapter:
 2. writes only missing profile bootstrap files such as `go.mod`, `Cargo.toml`,
    or a project file;
 3. performs LSP initialization, answers bidirectional server requests, and
-   opens all matching source documents;
+   opens either all matching source documents or the profile-selected query
+   documents;
 4. queries `textDocument/references` with `includeDeclaration: false`; for
    navigation it uses `textDocument/declaration` when explicitly enabled and
    advertised, otherwise `textDocument/definition`, without unioning the two;
    and queries `textDocument/typeDefinition` when advertised;
-5. keeps processing bidirectional server requests while the workspace settles;
+5. keeps processing bidirectional server requests while the workspace settles
+   or while an explicit per-document readiness condition is pending;
 6. normalizes `Location` and `LocationLink` responses to repository-relative,
    one-based UsageBench report locations.
 
@@ -95,6 +97,9 @@ Definition and type-definition navigation passes only when the response has one
 location and its complete range exactly matches the authored target. An
 expected target hidden among alternates is a failure. Missing required
 locations, partial responses, and protocol failures remain failures or errors.
+Every request logs its ID, method, elapsed time, and outcome. On timeout the
+adapter sends `$/cancelRequest` for that ID before returning the attributed
+runner error, so abandoned work is not silently left ahead of later cases.
 
 Profiles record both a requested version and the server's `serverInfo.version`
 when available. Servers that omit it are reported as `not reported`; the
