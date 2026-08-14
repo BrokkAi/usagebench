@@ -148,14 +148,22 @@ Profiles are JSON objects with these core fields:
   workspace before the server starts;
 - `readinessNotification` and `readinessTimeoutMilliseconds` wait for an
   explicit project-loaded signal when the server provides one;
+- `documentOpenStrategy` defaults to `all`; `query_documents` opens only
+  documents that contain a benchmark request position;
+- `documentReadiness` waits after each `didOpen` for a matching document URI
+  and ready state before another document is opened or any benchmark request is
+  dispatched;
 - `settleMilliseconds` and `requestTimeoutMilliseconds` tune server startup;
 - `generateCompileCommands` creates a minimal C/C++ compilation database.
 
 During the settle window the runner continues answering bidirectional server
 requests instead of sleeping; this is necessary for interactive build-import
 flows. Each matching benchmark document gets a fresh server and isolated
-workspace. Profiles are therefore comparable for correctness, but the current
-report does not measure warm-start or request latency. See
+workspace. Request completion and timeout timings are emitted to the run log.
+A timed-out request is attributed by ID and method and receives an LSP
+`$/cancelRequest` notification before the runner continues; it remains a
+runner error. Profiles are therefore comparable for correctness, but the
+current report does not measure warm-start or request latency. See
 [`docs/runner-adapters.md`](../../docs/runner-adapters.md) for the measured
 correctness table and the exact scoring semantics.
 
@@ -170,3 +178,8 @@ aggregate.
 
 Apple clangd 21 has its own `apple-clangd-21.json` profile. Do not use the
 upstream `clangd.json` requested-version metadata for an Apple clangd report.
+The Apple profile enables clangd's file-status extension, opens only the
+documents that contain the preregistered request positions, and requires each
+document's `textDocument/clangd.fileStatus` state to reach `idle` before
+queries begin. This is a document-readiness contract, not a longer query
+timeout or a semantic-result exception.

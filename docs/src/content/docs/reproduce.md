@@ -130,6 +130,11 @@ cryptographic payload attestation or cross-host reproducibility claim.
 Apple clangd 21 remains distinct from upstream clangd 22. The candidate
 contract requires the server-reported version to begin with
 `Apple clangd 21.0.0`, so an upstream clangd executable cannot satisfy that row.
+Its profile opens only benchmark query documents and waits for clangd's
+per-document file-status state to become `idle` before dispatching benchmark
+requests. Query timeouts remain 60 seconds, are logged with request timing and
+attribution, and trigger `$/cancelRequest`; they are still publication-blocking
+runner errors.
 
 ## Evaluation release order
 
