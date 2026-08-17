@@ -150,6 +150,10 @@ def add_numbers(left, right):
 
 def merge_bifrost(reports):
     merged = reports[0]
+    # RunReport omits an empty semantic_pack_runs vector on the wire.  Treat
+    # that schema-valid absence as an empty collection before aggregating the
+    # Bifrost language shards.
+    merged.setdefault("semanticPackRuns", [])
     invariant = ["usagebenchVersion", "usagebenchRevision", "usagebenchRelease", "runner", "invocation", "bifrostCommit", "bifrostResolvedCommit"]
     expected_environment = json.loads(json.dumps(merged["environment"]))
     expected_environment.get("analyzerExecutable", {}).pop("resolvedPath", None)
