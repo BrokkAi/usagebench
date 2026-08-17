@@ -125,6 +125,51 @@ pub fn build_promotion_audit(path: impl AsRef<Path>) -> Result<LegacyPromotionAu
     validate_manifest(path, &bytes, &manifest)
 }
 
+/// Return the immutable membership assigned to each case by a validated
+/// retrospective promotion manifest. The manifest remains analyzer-neutral:
+/// agentic re-review can strengthen its source contract, but never changes
+/// the original analyzer-informed selection into preregistered evidence.
+pub fn case_memberships(
+    path: impl AsRef<Path>,
+) -> Result<BTreeMap<(String, String), PromotionMembership>> {
+    let path = path.as_ref();
+    let bytes =
+        fs::read(path).with_context(|| format!("read promotion manifest {}", path.display()))?;
+    let value: serde_json::Value =
+        serde_json::from_slice(&bytes).context("parse promotion manifest JSON")?;
+    let schema: serde_json::Value =
+        serde_json::from_str(SCHEMA).context("parse bundled promotion schema")?;
+    let compiled = jsonschema::JSONSchema::compile(&schema)
+        .map_err(|error| anyhow!("compile promotion schema: {error}"))?;
+    if let Err(errors) = compiled.validate(&value) {
+        bail!(
+            "promotion manifest schema validation failed: {}",
+            errors
+                .map(|error| error.to_string())
+                .collect::<Vec<_>>()
+                .join("; ")
+        );
+    }
+    let manifest: LegacyPromotionManifest =
+        serde_json::from_value(value).context("deserialize promotion manifest")?;
+    validate_manifest(path, &bytes, &manifest)?;
+    let mut memberships = BTreeMap::new();
+    for document in manifest.documents {
+        for case in document.cases {
+            if memberships
+                .insert(
+                    (document.case_file.clone(), case.id.clone()),
+                    case.membership,
+                )
+                .is_some()
+            {
+                bail!("promotion manifest contains duplicate case membership");
+            }
+        }
+    }
+    Ok(memberships)
+}
+
 fn validate_manifest(
     path: &Path,
     bytes: &[u8],

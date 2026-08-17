@@ -8,10 +8,38 @@ workflow="$repo_root/.github/workflows/reference-environments.yml"
 reference_ci="$repo_root/scripts/reference-environment-ci.sh"
 scope_resolver="$repo_root/scripts/resolve-freeze-scope.sh"
 freeze_workflow="$repo_root/.github/workflows/freeze.yml"
+docs_workflow="$repo_root/.github/workflows/docs.yml"
 v030_registry="$repo_root/benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json"
+publication_validator="$repo_root/scripts/validate-publication-bundle.py"
+
+[[ -f "$publication_validator" ]] || {
+  echo "publication bundle validator is missing" >&2
+  exit 1
+}
+grep -Fq 'release_tag:' "$docs_workflow" || {
+  echo "docs publication must require an immutable release tag" >&2
+  exit 1
+}
+grep -Fq 'gh release download "$RELEASE_TAG"' "$docs_workflow" || {
+  echo "docs publication does not download a release-bound bundle" >&2
+  exit 1
+}
+grep -Fq 'scripts/validate-publication-bundle.py' "$docs_workflow" || {
+  echo "docs publication does not verify the immutable publication bundle" >&2
+  exit 1
+}
+grep -Fq -- '--output-directory "$bundle/results" --check' "$docs_workflow" || {
+  echo "docs publication does not reject generated result drift" >&2
+  exit 1
+}
+grep -Fq 'scripts/validate-publication-bundle.py' "$freeze_workflow" || {
+  echo "freeze workflow does not verify generated publication provenance" >&2
+  exit 1
+}
 
 python3 "$repo_root/scripts/build-real-project-v1-publication-review.py" --check
 python3 "$repo_root/scripts/build-real-project-v2-publication-review.py" --check
+python3 -m unittest "$repo_root/tests/test_publication_bundle.py"
 
 jq -e '.schemaVersion == 3' "$registry" >/dev/null
 jq -e '.schemaVersion == 3' "$v030_registry" >/dev/null

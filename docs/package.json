@@ -7,7 +7,9 @@
     "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
-    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check"
+    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check",
+    "evidence:check": "python3 ../scripts/generate-docs-evidence.py --check",
+    "links:check": "python3 ../scripts/check-doc-links.py"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.2",

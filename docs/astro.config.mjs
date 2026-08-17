@@ -37,6 +37,7 @@ export default defineConfig({
         {
           label: 'Results and findings',
           items: [
+            { label: 'Evidence map (generated)', slug: 'results/evidence' },
             { label: 'Current evaluation result', slug: 'results' },
             { label: 'Evaluation case comparison', slug: 'results/case-comparison' },
             { label: 'Historical development result', slug: 'results/development-2026-07-24' },

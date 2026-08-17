@@ -3,6 +3,11 @@ name: Docs
 # Publishing is manual so a reviewed release can be promoted deliberately.
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Immutable benchmark release whose verified results feed this publication'
+        required: true
+        type: string
 
 permissions: {}
 
@@ -17,14 +22,84 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    timeout-minutes: 20
+    timeout-minutes: 30
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
     steps:
       - name: Checkout source
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
-          fetch-depth: 1
+          ref: refs/heads/main
+          fetch-depth: 0
           lfs: false
           persist-credentials: false
+
+      - name: Resolve immutable release identity
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "release tag must match vMAJOR.MINOR.PATCH: $RELEASE_TAG" >&2
+            exit 1
+          }
+          release_revision="$(git rev-parse --verify "refs/tags/$RELEASE_TAG^{}")"
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          git merge-base --is-ancestor "$release_revision" refs/remotes/origin/main || {
+            echo "release $RELEASE_TAG is not reachable from origin/main" >&2
+            exit 1
+          }
+          {
+            echo "revision=$release_revision"
+            echo "bundle_root=$RUNNER_TEMP/publication-extracted/usagebench-$RELEASE_TAG"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Download immutable publication bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/publication"
+          archive="usagebench-${RELEASE_TAG}.tar.gz"
+          gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "$archive" \
+            --pattern "$archive.sha256" \
+            --dir "$RUNNER_TEMP/publication"
+          [[ -f "$RUNNER_TEMP/publication/$archive" && -f "$RUNNER_TEMP/publication/$archive.sha256" ]] || {
+            echo "release did not provide the expected archive and checksum" >&2
+            exit 1
+          }
+
+      - name: Verify immutable reports and generated result provenance
+        shell: bash
+        env:
+          RELEASE_REVISION: ${{ steps.release.outputs.revision }}
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/publication/usagebench-${RELEASE_TAG}.tar.gz"
+          checksum="$archive.sha256"
+          python3 scripts/validate-publication-bundle.py \
+            --archive "$archive" --checksum "$checksum" \
+            --extract-to "$RUNNER_TEMP/publication-extracted" \
+            --tag "$RELEASE_TAG" --revision "$RELEASE_REVISION"
+
+      - name: Set up Rust for generator drift check
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: stable
+
+      - name: Reject generated result drift
+        shell: bash
+        env:
+          RELEASE_REVISION: ${{ steps.release.outputs.revision }}
+        run: |
+          set -euo pipefail
+          bundle="$RUNNER_TEMP/publication-extracted/usagebench-${RELEASE_TAG}"
+          cargo run --locked --manifest-path "$bundle/Cargo.toml" -- generate-results \
+            --manifest "$bundle/evidence/freeze-manifest.json" \
+            --output-directory "$bundle/results" --check
 
       - name: Set up Node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
@@ -41,12 +116,21 @@ jobs:
         run: npm run check
         working-directory: docs
 
+      - name: Check generated evidence map
+        run: npm run evidence:check
+        working-directory: docs
+
+      - name: Check internal documentation links
+        run: npm run links:check
+        working-directory: docs
+
       - name: Build docs
         run: npm run build
         working-directory: docs
         env:
           PUBLIC_DOCS_SITE: https://brokkai.github.io
           PUBLIC_DOCS_BASE: /usagebench
+          USAGEBENCH_PUBLICATION_BUNDLE: ${{ steps.release.outputs.bundle_root }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4

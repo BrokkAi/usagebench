@@ -11,6 +11,7 @@ pub mod evaluation;
 pub mod freeze;
 pub mod promotion;
 pub mod promotion_cohort;
+pub mod publication;
 pub mod real_project;
 pub mod results;
 pub mod runners;

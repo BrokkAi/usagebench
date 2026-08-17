@@ -1,0 +1,175 @@
+{
+  "development": {
+    "balancedCoreCases": 110,
+    "caseCount": 160,
+    "controlCases": 6,
+    "legacyInventoryCases": 158,
+    "overflowCases": 42,
+    "remainingCases": 50,
+    "semanticPackCases": 2
+  },
+  "generatedBy": "scripts/generate-docs-evidence.py",
+  "guardrails": [
+    "Each prospective slice keeps its own profile and language denominator.",
+    "The reviewed legacy core is retrospectively selected and never becomes preregistered.",
+    "Controls, overflow, and development cases are not correctness denominators.",
+    "No score is published without a checksum-verified immutable result report."
+  ],
+  "schemaVersion": 1,
+  "slices": {
+    "legacy": {
+      "analyzerOutcomeUse": "forbidden",
+      "caseCount": 110,
+      "claimScope": "Descriptive comparisons are bounded to the named 110-case legacy balanced-core corpus and its frozen per-language denominator; they do not support preregistered, language-wide, ecosystem-wide, or prospective claims.",
+      "controlCases": 6,
+      "denominators": {
+        "cpp": 10,
+        "csharp": 10,
+        "go": 10,
+        "java": 10,
+        "javascript": 10,
+        "php": 10,
+        "python": 10,
+        "ruby": 10,
+        "rust": 10,
+        "scala": 10,
+        "typescript": 10
+      },
+      "inputs": [
+        {
+          "file": "benchmarks/promotion/legacy-v1/manifest.json",
+          "sha256": "3d00a4a46c8ba4d9a183d914eba76961c23e999ef34ae706311fd9784e50d012"
+        },
+        {
+          "file": "benchmarks/promotion/legacy-v1/cohort.json",
+          "sha256": "dc86fe0086d4ba81188258736658d6a79ddd64da9d9e59746fa19bc2be642e1d"
+        },
+        {
+          "file": "docs/legacy-promotion-selection-policy.md",
+          "sha256": "1ac2968892c97af5b570ddfd3bb6f5e9d615b0fbb1955907901bb319c6050458"
+        }
+      ],
+      "inventoryCases": 158,
+      "languageCount": 11,
+      "overflowCases": 42,
+      "perLanguage": 10,
+      "promotionId": "legacy-promotion-v1-balanced-core",
+      "result": {
+        "release": null,
+        "reportArtifact": null,
+        "status": "awaiting_checksum_verified_report"
+      },
+      "reviewTier": "legacy_promoted",
+      "selectionBasis": "source_only",
+      "selectionRegime": "retrospectively_selected"
+    },
+    "v1": {
+      "caseCount": 36,
+      "claimScope": "This frozen slice supports only descriptive, per-profile comparisons for the source-only sampled public repositories and the References and Definition operations recorded here. It does not estimate language-wide, ecosystem-wide, latency, memory, or cold-start performance.",
+      "freezeId": "real-project-v1",
+      "inputs": [
+        {
+          "file": "benchmarks/evaluation/real-project-v1/protocol.json",
+          "sha256": "9780dc32b34de862f51588bcdf036a004b9a4de76a3c4c52eb667fbbc51ad501"
+        },
+        {
+          "file": "benchmarks/evaluation/real-project-v1/population.json",
+          "sha256": "cd72b64322017cc8673722e2638c1c52108148cedb320a63ea6993fb01d1af83"
+        },
+        {
+          "file": "benchmarks/evaluation/real-project-v1/selection.json",
+          "sha256": "964f23de0130dfd48f38b12bfa35806659be12176b828fdc97fa7ef3dfcc46e8"
+        },
+        {
+          "file": "benchmarks/evaluation/real-project-v1/review.json",
+          "sha256": "a801484c37f9071db95359050db098ec282bb75b64e94cf87e8df2cd66a2ad6c"
+        },
+        {
+          "file": "benchmarks/evaluation/real-project-v1/sources.json",
+          "sha256": "700a9b6927d2fbb57fae005b3f95057132902fba9eeb86ef7deb73db77cde45e"
+        }
+      ],
+      "profiles": [
+        {
+          "candidateId": "gopls",
+          "caseCount": 12,
+          "language": "go",
+          "repositories": 4
+        },
+        {
+          "candidateId": "pyright",
+          "caseCount": 12,
+          "language": "python",
+          "repositories": 4
+        },
+        {
+          "candidateId": "typescript-language-server",
+          "caseCount": 12,
+          "language": "typescript",
+          "repositories": 4
+        }
+      ],
+      "result": {
+        "release": "v0.2.0",
+        "reportArtifact": null,
+        "status": "published_historical_release"
+      },
+      "reviewTier": "human_adjudicated_agent_panel",
+      "selectionRegime": "prospective_pre_registered"
+    },
+    "v2": {
+      "caseCount": 36,
+      "claimScope": "This independent slice supports only descriptive per-profile comparisons for the source-only sampled Java, Rust, and C++ repositories and the References and Definition operations recorded here. Report v2 separately. A combined v1/v2 view may preserve and aggregate only documented language/profile strata and their denominators; it must not pool the slices into language-wide, ecosystem-wide, cross-language, latency, memory, or cold-start claims.",
+      "freezeId": "real-project-v2",
+      "inputs": [
+        {
+          "file": "benchmarks/evaluation/real-project-v2/protocol.json",
+          "sha256": "1c0ff8a5c0fc4f4a66b564dcdb9dd384e1b9f5ee28134a1dd34770b85a4ffbf1"
+        },
+        {
+          "file": "benchmarks/evaluation/real-project-v2/population.json",
+          "sha256": "846d95b72805733ab199f03dc9ad39d59afcf7173538bf144c2176db70c434f2"
+        },
+        {
+          "file": "benchmarks/evaluation/real-project-v2/selection.json",
+          "sha256": "88a853512223c5c4859df2c9fe068e83364a3c3bb84defdd2d9f2c502aa58b2c"
+        },
+        {
+          "file": "benchmarks/evaluation/real-project-v2/review.json",
+          "sha256": "a22a32fa5945fc3d716b866f3fb9b4b055fce9984534dd8e2417fae569b86e1d"
+        },
+        {
+          "file": "benchmarks/evaluation/real-project-v2/sources.json",
+          "sha256": "cd0684b7210d63ae21b7b953699e53e1eaafd750ec8918bb4ae783dc9a377857"
+        }
+      ],
+      "profiles": [
+        {
+          "candidateId": "eclipse-jdtls",
+          "caseCount": 12,
+          "language": "java",
+          "repositories": 4
+        },
+        {
+          "candidateId": "rust-analyzer",
+          "caseCount": 12,
+          "language": "rust",
+          "repositories": 4
+        },
+        {
+          "candidateId": "apple-clangd-21",
+          "caseCount": 12,
+          "language": "cpp",
+          "repositories": 4
+        }
+      ],
+      "result": {
+        "release": null,
+        "reportArtifact": null,
+        "status": "awaiting_checksum_verified_report"
+      },
+      "reviewTier": "human_adjudicated_agent_panel",
+      "selectionRegime": "prospective_pre_registered"
+    }
+  }
+}
