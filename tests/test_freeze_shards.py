@@ -92,6 +92,39 @@ class FreezeShardTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "runner"):
             MODULE.merge_bifrost([left, right])
 
+    def test_merge_accepts_reports_omitting_empty_semantic_pack_runs(self):
+        def report(case_file, semantic_pack_runs=None):
+            result = {
+                "usagebenchVersion": "0.3.0",
+                "usagebenchRevision": "a" * 40,
+                "usagebenchRelease": "v0.3.0",
+                "runner": {"name": "bifrost"},
+                "invocation": {},
+                "bifrostCommit": "b" * 40,
+                "bifrostResolvedCommit": "b" * 40,
+                "environment": {"analyzerExecutable": {}},
+                "requestedCaseFiles": [case_file],
+                "caseFiles": [case_file],
+                "documents": [{"caseFile": case_file}],
+                "requestedTotals": {"cases": 1},
+                "totals": {"cases": 1},
+                "startedAtUnixSeconds": 2,
+                "finishedAtUnixSeconds": 3,
+            }
+            if semantic_pack_runs is not None:
+                result["semanticPackRuns"] = semantic_pack_runs
+            return result
+
+        merged = MODULE.merge_bifrost([
+            report("java-01.yaml"),
+            report("rust-01.yaml", [{"caseFile": "rust-01.yaml"}]),
+        ])
+
+        self.assertEqual(merged["semanticPackRuns"], [{"caseFile": "rust-01.yaml"}])
+        self.assertEqual(merged["requestedCaseFiles"], ["java-01.yaml", "rust-01.yaml"])
+        self.assertEqual(merged["caseFiles"], ["java-01.yaml", "rust-01.yaml"])
+        self.assertEqual(merged["totals"], {"cases": 2})
+
     def test_aggregate_rejects_partial_artifact_set(self):
         with tempfile.TemporaryDirectory() as artifacts, tempfile.TemporaryDirectory() as output_parent:
             args = type("Args", (), {
