@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-8",
+  "caseId": "js-parity-object-literal-method-call",
+  "language": "javascript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "f1c4e26e5d7ebfa1c05745fb6bd8ce586992b6b5794455dfdb2de1e028a1c444"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/library.js",
+    "range": {
+      "start": {
+        "line": 15,
+        "character": 2
+      },
+      "end": {
+        "line": 15,
+        "character": 12
+      }
+    }
+  },
+  "displayName": "formatTask"
+}

@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m8_openai_java",
+    "executedAt": "2026-08-17T10:17:03Z"
+  },
+  "records": [
+    {
+      "caseId": "java-parity-interface-receiver-method-call",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/main/java/example/parity/Handler.java",
+        "range": {
+          "start": {
+            "line": 3,
+            "character": 11
+          },
+          "end": {
+            "line": 3,
+            "character": 17
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/main/java/example/parity/ConsoleHandler.java",
+            "range": {
+              "start": {
+                "line": 4,
+                "character": 18
+              },
+              "end": {
+                "line": 4,
+                "character": 24
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the distinct overriding method ConsoleHandler.handle; it does not resolve to the selected Handler.handle declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main/java/example/parity/Runner.java",
+            "range": {
+              "start": {
+                "line": 6,
+                "character": 23
+              },
+              "end": {
+                "line": 6,
+                "character": 29
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The receiver expression handler has compile-time type Handler, so this invocation resolves to Handler.handle."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main/java/example/parity/Runner.java",
+            "range": {
+              "start": {
+                "line": 6,
+                "character": 54
+              },
+              "end": {
+                "line": 6,
+                "character": 60
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "The receiver expression direct has compile-time type ConsoleHandler, so overload resolution selects the distinct ConsoleHandler.handle declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main/java/example/parity/Runner.java",
+            "range": {
+              "start": {
+                "line": 12,
+                "character": 26
+              },
+              "end": {
+                "line": 12,
+                "character": 32
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the anonymous class's distinct overriding handle method; it does not resolve to the selected Handler.handle declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main/java/example/parity/Runner.java",
+            "range": {
+              "start": {
+                "line": 19,
+                "character": 31
+              },
+              "end": {
+                "line": 19,
+                "character": 37
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "makeAnonymous() has declared return type Handler, so this invocation resolves to Handler.handle."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/main/java/example/parity/Runner.java",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 23
+          },
+          "end": {
+            "line": 6,
+            "character": 29
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "PROMPT.md",
+        "CASE.json",
+        "RESPONSE.schema.json",
+        "source/src/main/java/example/parity/ConsoleHandler.java",
+        "source/src/main/java/example/parity/Handler.java",
+        "source/src/main/java/example/parity/Names.java",
+        "source/src/main/java/example/parity/Runner.java",
+        "source/src/main/java/example/parity/StaticImportUser.java"
+      ],
+      "rationale": "The complete source tree contains two invocations whose receiver's compile-time type is Handler, and both resolve to the selected interface method. The concrete-class invocation resolves instead to ConsoleHandler.handle, while both overriding method-name declarations introduce distinct method symbols. There are no explicit import or export binding tokens for handle and no unresolved required-contract ambiguity."
+    }
+  ]
+}
