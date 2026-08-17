@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-9",
+  "caseId": "rust-imported-type-and-member-type-lookup",
+  "language": "rust",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "c5ad5ddcfa6b358fd40561655d775b54f318747dc7d671524396dffd03b1ac8e"
+  },
+  "reviewProfile": "navigation_v1",
+  "queries": [
+    {
+      "queryId": "query-1",
+      "operation": "type_definition",
+      "query": {
+        "uri": "benchmark://source/src/lib.rs",
+        "range": {
+          "start": {
+            "line": 17,
+            "character": 42
+          },
+          "end": {
+            "line": 17,
+            "character": 51
+          }
+        }
+      },
+      "displayName": "formatter",
+      "kind": "variable"
+    },
+    {
+      "queryId": "query-2",
+      "operation": "type_definition",
+      "query": {
+        "uri": "benchmark://source/src/service.rs",
+        "range": {
+          "start": {
+            "line": 51,
+            "character": 40
+          },
+          "end": {
+            "line": 51,
+            "character": 45
+          }
+        }
+      },
+      "displayName": "label",
+      "kind": "field"
+    }
+  ]
+}

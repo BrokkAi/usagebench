@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-9",
+  "caseId": "cpp-method-call",
+  "language": "cpp",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "061efeae8db53e485e4441886fde6ea45a982b509e69cad9605bf926761d7a90"
+  },
+  "declaration": {
+    "uri": "benchmark://source/include/service.h",
+    "range": {
+      "start": {
+        "line": 14,
+        "character": 16
+      },
+      "end": {
+        "line": 14,
+        "character": 23
+      }
+    }
+  },
+  "displayName": "execute"
+}

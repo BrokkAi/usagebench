@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m9_openai_scala",
+    "executedAt": "2026-08-17T10:54:10Z"
+  },
+  "records": [
+    {
+      "caseId": "scala-parity-extension-method-call",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/main/scala/example/Workflow.scala",
+        "range": {
+          "start": {
+            "line": 19,
+            "character": 8
+          },
+          "end": {
+            "line": 19,
+            "character": 12
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/main/scala/example/Workflow.scala",
+            "range": {
+              "start": {
+                "line": 29,
+                "character": 30
+              },
+              "end": {
+                "line": 29,
+                "character": 34
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The selected-name token in the extension invocation resolves to Syntax.slug for the String receiver."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/main/scala/example/Workflow.scala",
+        "range": {
+          "start": {
+            "line": 29,
+            "character": 30
+          },
+          "end": {
+            "line": 29,
+            "character": 34
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/main/scala/example/Workflow.scala"
+      ],
+      "rationale": "The complete fixture has one identifier token outside the declaration that semantically resolves to the extension method: slug in the direct extension invocation. The Syntax wildcard import introduces no explicit slug token, so bindings_optional adds no optional location. The sole required location is therefore also the deterministic definitionUsage."
+    }
+  ]
+}

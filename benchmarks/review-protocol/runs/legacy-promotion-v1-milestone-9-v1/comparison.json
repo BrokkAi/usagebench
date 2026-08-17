@@ -1,0 +1,679 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "legacy-promotion-v1-milestone-9",
+  "status": "pending_human_adjudication",
+  "cases": [
+    {
+      "caseId": "cpp-method-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": false,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": false,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main.cpp",
+            7,
+            26,
+            7,
+            33
+          ],
+          [
+            "benchmark://source/src/service.cpp",
+            12,
+            21,
+            12,
+            28
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main.cpp",
+          7,
+          26,
+          7,
+          33
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main.cpp",
+            7,
+            26,
+            7,
+            33
+          ],
+          [
+            "benchmark://source/src/service.cpp",
+            11,
+            21,
+            11,
+            28
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main.cpp",
+          7,
+          26,
+          7,
+          33
+        ]
+      }
+    },
+    {
+      "caseId": "csharp-parity-buffer-implementation-method-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/Polymorphism.cs",
+            31,
+            31,
+            31,
+            37
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/Polymorphism.cs",
+          31,
+          31,
+          31,
+          37
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/Polymorphism.cs",
+            31,
+            31,
+            31,
+            37
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/Polymorphism.cs",
+          31,
+          31,
+          31,
+          37
+        ]
+      }
+    },
+    {
+      "caseId": "go-parity-embedded-promoted-field-access",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": false,
+      "fields": {
+        "decision": false,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/cmd/app/main.go",
+            7,
+            12,
+            7,
+            16
+          ],
+          [
+            "benchmark://source/pkg/service/service.go",
+            7,
+            3,
+            7,
+            7
+          ],
+          [
+            "benchmark://source/pkg/service/service.go",
+            8,
+            10,
+            8,
+            14
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/cmd/app/main.go",
+          7,
+          12,
+          7,
+          16
+        ]
+      },
+      "anthropic": {
+        "decision": "replace",
+        "required": [
+          [
+            "benchmark://source/cmd/app/main.go",
+            7,
+            12,
+            7,
+            16
+          ],
+          [
+            "benchmark://source/pkg/service/service.go",
+            7,
+            3,
+            7,
+            7
+          ],
+          [
+            "benchmark://source/pkg/service/service.go",
+            8,
+            10,
+            8,
+            14
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/cmd/app/main.go",
+          7,
+          12,
+          7,
+          16
+        ]
+      }
+    },
+    {
+      "caseId": "java-lambda-body-member-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main/java/precision/Precision.java",
+            12,
+            43,
+            12,
+            50
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main/java/precision/Precision.java",
+          12,
+          43,
+          12,
+          50
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main/java/precision/Precision.java",
+            12,
+            43,
+            12,
+            50
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main/java/precision/Precision.java",
+          12,
+          43,
+          12,
+          50
+        ]
+      }
+    },
+    {
+      "caseId": "js-commonjs-barrel-class-construction",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/app.js",
+            2,
+            4,
+            2,
+            10
+          ],
+          [
+            "benchmark://source/src/lib.js",
+            5,
+            13,
+            5,
+            19
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/app.js",
+          2,
+          4,
+          2,
+          10
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/app.js",
+            2,
+            4,
+            2,
+            10
+          ],
+          [
+            "benchmark://source/src/lib.js",
+            5,
+            13,
+            5,
+            19
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/app.js",
+          2,
+          4,
+          2,
+          10
+        ]
+      }
+    },
+    {
+      "caseId": "php-parity-static-property-access",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": false,
+      "fields": {
+        "decision": false,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/Consumer.php",
+            9,
+            17,
+            9,
+            22
+          ],
+          [
+            "benchmark://source/src/Service/EmailNotifier.php",
+            15,
+            14,
+            15,
+            19
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/Consumer.php",
+          9,
+          17,
+          9,
+          22
+        ]
+      },
+      "anthropic": {
+        "decision": "replace",
+        "required": [
+          [
+            "benchmark://source/src/Consumer.php",
+            9,
+            17,
+            9,
+            22
+          ],
+          [
+            "benchmark://source/src/Service/EmailNotifier.php",
+            15,
+            14,
+            15,
+            19
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/Consumer.php",
+          9,
+          17,
+          9,
+          22
+        ]
+      }
+    },
+    {
+      "caseId": "python-barrel-class-construction",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/consumer.py",
+            5,
+            12,
+            5,
+            17
+          ],
+          [
+            "benchmark://source/consumer.py",
+            5,
+            20,
+            5,
+            25
+          ],
+          [
+            "benchmark://source/precision/services.py",
+            9,
+            17,
+            9,
+            22
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/consumer.py",
+          5,
+          12,
+          5,
+          17
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/consumer.py",
+            5,
+            12,
+            5,
+            17
+          ],
+          [
+            "benchmark://source/consumer.py",
+            5,
+            20,
+            5,
+            25
+          ],
+          [
+            "benchmark://source/precision/services.py",
+            9,
+            17,
+            9,
+            22
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/consumer.py",
+          5,
+          12,
+          5,
+          17
+        ]
+      }
+    },
+    {
+      "caseId": "ruby-prepend-method-precedence",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/app/report.rb",
+            8,
+            14,
+            8,
+            25
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/app/report.rb",
+          8,
+          14,
+          8,
+          25
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/app/report.rb",
+            8,
+            14,
+            8,
+            25
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/app/report.rb",
+          8,
+          14,
+          8,
+          25
+        ]
+      }
+    },
+    {
+      "caseId": "rust-imported-type-and-member-type-lookup",
+      "reviewProfile": "navigation_v1",
+      "primaryConsensus": true,
+      "fields": {
+        "queryIdentity": true,
+        "decision": true,
+        "targets": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decisions": [
+          "accept",
+          "accept"
+        ],
+        "targets": [
+          [
+            [
+              "benchmark://source/src/service.rs",
+              34,
+              11,
+              34,
+              25
+            ]
+          ],
+          [
+            [
+              "benchmark://source/src/service.rs",
+              36,
+              11,
+              36,
+              21
+            ]
+          ]
+        ]
+      },
+      "anthropic": {
+        "decisions": [
+          "accept",
+          "accept"
+        ],
+        "targets": [
+          [
+            [
+              "benchmark://source/src/service.rs",
+              34,
+              11,
+              34,
+              25
+            ]
+          ],
+          [
+            [
+              "benchmark://source/src/service.rs",
+              36,
+              11,
+              36,
+              21
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "caseId": "scala-parity-extension-method-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main/scala/example/Workflow.scala",
+            29,
+            30,
+            29,
+            34
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main/scala/example/Workflow.scala",
+          29,
+          30,
+          29,
+          34
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/main/scala/example/Workflow.scala",
+            29,
+            30,
+            29,
+            34
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/main/scala/example/Workflow.scala",
+          29,
+          30,
+          29,
+          34
+        ]
+      }
+    },
+    {
+      "caseId": "ts-parity-default-function-import-call",
+      "reviewProfile": "references_v3",
+      "primaryConsensus": true,
+      "fields": {
+        "decision": true,
+        "declaration": true,
+        "requiredLocations": true,
+        "definitionUsage": true,
+        "highConfidence": true,
+        "noRequiredAmbiguity": true
+      },
+      "openai": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/app.ts",
+            2,
+            15,
+            2,
+            27
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/app.ts",
+          2,
+          15,
+          2,
+          27
+        ]
+      },
+      "anthropic": {
+        "decision": "accept",
+        "required": [
+          [
+            "benchmark://source/src/app.ts",
+            2,
+            15,
+            2,
+            27
+          ]
+        ],
+        "definitionUsage": [
+          "benchmark://source/src/app.ts",
+          2,
+          15,
+          2,
+          27
+        ]
+      }
+    }
+  ]
+}

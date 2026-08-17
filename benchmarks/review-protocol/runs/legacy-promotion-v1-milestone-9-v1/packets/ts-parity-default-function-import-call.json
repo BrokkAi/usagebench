@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-9",
+  "caseId": "ts-parity-default-function-import-call",
+  "language": "typescript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "eb2392e236c01ee453711d48f26d6591e21cbe36dd10be07279f509b55e36716"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/api.ts",
+    "range": {
+      "start": {
+        "line": 21,
+        "character": 24
+      },
+      "end": {
+        "line": 21,
+        "character": 36
+      }
+    }
+  },
+  "displayName": "createClient"
+}

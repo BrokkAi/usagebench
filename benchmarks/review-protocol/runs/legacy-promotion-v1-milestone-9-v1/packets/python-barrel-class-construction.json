@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-9",
+  "caseId": "python-barrel-class-construction",
+  "language": "python",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "cf5ff660794a07b347246901242c065f154ae38a2ab8e80d5754ec97e485e315"
+  },
+  "declaration": {
+    "uri": "benchmark://source/precision/services.py",
+    "range": {
+      "start": {
+        "line": 5,
+        "character": 6
+      },
+      "end": {
+        "line": 5,
+        "character": 11
+      }
+    }
+  },
+  "displayName": "Child"
+}
