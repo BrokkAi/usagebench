@@ -83,10 +83,10 @@ protocol. It executes Bifrost plus `eclipse-jdtls`, `rust-analyzer`, and
 and does not introduce a second-host evidence gate.
 
 The v0.3.0 execution identities are frozen separately in
-`candidates-v0.3.0.json`. In particular, that historical release remains bound
-to Bifrost v0.8.8 at `a54be9be9b08b9d9ddbab1c471e26d7f8bd932df` even after the
-active development candidate advances. A newer Bifrost run is evidence for a
-subsequent snapshot or release, never a replacement for v0.3.0 evidence.
+`candidates-v0.3.0.json`. Its Bifrost candidate is pinned to public release
+v0.10.1 at `511adaa2733067bb1b7809ab79e06ec0e3d2a146`. Any later Bifrost run is
+evidence for a subsequent snapshot or release, never a replacement for v0.3.0
+evidence.
 
 The v1 selection is hash-linked by the v2 protocol. Every v1-selected
 repository is ineligible even if it appears in a v2 GitHub language frame.

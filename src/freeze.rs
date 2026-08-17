@@ -1145,10 +1145,10 @@ mod tests {
             .find(|candidate| candidate.id == "bifrost")
             .unwrap();
 
-        assert_eq!(bifrost.requested_version, "v0.8.8");
+        assert_eq!(bifrost.requested_version, "v0.10.1");
         assert_eq!(
             bifrost.revision.as_deref(),
-            Some("a54be9be9b08b9d9ddbab1c471e26d7f8bd932df")
+            Some("511adaa2733067bb1b7809ab79e06ec0e3d2a146")
         );
         assert_eq!(
             registry
