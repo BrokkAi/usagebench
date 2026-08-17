@@ -1,19 +1,53 @@
 ---
 title: How good is Bifrost at finding usages?
-description: A direct, independently reviewed comparison of Bifrost usage analysis with established language servers.
+description: An evidence-derived view of Bifrost usage analysis across prospective and retrospectively reviewed UsageBench slices.
 tableOfContents: false
 ---
 
-<p class="snapshot-kicker">IMMUTABLE EVALUATION · USAGEBENCH v0.2.0</p>
+import evidence from '../../data/evidence.json';
+
+<p class="snapshot-kicker">IMMUTABLE EVIDENCE MAP · USAGEBENCH</p>
 
 <div class="verdict-panel">
   <span>Short answer</span>
-  <strong>Near parity on this sample. Strongest in TypeScript; behind in Go and Python.</strong>
+  <strong>Published v1 is near parity; the broader evidence is deliberately stratified.</strong>
   <p>
-    Bifrost met the complete reviewed usage contract in <b>25 of 36 cases
-    (69.4%)</b>. The three established language servers met it in <b>26 of 36
-    (72.2%)</b>.
+    The immutable v1 result reports Bifrost at <b>25 of 36 cases (69.4%)</b>
+    under the strict contract, versus <b>26 of 36 (72.2%)</b> for the reference
+    servers. Independent v2 and reviewed-legacy report artifacts are not yet
+    checked in, so they are shown as frozen evidence scope—not guessed scores.
   </p>
+</div>
+
+<div class="evidence-summary" aria-label="Evidence breadth and trust tiers">
+  <div class="evidence-summary__item evidence-summary__item--published">
+    <span>Prospective v1</span>
+    <strong>{evidence.slices.v1.caseCount}<small> cases</small></strong>
+    <p>Published historical release <code>{evidence.slices.v1.result.release}</code>; 12 per profile</p>
+  </div>
+  <div class="evidence-summary__item evidence-summary__item--pending">
+    <span>Prospective v2</span>
+    <strong>{evidence.slices.v2.caseCount}<small> cases</small></strong>
+    <p>Three independent profiles; awaiting checksum-verified result reports</p>
+  </div>
+  <div class="evidence-summary__item evidence-summary__item--retrospective">
+    <span>Reviewed legacy core</span>
+    <strong>{evidence.slices.legacy.caseCount}<small> cases</small></strong>
+    <p>{evidence.slices.legacy.perLanguage} × {evidence.slices.legacy.languageCount} languages; retrospective only</p>
+  </div>
+  <div class="evidence-summary__item evidence-summary__item--development">
+    <span>Remaining development</span>
+    <strong>{evidence.development.remainingCases}<small> cases</small></strong>
+    <p>{evidence.development.overflowCases} overflow · {evidence.development.controlCases} controls · {evidence.development.semanticPackCases} semantic-pack cases</p>
+  </div>
+</div>
+
+<div class="evidence-note">
+  The [generated evidence map](results/evidence/) shows every profile and
+  language denominator, the frozen manifest checksums, and the safeguards that
+  keep v1, v2, the reviewed legacy core, controls, overflow, and development
+  cases from being pooled. The v1 score below is historical release evidence;
+  all future score tables must be generated from checksum-verified reports.
 </div>
 
 <div class="result-summary result-summary--headline" aria-label="Headline evaluation comparison">

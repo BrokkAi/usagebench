@@ -146,6 +146,75 @@ body {
   margin: 0.55rem 0 0;
 }
 
+.evidence-summary {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-block: 1.75rem;
+}
+
+.evidence-summary__item {
+  background: rgb(255 255 255 / 0.025);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-top: 3px solid var(--sl-color-gray-4);
+  border-radius: 0.45rem;
+  margin-top: 0 !important;
+  padding: 0.95rem;
+}
+
+.evidence-summary__item--published {
+  border-color: rgb(255 134 107 / 0.35);
+  border-top-color: var(--usagebench-bifrost);
+}
+
+.evidence-summary__item--pending {
+  border-color: rgb(97 199 220 / 0.35);
+  border-top-color: var(--usagebench-reference);
+}
+
+.evidence-summary__item--retrospective {
+  border-color: rgb(187 146 255 / 0.35);
+  border-top-color: #bb92ff;
+}
+
+.evidence-summary__item--development {
+  border-color: rgb(255 255 255 / 0.2);
+  border-top-color: var(--sl-color-gray-3);
+}
+
+.evidence-summary__item > span {
+  color: var(--sl-color-gray-2);
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  min-height: 2.5em;
+  text-transform: uppercase;
+}
+
+.evidence-summary__item strong {
+  color: var(--sl-color-white);
+  display: block;
+  font-size: clamp(1.55rem, 3vw, 2.15rem);
+  letter-spacing: -0.06em;
+  line-height: 1.05;
+  margin-top: 0.5rem;
+}
+
+.evidence-summary__item small {
+  color: var(--sl-color-gray-3);
+  font-size: 0.42em;
+  letter-spacing: -0.02em;
+}
+
+.evidence-summary__item p {
+  color: var(--sl-color-gray-3);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  margin: 0.55rem 0 0;
+}
+
 .result-summary {
   display: grid;
   gap: 0.75rem;
@@ -356,6 +425,7 @@ body {
 }
 
 @media (max-width: 30rem) {
+  .evidence-summary,
   .result-summary--headline,
   .profile-scorecard {
     grid-template-columns: 1fr;
@@ -363,5 +433,11 @@ body {
 
   .result-metric > span {
     min-height: auto;
+  }
+}
+
+@media (min-width: 30.01rem) and (max-width: 56rem) {
+  .evidence-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

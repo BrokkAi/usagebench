@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BrokkAi/usagebench/schema/stratified-publication.schema.json",
+  "title": "UsageBench Stratified Publication Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "publicationId", "slices", "aggregate"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "publicationId": { "type": "string", "minLength": 1 },
+    "slices": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/slice" }
+    },
+    "aggregate": { "$ref": "#/$defs/aggregate" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "artifactLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "sha256"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "slice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "evidenceTier", "selectionProvenance", "snapshotKind", "snapshot", "includeInHeadline"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "evidenceTier": { "enum": ["prospective_evaluation", "retrospective_reviewed_legacy", "development_regression"] },
+        "selectionProvenance": { "enum": ["pre_registered", "retrospectively_selected", "analyzer_informed"] },
+        "snapshotKind": { "enum": ["development", "evaluation", "legacy_promoted"] },
+        "snapshot": { "$ref": "#/$defs/artifactLink" },
+        "includeInHeadline": { "type": "boolean" }
+      }
+    },
+    "aggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "includedSlices", "weightingName"],
+      "properties": {
+        "method": { "enum": ["none", "equal_slice", "equal_language", "micro"] },
+        "includedSlices": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "weightingName": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -141,6 +141,19 @@ enum Command {
         #[arg(long)]
         check: bool,
     },
+    /// Validate a hash-bound stratified publication manifest and every linked
+    /// snapshot/report artifact.
+    ValidatePublication { manifest: PathBuf },
+    /// Generate machine-readable stratified publication metadata from linked
+    /// checksum-verified snapshots.
+    GeneratePublication {
+        /// Stratified publication manifest.
+        #[arg(long)]
+        manifest: PathBuf,
+        /// Destination for derived machine-readable publication metadata.
+        #[arg(long)]
+        output: PathBuf,
+    },
     /// Run benchmark case YAML files against Bifrost.
     RunBifrost {
         /// Case file or directory to run.
@@ -402,6 +415,23 @@ fn main() -> Result<()> {
                     output_directory.display()
                 );
             }
+        }
+        Command::ValidatePublication { manifest } => {
+            let publication = usagebench::publication::generate(&manifest)?;
+            println!(
+                "validated stratified publication {} with {} slice(s)",
+                publication.publication_id,
+                publication.slices.len()
+            );
+        }
+        Command::GeneratePublication { manifest, output } => {
+            let publication = usagebench::publication::write(&manifest, &output)?;
+            println!(
+                "wrote stratified publication {} with {} slice(s) to {}",
+                publication.publication_id,
+                publication.slices.len(),
+                output.display()
+            );
         }
         Command::RunBifrost {
             path,

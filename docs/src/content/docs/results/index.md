@@ -8,6 +8,11 @@ description: Immutable v0.2.0 results for the independently reviewed real-projec
 > [UsageBench v0.2.0](https://github.com/BrokkAi/usagebench/releases/tag/v0.2.0).
 > It does not pool the broader analyzer-informed development corpus.
 
+The [generated evidence map](evidence/) is the site-wide index of the frozen
+v1 and v2 prospective slices, the separately reviewed legacy core, controls,
+overflow, and remaining development cases. This page remains the detailed
+historical v1 result; it does not become a proxy for the other strata.
+
 The active development candidate is public Bifrost v0.10.1 at immutable commit
 `511adaa2733067bb1b7809ab79e06ec0e3d2a146`. No result for that release is
 published on this page: the tables below remain historical v0.2.0 evidence

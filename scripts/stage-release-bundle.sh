@@ -70,8 +70,20 @@ if [[ -n "$generated_results_directory" ]]; then
     echo "generated results must contain results.md and case-comparison.md: $generated_results_directory" >&2
     exit 1
   }
+  if find "$generated_results_directory" -maxdepth 1 -type l -print -quit | grep -q .; then
+    echo "generated results may not contain symlinks: $generated_results_directory" >&2
+    exit 1
+  fi
+  generated_result_files=()
+  while IFS= read -r generated_result_file; do
+    generated_result_files+=("$generated_result_file")
+  done < <(find "$generated_results_directory" -maxdepth 1 -type f -print | sort)
+  [[ "${#generated_result_files[@]}" -gt 0 ]] || {
+    echo "generated results directory is empty: $generated_results_directory" >&2
+    exit 1
+  }
   mkdir -p "$destination/results"
-  cp "$generated_results_directory/results.md" "$generated_results_directory/case-comparison.md" "$destination/results/"
+  cp -- "${generated_result_files[@]}" "$destination/results/"
 fi
 
 stage_finished_ns="$(python3 -c 'import time; print(time.time_ns())')"

@@ -263,6 +263,11 @@ jobs:
           cargo run --locked -- generate-results --manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.json" --output-directory "$RUNNER_TEMP/freeze-results"
           stage="usagebench-$SNAPSHOT_VERSION"
           scripts/stage-release-bundle.sh . "dist/$stage" "$SNAPSHOT_VERSION" "$REVISION" "$RUNNER_TEMP/freeze-evidence" "$RUNNER_TEMP/freeze-results"
+          cargo run --locked -- generate-results \
+            --manifest "dist/$stage/evidence/freeze-manifest.json" \
+            --output-directory "dist/$stage/results" --check
+          python3 scripts/validate-publication-bundle.py \
+            --bundle "dist/$stage" --tag "$SNAPSHOT_VERSION" --revision "$REVISION"
           tar -C dist -czf "dist/$stage.tar.gz" "$stage"
           (cd dist && shasum -a 256 "$stage.tar.gz" > "$stage.tar.gz.sha256")
       - name: Retain development freeze phase timings
@@ -332,6 +337,11 @@ jobs:
           cargo run --locked -- generate-results --manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.json" --output-directory "$RUNNER_TEMP/freeze-results"
           stage="usagebench-$SNAPSHOT_VERSION"
           scripts/stage-release-bundle.sh . "dist/$stage" "$SNAPSHOT_VERSION" "$REVISION" "$RUNNER_TEMP/freeze-evidence" "$RUNNER_TEMP/freeze-results"
+          cargo run --locked -- generate-results \
+            --manifest "dist/$stage/evidence/freeze-manifest.json" \
+            --output-directory "dist/$stage/results" --check
+          python3 scripts/validate-publication-bundle.py \
+            --bundle "dist/$stage" --tag "$SNAPSHOT_VERSION" --revision "$REVISION"
           tar -C dist -czf "dist/$stage.tar.gz" "$stage"
           (cd dist && shasum -a 256 "$stage.tar.gz" > "$stage.tar.gz.sha256")
       - name: Retain evaluation freeze phase timings
