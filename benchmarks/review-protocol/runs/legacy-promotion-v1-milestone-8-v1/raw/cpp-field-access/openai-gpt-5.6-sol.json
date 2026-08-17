@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m8_openai_cpp",
+    "executedAt": "2026-08-17T10:14:08Z"
+  },
+  "records": [
+    {
+      "caseId": "cpp-field-access",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/include/service.h",
+        "range": {
+          "start": {
+            "line": 7,
+            "character": 16
+          },
+          "end": {
+            "line": 7,
+            "character": 20
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 8,
+                "character": 60
+              },
+              "end": {
+                "line": 8,
+                "character": 64
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The member-access token in repository.last resolves to Repository::last."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/service.cpp",
+            "range": {
+              "start": {
+                "line": 5,
+                "character": 4
+              },
+              "end": {
+                "line": 5,
+                "character": 8
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Inside Repository::save, the unqualified assignment target last resolves to the Repository::last field."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/service.cpp",
+            "range": {
+              "start": {
+                "line": 6,
+                "character": 11
+              },
+              "end": {
+                "line": 6,
+                "character": 15
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Inside Repository::save, the unqualified returned token last resolves to the Repository::last field."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/main.cpp",
+        "range": {
+          "start": {
+            "line": 8,
+            "character": 60
+          },
+          "end": {
+            "line": 8,
+            "character": 64
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/include/service.h",
+        "source/src/main.cpp",
+        "source/src/service.cpp"
+      ],
+      "rationale": "The complete source tree contains three identifier tokens outside the supplied declaration that resolve to Repository::last: one explicit member access in run_demo and two implicit member accesses in Repository::save. There are no binding tokens, competing declarations, or unresolved required-contract ambiguities. The definitionUsage is the first required location after sorting by URI and source position."
+    }
+  ]
+}

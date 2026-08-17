@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m8_openai_csharp",
+    "executedAt": "2026-08-17T10:14:07Z"
+  },
+  "records": [
+    {
+      "caseId": "csharp-property-access",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/Service.cs",
+        "range": {
+          "start": {
+            "line": 9,
+            "character": 18
+          },
+          "end": {
+            "line": 9,
+            "character": 22
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/Consumer.cs",
+            "range": {
+              "start": {
+                "line": 9,
+                "character": 53
+              },
+              "end": {
+                "line": 9,
+                "character": 57
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The member-access token repository.Last reads the selected Repository.Last property."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/Service.cs",
+            "range": {
+              "start": {
+                "line": 13,
+                "character": 8
+              },
+              "end": {
+                "line": 13,
+                "character": 12
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The unqualified token Last inside Repository.Save assigns the selected instance property."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/Service.cs",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 15
+              },
+              "end": {
+                "line": 14,
+                "character": 19
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The unqualified token Last inside Repository.Save reads and returns the selected instance property."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/Consumer.cs",
+        "range": {
+          "start": {
+            "line": 9,
+            "character": 53
+          },
+          "end": {
+            "line": 9,
+            "character": 57
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/Consumer.cs",
+        "source/src/Service.cs"
+      ],
+      "rationale": "The complete two-file source tree defines one Repository.Last property and contains exactly three identifier tokens outside its declaration that resolve to it: a write and read in Repository.Save and a member-access read in Consumer.Run. There are no import, export, re-export, same-name, or unresolved candidates."
+    }
+  ]
+}

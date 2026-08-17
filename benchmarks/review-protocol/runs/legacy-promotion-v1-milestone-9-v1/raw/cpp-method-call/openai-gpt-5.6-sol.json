@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m9_openai_cpp",
+    "executedAt": "2026-08-17T10:49:36Z"
+  },
+  "records": [
+    {
+      "caseId": "cpp-method-call",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/include/service.h",
+        "range": {
+          "start": {
+            "line": 14,
+            "character": 16
+          },
+          "end": {
+            "line": 14,
+            "character": 23
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 7,
+                "character": 26
+              },
+              "end": {
+                "line": 7,
+                "character": 33
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The member-access token in service.execute resolves to Service::execute."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/service.cpp",
+            "range": {
+              "start": {
+                "line": 12,
+                "character": 21
+              },
+              "end": {
+                "line": 12,
+                "character": 28
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This out-of-class definition token defines and resolves to the declared Service::execute method."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/main.cpp",
+        "range": {
+          "start": {
+            "line": 7,
+            "character": 26
+          },
+          "end": {
+            "line": 7,
+            "character": 33
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/include/service.h",
+        "source/src/main.cpp",
+        "source/src/service.cpp"
+      ],
+      "rationale": "The complete fixture contains exactly two identifier tokens outside the supplied declaration that resolve to Service::execute: its call in main.cpp and its out-of-class definition in service.cpp. There are no import, re-export, or export binding tokens, and no unresolved required-contract ambiguities. The main.cpp call is the deterministic definitionUsage because its URI sorts before service.cpp."
+    }
+  ]
+}

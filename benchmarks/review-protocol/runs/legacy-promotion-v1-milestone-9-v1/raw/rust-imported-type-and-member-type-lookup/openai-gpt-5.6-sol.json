@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m9_openai_rust",
+    "executedAt": "2026-08-17T10:54:00Z"
+  },
+  "records": [
+    {
+      "caseId": "rust-imported-type-and-member-type-lookup",
+      "queries": [
+        {
+          "queryId": "query-1",
+          "operation": "type_definition",
+          "query": {
+            "uri": "benchmark://source/src/lib.rs",
+            "range": {
+              "start": {
+                "line": 17,
+                "character": 42
+              },
+              "end": {
+                "line": 17,
+                "character": 51
+              }
+            }
+          },
+          "decision": "accept",
+          "confidence": "high",
+          "resolvedIdentity": "service::AuditFormatter",
+          "targets": [
+            {
+              "uri": "benchmark://source/src/service.rs",
+              "range": {
+                "start": {
+                  "line": 34,
+                  "character": 11
+                },
+                "end": {
+                  "line": 34,
+                  "character": 25
+                }
+              }
+            }
+          ],
+          "ambiguities": [],
+          "rationale": "The selected formatter argument is the local variable declared as AuditFormatter, whose type declaration is the AuditFormatter unit struct in service.rs."
+        },
+        {
+          "queryId": "query-2",
+          "operation": "type_definition",
+          "query": {
+            "uri": "benchmark://source/src/service.rs",
+            "range": {
+              "start": {
+                "line": 51,
+                "character": 40
+              },
+              "end": {
+                "line": 51,
+                "character": 45
+              }
+            }
+          },
+          "decision": "accept",
+          "confidence": "high",
+          "resolvedIdentity": "service::AuditLabel",
+          "targets": [
+            {
+              "uri": "benchmark://source/src/service.rs",
+              "range": {
+                "start": {
+                  "line": 36,
+                  "character": 11
+                },
+                "end": {
+                  "line": 36,
+                  "character": 21
+                }
+              }
+            }
+          ],
+          "ambiguities": [],
+          "rationale": "The selected label field access resolves through AuditEvent.label, whose declared type is AuditLabel; its type declaration is the AuditLabel struct in service.rs."
+        }
+      ],
+      "inspectedPaths": [
+        "PROMPT.md",
+        "CASE.json",
+        "RESPONSE.schema.json",
+        "source/src/lib.rs",
+        "source/src/service.rs"
+      ],
+      "rationale": "The complete Rust fixture establishes one exact type-definition target for each query: AuditFormatter for the imported local argument and AuditLabel for the member-access expression."
+    }
+  ]
+}

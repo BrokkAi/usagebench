@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m10_openai_go",
+    "executedAt": "2026-08-17T11:22:26Z"
+  },
+  "records": [
+    {
+      "caseId": "go-parity-embedded-promoted-method-call",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/pkg/service/service.go",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 19
+          },
+          "end": {
+            "line": 6,
+            "character": 25
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/cmd/app/main.go",
+            "range": {
+              "start": {
+                "line": 6,
+                "character": 8
+              },
+              "end": {
+                "line": 6,
+                "character": 14
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The Record selector resolves to AuditLog.Record through Worker's embedded *AuditLog field."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/service/service.go",
+            "range": {
+              "start": {
+                "line": 24,
+                "character": 10
+              },
+              "end": {
+                "line": 24,
+                "character": 16
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The Record selector in Worker.Run resolves to AuditLog.Record by Go method promotion from the embedded *AuditLog field."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/cmd/app/main.go",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 8
+          },
+          "end": {
+            "line": 6,
+            "character": 14
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/cmd/app/main.go",
+        "source/go.mod",
+        "source/pkg/service/integration.go",
+        "source/pkg/service/service.go"
+      ],
+      "rationale": "The complete source snapshot contains exactly two identifier tokens outside the declaration that semantically resolve to AuditLog.Record. Both are calls through Worker values and resolve via Go's promoted method set for the embedded *AuditLog field. The lexicographically first required location is the call in cmd/app/main.go, so it is the deterministic definitionUsage."
+    }
+  ]
+}

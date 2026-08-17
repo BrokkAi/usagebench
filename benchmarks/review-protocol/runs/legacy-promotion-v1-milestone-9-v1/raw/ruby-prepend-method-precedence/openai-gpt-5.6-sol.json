@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m9_openai_ruby",
+    "executedAt": "2026-08-17T10:53:25Z"
+  },
+  "records": [
+    {
+      "caseId": "ruby-prepend-method-precedence",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/lib/billing/formatting.rb",
+        "range": {
+          "start": {
+            "line": 2,
+            "character": 8
+          },
+          "end": {
+            "line": 2,
+            "character": 19
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/app/report.rb",
+            "range": {
+              "start": {
+                "line": 8,
+                "character": 14
+              },
+              "end": {
+                "line": 8,
+                "character": 25
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "Invoice prepends Billing::Formatting, so Ruby method lookup resolves invoice.total_label to Billing::Formatting#total_label before the class's own instance method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/lib/billing/invoice.rb",
+            "range": {
+              "start": {
+                "line": 22,
+                "character": 8
+              },
+              "end": {
+                "line": 22,
+                "character": 19
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares Billing::Invoice#total_label, a distinct method that is shadowed by the prepended Billing::Formatting implementation for Invoice receivers."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/app/report.rb",
+        "range": {
+          "start": {
+            "line": 8,
+            "character": 14
+          },
+          "end": {
+            "line": 8,
+            "character": 25
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/app/report.rb",
+        "source/lib/billing/auditable.rb",
+        "source/lib/billing/findable.rb",
+        "source/lib/billing/formatting.rb",
+        "source/lib/billing/invoice.rb",
+        "source/lib/billing/money.rb",
+        "source/lib/billing/record.rb",
+        "source/lib/billing/user.rb"
+      ],
+      "rationale": "The selected declaration is Billing::Formatting#total_label. Billing::Invoice prepends Formatting, placing the module ahead of Invoice in the ancestor lookup chain. The sole exact-name call, invoice.total_label, therefore resolves to the selected declaration. The direct Invoice method is a distinct shadowed declaration, and no import, re-export, or export binding token names total_label."
+    }
+  ]
+}

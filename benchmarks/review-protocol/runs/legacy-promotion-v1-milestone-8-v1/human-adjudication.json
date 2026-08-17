@@ -1,0 +1,680 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "legacy-promotion-v1-milestone-8",
+  "adjudicator": {
+    "identity": "DavidBakerEffendi",
+    "adjudicatedAt": "2026-08-17T10:48:30Z",
+    "attestation": "Approved all M8 recommendations, including the C++, C#, Python, and Scala resolutions presented in this Codex task after review of provider agreements, disagreements, authored-contract context, and reasoned recommendations in Codex task 019fd639-253c-7d70-b052-162306154b5d."
+  },
+  "cases": [
+    {
+      "caseId": "cpp-field-access",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_locations_despite_replace_label",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/include/service.h",
+        "range": {
+          "start": {
+            "line": 7,
+            "character": 16
+          },
+          "end": {
+            "line": 7,
+            "character": 20
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/service.cpp",
+          "range": {
+            "start": {
+              "line": 5,
+              "character": 4
+            },
+            "end": {
+              "line": 5,
+              "character": 8
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/service.cpp",
+          "range": {
+            "start": {
+              "line": 6,
+              "character": 11
+            },
+            "end": {
+              "line": 6,
+              "character": 15
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/main.cpp",
+          "range": {
+            "start": {
+              "line": 8,
+              "character": 60
+            },
+            "end": {
+              "line": 8,
+              "character": 64
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/main.cpp",
+        "range": {
+          "start": {
+            "line": 8,
+            "character": 60
+          },
+          "end": {
+            "line": 8,
+            "character": 64
+          }
+        }
+      },
+      "rationale": "Both providers derived the identical authored three-location contract; Anthropic's replace label proposed no substantive change."
+    },
+    {
+      "caseId": "csharp-property-access",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_locations_despite_replace_label",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/Service.cs",
+        "range": {
+          "start": {
+            "line": 9,
+            "character": 18
+          },
+          "end": {
+            "line": 9,
+            "character": 22
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/Service.cs",
+          "range": {
+            "start": {
+              "line": 13,
+              "character": 8
+            },
+            "end": {
+              "line": 13,
+              "character": 12
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/Service.cs",
+          "range": {
+            "start": {
+              "line": 14,
+              "character": 15
+            },
+            "end": {
+              "line": 14,
+              "character": 19
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/Consumer.cs",
+          "range": {
+            "start": {
+              "line": 9,
+              "character": 53
+            },
+            "end": {
+              "line": 9,
+              "character": 57
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/Consumer.cs",
+        "range": {
+          "start": {
+            "line": 9,
+            "character": 53
+          },
+          "end": {
+            "line": 9,
+            "character": 57
+          }
+        }
+      },
+      "rationale": "Both providers derived the identical authored three-location contract; Anthropic's replace label proposed no substantive change."
+    },
+    {
+      "caseId": "go-value-receiver-method-call",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/example/service.go",
+        "range": {
+          "start": {
+            "line": 27,
+            "character": 17
+          },
+          "end": {
+            "line": 27,
+            "character": 24
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/example/service_test.go",
+          "range": {
+            "start": {
+              "line": 5,
+              "character": 22
+            },
+            "end": {
+              "line": 5,
+              "character": 29
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/example/service_test.go",
+        "range": {
+          "start": {
+            "line": 5,
+            "character": 22
+          },
+          "end": {
+            "line": 5,
+            "character": 29
+          }
+        }
+      },
+      "rationale": "The two blinded providers agreed exactly on the primary consensus contract."
+    },
+    {
+      "caseId": "java-parity-interface-receiver-method-call",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/main/java/example/parity/Handler.java",
+        "range": {
+          "start": {
+            "line": 3,
+            "character": 11
+          },
+          "end": {
+            "line": 3,
+            "character": 17
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/main/java/example/parity/Runner.java",
+          "range": {
+            "start": {
+              "line": 6,
+              "character": 23
+            },
+            "end": {
+              "line": 6,
+              "character": 29
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/main/java/example/parity/Runner.java",
+          "range": {
+            "start": {
+              "line": 19,
+              "character": 31
+            },
+            "end": {
+              "line": 19,
+              "character": 37
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/main/java/example/parity/Runner.java",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 23
+          },
+          "end": {
+            "line": 6,
+            "character": 29
+          }
+        }
+      },
+      "rationale": "The two blinded providers agreed exactly on the primary consensus contract."
+    },
+    {
+      "caseId": "js-parity-object-literal-method-call",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/library.js",
+        "range": {
+          "start": {
+            "line": 15,
+            "character": 2
+          },
+          "end": {
+            "line": 15,
+            "character": 12
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/library.js",
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 19
+            },
+            "end": {
+              "line": 10,
+              "character": 29
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/consumer.js",
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 8
+            },
+            "end": {
+              "line": 4,
+              "character": 18
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/consumer.js",
+        "range": {
+          "start": {
+            "line": 4,
+            "character": 8
+          },
+          "end": {
+            "line": 4,
+            "character": 18
+          }
+        }
+      },
+      "rationale": "The two blinded providers agreed exactly on the primary consensus contract."
+    },
+    {
+      "caseId": "php-parity-concrete-implementation-method-call",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/Service/EmailNotifier.php",
+        "range": {
+          "start": {
+            "line": 13,
+            "character": 20
+          },
+          "end": {
+            "line": 13,
+            "character": 26
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/Consumer.php",
+          "range": {
+            "start": {
+              "line": 7,
+              "character": 9
+            },
+            "end": {
+              "line": 7,
+              "character": 15
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/Consumer.php",
+        "range": {
+          "start": {
+            "line": 7,
+            "character": 9
+          },
+          "end": {
+            "line": 7,
+            "character": 15
+          }
+        }
+      },
+      "rationale": "The two blinded providers agreed exactly on the primary consensus contract."
+    },
+    {
+      "caseId": "python-parity-reexported-class-alias-classmethod",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "authored_union_of_partial_provider_derivations",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/shop/models.py",
+        "range": {
+          "start": {
+            "line": 4,
+            "character": 6
+          },
+          "end": {
+            "line": 4,
+            "character": 10
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/shop/models.py",
+          "range": {
+            "start": {
+              "line": 12,
+              "character": 23
+            },
+            "end": {
+              "line": 12,
+              "character": 27
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/tests/test_models.py",
+          "range": {
+            "start": {
+              "line": 3,
+              "character": 7
+            },
+            "end": {
+              "line": 3,
+              "character": 14
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/tests/test_models.py",
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 0
+            },
+            "end": {
+              "line": 4,
+              "character": 7
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/shop/models.py",
+        "range": {
+          "start": {
+            "line": 12,
+            "character": 23
+          },
+          "end": {
+            "line": 12,
+            "character": 27
+          }
+        }
+      },
+      "rationale": "Retain the semantic quoted User annotation and both alias-spelled Account runtime receiver usages. The annotation is semantic type syntax and the receivers resolve through the explicit alias to the same User class; binding tokens remain optional."
+    },
+    {
+      "caseId": "ruby-class-variable-access",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/lib/billing/invoice.rb",
+        "range": {
+          "start": {
+            "line": 11,
+            "character": 4
+          },
+          "end": {
+            "line": 11,
+            "character": 14
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/lib/billing/invoice.rb",
+          "range": {
+            "start": {
+              "line": 27,
+              "character": 6
+            },
+            "end": {
+              "line": 27,
+              "character": 16
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/lib/billing/invoice.rb",
+        "range": {
+          "start": {
+            "line": 27,
+            "character": 6
+          },
+          "end": {
+            "line": 27,
+            "character": 16
+          }
+        }
+      },
+      "rationale": "The two blinded providers agreed exactly on the primary consensus contract."
+    },
+    {
+      "caseId": "rust-barrel-trait-static-qualifier",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/service.rs",
+        "range": {
+          "start": {
+            "line": 0,
+            "character": 10
+          },
+          "end": {
+            "line": 0,
+            "character": 16
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/service.rs",
+          "range": {
+            "start": {
+              "line": 6,
+              "character": 5
+            },
+            "end": {
+              "line": 6,
+              "character": 11
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/lib.rs",
+          "range": {
+            "start": {
+              "line": 6,
+              "character": 4
+            },
+            "end": {
+              "line": 6,
+              "character": 10
+            }
+          }
+        },
+        {
+          "uri": "benchmark://source/src/lib.rs",
+          "range": {
+            "start": {
+              "line": 8,
+              "character": 4
+            },
+            "end": {
+              "line": 8,
+              "character": 10
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/lib.rs",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 4
+          },
+          "end": {
+            "line": 6,
+            "character": 10
+          }
+        }
+      },
+      "rationale": "The two blinded providers agreed exactly on the primary consensus contract."
+    },
+    {
+      "caseId": "scala-parity-case-class-generated-construction-and-copy",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "anthropic_and_authored_reference_navigation_boundary",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/main/scala/example/Workflow.scala",
+        "range": {
+          "start": {
+            "line": 31,
+            "character": 11
+          },
+          "end": {
+            "line": 31,
+            "character": 24
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/main/scala/example/Workflow.scala",
+          "range": {
+            "start": {
+              "line": 34,
+              "character": 16
+            },
+            "end": {
+              "line": 34,
+              "character": 29
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/main/scala/example/Workflow.scala",
+        "range": {
+          "start": {
+            "line": 34,
+            "character": 16
+          },
+          "end": {
+            "line": 34,
+            "character": 29
+          }
+        }
+      },
+      "rationale": "Retain RenderRequest construction as the sole References usage. The copy token denotes a generated method rather than the class for References, while its separate Definition lookup may target the case-class declaration because no authored generated-method token exists."
+    },
+    {
+      "caseId": "ts-tsx-component-reference",
+      "reviewProfile": "references_v3",
+      "adjudicated": "accept",
+      "basis": "provider_consensus",
+      "sourceContractAction": "retain_authored",
+      "finalDeclaration": {
+        "uri": "benchmark://source/src/components.tsx",
+        "range": {
+          "start": {
+            "line": 22,
+            "character": 16
+          },
+          "end": {
+            "line": 22,
+            "character": 27
+          }
+        }
+      },
+      "finalRequiredLocations": [
+        {
+          "uri": "benchmark://source/src/app.tsx",
+          "range": {
+            "start": {
+              "line": 9,
+              "character": 10
+            },
+            "end": {
+              "line": 9,
+              "character": 21
+            }
+          }
+        }
+      ],
+      "finalDefinitionUsage": {
+        "uri": "benchmark://source/src/app.tsx",
+        "range": {
+          "start": {
+            "line": 9,
+            "character": 10
+          },
+          "end": {
+            "line": 9,
+            "character": 21
+          }
+        }
+      },
+      "rationale": "The two blinded providers agreed exactly on the primary consensus contract."
+    }
+  ]
+}

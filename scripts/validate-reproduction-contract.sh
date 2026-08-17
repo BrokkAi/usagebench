@@ -21,9 +21,9 @@ jq -e '
     "id": "bifrost",
     "runner": "bifrost",
     "name": "Bifrost",
-    "requestedVersion": "v0.8.8",
+    "requestedVersion": "v0.10.1",
     "source": "https://github.com/BrokkAi/bifrost",
-    "revision": "a54be9be9b08b9d9ddbab1c471e26d7f8bd932df",
+    "revision": "511adaa2733067bb1b7809ab79e06ec0e3d2a146",
     "advertised": true,
     "referenceRunner": "bifrost",
     "runtimeNetworking": "disabled",
@@ -33,8 +33,8 @@ jq -e '
 jq -e '
   [.candidates[] | select(
     .id == "bifrost"
-    and .requestedVersion == "43b986355bc767073921fac40f01b34d059ea564"
-    and .revision == "43b986355bc767073921fac40f01b34d059ea564"
+    and .requestedVersion == "v0.10.1"
+    and .revision == "511adaa2733067bb1b7809ab79e06ec0e3d2a146"
   )] | length == 1
 ' "$registry" >/dev/null
 

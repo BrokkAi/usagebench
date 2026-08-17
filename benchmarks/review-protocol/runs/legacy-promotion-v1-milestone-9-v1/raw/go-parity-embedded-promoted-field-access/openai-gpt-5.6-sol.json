@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m9_openai_go",
+    "executedAt": "2026-08-17T10:49:58Z"
+  },
+  "records": [
+    {
+      "caseId": "go-parity-embedded-promoted-field-access",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/pkg/service/service.go",
+        "range": {
+          "start": {
+            "line": 3,
+            "character": 1
+          },
+          "end": {
+            "line": 3,
+            "character": 5
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/cmd/app/main.go",
+            "range": {
+              "start": {
+                "line": 7,
+                "character": 12
+              },
+              "end": {
+                "line": 7,
+                "character": 16
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The selector Last resolves to AuditLog.Last through Worker's embedded *AuditLog field promotion."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/service/service.go",
+            "range": {
+              "start": {
+                "line": 7,
+                "character": 3
+              },
+              "end": {
+                "line": 7,
+                "character": 7
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The assignment selector a.Last directly resolves to the declared AuditLog.Last field."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/pkg/service/service.go",
+            "range": {
+              "start": {
+                "line": 8,
+                "character": 10
+              },
+              "end": {
+                "line": 8,
+                "character": 14
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The return selector a.Last directly resolves to the declared AuditLog.Last field."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/cmd/app/main.go",
+        "range": {
+          "start": {
+            "line": 7,
+            "character": 12
+          },
+          "end": {
+            "line": 7,
+            "character": 16
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/cmd/app/main.go",
+        "source/go.mod",
+        "source/pkg/service/integration.go",
+        "source/pkg/service/service.go"
+      ],
+      "rationale": "The declaration is the Last field of AuditLog. The complete source contains two direct selectors on *AuditLog and one selector on *Worker that resolves to the same field by Go embedded-field promotion. These are the complete required semantic usage set; there are no explicit binding tokens, plausible exact-name tokens resolving elsewhere, or required-contract ambiguities."
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m10_openai_javascript",
+    "executedAt": "2026-08-17T11:23:50Z"
+  },
+  "records": [
+    {
+      "caseId": "js-commonjs-barrel-member-call",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/lib.js",
+        "range": {
+          "start": {
+            "line": 1,
+            "character": 2
+          },
+          "end": {
+            "line": 1,
+            "character": 9
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/app.js",
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 13
+              },
+              "end": {
+                "line": 2,
+                "character": 20
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The request member call is made on a new instance of Client imported through the CommonJS barrel, so it resolves to the selected Client.request method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/app.js",
+            "range": {
+              "start": {
+                "line": 3,
+                "character": 29
+              },
+              "end": {
+                "line": 3,
+                "character": 36
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The barrel re-exports create from lib.js; create returns a new Client, so this request member call resolves to the selected Client.request method."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/app.js",
+        "range": {
+          "start": {
+            "line": 2,
+            "character": 13
+          },
+          "end": {
+            "line": 2,
+            "character": 20
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/lib.js",
+        "source/src/barrel.js",
+        "source/src/app.js"
+      ],
+      "rationale": "The complete fixture defines Client.request once, re-exports the module through barrel.js, and invokes that method twice in app.js: once on a directly constructed Client and once on the Client returned by create. Both exact request tokens are required usages; no request-named binding token exists for optional classification."
+    }
+  ]
+}

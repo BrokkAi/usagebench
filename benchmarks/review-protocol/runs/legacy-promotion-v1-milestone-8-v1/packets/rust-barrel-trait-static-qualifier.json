@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-8",
+  "caseId": "rust-barrel-trait-static-qualifier",
+  "language": "rust",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "a5f979c269dc9fc75d44231d71131eb38495be900f3d0bd2bf0c38345e0c3320"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/service.rs",
+    "range": {
+      "start": {
+        "line": 0,
+        "character": 10
+      },
+      "end": {
+        "line": 0,
+        "character": 16
+      }
+    }
+  },
+  "displayName": "Worker"
+}

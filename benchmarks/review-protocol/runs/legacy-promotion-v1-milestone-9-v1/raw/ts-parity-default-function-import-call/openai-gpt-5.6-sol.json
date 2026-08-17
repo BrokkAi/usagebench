@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m9_openai_typescript",
+    "executedAt": "2026-08-17T10:54:53Z"
+  },
+  "records": [
+    {
+      "caseId": "ts-parity-default-function-import-call",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/api.ts",
+        "range": {
+          "start": {
+            "line": 21,
+            "character": 24
+          },
+          "end": {
+            "line": 21,
+            "character": 36
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/app.ts",
+            "range": {
+              "start": {
+                "line": 0,
+                "character": 7
+              },
+              "end": {
+                "line": 0,
+                "character": 19
+              }
+            }
+          },
+          "classification": "optional",
+          "rationale": "This explicit default-import binding resolves to the selected default-exported function and is optional under bindings_optional."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/app.ts",
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 15
+              },
+              "end": {
+                "line": 2,
+                "character": 27
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "This call expression invokes the imported binding that resolves to the selected default-exported createClient declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/app.ts",
+        "range": {
+          "start": {
+            "line": 2,
+            "character": 15
+          },
+          "end": {
+            "line": 2,
+            "character": 27
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/api.ts",
+        "source/src/app.ts"
+      ],
+      "rationale": "The complete source snapshot contains one required semantic use of the selected default-exported function: the createClient call in app.ts. The explicit default-import binding is recorded as optional under the declared reference policy. No other identifier token resolves to this declaration, so the required set is complete and unambiguous."
+    }
+  ]
+}

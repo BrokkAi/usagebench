@@ -1,0 +1,3111 @@
+{
+  "schemaVersion": 1,
+  "promotionId": "legacy-promotion-v1-balanced-core",
+  "claimScope": "Descriptive comparisons are bounded to the named 110-case legacy balanced-core corpus and its frozen per-language denominator; they do not support preregistered, language-wide, ecosystem-wide, or prospective claims.",
+  "selectionProvenance": "retrospectively_selected",
+  "reviewTier": "legacy_promoted",
+  "selectionBasis": "source_only",
+  "analyzerOutcomeUse": "forbidden",
+  "eligibilityPolicy": {
+    "file": "docs/legacy-promotion-selection-policy.md",
+    "sha256": "1ac2968892c97af5b570ddfd3bb6f5e9d615b0fbb1955907901bb319c6050458"
+  },
+  "balancePolicy": {
+    "languageCount": 11,
+    "maximumPerLanguage": 10,
+    "eligibleCounts": {
+      "cpp": 15,
+      "csharp": 16,
+      "go": 11,
+      "java": 11,
+      "javascript": 10,
+      "php": 14,
+      "python": 13,
+      "ruby": 20,
+      "rust": 15,
+      "scala": 15,
+      "typescript": 12
+    },
+    "balancedCorePerLanguage": 10,
+    "requiredStrata": [
+      "operation",
+      "symbol_kind",
+      "semantic_feature",
+      "source_complexity",
+      "operation_status",
+      "language"
+    ]
+  },
+  "documents": [
+    {
+      "caseFile": "benchmarks/cases/cpp-baseline.yaml",
+      "sourceSha256": "e5b5974f7b6882dc5955476542ca904e51bc8d0239a7fada62f58347ef88877b",
+      "language": "cpp",
+      "cases": [
+        {
+          "id": "cpp-constructor-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "constructor",
+            "semantic_feature": "construction",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "cpp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/cpp-constructor-call/openai-gpt-5.6-sol.json",
+              "sha256": "88b4f44bb7cac266d8b6252d9fd5c55062608ba53c7f92cc739232421ab6be43"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/cpp-constructor-call/anthropic-claude-fable-5.json",
+              "sha256": "79727cd3a2922a4f4b06dd9a7952939dbf309b73dceacd6133c27911db7b59f4"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/human-adjudication.json",
+            "sha256": "0bd1da55b408442bbc22ffd5ed233f1e2f7f86a2cc658b120e5cb53e59137389"
+          }
+        },
+        {
+          "id": "cpp-constant-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "constant",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "cpp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/cpp-constant-access/openai-gpt-5.6-sol.json",
+              "sha256": "5a5d41e46cb584e9fdbd6427e8d82b09fd9d191168a030378f88c8232a43a0dc"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/cpp-constant-access/anthropic-claude-fable-5.json",
+              "sha256": "a2e38466b186464ebc436f23732ae0b7e07c6a9492a4cfe067eeb5683577b3b4"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/human-adjudication.json",
+            "sha256": "8cdc90a1ec49e0cd1ccf04d26825c231ea7450fda4884d1a0a6cc4a6b3c3ae96"
+          }
+        },
+        {
+          "id": "cpp-function-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "cpp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/cpp-function-call/openai-gpt-5.6-sol.json",
+              "sha256": "c6ee97958b7a915c745edc4f373538feedafaf14c440ed27476c46e6a79e6d79"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/cpp-function-call/anthropic-claude-fable-5.json",
+              "sha256": "75ea9d76b2376d7a12ed4517a41a02bfbc6db5ca3752410d8025c22fb177471e"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/human-adjudication.json",
+            "sha256": "ddfd0af07472bf26134deb39365fc64ed98dbbe2e6c7f37ece243190396da918"
+          }
+        },
+        {
+          "id": "cpp-class-reference",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "nominal_types",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "cpp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/cpp-class-reference/openai-gpt-5.6-sol.json",
+              "sha256": "4d5c4a5dd2b6bd686c1829e634c513869699188362da1534e37d5c6c2ee13b3a"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/cpp-class-reference/anthropic-claude-fable-5.json",
+              "sha256": "dbe63cf4b08c539dbd0f1ad0228e2f8157299a057d4df612415b1fc5413b02bb"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/human-adjudication.json",
+            "sha256": "fe47cb2d236b8e106e1d610681bf57dd61d2928c6eb57adf24f58997c3a3772f"
+          }
+        },
+        {
+          "id": "cpp-field-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "field",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "cpp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/cpp-field-access/openai-gpt-5.6-sol.json",
+              "sha256": "aaf31b6f7c00b4df7fef55fd87719479e36b478d6907c4019b508de3ba78f330"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/cpp-field-access/anthropic-claude-fable-5.json",
+              "sha256": "0201486a1e95e91b550cf21cfe2229eea8912e98bbf1236d8b7987e94c01b5f5"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/human-adjudication.json",
+            "sha256": "d967256fb50c2aa41a2a2218b6e4d023e4c531f8df764ffd6539fc40e2064075"
+          }
+        },
+        {
+          "id": "cpp-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "cpp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/cpp-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "741914dbdc5186990aba9266b46ea8217fa885e6c4aa1de62423504e4f7cb663"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/cpp-method-call/anthropic-claude-fable-5.json",
+              "sha256": "b1acf9388a01e0e132fecc0fafeef55d637364a277568a667ce175960d17e828"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/human-adjudication.json",
+            "sha256": "c3f6315408b7063db45568758cbb2b46c54cc246ce3398ea6bf69255468f7e67"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/cpp-lsp-parity.yaml",
+      "sourceSha256": "53719e5f6d2479154d43cb8e5357970618f69911aaeb39f697fc001d9e770543",
+      "language": "cpp",
+      "cases": [
+        {
+          "id": "cpp-parity-using-alias-constructor",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references+type_definition",
+            "symbol_kind": "class",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "cpp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/cpp-parity-using-alias-constructor/openai-gpt-5.6-sol.json",
+              "sha256": "c321e43cb2a315ed5b0fd5325a2c689a55b092626567bee660ae2b6979910135"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/cpp-parity-using-alias-constructor/anthropic-claude-fable-5.json",
+              "sha256": "9f3cef1e4cbb44b56eb305d5e92e71563ef5c6fd12c4c3ff7a8cd94e8f9f7793"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/human-adjudication.json",
+            "sha256": "97754a75802d9a51bcf2cadf998f92410b8e2ab201cb57fd618060f34aa721a3"
+          }
+        },
+        {
+          "id": "cpp-parity-concrete-override-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "cpp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/cpp-parity-concrete-override-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "9aee357e91545696c0a0646ee35d3b1bc2ea2ceb8f82291cd3876837cbe35909"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/cpp-parity-concrete-override-method-call/anthropic-claude-fable-5.json",
+              "sha256": "476ff60a6b80e052d03d706dd79bd3fdd5e4f42caecbb4ff82c4869655d1faf2"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/human-adjudication.json",
+            "sha256": "a678b4fd5ae5038fa74e4ba2b19d34acbd508ea155f5de3ac9124a8757a4917a"
+          }
+        },
+        {
+          "id": "cpp-parity-function-like-macro-expanded-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "generated_or_macro",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "cpp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/cpp-parity-function-like-macro-expanded-call/openai-gpt-5.6-sol.json",
+              "sha256": "ea8354ee08df31d7c6278b0c92cc57e58b1e2ebc9b838a13ee9df79f9a1acfe1"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/cpp-parity-function-like-macro-expanded-call/anthropic-claude-fable-5.json",
+              "sha256": "ffea746d1bdff92c5b89b1426962f87dc4cd5743ffb0a77fe01eb642ac5b5762"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+            "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+          }
+        },
+        {
+          "id": "cpp-parity-direct-function-call-control",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "callables",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "cpp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/cpp-parity-direct-function-call-control/openai-gpt-5.6-sol.json",
+              "sha256": "8e579efe1fc3eba7d16eff417d57aa926c5bc663e1725f0e3f676931c58e9f14"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/cpp-parity-direct-function-call-control/anthropic-claude-fable-5.json",
+              "sha256": "35c835dbfbddccb81e1a28609914bbc2f39c5cc33f5cbba0865515eeddf1f504"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/human-adjudication.json",
+            "sha256": "6b788fd8142bbc7d22c18915807b0a25c6f52cb9596266707e086691b82ded98"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/csharp-baseline.yaml",
+      "sourceSha256": "acc78e34e7186285976aebe6d6b0cb42a6d43446a7641ec83508c6565be9964b",
+      "language": "csharp",
+      "cases": [
+        {
+          "id": "csharp-class-reference",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "nominal_types",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "csharp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/csharp-class-reference/openai-gpt-5.6-sol.json",
+              "sha256": "19bba3e4f4a9343e5d21fe2f03cdcca46e026da69831f8349457aa91ce12db4e"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/csharp-class-reference/anthropic-claude-fable-5.json",
+              "sha256": "d020b5cd2cdfb7ec771b5fadeccc32463f33b8d1ae9b1ae3482d120a41c19848"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/human-adjudication.json",
+            "sha256": "0bd1da55b408442bbc22ffd5ed233f1e2f7f86a2cc658b120e5cb53e59137389"
+          }
+        },
+        {
+          "id": "csharp-constant-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "constant",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "csharp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/csharp-constant-access/openai-gpt-5.6-sol.json",
+              "sha256": "4f0b2ce98bc2b6740f3fc34695546589cce34b71e75db91cbf470fefccaa8fab"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/csharp-constant-access/anthropic-claude-fable-5.json",
+              "sha256": "0ceced8477e92888541d9ede63f8b9c5dfd61ea51475e7e22db079311fc798f4"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/human-adjudication.json",
+            "sha256": "8cdc90a1ec49e0cd1ccf04d26825c231ea7450fda4884d1a0a6cc4a6b3c3ae96"
+          }
+        },
+        {
+          "id": "csharp-constructor-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "constructor",
+            "semantic_feature": "construction",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "csharp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/csharp-constructor-call/openai-gpt-5.6-sol.json",
+              "sha256": "46e7267546afc2e1062972cd5bce64826252a7703cd41c70957feebd2dc25399"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/csharp-constructor-call/anthropic-claude-fable-5.json",
+              "sha256": "80c3d6827386b086961ae2131dfc2b2d8ea9ed79b67ed6207aadec83c960d805"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/human-adjudication.json",
+            "sha256": "ddfd0af07472bf26134deb39365fc64ed98dbbe2e6c7f37ece243190396da918"
+          }
+        },
+        {
+          "id": "csharp-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "csharp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/csharp-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "253c606d63034b59aef6d8eeaa9b6eef58a441aa944428b1fc68e3a5a6404bb9"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/csharp-method-call/anthropic-claude-fable-5.json",
+              "sha256": "2aa26559a586fb7d9f508b851f8552aad5c2efcd0b64f724ec503abd4e7d34f9"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/human-adjudication.json",
+            "sha256": "a678b4fd5ae5038fa74e4ba2b19d34acbd508ea155f5de3ac9124a8757a4917a"
+          }
+        },
+        {
+          "id": "csharp-property-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "property",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "csharp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/csharp-property-access/openai-gpt-5.6-sol.json",
+              "sha256": "deb4ea61371f7a32271da2ba6ed65dddef4595971a7da4161df64bc0d7fc0b10"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/csharp-property-access/anthropic-claude-fable-5.json",
+              "sha256": "255b02f5d7804775b3b4480486f706d4fa8f252dc9ead46cce4ed5749f7295f6"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/human-adjudication.json",
+            "sha256": "d967256fb50c2aa41a2a2218b6e4d023e4c531f8df764ffd6539fc40e2064075"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/csharp-lsp-parity.yaml",
+      "sourceSha256": "5e9afcf5dd97dc092c008a323fdf587be10708134cd6f67644c6529c0c2266b6",
+      "language": "csharp",
+      "cases": [
+        {
+          "id": "csharp-parity-interface-receiver-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references+type_definition",
+            "symbol_kind": "method",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "csharp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/csharp-parity-interface-receiver-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "ae91f5792c8cbad18d1e5a46567e2cd55db5f499440350558f03b941908a388d"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/csharp-parity-interface-receiver-method-call/anthropic-claude-fable-5.json",
+              "sha256": "697bc5194c1f8f43abfcf267ce25f8372e7c8839f32b0ec550eba9d2c8f9bb85"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/human-adjudication.json",
+            "sha256": "97754a75802d9a51bcf2cadf998f92410b8e2ab201cb57fd618060f34aa721a3"
+          }
+        },
+        {
+          "id": "csharp-parity-namespace-alias-constructor",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references+type_definition",
+            "symbol_kind": "class",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "csharp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/csharp-parity-namespace-alias-constructor/openai-gpt-5.6-sol.json",
+              "sha256": "21d97e7fe43ae3daa01b7ae1091f122b72e5844893c2c400ecaf4b5e70436638"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/csharp-parity-namespace-alias-constructor/anthropic-claude-fable-5.json",
+              "sha256": "074c71a74aa6c5cd38e34f9d2e8a00b03380058c16324b3edec5b49c52cae984"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/human-adjudication.json",
+            "sha256": "fe47cb2d236b8e106e1d610681bf57dd61d2928c6eb57adf24f58997c3a3772f"
+          }
+        },
+        {
+          "id": "csharp-parity-buffer-implementation-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "csharp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/csharp-parity-buffer-implementation-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "b69fcfac20e967bf8bdfa415a726baa345a4e9671b19651596507e1b1b947143"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/csharp-parity-buffer-implementation-method-call/anthropic-claude-fable-5.json",
+              "sha256": "32bc8584f351f3e464b643820919afb02e80924b02f783004950761ffd9da32f"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/human-adjudication.json",
+            "sha256": "c3f6315408b7063db45568758cbb2b46c54cc246ce3398ea6bf69255468f7e67"
+          }
+        },
+        {
+          "id": "csharp-parity-concrete-implementation-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "csharp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/csharp-parity-concrete-implementation-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "1b8eb6b0d579112356941371b21d1f8503e0be0df2921c8f3becf29cda2a1918"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/csharp-parity-concrete-implementation-method-call/anthropic-claude-fable-5.json",
+              "sha256": "b3a7e3f495087dcb93a0ae6fbd0240e18cb2c577408bf7f757527bb43d1d181d"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/human-adjudication.json",
+            "sha256": "6b788fd8142bbc7d22c18915807b0a25c6f52cb9596266707e086691b82ded98"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/csharp-source-generator.yaml",
+      "sourceSha256": "89f22bb68fea5ea74ba8e7fea495b697b5ff0ce9dc8f30adaeeb39192f70e012",
+      "language": "csharp",
+      "cases": [
+        {
+          "id": "csharp-source-generator-partial-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "references",
+            "symbol_kind": "method",
+            "semantic_feature": "generated_or_macro",
+            "source_complexity": "generated_project",
+            "operation_status": "canonical",
+            "language": "csharp"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/csharp-source-generator-partial-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "9ab117e4af4265433c54f90eab9777b1c7f5751fba2b1a958f575e214a4348a5"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/csharp-source-generator-partial-method-call/anthropic-claude-fable-5.json",
+              "sha256": "4474dabdb33e128d79f8a9440f687520d6249658d1f910111f7480d8947ecb1c"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+            "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/go-baseline.yaml",
+      "sourceSha256": "5145d941303292d2b0d4d245c702daf418bf426a7e333bcfc780481704807ffa",
+      "language": "go",
+      "cases": [
+        {
+          "id": "go-package-constant-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+definition+references",
+            "symbol_kind": "constant",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical+compatible",
+            "language": "go"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/go-package-constant-access/openai-gpt-5.6-sol.json",
+              "sha256": "2f06c116b7caefc566b4f12f4a648a4fb737db4f78baa8659113b53ab0ba0593"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/go-package-constant-access/anthropic-claude-fable-5.json",
+              "sha256": "e899e47704a6522b8842a65160bd6a416f4368fc4199fe7cc5ed5817898648f1"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/human-adjudication.json",
+            "sha256": "97754a75802d9a51bcf2cadf998f92410b8e2ab201cb57fd618060f34aa721a3"
+          }
+        },
+        {
+          "id": "go-package-function-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "modules_and_namespaces",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "go"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/go-package-function-call/openai-gpt-5.6-sol.json",
+              "sha256": "f59c9390c3d0fb71547b0bb357d6378bd2f6ceebbaeca763ea6e2c4dc4529bd0"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/go-package-function-call/anthropic-claude-fable-5.json",
+              "sha256": "3d0f53367a6f3716c4f281d5d0f478c5741aee100c94af82afd0a5421d3bee44"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/human-adjudication.json",
+            "sha256": "0bd1da55b408442bbc22ffd5ed233f1e2f7f86a2cc658b120e5cb53e59137389"
+          }
+        },
+        {
+          "id": "go-pointer-receiver-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "go"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/go-pointer-receiver-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "1716c55c59dd12d83f8fa13319841e3b12e37ebaf6ee8ee8b9db81d2f577aed1"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/go-pointer-receiver-method-call/anthropic-claude-fable-5.json",
+              "sha256": "9cd485ad556a35f87b06e25f67f4648ffa8e9ae6b1a78124f5b12e63ebae3d30"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/human-adjudication.json",
+            "sha256": "8cdc90a1ec49e0cd1ccf04d26825c231ea7450fda4884d1a0a6cc4a6b3c3ae96"
+          }
+        },
+        {
+          "id": "go-package-variable-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+definition+references",
+            "symbol_kind": "variable",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical+compatible",
+            "language": "go"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/go-package-variable-access/openai-gpt-5.6-sol.json",
+              "sha256": "ca6c0d0b593d592647c525596f34ee3598104891567bb3435a08feec7f509b2d"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/go-package-variable-access/anthropic-claude-fable-5.json",
+              "sha256": "bcb1a266df527fd47a97c698a11ffe8bb2300a9cdb4aca7d876ec2d79e72eb45"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/human-adjudication.json",
+            "sha256": "fe47cb2d236b8e106e1d610681bf57dd61d2928c6eb57adf24f58997c3a3772f"
+          }
+        },
+        {
+          "id": "go-struct-field-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+definition+references",
+            "symbol_kind": "field",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical+compatible",
+            "language": "go"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/go-struct-field-access/openai-gpt-5.6-sol.json",
+              "sha256": "7b944d50975afa6e884f5afcb1d5419a0cd46b5b6974e48dd632cacbdca612a6"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/go-struct-field-access/anthropic-claude-fable-5.json",
+              "sha256": "a499c0a36aee5c9ae839b4b663c61a2f4cc13373642f8390860d49429f12b3f5"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+            "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+          }
+        },
+        {
+          "id": "go-value-receiver-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "go"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/go-value-receiver-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "3e1d8938ec84cab4261ae8b1defe99e0cc0df058d02742d0fc1c9e0eb92c9c36"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/go-value-receiver-method-call/anthropic-claude-fable-5.json",
+              "sha256": "93cf0b2a0b4be5e6d2a8422224dceb1bfaf78f09abd9dd2f34b80df89d1fb015"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/human-adjudication.json",
+            "sha256": "d967256fb50c2aa41a2a2218b6e4d023e4c531f8df764ffd6539fc40e2064075"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/go-lsp-parity.yaml",
+      "sourceSha256": "019fc6a615f2067252ed820f927eb13a768d9ccfc98038decc44f53c33bef30e",
+      "language": "go",
+      "cases": [
+        {
+          "id": "go-parity-cross-package-import-alias-function-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "go"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/go-parity-cross-package-import-alias-function-call/openai-gpt-5.6-sol.json",
+              "sha256": "87471754a8ca44384f3ef7f1b243c9b07b43037f84bc493101f26b7e63d14750"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/go-parity-cross-package-import-alias-function-call/anthropic-claude-fable-5.json",
+              "sha256": "5e6cc458f49500190e65a8d4a0f198326d64fe8fdb874cc898ec7bbd3f10dbd4"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/human-adjudication.json",
+            "sha256": "ddfd0af07472bf26134deb39365fc64ed98dbbe2e6c7f37ece243190396da918"
+          }
+        },
+        {
+          "id": "go-parity-embedded-promoted-field-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+definition+references",
+            "symbol_kind": "field",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical+compatible",
+            "language": "go"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/go-parity-embedded-promoted-field-access/openai-gpt-5.6-sol.json",
+              "sha256": "3e9b94039eff7602ac1658559cf26dc6121f25725fee8287a6159fb0b03f2258"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/go-parity-embedded-promoted-field-access/anthropic-claude-fable-5.json",
+              "sha256": "684d3ad9061c8d33ee3359c531e38bc18c469633c480b35722e810d6b06cdee5"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/human-adjudication.json",
+            "sha256": "c3f6315408b7063db45568758cbb2b46c54cc246ce3398ea6bf69255468f7e67"
+          }
+        },
+        {
+          "id": "go-parity-embedded-promoted-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "go"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/go-parity-embedded-promoted-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "dda8bc0434c19c3a4afef9dd476195c49b02334d17242d08aefb47e0f109f372"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/go-parity-embedded-promoted-method-call/anthropic-claude-fable-5.json",
+              "sha256": "872985443ea8d09c9b7be62537d564d7081225cc8c1d417f57384ec825e04cab"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/human-adjudication.json",
+            "sha256": "6b788fd8142bbc7d22c18915807b0a25c6f52cb9596266707e086691b82ded98"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/go-precision.yaml",
+      "sourceSha256": "c23a83384ceb64b4799d5e522ef7218442010c82cf0092b62da6700936465a19",
+      "language": "go",
+      "cases": [
+        {
+          "id": "go-interface-receiver-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "focused_edge_fixture",
+            "operation_status": "canonical+compatible",
+            "language": "go"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/go-interface-receiver-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "fb819ab0d2e432ddc8156cc0ad82f46aecfe98924e985322fdd5a37b5155ee0f"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/go-interface-receiver-method-call/anthropic-claude-fable-5.json",
+              "sha256": "20c4cfecc161699c0eca376e1157b1046101738f4414fdb65224552799b0e20a"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/human-adjudication.json",
+            "sha256": "a678b4fd5ae5038fa74e4ba2b19d34acbd508ea155f5de3ac9124a8757a4917a"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/java-baseline.yaml",
+      "sourceSha256": "bc1b32416448344c60ea3178f28a5bb99ea9d1b64842bbff06b7663a46651758",
+      "language": "java",
+      "cases": [
+        {
+          "id": "java-nested-class-constructor",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "construction",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "java"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/java-nested-class-constructor/openai-gpt-5.6-sol.json",
+              "sha256": "83ed46283138dc4ceb23038d0841ff65a3bf402fa7cc9a9570332a8bdfca72b4"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/java-nested-class-constructor/anthropic-claude-fable-5.json",
+              "sha256": "4b43b334da7813d4df1fcf8d424bdc14fc6422a27398a23a071034cda15ded50"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/human-adjudication.json",
+            "sha256": "97754a75802d9a51bcf2cadf998f92410b8e2ab201cb57fd618060f34aa721a3"
+          }
+        },
+        {
+          "id": "java-service-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "java"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/java-service-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "de3df0795fb04f282c066691ab0dc7be925132626229857aab5a791f28aca4a7"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/java-service-method-call/anthropic-claude-fable-5.json",
+              "sha256": "bc38b21b70494035f9ffc2774160bde8b15e9b7a7c4ff3ff967817fc26ed9fee"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/human-adjudication.json",
+            "sha256": "8cdc90a1ec49e0cd1ccf04d26825c231ea7450fda4884d1a0a6cc4a6b3c3ae96"
+          }
+        },
+        {
+          "id": "java-static-field-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "field",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "java"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/java-static-field-access/openai-gpt-5.6-sol.json",
+              "sha256": "dd9d5609090f135bfcbdae1fbfc31f501f9f07a91dedbde4cd87ffa509a9dd51"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/java-static-field-access/anthropic-claude-fable-5.json",
+              "sha256": "28f91f8937c7443fc874e7617ed1bf3a2df39818eaba7403a58532d2cbbd67e6"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/human-adjudication.json",
+            "sha256": "ddfd0af07472bf26134deb39365fc64ed98dbbe2e6c7f37ece243190396da918"
+          }
+        },
+        {
+          "id": "java-service-class-construction",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "nominal_types",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "java"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/java-service-class-construction/openai-gpt-5.6-sol.json",
+              "sha256": "3110f47a26e48a42c9555ee59ebe96315f0d09920cdaac17fac0eeaf2dcfd55d"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/java-service-class-construction/anthropic-claude-fable-5.json",
+              "sha256": "2895acc116fe5468957c204b78d6617c89d4c03ca635097e4b7d3f1b2219ca45"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/human-adjudication.json",
+            "sha256": "a678b4fd5ae5038fa74e4ba2b19d34acbd508ea155f5de3ac9124a8757a4917a"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/java-lsp-parity.yaml",
+      "sourceSha256": "d04a8052cf435d48c95fa6463b999f089a6966417874e4d283e0925b0ee3523d",
+      "language": "java",
+      "cases": [
+        {
+          "id": "java-parity-interface-local-type-lookup",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "type_definition",
+            "symbol_kind": "interface",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "java"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/java-parity-interface-local-type-lookup/openai-gpt-5.6-sol.json",
+              "sha256": "c40c375ef456a1559e07f5e64f2f5730442ba51514726b87a284fdf5a7f5e7b5"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/java-parity-interface-local-type-lookup/anthropic-claude-fable-5.json",
+              "sha256": "591669dfc79dce31600685a807e09f1c95f6aa3393a07af5f68d13347d6499cc"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/human-adjudication.json",
+            "sha256": "0bd1da55b408442bbc22ffd5ed233f1e2f7f86a2cc658b120e5cb53e59137389"
+          }
+        },
+        {
+          "id": "java-parity-static-import-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "java"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/java-parity-static-import-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "2d213ac980fd6e2c6c5dad4bcde8ad2b32694546b5351fe39b6c22ef0801319c"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/java-parity-static-import-method-call/anthropic-claude-fable-5.json",
+              "sha256": "f9e9acbf1e637c28d6bbb81d24aa3088fc726b062f8709be21be603562602238"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/human-adjudication.json",
+            "sha256": "fe47cb2d236b8e106e1d610681bf57dd61d2928c6eb57adf24f58997c3a3772f"
+          }
+        },
+        {
+          "id": "java-parity-concrete-implementation-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "java"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/java-parity-concrete-implementation-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "53eae5c2a231bee3f93d4a38adc47935325630e63cf3ea6748ee068f2f167560"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/java-parity-concrete-implementation-method-call/anthropic-claude-fable-5.json",
+              "sha256": "e41e9b6bc67556fce6c1878649eee9ca2ded9841be1757926d94198479d6897c"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+            "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+          }
+        },
+        {
+          "id": "java-parity-interface-receiver-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "java"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/java-parity-interface-receiver-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "d96a57ec152ddbc1cd218bb2c75d8037fae08a307c653a00bafeed4b1b02bb6e"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/java-parity-interface-receiver-method-call/anthropic-claude-fable-5.json",
+              "sha256": "10997469b627239862d09e43d26747b5c9ac0ffc470a90ba69e1f7231f17bef1"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/human-adjudication.json",
+            "sha256": "d967256fb50c2aa41a2a2218b6e4d023e4c531f8df764ffd6539fc40e2064075"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/java-precision.yaml",
+      "sourceSha256": "a15fdf85637575af68efcd24ac21f0e0fb22049ef8a97f4fbb46d22468f71ba2",
+      "language": "java",
+      "cases": [
+        {
+          "id": "java-lambda-body-member-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "focused_edge_fixture",
+            "operation_status": "canonical",
+            "language": "java"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/java-lambda-body-member-call/openai-gpt-5.6-sol.json",
+              "sha256": "44bf4d96514619847c8eda13c58ed2c8f0e6adf3af5691c6d72a7cd9b998a8a7"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/java-lambda-body-member-call/anthropic-claude-fable-5.json",
+              "sha256": "da32e59e6bcaefa934b562a4f4df3647f2382ff08e3132789035aacfa79b5fff"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/human-adjudication.json",
+            "sha256": "c3f6315408b7063db45568758cbb2b46c54cc246ce3398ea6bf69255468f7e67"
+          }
+        },
+        {
+          "id": "java-record-type-reference",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "nominal_types",
+            "source_complexity": "focused_edge_fixture",
+            "operation_status": "canonical",
+            "language": "java"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/java-record-type-reference/openai-gpt-5.6-sol.json",
+              "sha256": "e5551d5e7c00356bc61746cd8dc7a3a5d51fe0f82105b7557cbf4753f8e18b33"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/java-record-type-reference/anthropic-claude-fable-5.json",
+              "sha256": "d3d9323118c97e99521c9fa0d82da64d826e9ff6448dd3a2392d5cf6b2b3af6a"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/human-adjudication.json",
+            "sha256": "6b788fd8142bbc7d22c18915807b0a25c6f52cb9596266707e086691b82ded98"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/javascript-baseline.yaml",
+      "sourceSha256": "1312804f64ba207b65402c26fe57ed0866362785ee6ac1163ba123a57e916900",
+      "language": "javascript",
+      "cases": [
+        {
+          "id": "js-class-property-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+definition+references",
+            "symbol_kind": "property",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical+compatible",
+            "language": "javascript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/js-class-property-access/openai-gpt-5.6-sol.json",
+              "sha256": "1ec8b437eba6dc75c1c89b2f43f7f77538fa3cf83c0c26b7ca8c6a010581c3e5"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/js-class-property-access/anthropic-claude-fable-5.json",
+              "sha256": "b1cc7e0d44f809e2a268000ad0bb210fe654118107db42ed459ed208c7163a91"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/human-adjudication.json",
+            "sha256": "97754a75802d9a51bcf2cadf998f92410b8e2ab201cb57fd618060f34aa721a3"
+          }
+        },
+        {
+          "id": "js-class-construction",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "nominal_types",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "javascript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/js-class-construction/openai-gpt-5.6-sol.json",
+              "sha256": "db262792473c4d4a4b9722d7d8234d5b093971e0753dc2b5d2aa4f8d27d9b0e8"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/js-class-construction/anthropic-claude-fable-5.json",
+              "sha256": "434ef68f610a767ec3583ba9491a230ccc7e9607d29dc7e80d133c0d838a1088"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/human-adjudication.json",
+            "sha256": "0bd1da55b408442bbc22ffd5ed233f1e2f7f86a2cc658b120e5cb53e59137389"
+          }
+        },
+        {
+          "id": "js-commonjs-exported-member-usage",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "function",
+            "semantic_feature": "other_source_semantics",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "javascript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/js-commonjs-exported-member-usage/openai-gpt-5.6-sol.json",
+              "sha256": "12d838eb3f4bd20d84f179d659b2d7c44729a4c26daf0855558c1b5954f8513e"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/js-commonjs-exported-member-usage/anthropic-claude-fable-5.json",
+              "sha256": "aa7c1408e22c7426b46161b6b2496cb62ff077a14e665997752c8839cdfcb66d"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/human-adjudication.json",
+            "sha256": "8cdc90a1ec49e0cd1ccf04d26825c231ea7450fda4884d1a0a6cc4a6b3c3ae96"
+          }
+        },
+        {
+          "id": "js-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "javascript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/js-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "22d60007e49e7c8989a6fb0b79ec99917a4ab6e9080983e6dbe04b46bfee94a2"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/js-method-call/anthropic-claude-fable-5.json",
+              "sha256": "96ab6b29806af0266e102cba313ecfe4416920564f0c06a90445bdfacd77725c"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/human-adjudication.json",
+            "sha256": "ddfd0af07472bf26134deb39365fc64ed98dbbe2e6c7f37ece243190396da918"
+          }
+        },
+        {
+          "id": "js-named-export-import-function",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "javascript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/js-named-export-import-function/openai-gpt-5.6-sol.json",
+              "sha256": "9c89f02819a14b3e0114d037bb240f7280aee59076379d7b243cf7341a592b63"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/js-named-export-import-function/anthropic-claude-fable-5.json",
+              "sha256": "bafb94f8c3270d4d0e8862fdd1213221f11b60acbc04d1c9167bed061461506a"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/human-adjudication.json",
+            "sha256": "a678b4fd5ae5038fa74e4ba2b19d34acbd508ea155f5de3ac9124a8757a4917a"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/javascript-lsp-parity.yaml",
+      "sourceSha256": "067b5cd867b6167bb3de8f9d146aca1f12e2025e6aee0a2d777b31a84b9dfd98",
+      "language": "javascript",
+      "cases": [
+        {
+          "id": "js-parity-computed-string-literal-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "dynamic_indirection",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "javascript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/js-parity-computed-string-literal-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "2c124b9a1812287e754cdee2b25a1402031844c2d0fc5bc9da5233b51fb5c678"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/js-parity-computed-string-literal-method-call/anthropic-claude-fable-5.json",
+              "sha256": "02855717baec01f56248b12ccad14d98acea16d771fb110ca6e286b51dc84151"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/human-adjudication.json",
+            "sha256": "fe47cb2d236b8e106e1d610681bf57dd61d2928c6eb57adf24f58997c3a3772f"
+          }
+        },
+        {
+          "id": "js-parity-commonjs-destructured-function-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "callables",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "javascript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/js-parity-commonjs-destructured-function-call/openai-gpt-5.6-sol.json",
+              "sha256": "5d07805664f0e6c84eff678d14e35e12b96b67884a3d16a7d3ccdd7ec31cbd69"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/js-parity-commonjs-destructured-function-call/anthropic-claude-fable-5.json",
+              "sha256": "a177784188df4755d16f915c2b734ff3607c7a5826ef682426f1f808a7ba01a5"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+            "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+          }
+        },
+        {
+          "id": "js-parity-object-literal-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "javascript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/js-parity-object-literal-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "bd07c1eade0686724cde7fc5dd789ffaadf09a932117fd008341da0a95a7ee98"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/js-parity-object-literal-method-call/anthropic-claude-fable-5.json",
+              "sha256": "8a4691898abb0a2767c304a4097d94ac7fe71365391ca107a89110e23d1406d8"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/human-adjudication.json",
+            "sha256": "d967256fb50c2aa41a2a2218b6e4d023e4c531f8df764ffd6539fc40e2064075"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/javascript-precision.yaml",
+      "sourceSha256": "0e9af3dd09fed9007f268c345a5b400daeb72971829650d2622d1508c0c098ba",
+      "language": "javascript",
+      "cases": [
+        {
+          "id": "js-commonjs-barrel-class-construction",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "focused_edge_fixture",
+            "operation_status": "canonical",
+            "language": "javascript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/js-commonjs-barrel-class-construction/openai-gpt-5.6-sol.json",
+              "sha256": "dd1abf2394945c446c1263be1b0b9649785be04881563bbcbff61788122f290f"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/js-commonjs-barrel-class-construction/anthropic-claude-fable-5.json",
+              "sha256": "a343f9d25be9bc7bf8615de5cf24fb0d8b05970bcb5f1c31705c46dee582ff26"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/human-adjudication.json",
+            "sha256": "c3f6315408b7063db45568758cbb2b46c54cc246ce3398ea6bf69255468f7e67"
+          }
+        },
+        {
+          "id": "js-commonjs-barrel-member-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "focused_edge_fixture",
+            "operation_status": "canonical",
+            "language": "javascript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/js-commonjs-barrel-member-call/openai-gpt-5.6-sol.json",
+              "sha256": "e3bdcdf65d1dd853c9c6aae3fc761fe1abe98d95fbe0577b79942f781cb533b5"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/js-commonjs-barrel-member-call/anthropic-claude-fable-5.json",
+              "sha256": "3cf05a3c023e03aefafedb509572b2ab8799d1d3ee16d6de3a26f1a6db9d3ee5"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/human-adjudication.json",
+            "sha256": "6b788fd8142bbc7d22c18915807b0a25c6f52cb9596266707e086691b82ded98"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/php-baseline.yaml",
+      "sourceSha256": "e43eecdbce71ce682274dc80e428391cc00bb9bc269a561d7b77a2edc22b3733",
+      "language": "php",
+      "cases": [
+        {
+          "id": "php-constant-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+definition+references",
+            "symbol_kind": "constant",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical+compatible",
+            "language": "php"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/php-constant-access/openai-gpt-5.6-sol.json",
+              "sha256": "c388029e6a1f587cd21e1fcd86b6a70ae71d7686a1279e68059ce3aaee82c495"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/php-constant-access/anthropic-claude-fable-5.json",
+              "sha256": "5db275acb1b42b80b37c045223ba4f978b0602a76aed89ee1416e2a3d9da2e63"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/human-adjudication.json",
+            "sha256": "97754a75802d9a51bcf2cadf998f92410b8e2ab201cb57fd618060f34aa721a3"
+          }
+        },
+        {
+          "id": "php-class-construction",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "nominal_types",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "php"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/php-class-construction/openai-gpt-5.6-sol.json",
+              "sha256": "28249dbbff386d5092686b6a84c1ea638de9e17ffe4d4c9206e07f21e43b79fb"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/php-class-construction/anthropic-claude-fable-5.json",
+              "sha256": "539dd33973e5c75a48a9dff77ef155fc0b12f3ff14e172b38fa98c900d045568"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/human-adjudication.json",
+            "sha256": "0bd1da55b408442bbc22ffd5ed233f1e2f7f86a2cc658b120e5cb53e59137389"
+          }
+        },
+        {
+          "id": "php-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "php"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/php-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "2d6bb03e3c3757a5a4c2bbb240d884e9b51986596fa95337e34652467adc1474"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/php-method-call/anthropic-claude-fable-5.json",
+              "sha256": "aba96f8014c47c097b2d2d08f73f4833b93cfd831635885ab78738c3798855b4"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/human-adjudication.json",
+            "sha256": "8cdc90a1ec49e0cd1ccf04d26825c231ea7450fda4884d1a0a6cc4a6b3c3ae96"
+          }
+        },
+        {
+          "id": "php-property-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+definition+references",
+            "symbol_kind": "property",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical+compatible",
+            "language": "php"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/php-property-access/openai-gpt-5.6-sol.json",
+              "sha256": "44c92d245fb5e90ec8092697a1c01aaf8e2ef8270655c667c4d357536c0e265c"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/php-property-access/anthropic-claude-fable-5.json",
+              "sha256": "671b9a79e65c744fa548c53393c69838212a1faf83ce1320125b253baf17981c"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+            "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/php-lsp-parity.yaml",
+      "sourceSha256": "e1fb1ef282c77720c5d3bd1ffa35445f145fd478759293d055a8168ca6db832b",
+      "language": "php",
+      "cases": [
+        {
+          "id": "php-parity-interface-method-implementation",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "references",
+            "symbol_kind": "method",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "php"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/php-parity-interface-method-implementation/openai-gpt-5.6-sol.json",
+              "sha256": "5d88f4002b852c9a396b8d53927261f5e209e47f6cfa4a0e7cc2029d3c8d0d9b"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/php-parity-interface-method-implementation/anthropic-claude-fable-5.json",
+              "sha256": "4f82602f5fe020d0830441629057474e41f724e5fbf0beb1dbfbd9a5302ef3ff"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/human-adjudication.json",
+            "sha256": "a678b4fd5ae5038fa74e4ba2b19d34acbd508ea155f5de3ac9124a8757a4917a"
+          }
+        },
+        {
+          "id": "php-parity-magic-get-no-ordinary-usage",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "references",
+            "symbol_kind": "method",
+            "semantic_feature": "other_source_semantics",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "php"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/php-parity-magic-get-no-ordinary-usage/openai-gpt-5.6-sol.json",
+              "sha256": "5a73901c0b957d37bb726e3045dc6fddc10dd67a0a98407e25022c2ae867c912"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/php-parity-magic-get-no-ordinary-usage/anthropic-claude-fable-5.json",
+              "sha256": "d1ab32e489734d751090b094646152e0bf4516bf920a0a9b6711c2be7063ab98"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/human-adjudication.json",
+            "sha256": "fe47cb2d236b8e106e1d610681bf57dd61d2928c6eb57adf24f58997c3a3772f"
+          }
+        },
+        {
+          "id": "php-parity-concrete-implementation-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "php"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/php-parity-concrete-implementation-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "40a3aa6849096015d8b66b9c022aa7d0e2dd1816b493d260d81d91b6d1e8aa66"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/php-parity-concrete-implementation-method-call/anthropic-claude-fable-5.json",
+              "sha256": "d2da5a16d8fdac3044b374bb695080e8e43f5da2d5d2c0ab56d4a7203369402c"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/human-adjudication.json",
+            "sha256": "d967256fb50c2aa41a2a2218b6e4d023e4c531f8df764ffd6539fc40e2064075"
+          }
+        },
+        {
+          "id": "php-parity-static-property-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+definition+references",
+            "symbol_kind": "property",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical+compatible",
+            "language": "php"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/php-parity-static-property-access/openai-gpt-5.6-sol.json",
+              "sha256": "9f90842ba2357214fe2bc847661d9d2e42c2c275da945bdfac611361f87d402a"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/php-parity-static-property-access/anthropic-claude-fable-5.json",
+              "sha256": "abc08b2229b25bd71c0402e4fab28c1624277fd3dd3f1d96016afbc688c4338d"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/human-adjudication.json",
+            "sha256": "c3f6315408b7063db45568758cbb2b46c54cc246ce3398ea6bf69255468f7e67"
+          }
+        },
+        {
+          "id": "php-parity-trait-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "php"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/php-parity-trait-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "d85f904d5171b37c933ac126a0c1a7084366c2e7e93311ee08424ea29ab4c3f6"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/php-parity-trait-method-call/anthropic-claude-fable-5.json",
+              "sha256": "1a9d2d5760fe1cff375dd14515d9326dfa15f036cd9953a7725872d40aa98d9f"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/human-adjudication.json",
+            "sha256": "6b788fd8142bbc7d22c18915807b0a25c6f52cb9596266707e086691b82ded98"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/php-precision.yaml",
+      "sourceSha256": "c70d7525a49060f0a7b36a0e59a4e23f5c30ec2ef541caa87a0b79d543f34d89",
+      "language": "php",
+      "cases": [
+        {
+          "id": "php-function-import-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "focused_edge_fixture",
+            "operation_status": "canonical",
+            "language": "php"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/php-function-import-call/openai-gpt-5.6-sol.json",
+              "sha256": "6b8a034d09439e06d8485173d5171e02470dc8c0a41ece6189e5467e98f8d179"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/php-function-import-call/anthropic-claude-fable-5.json",
+              "sha256": "eca69a6f15f898838de3f66fb58d6406ce9c00f1353e98cfd798e35f3f1e409c"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/human-adjudication.json",
+            "sha256": "ddfd0af07472bf26134deb39365fc64ed98dbbe2e6c7f37ece243190396da918"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/python-baseline.yaml",
+      "sourceSha256": "dd6471ac509fcc7d8eda38dcb90c42abddc1c643bb812858946e0d2171e9829d",
+      "language": "python",
+      "cases": [
+        {
+          "id": "python-attribute-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "property",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "python"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/python-attribute-access/openai-gpt-5.6-sol.json",
+              "sha256": "4392401c3cf3aef81616605af5ca0ba759979a08f258ba01e6353c25fbd7ee96"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/python-attribute-access/anthropic-claude-fable-5.json",
+              "sha256": "472437150dec078036d212c46a89a7afa72abf02e890cb352574d4a477747338"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/human-adjudication.json",
+            "sha256": "97754a75802d9a51bcf2cadf998f92410b8e2ab201cb57fd618060f34aa721a3"
+          }
+        },
+        {
+          "id": "python-class-instantiation",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "nominal_types",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "python"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/python-class-instantiation/openai-gpt-5.6-sol.json",
+              "sha256": "fc459ae7fafee5e3e7c0698c10956ca8df62d7821620c83b3770a344014123a4"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/python-class-instantiation/anthropic-claude-fable-5.json",
+              "sha256": "42561bb2580ae9e2ca6d90c065d86fd2a7f32d9190641fa9cf60efd63a8e7ddf"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/human-adjudication.json",
+            "sha256": "0bd1da55b408442bbc22ffd5ed233f1e2f7f86a2cc658b120e5cb53e59137389"
+          }
+        },
+        {
+          "id": "python-function-call-and-reexport",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "python"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/python-function-call-and-reexport/openai-gpt-5.6-sol.json",
+              "sha256": "0291ec2e3607f79912e77a76cf8e392292ab8ad26b4120e384251a757748b621"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/python-function-call-and-reexport/anthropic-claude-fable-5.json",
+              "sha256": "d8359f22475f643fd5d1931884abd0613b7c5fad69502d1fdaad3e5b05c57ee3"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/human-adjudication.json",
+            "sha256": "8cdc90a1ec49e0cd1ccf04d26825c231ea7450fda4884d1a0a6cc4a6b3c3ae96"
+          }
+        },
+        {
+          "id": "python-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "python"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/python-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "558a721e08f5f221324bc99571c52fafa70fda505fc6b750440ff2d9f8792353"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/python-method-call/anthropic-claude-fable-5.json",
+              "sha256": "dd5429e56386b191b92e0696c6834a15bd3d98beff68b508a2a42341c4eeb64e"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/human-adjudication.json",
+            "sha256": "ddfd0af07472bf26134deb39365fc64ed98dbbe2e6c7f37ece243190396da918"
+          }
+        },
+        {
+          "id": "python-module-import",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "module",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "python"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/python-module-import/openai-gpt-5.6-sol.json",
+              "sha256": "9f290042f9f664a950a83c2c6ca3d29e961887c9245716f429a423c87f931430"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/python-module-import/anthropic-claude-fable-5.json",
+              "sha256": "1713e53b4e1c7b938192ab1cb8d6b34f1180ffab89456213f90d7dabc437b81e"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/human-adjudication.json",
+            "sha256": "a678b4fd5ae5038fa74e4ba2b19d34acbd508ea155f5de3ac9124a8757a4917a"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/python-lsp-parity.yaml",
+      "sourceSha256": "c9e2c7c9f77ea2d28851833b20404a213ebfb23ffb8cf21921d9742dd85642b2",
+      "language": "python",
+      "cases": [
+        {
+          "id": "python-parity-classmethod-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "python"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/python-parity-classmethod-call/openai-gpt-5.6-sol.json",
+              "sha256": "288f85f4ef3f906a1996596a416f729e305960712e8bc89b54dcf70a3b0d8118"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/python-parity-classmethod-call/anthropic-claude-fable-5.json",
+              "sha256": "7b3a95db539433259247538dcd01c817b763ebfd1933fdce94862275aa5403fd"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/human-adjudication.json",
+            "sha256": "fe47cb2d236b8e106e1d610681bf57dd61d2928c6eb57adf24f58997c3a3772f"
+          }
+        },
+        {
+          "id": "python-parity-property-getter-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "property",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "python"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/python-parity-property-getter-access/openai-gpt-5.6-sol.json",
+              "sha256": "96380e29374877629715809a068cd32904d2ba2e33a560d00797aa4476ebae1f"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/python-parity-property-getter-access/anthropic-claude-fable-5.json",
+              "sha256": "d610273b0025840f345f9a5a230d08b8f848eca2f99f751cbf0ca5af70eb6f3e"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+            "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+          }
+        },
+        {
+          "id": "python-parity-reexported-class-alias-classmethod",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "python"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/python-parity-reexported-class-alias-classmethod/openai-gpt-5.6-sol.json",
+              "sha256": "bf12fa1d0bad6a4957ccf7a33833ecdf8775f24b94dd7c5a77f5b31b52882043"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/python-parity-reexported-class-alias-classmethod/anthropic-claude-fable-5.json",
+              "sha256": "b7df0ad7fc54d5551fa4e789f9370c0e189bca4f736881e91d32e56e6388e51f"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/human-adjudication.json",
+            "sha256": "d967256fb50c2aa41a2a2218b6e4d023e4c531f8df764ffd6539fc40e2064075"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/python-precision.yaml",
+      "sourceSha256": "7a160d57cbcc0915ebd46a7f7b6edafc5c91f90c2fd40ada827d5f09340280ae",
+      "language": "python",
+      "cases": [
+        {
+          "id": "python-barrel-class-construction",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "focused_edge_fixture",
+            "operation_status": "canonical",
+            "language": "python"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/python-barrel-class-construction/openai-gpt-5.6-sol.json",
+              "sha256": "d1e011ba6bb751a2706ab960f4ae2cc10f1f8660f94eff8aaeb4b06a1363d19c"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/python-barrel-class-construction/anthropic-claude-fable-5.json",
+              "sha256": "52e93b6bd872b483d2c9f89fb79a8b642a1e37217e8aa4bd180586cde6fdc274"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/human-adjudication.json",
+            "sha256": "c3f6315408b7063db45568758cbb2b46c54cc246ce3398ea6bf69255468f7e67"
+          }
+        },
+        {
+          "id": "python-barrel-inherited-member-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "focused_edge_fixture",
+            "operation_status": "canonical",
+            "language": "python"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/python-barrel-inherited-member-call/openai-gpt-5.6-sol.json",
+              "sha256": "0053ace9391007f7719a4c52517719eb509181d114bc3fb08a5da3671429bf56"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/python-barrel-inherited-member-call/anthropic-claude-fable-5.json",
+              "sha256": "07220009d59ed2de779418e882c739217f4f8543cab5bd21cf5943938472b025"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/human-adjudication.json",
+            "sha256": "6b788fd8142bbc7d22c18915807b0a25c6f52cb9596266707e086691b82ded98"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/ruby-baseline.yaml",
+      "sourceSha256": "36a575bd29e361b18f4b1762e2faad74d97baaa49c27d0b89eecbd125c4a5dbd",
+      "language": "ruby",
+      "cases": [
+        {
+          "id": "ruby-class-constant-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "constant",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "ruby"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/ruby-class-constant-access/openai-gpt-5.6-sol.json",
+              "sha256": "313780653df5a3a6eb7f182ab81ca2ee76ba55d442ab55dd1a74479c4fa2ab57"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/ruby-class-constant-access/anthropic-claude-fable-5.json",
+              "sha256": "99685ee291ebceaabbd9712d21a9b7c57a5988990df5b3447a7a0aae761564aa"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/human-adjudication.json",
+            "sha256": "97754a75802d9a51bcf2cadf998f92410b8e2ab201cb57fd618060f34aa721a3"
+          }
+        },
+        {
+          "id": "ruby-extend-and-include-method-lookup",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "ruby"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/ruby-extend-and-include-method-lookup/openai-gpt-5.6-sol.json",
+              "sha256": "dc69da544b16985f7a67b4739b4a52f19b83c7d2bd0a559dc6581874c1f91cf6"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/ruby-extend-and-include-method-lookup/anthropic-claude-fable-5.json",
+              "sha256": "a57d8144a7ba9c36794d95f0b4fe1b034b869b069dda9a969fe3473ee162495a"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/human-adjudication.json",
+            "sha256": "0bd1da55b408442bbc22ffd5ed233f1e2f7f86a2cc658b120e5cb53e59137389"
+          }
+        },
+        {
+          "id": "ruby-require-relative-class-construction",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "nominal_types",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "ruby"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/ruby-require-relative-class-construction/openai-gpt-5.6-sol.json",
+              "sha256": "cf4a6312d0ee27a3b27c9544f7bba3565086ccf64a913160bc72012fd7fd79dd"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/ruby-require-relative-class-construction/anthropic-claude-fable-5.json",
+              "sha256": "9b74fad8a75148004680e78c79f1e5f07cb0dc6e8e03cfa92bbcf4d231d668df"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/human-adjudication.json",
+            "sha256": "8cdc90a1ec49e0cd1ccf04d26825c231ea7450fda4884d1a0a6cc4a6b3c3ae96"
+          }
+        },
+        {
+          "id": "ruby-include-instance-mixin",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "ruby"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/ruby-include-instance-mixin/openai-gpt-5.6-sol.json",
+              "sha256": "3bda9c60da1aff5a3b69c3b11741448e05e49728d5765da938e2b64b7357a03e"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/ruby-include-instance-mixin/anthropic-claude-fable-5.json",
+              "sha256": "032495b46ead5969250708701d143d81318cb808e8769cd114245982154a6587"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/human-adjudication.json",
+            "sha256": "ddfd0af07472bf26134deb39365fc64ed98dbbe2e6c7f37ece243190396da918"
+          }
+        },
+        {
+          "id": "ruby-class-variable-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "field",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "ruby"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/ruby-class-variable-access/openai-gpt-5.6-sol.json",
+              "sha256": "5634b2dcd967c540c7c42cef7de3c560d2608021f2fa69a163089168764c61a9"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/ruby-class-variable-access/anthropic-claude-fable-5.json",
+              "sha256": "8dba2ffd0a322b4048b934145639bce917b30a7682195920d019bd7c4e3cbb79"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/human-adjudication.json",
+            "sha256": "d967256fb50c2aa41a2a2218b6e4d023e4c531f8df764ffd6539fc40e2064075"
+          }
+        },
+        {
+          "id": "ruby-prepend-method-precedence",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "ruby"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/ruby-prepend-method-precedence/openai-gpt-5.6-sol.json",
+              "sha256": "33d012c8464a48264117fc491446270ef1ab820e116461956d3647575cf8e9d2"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/ruby-prepend-method-precedence/anthropic-claude-fable-5.json",
+              "sha256": "3082736525dc381bc42e92d111265193d336a001e88d2c03cbe03cce88ebfe48"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/human-adjudication.json",
+            "sha256": "c3f6315408b7063db45568758cbb2b46c54cc246ce3398ea6bf69255468f7e67"
+          }
+        },
+        {
+          "id": "ruby-relative-nested-constant",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "ruby"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/ruby-relative-nested-constant/openai-gpt-5.6-sol.json",
+              "sha256": "0477b4e627bf2ad9c859a53b388650704fdca41badbec9fd4a8652db6dfc7ad4"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/ruby-relative-nested-constant/anthropic-claude-fable-5.json",
+              "sha256": "f397bbaaa3683d4e8a6fdee24729efc9807de66bf90d440aee017f7ebcd271bc"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/human-adjudication.json",
+            "sha256": "6b788fd8142bbc7d22c18915807b0a25c6f52cb9596266707e086691b82ded98"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/ruby-lsp-parity.yaml",
+      "sourceSha256": "40d40645121ecb2c542f7b67efe45e8f4c9904be257d14ad4f4b7f4e44af5563",
+      "language": "ruby",
+      "cases": [
+        {
+          "id": "ruby-parity-alias-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "method",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "ruby"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/ruby-parity-alias-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "0e5cc2d0927179315e3aa9b0e6c4d35c3192faba68a29ed4b05dc50895a6f1e5"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/ruby-parity-alias-method-call/anthropic-claude-fable-5.json",
+              "sha256": "9adcf882604d31fb5822627ffaedd0dd5356eed9864841b46e8f4f57b5a67352"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/human-adjudication.json",
+            "sha256": "a678b4fd5ae5038fa74e4ba2b19d34acbd508ea155f5de3ac9124a8757a4917a"
+          }
+        },
+        {
+          "id": "ruby-parity-module-function-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "modules_and_namespaces",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "ruby"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/ruby-parity-module-function-call/openai-gpt-5.6-sol.json",
+              "sha256": "d2946bdfd3ac61d32c9a95f7ed3ff5d14dcf1f15c07c32a559a592b68963c82b"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/ruby-parity-module-function-call/anthropic-claude-fable-5.json",
+              "sha256": "18318224e5e97e4a4762f15cf3f6945ebf959c04e18d7266ea31e5d49e91dbf4"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/human-adjudication.json",
+            "sha256": "fe47cb2d236b8e106e1d610681bf57dd61d2928c6eb57adf24f58997c3a3772f"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/ruby-precision.yaml",
+      "sourceSha256": "dd27a875c0e7a545b9a6547e823d552d7d73274767c1bf52f0a10528284a67f2",
+      "language": "ruby",
+      "cases": [
+        {
+          "id": "ruby-factory-return-member-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "construction",
+            "source_complexity": "focused_edge_fixture",
+            "operation_status": "canonical",
+            "language": "ruby"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/ruby-factory-return-member-call/openai-gpt-5.6-sol.json",
+              "sha256": "6040124630f4cabd7782e14d6bd1226fc87ecd03b807c6bd7f4d2929e54c8612"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/ruby-factory-return-member-call/anthropic-claude-fable-5.json",
+              "sha256": "616e7558af4b2c104867a446347e4e6176002656848882e4bb8df96122f5669e"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+            "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/rust-baseline.yaml",
+      "sourceSha256": "f31898c2ffbcc4e4e2351a4c1aa316a3e82564be1f1e728848c4a0f80ff359d4",
+      "language": "rust",
+      "cases": [
+        {
+          "id": "rust-field-write",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "field",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "rust"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/rust-field-write/openai-gpt-5.6-sol.json",
+              "sha256": "7a31c91a709df341861f5576a1b5cc09d1be07b254fba4bcdfed1d2876983d4d"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/rust-field-write/anthropic-claude-fable-5.json",
+              "sha256": "734868eefd2097b0f7b47d29f51f93c209338f711f43a9e4d9898d56b7b59b93"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/human-adjudication.json",
+            "sha256": "97754a75802d9a51bcf2cadf998f92410b8e2ab201cb57fd618060f34aa721a3"
+          }
+        },
+        {
+          "id": "rust-explicit-local-and-parameter-type-lookup",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "type_definition",
+            "symbol_kind": "type",
+            "semantic_feature": "nominal_types",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "rust"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/rust-explicit-local-and-parameter-type-lookup/openai-gpt-5.6-sol.json",
+              "sha256": "f8c0a0e5c705002e4a0463dc971aba0ed6a2d5dc41d9674f3f5ab66f075e026c"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/rust-explicit-local-and-parameter-type-lookup/anthropic-claude-fable-5.json",
+              "sha256": "30410e92b38b8eac44aba98399e8afb01ce983526cb0204ecde1534684acc74a"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/human-adjudication.json",
+            "sha256": "0bd1da55b408442bbc22ffd5ed233f1e2f7f86a2cc658b120e5cb53e59137389"
+          }
+        },
+        {
+          "id": "rust-function-call-and-reexport",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "rust"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/rust-function-call-and-reexport/openai-gpt-5.6-sol.json",
+              "sha256": "66903b0d901ff30cd7c9bd82cd9a97426198fc820f8a56e7679784f85c5b48fb"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/rust-function-call-and-reexport/anthropic-claude-fable-5.json",
+              "sha256": "70044a5090c3296dc94ddc81f8c5b0cde285a47ab5ca98587783bacc73534a46"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/human-adjudication.json",
+            "sha256": "8cdc90a1ec49e0cd1ccf04d26825c231ea7450fda4884d1a0a6cc4a6b3c3ae96"
+          }
+        },
+        {
+          "id": "rust-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "rust"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/rust-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "2f9bb90ae54bd959c1ac6a171d4d0fe76deb759c8b768ba5f60cacc815d19278"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/rust-method-call/anthropic-claude-fable-5.json",
+              "sha256": "dcf407ece40e9a56c5308e0d7e2bb65201f56b75bc4840589a9b53f75a4d92c0"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/human-adjudication.json",
+            "sha256": "ddfd0af07472bf26134deb39365fc64ed98dbbe2e6c7f37ece243190396da918"
+          }
+        },
+        {
+          "id": "rust-imported-type-and-member-type-lookup",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "type_definition",
+            "symbol_kind": "type",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "rust"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/rust-imported-type-and-member-type-lookup/openai-gpt-5.6-sol.json",
+              "sha256": "328c8eb13ea6abe6925021363fcc581d24c32475a2134fde64eb4890701c45ad"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/rust-imported-type-and-member-type-lookup/anthropic-claude-fable-5.json",
+              "sha256": "1e016ec0e53fd70a7d4ab9e05cb7b24807635dfb95652c403d01d4317f84777e"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/human-adjudication.json",
+            "sha256": "c3f6315408b7063db45568758cbb2b46c54cc246ce3398ea6bf69255468f7e67"
+          }
+        },
+        {
+          "id": "rust-struct-construction",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "type",
+            "semantic_feature": "nominal_types",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "rust"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/rust-struct-construction/openai-gpt-5.6-sol.json",
+              "sha256": "09442c9d1b75cf17b00dc1104c80c9c3bda00e0edefc79887c3ae62c7479dc30"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/rust-struct-construction/anthropic-claude-fable-5.json",
+              "sha256": "1763477ed2ee39d3fda81cf6d3b4d8f2339dfc8992597bf61883ccec847f9ba3"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/human-adjudication.json",
+            "sha256": "6b788fd8142bbc7d22c18915807b0a25c6f52cb9596266707e086691b82ded98"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/rust-lsp-parity.yaml",
+      "sourceSha256": "e42742a3162ba325bd2571201dab5fc550793f98aef97ea835af308c0d5100cf",
+      "language": "rust",
+      "cases": [
+        {
+          "id": "rust-parity-module-declaration-definition",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration",
+            "symbol_kind": "module",
+            "semantic_feature": "modules_and_namespaces",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "rust"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/rust-parity-module-declaration-definition/openai-gpt-5.6-sol.json",
+              "sha256": "3caf6a3e3e0f7df0744e4634f23ea2c2e4f2a3093f534c9fc707c6338dd8fc75"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/rust-parity-module-declaration-definition/anthropic-claude-fable-5.json",
+              "sha256": "4add03c76a486e2de35cc309605c5c5b5a2b7ac97669011d2cff76ca8e2a20a2"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/human-adjudication.json",
+            "sha256": "a678b4fd5ae5038fa74e4ba2b19d34acbd508ea155f5de3ac9124a8757a4917a"
+          }
+        },
+        {
+          "id": "rust-parity-macro-generated-function-reference",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "generated_or_macro",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "rust"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/rust-parity-macro-generated-function-reference/openai-gpt-5.6-sol.json",
+              "sha256": "a39b3484473ef0e90b6b7e57bc9d2551b56c89b54114f97a1a5826cab53c403a"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/rust-parity-macro-generated-function-reference/anthropic-claude-fable-5.json",
+              "sha256": "49c5004e0857bffa5a377aa6cf565101dd748eaccf3cbdd3b4300e8ac0969350"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/human-adjudication.json",
+            "sha256": "fe47cb2d236b8e106e1d610681bf57dd61d2928c6eb57adf24f58997c3a3772f"
+          }
+        },
+        {
+          "id": "rust-parity-ufcs-trait-method-definition",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition",
+            "symbol_kind": "method",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "rust"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/rust-parity-ufcs-trait-method-definition/openai-gpt-5.6-sol.json",
+              "sha256": "e1c78d553a82b48009989239f6ef8431a588f75fb994f66359b97825533650b6"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/rust-parity-ufcs-trait-method-definition/anthropic-claude-fable-5.json",
+              "sha256": "54f7c3908e664ba3141459efac3e9ee86c32505ef5707a78318ab285b6a62f39"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+            "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/rust-precision.yaml",
+      "sourceSha256": "7fe5a163861d154911892bedacc77b0be9f4e56befe9491531cc66a4f25dd107",
+      "language": "rust",
+      "cases": [
+        {
+          "id": "rust-barrel-trait-static-qualifier",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "interface",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "focused_edge_fixture",
+            "operation_status": "canonical",
+            "language": "rust"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/rust-barrel-trait-static-qualifier/openai-gpt-5.6-sol.json",
+              "sha256": "49c4ca0d6aba7d37d751ce3a375fb562f7417a4d2855e400075251d3a7de7e8f"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/rust-barrel-trait-static-qualifier/anthropic-claude-fable-5.json",
+              "sha256": "1c0dc1bb199e5c18480d991cbff179ed929935707d88c57f491a7b2a1c1763d1"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/human-adjudication.json",
+            "sha256": "d967256fb50c2aa41a2a2218b6e4d023e4c531f8df764ffd6539fc40e2064075"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/scala-baseline.yaml",
+      "sourceSha256": "f30e5e370d3b7f7fa7be2d19228264b7872cd79caf3fd26d47251f8a292dd1b4",
+      "language": "scala",
+      "cases": [
+        {
+          "id": "scala-class-construction",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "nominal_types",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "scala"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/scala-class-construction/openai-gpt-5.6-sol.json",
+              "sha256": "bf92053f6032ced9e1b1d1fe9dd2e558816acea4a5655a6a6ba364913e5238f2"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/scala-class-construction/anthropic-claude-fable-5.json",
+              "sha256": "a542adb9a9e1750b8fd681120548dfc24286e947fc54ec66d2445d32e3e2b0b6"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/human-adjudication.json",
+            "sha256": "97754a75802d9a51bcf2cadf998f92410b8e2ab201cb57fd618060f34aa721a3"
+          }
+        },
+        {
+          "id": "scala-object-val-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "constant",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "scala"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/scala-object-val-access/openai-gpt-5.6-sol.json",
+              "sha256": "931a01e90b910e7b9ae0111a0830358e71632a34ebe883682ff0e1829856eeb4"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/scala-object-val-access/anthropic-claude-fable-5.json",
+              "sha256": "7aca444a1d9702f0d88ac2408c99533022f0d54e2abc186ff6c5fe8bce77ddb5"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/human-adjudication.json",
+            "sha256": "0bd1da55b408442bbc22ffd5ed233f1e2f7f86a2cc658b120e5cb53e59137389"
+          }
+        },
+        {
+          "id": "scala-companion-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "scala"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/scala-companion-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "3b4bb62b1310b31e02c112c1aa4756f1a4b5ce718a8fb72abf68e38ae579e565"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/scala-companion-method-call/anthropic-claude-fable-5.json",
+              "sha256": "2c1b982e3527a5e570707fdd609feab91920a9f533e06ed71e1abf930bf5e8e0"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/human-adjudication.json",
+            "sha256": "8cdc90a1ec49e0cd1ccf04d26825c231ea7450fda4884d1a0a6cc4a6b3c3ae96"
+          }
+        },
+        {
+          "id": "scala-var-field-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "field",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "scala"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/scala-var-field-access/openai-gpt-5.6-sol.json",
+              "sha256": "39157664d7d8256414e8019533ad97d0ee333bc7b48562b6f93472a22147ac81"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/scala-var-field-access/anthropic-claude-fable-5.json",
+              "sha256": "b458a4764f1761ca4d13da63256254be2d4195dfc1afae34ffda79dd55094305"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+            "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/scala-lsp-parity.yaml",
+      "sourceSha256": "cf48b97938a1057a51817f100fd7fc60778784ce8def2678fb4156fdcb32c6c7",
+      "language": "scala",
+      "cases": [
+        {
+          "id": "scala-parity-case-class-generated-component-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+references",
+            "symbol_kind": "field",
+            "semantic_feature": "generated_or_macro",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "scala"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/scala-parity-case-class-generated-component-access/openai-gpt-5.6-sol.json",
+              "sha256": "4cef0ce2e27f0741674965a665042d709c22f3193fe84c8baff8fd8e1cad67d6"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/scala-parity-case-class-generated-component-access/anthropic-claude-fable-5.json",
+              "sha256": "1819605050b56a64dc8a78b73b1f8b46c6933adc9a69680937888dfa2cd5bda0"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/human-adjudication.json",
+            "sha256": "ddfd0af07472bf26134deb39365fc64ed98dbbe2e6c7f37ece243190396da918"
+          }
+        },
+        {
+          "id": "scala-parity-concrete-override-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "scala"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/scala-parity-concrete-override-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "46355d39b0406e1f2d88dfe654a89414b81c605bd0624809ba53a5c00ed76289"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/scala-parity-concrete-override-method-call/anthropic-claude-fable-5.json",
+              "sha256": "5324bcc7b94c24d49a29efb2611e98634dd397d9ab712156573233255fd589cd"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/human-adjudication.json",
+            "sha256": "a678b4fd5ae5038fa74e4ba2b19d34acbd508ea155f5de3ac9124a8757a4917a"
+          }
+        },
+        {
+          "id": "scala-parity-import-alias-companion-method",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "scala"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/scala-parity-import-alias-companion-method/openai-gpt-5.6-sol.json",
+              "sha256": "ffb9f7530460db071d8d4c96f19a35f0d5b94cf0d0bff03f7ead87aa04ceba73"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/scala-parity-import-alias-companion-method/anthropic-claude-fable-5.json",
+              "sha256": "e2ea0d81d927208d3a4fd345e3dc35bac7ffd1e114984a415421fa059d26e850"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/human-adjudication.json",
+            "sha256": "fe47cb2d236b8e106e1d610681bf57dd61d2928c6eb57adf24f58997c3a3772f"
+          }
+        },
+        {
+          "id": "scala-parity-case-class-generated-construction-and-copy",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "generated_or_macro",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "scala"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/scala-parity-case-class-generated-construction-and-copy/openai-gpt-5.6-sol.json",
+              "sha256": "5fa22bca39e8ba33ef27312cae8fee334a0596d47f84d7b2f357ba10463ad16b"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/scala-parity-case-class-generated-construction-and-copy/anthropic-claude-fable-5.json",
+              "sha256": "9737feb2e6b20a783e73032f29cc3f6aa821c3a9975cc7336aaba2d6d328d58a"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/human-adjudication.json",
+            "sha256": "d967256fb50c2aa41a2a2218b6e4d023e4c531f8df764ffd6539fc40e2064075"
+          }
+        },
+        {
+          "id": "scala-parity-extension-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "scala"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/scala-parity-extension-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "000af5cefb1f14a5ca2eb8280a35158aba0b6f1901ad571173ecfe78e59957d8"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/scala-parity-extension-method-call/anthropic-claude-fable-5.json",
+              "sha256": "ecdbc5760b1af722ad2c546781c5b87eb0d6cacc1b0b1d15a56a094c5ab513f9"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/human-adjudication.json",
+            "sha256": "c3f6315408b7063db45568758cbb2b46c54cc246ce3398ea6bf69255468f7e67"
+          }
+        },
+        {
+          "id": "scala-parity-trait-method-implementation",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "scala"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/scala-parity-trait-method-implementation/openai-gpt-5.6-sol.json",
+              "sha256": "820c25dd92e69da7f66c3bb5862acf723445456bd3577dccd021c6c539db890d"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/scala-parity-trait-method-implementation/anthropic-claude-fable-5.json",
+              "sha256": "90f4d579d8ee7856ae04816ce85aff20ff67dc3fa685e4a3ace9ad932f8e1658"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/human-adjudication.json",
+            "sha256": "6b788fd8142bbc7d22c18915807b0a25c6f52cb9596266707e086691b82ded98"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/typescript-baseline.yaml",
+      "sourceSha256": "b83b1550786a1b994c76e4d797abdfd191996309d8ec0688e2474b48ebd27539",
+      "language": "typescript",
+      "cases": [
+        {
+          "id": "ts-object-property-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+definition+references",
+            "symbol_kind": "property",
+            "semantic_feature": "state_and_properties",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical+compatible",
+            "language": "typescript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/ts-object-property-access/openai-gpt-5.6-sol.json",
+              "sha256": "6e037a4ffcd3a2d9aae16c1a3316bf6389b55494242d6a09179c97282641ffbb"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/raw/ts-object-property-access/anthropic-claude-fable-5.json",
+              "sha256": "331ed81ca5aac8817628b9ede5aab16866d2bd973e6c5d9f7b902ab37941a6d2"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-1-v3/human-adjudication.json",
+            "sha256": "97754a75802d9a51bcf2cadf998f92410b8e2ab201cb57fd618060f34aa721a3"
+          }
+        },
+        {
+          "id": "ts-class-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "typescript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/ts-class-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "a5ea07b6c72a49886bfa43b3f28b5103c107d7cc624dc0173f78ff668ce7bba2"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/raw/ts-class-method-call/anthropic-claude-fable-5.json",
+              "sha256": "274419a6db4bd211c2b8098b67eae472bcfdee8a09e2e3f4566a4d4d1092018e"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-2-v1/human-adjudication.json",
+            "sha256": "0bd1da55b408442bbc22ffd5ed233f1e2f7f86a2cc658b120e5cb53e59137389"
+          }
+        },
+        {
+          "id": "ts-ky-style-implementation-static-create",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "other_source_semantics",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "typescript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/ts-ky-style-implementation-static-create/openai-gpt-5.6-sol.json",
+              "sha256": "2fae0a6af6cfdfacb2bd832811b57c560d9057d2d220a13782d0349097d21526"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/raw/ts-ky-style-implementation-static-create/anthropic-claude-fable-5.json",
+              "sha256": "7dfdac0066eba10347b462c076791f0432244892bcce80c313c2e4f8796ae991"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-4-v1/human-adjudication.json",
+            "sha256": "ddfd0af07472bf26134deb39365fc64ed98dbbe2e6c7f37ece243190396da918"
+          }
+        },
+        {
+          "id": "ts-named-export-import-function",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "typescript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/ts-named-export-import-function/openai-gpt-5.6-sol.json",
+              "sha256": "f46fc19f7eb1b0569650af281e4ecb76bcb95fe80b481877359b2f7eab59c5d3"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/raw/ts-named-export-import-function/anthropic-claude-fable-5.json",
+              "sha256": "17a4ef3d7e8d04e7a3e1eebe25df1cba98b16ec8c8f2fa4be5340fd8ed3936c2"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-6-v1/human-adjudication.json",
+            "sha256": "fe47cb2d236b8e106e1d610681bf57dd61d2928c6eb57adf24f58997c3a3772f"
+          }
+        },
+        {
+          "id": "ts-default-class-import-and-construction",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "class",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "typescript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/ts-default-class-import-and-construction/openai-gpt-5.6-sol.json",
+              "sha256": "8934aaf11b687339cc8a8d96d816435fdf21d0818b193f716826954c16b29edc"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/raw/ts-default-class-import-and-construction/anthropic-claude-fable-5.json",
+              "sha256": "fb44b9236e9d6947dda78470591d1561adecb7ed1c7260d67fb09184a3048f46"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-7-v1/human-adjudication.json",
+            "sha256": "44415c6c9ca22e71e4314e05c681c61422669ef7368f44605377f9ceb52d4bf6"
+          }
+        },
+        {
+          "id": "ts-tsx-component-reference",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "other_source_semantics",
+            "source_complexity": "minimal_baseline_fixture",
+            "operation_status": "canonical",
+            "language": "typescript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/ts-tsx-component-reference/openai-gpt-5.6-sol.json",
+              "sha256": "5f09daf76186b0960f6abea2ef82b0c28a61d9a989dfb9c0cc099518119a3cab"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/raw/ts-tsx-component-reference/anthropic-claude-fable-5.json",
+              "sha256": "8415d7b1476fddb4e7f4be41f77ecc2c3678177377dc9e91c2ca3c1dde22ddb5"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-8-v1/human-adjudication.json",
+            "sha256": "d967256fb50c2aa41a2a2218b6e4d023e4c531f8df764ffd6539fc40e2064075"
+          }
+        }
+      ]
+    },
+    {
+      "caseFile": "benchmarks/cases/typescript-lsp-parity.yaml",
+      "sourceSha256": "1259484add6b2c4f8a578aa119301454b2f0679398656d25410c06658ea93dbc",
+      "language": "typescript",
+      "cases": [
+        {
+          "id": "ts-parity-type-only-interface-import",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "type_definition",
+            "symbol_kind": "interface",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "typescript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/ts-parity-type-only-interface-import/openai-gpt-5.6-sol.json",
+              "sha256": "69e79c6d59d6e0f70177cc370e6b063c3a84049f21b200df270ed329f7aa3452"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/raw/ts-parity-type-only-interface-import/anthropic-claude-fable-5.json",
+              "sha256": "2e0a18ce51a83e9c976761b74929e1612a5570f1d50dd3b5d562e299d3b08de9"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-3-v1/human-adjudication.json",
+            "sha256": "8cdc90a1ec49e0cd1ccf04d26825c231ea7450fda4884d1a0a6cc4a6b3c3ae96"
+          }
+        },
+        {
+          "id": "ts-parity-interface-property-access",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "declaration+definition+references",
+            "symbol_kind": "property",
+            "semantic_feature": "inheritance_and_dispatch",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical+compatible",
+            "language": "typescript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/ts-parity-interface-property-access/openai-gpt-5.6-sol.json",
+              "sha256": "4b58843495caac4b1eeda6b7f79f15ff09103d9d0412754f95e30f9d20a79f79"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/raw/ts-parity-interface-property-access/anthropic-claude-fable-5.json",
+              "sha256": "03510e29e0a72e66c270a29be8655d8114491f2a0d93125594cfae6b2d1c11af"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-5-v1/human-adjudication.json",
+            "sha256": "a678b4fd5ae5038fa74e4ba2b19d34acbd508ea155f5de3ac9124a8757a4917a"
+          }
+        },
+        {
+          "id": "ts-parity-default-function-import-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "function",
+            "semantic_feature": "imports_and_aliases",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "typescript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/ts-parity-default-function-import-call/openai-gpt-5.6-sol.json",
+              "sha256": "71a284f0ba75269faa50f0d788b4fd7e1a44db050c9d3f0678f729ccf682c51a"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/raw/ts-parity-default-function-import-call/anthropic-claude-fable-5.json",
+              "sha256": "3ae16c0ce7a024eb4496667514ad1bfb891ed6bf1a5f9a98f7dd1ed4a0495897"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-9-v1/human-adjudication.json",
+            "sha256": "c3f6315408b7063db45568758cbb2b46c54cc246ce3398ea6bf69255468f7e67"
+          }
+        },
+        {
+          "id": "ts-parity-static-method-call",
+          "membership": "balanced_core",
+          "strata": {
+            "operation": "definition+references",
+            "symbol_kind": "method",
+            "semantic_feature": "callables",
+            "source_complexity": "adapted_parity_fixture",
+            "operation_status": "canonical",
+            "language": "typescript"
+          },
+          "reviewRecords": [
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/ts-parity-static-method-call/openai-gpt-5.6-sol.json",
+              "sha256": "640fa6580a1d012639d50dadd6c55dd6d752714b7649729a5f627dd9fcc349ca"
+            },
+            {
+              "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/raw/ts-parity-static-method-call/anthropic-claude-fable-5.json",
+              "sha256": "b8ffa05762c7952d962ff4865c48f2e1a2e3b5c395cb50cfbedba04f519c9945"
+            }
+          ],
+          "adjudication": {
+            "file": "benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-10-v1/human-adjudication.json",
+            "sha256": "6b788fd8142bbc7d22c18915807b0a25c6f52cb9596266707e086691b82ded98"
+          }
+        }
+      ]
+    }
+  ]
+}

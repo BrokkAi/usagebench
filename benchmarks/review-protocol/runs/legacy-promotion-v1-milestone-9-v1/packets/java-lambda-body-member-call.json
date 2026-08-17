@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-9",
+  "caseId": "java-lambda-body-member-call",
+  "language": "java",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "a7746c717b559c309eb2d7f0bf97c364b3c5c8fc570f4a33fc72704df21b6315"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/main/java/precision/Precision.java",
+    "range": {
+      "start": {
+        "line": 3,
+        "character": 9
+      },
+      "end": {
+        "line": 3,
+        "character": 16
+      }
+    }
+  },
+  "displayName": "execute"
+}

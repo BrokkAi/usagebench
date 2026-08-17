@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-9",
+  "caseId": "js-commonjs-barrel-class-construction",
+  "language": "javascript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "3aff4e613cb06a45d41260f194eb63ef367f5f6ddb5e8e911ecc585e599f0a33"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/lib.js",
+    "range": {
+      "start": {
+        "line": 0,
+        "character": 6
+      },
+      "end": {
+        "line": 0,
+        "character": 12
+      }
+    }
+  },
+  "displayName": "Client"
+}

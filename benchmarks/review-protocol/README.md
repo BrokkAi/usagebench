@@ -59,12 +59,12 @@ and its declaration target; they do not reinterpret the expression as a textual
 usage of the type name. Unsupported candidate capability remains an execution
 status and never changes this source-derived contract.
 
-The currently completed tranche contains milestones 1 through 7: 77 balanced-core
-cases, 154 fresh provider-native sessions, mechanical comparison, and accountable
-human adjudication. Milestones 8 through 10 remain part of the frozen cohort but
-are deferred to a follow-up execution issue. This tranche is mergeable reviewed
-evidence; it is not the final 110-case `legacy_promoted` manifest and does not
-change the immutable `N = 10` denominator.
+The completed review contains milestones 1 through 10: 110 balanced-core
+cases, 220 fresh provider-native sessions, mechanical comparison, and accountable
+human adjudication. The final hash-bound
+`benchmarks/promotion/legacy-v1/manifest.json` publishes that complete cohort as
+the corpus-bounded `legacy_promoted` tier without changing the immutable
+`N = 10` denominator or its retrospective selection provenance.
 
 Validate each adjudicated milestone with:
 
@@ -72,4 +72,10 @@ Validate each adjudicated milestone with:
 for run in benchmarks/review-protocol/runs/legacy-promotion-v1-milestone-*/run.json; do
   python3 scripts/validate-legacy-promotion-milestone.py "$run"
 done
+```
+
+Validate the complete promotion manifest with:
+
+```bash
+cargo run -- validate-legacy-promotion benchmarks/promotion/legacy-v1/manifest.json
 ```

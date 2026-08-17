@@ -56,13 +56,13 @@ class FreezeShardTests(unittest.TestCase):
         active_bifrost = next(item for item in active["candidates"] if item["id"] == "bifrost")
         frozen_bifrost = next(item for item in frozen["candidates"] if item["id"] == "bifrost")
         self.assertEqual(
-            active_bifrost["requestedVersion"], "43b986355bc767073921fac40f01b34d059ea564"
+            active_bifrost["requestedVersion"], "v0.10.1"
         )
         self.assertEqual(
-            active_bifrost["revision"], "43b986355bc767073921fac40f01b34d059ea564"
+            active_bifrost["revision"], "511adaa2733067bb1b7809ab79e06ec0e3d2a146"
         )
-        self.assertEqual(frozen_bifrost["requestedVersion"], "v0.8.8")
-        self.assertEqual(frozen_bifrost["revision"], "a54be9be9b08b9d9ddbab1c471e26d7f8bd932df")
+        self.assertEqual(frozen_bifrost["requestedVersion"], "v0.10.1")
+        self.assertEqual(frozen_bifrost["revision"], "511adaa2733067bb1b7809ab79e06ec0e3d2a146")
 
     def test_bifrost_reference_cache_stays_off_read_only_corpus(self):
         runner = (ROOT / "scripts/run-reference.sh").read_text()
