@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m10_openai_csharp",
+    "executedAt": "2026-08-17T11:22:46Z"
+  },
+  "records": [
+    {
+      "caseId": "csharp-parity-concrete-implementation-method-call",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/Handlers.cs",
+        "range": {
+          "start": {
+            "line": 38,
+            "character": 18
+          },
+          "end": {
+            "line": 38,
+            "character": 24
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/Consumers.cs",
+            "range": {
+              "start": {
+                "line": 15,
+                "character": 28
+              },
+              "end": {
+                "line": 15,
+                "character": 34
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "The receiver has static type IHandler, so this token resolves to the interface member rather than the ConsoleHandler implementation."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/Consumers.cs",
+            "range": {
+              "start": {
+                "line": 17,
+                "character": 30
+              },
+              "end": {
+                "line": 17,
+                "character": 36
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The receiver is inferred as ConsoleHandler, so this invocation resolves directly to the selected concrete implementation."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/Handlers.cs",
+            "range": {
+              "start": {
+                "line": 6,
+                "character": 11
+              },
+              "end": {
+                "line": 6,
+                "character": 17
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares the distinct IHandler interface member implemented by the selected concrete method."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/Polymorphism.cs",
+            "range": {
+              "start": {
+                "line": 4,
+                "character": 18
+              },
+              "end": {
+                "line": 4,
+                "character": 24
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "This token declares BufferHandler.Handle, a distinct implementation."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/Polymorphism.cs",
+            "range": {
+              "start": {
+                "line": 25,
+                "character": 35
+              },
+              "end": {
+                "line": 25,
+                "character": 41
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "The receiver has static type IHandler, so this token resolves to the interface member even though runtime dispatch may select ConsoleHandler.Handle."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/Polymorphism.cs",
+            "range": {
+              "start": {
+                "line": 28,
+                "character": 33
+              },
+              "end": {
+                "line": 28,
+                "character": 39
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The receiver is inferred as ConsoleHandler, so this invocation resolves directly to the selected concrete implementation."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/Polymorphism.cs",
+            "range": {
+              "start": {
+                "line": 31,
+                "character": 31
+              },
+              "end": {
+                "line": 31,
+                "character": 37
+              }
+            }
+          },
+          "classification": "excluded",
+          "rationale": "The receiver is inferred as BufferHandler, so this token resolves to BufferHandler.Handle."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/Consumers.cs",
+        "range": {
+          "start": {
+            "line": 17,
+            "character": 30
+          },
+          "end": {
+            "line": 17,
+            "character": 36
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/Consumers.cs",
+        "source/src/Handlers.cs",
+        "source/src/Polymorphism.cs"
+      ],
+      "rationale": "The complete source contains exactly two invocation tokens whose receivers have concrete static type ConsoleHandler. Interface-typed calls bind to IHandler.Handle, while BufferHandler tokens bind to its separate implementation. The lexicographically first required URI is Consumers.cs, making that call the deterministic definitionUsage."
+    }
+  ]
+}

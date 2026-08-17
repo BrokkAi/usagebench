@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "cohortId": "legacy-promotion-v1-source-only-cohort",
+  "milestoneId": "legacy-promotion-v1-milestone-10",
+  "caseId": "ts-parity-static-method-call",
+  "language": "typescript",
+  "referencePolicy": "bindings_optional",
+  "positionEncoding": "utf-16",
+  "source": {
+    "root": "source",
+    "kind": "complete_fixture",
+    "treeSha256": "eb2392e236c01ee453711d48f26d6591e21cbe36dd10be07279f509b55e36716"
+  },
+  "declaration": {
+    "uri": "benchmark://source/src/api.ts",
+    "range": {
+      "start": {
+        "line": 6,
+        "character": 9
+      },
+      "end": {
+        "line": 6,
+        "character": 15
+      }
+    }
+  },
+  "displayName": "create"
+}

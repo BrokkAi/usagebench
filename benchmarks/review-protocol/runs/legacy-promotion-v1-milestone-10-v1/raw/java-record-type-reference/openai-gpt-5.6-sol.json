@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m10_openai_java",
+    "executedAt": "2026-08-17T11:23:41Z"
+  },
+  "records": [
+    {
+      "caseId": "java-record-type-reference",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/src/main/java/precision/Precision.java",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 7
+          },
+          "end": {
+            "line": 6,
+            "character": 12
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/main/java/precision/Precision.java",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 8
+              },
+              "end": {
+                "line": 14,
+                "character": 13
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The variable's declared type Entry resolves to the record declaration."
+        },
+        {
+          "location": {
+            "uri": "benchmark://source/src/main/java/precision/Precision.java",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 26
+              },
+              "end": {
+                "line": 14,
+                "character": 31
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The constructor class name Entry resolves to the record declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/main/java/precision/Precision.java",
+        "range": {
+          "start": {
+            "line": 14,
+            "character": 8
+          },
+          "end": {
+            "line": 14,
+            "character": 13
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/src/main/java/precision/Helpers.java",
+        "source/src/main/java/precision/Precision.java"
+      ],
+      "rationale": "The complete Java fixture contains exactly two identifier tokens outside the declaration that resolve to the Entry record: its use as a local variable type and its use as the constructed class name. There are no explicit imports, exports, re-exports, or competing Entry declarations."
+    }
+  ]
+}

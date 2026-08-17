@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "reviewer": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "executionId": "codex-task:/root/m10_openai_cpp",
+    "executedAt": "2026-08-17T11:22:19Z"
+  },
+  "records": [
+    {
+      "caseId": "cpp-parity-direct-function-call-control",
+      "decision": "accept",
+      "confidence": "high",
+      "declaration": {
+        "uri": "benchmark://source/include/parity.h",
+        "range": {
+          "start": {
+            "line": 40,
+            "character": 19
+          },
+          "end": {
+            "line": 40,
+            "character": 31
+          }
+        }
+      },
+      "locations": [
+        {
+          "location": {
+            "uri": "benchmark://source/src/main.cpp",
+            "range": {
+              "start": {
+                "line": 13,
+                "character": 26
+              },
+              "end": {
+                "line": 13,
+                "character": 38
+              }
+            }
+          },
+          "classification": "required",
+          "rationale": "The qualified identifier token in parity::direct_label(\"direct\") resolves to the selected inline function declaration."
+        }
+      ],
+      "definitionUsage": {
+        "uri": "benchmark://source/src/main.cpp",
+        "range": {
+          "start": {
+            "line": 13,
+            "character": 26
+          },
+          "end": {
+            "line": 13,
+            "character": 38
+          }
+        }
+      },
+      "ambiguities": [],
+      "inspectedPaths": [
+        "source/include/parity.h",
+        "source/src/main.cpp",
+        "source/src/parity.cpp"
+      ],
+      "rationale": "The complete fixture contains exactly one identifier token outside the declaration that resolves to parity::direct_label: the qualified direct call in source/src/main.cpp. No explicit import, re-export, or export bindings apply, and there is no unresolved required-contract ambiguity."
+    }
+  ]
+}
