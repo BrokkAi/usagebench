@@ -120,6 +120,8 @@ jobs:
           printf 'tag=%s\nrevision=%s\nsnapshot_kind=%s\nrelease_name=%s\ncase_path=%s\ncandidates=%s\ncandidate_registry=%s\n' \
             "$SNAPSHOT_VERSION" "$revision" "$SNAPSHOT_KIND" "$release_name" "$case_path" "$candidates" "$candidate_registry" >> "$GITHUB_OUTPUT"
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - name: Cache cargo + target
+        uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
       - name: Validate harness, corpus, and frozen evidence
         run: |
           cargo test --locked
@@ -157,6 +159,8 @@ jobs:
           lfs: true
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - name: Cache cargo + target
+        uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
       - name: Install exact candidate tool
         shell: bash
         env:
@@ -177,7 +181,15 @@ jobs:
             gzip -dc "$tools/rust-analyzer.gz" > "$tools/bin/rust-analyzer"
             chmod +x "$tools/bin/rust-analyzer"
           elif [[ "$CANDIDATE" == "apple-clangd-21" ]]; then
-            /usr/bin/clangd --version | grep -F 'Apple clangd version 21.0.0'
+            resolved_version_prefix="$(jq -er --arg candidate "$CANDIDATE" \
+              '.candidates[] | select(.id == $candidate) | .resolvedVersionPrefix' \
+              "${{ needs.preflight.outputs.candidate_registry }}")"
+            actual_version="$(/usr/bin/clangd --version)"
+            [[ "$actual_version" == "$resolved_version_prefix"* ]] || {
+              echo "Apple clangd version does not match the selected candidate registry" >&2
+              printf 'expected prefix: %s\nactual version: %s\n' "$resolved_version_prefix" "$actual_version" >&2
+              exit 1
+            }
           else
             public_bifrost_source='https://github.com/BrokkAi/bifrost'
             public_bifrost_repo="$public_bifrost_source.git"
@@ -260,6 +272,8 @@ jobs:
           lfs: true
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - name: Cache cargo + target
+        uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
       - name: Authenticate checksum-addressed image publication
         env:
           GHCR_TOKEN: ${{ github.token }}
@@ -336,6 +350,8 @@ jobs:
           lfs: true
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - name: Cache cargo + target
+        uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           pattern: freeze-shard-*

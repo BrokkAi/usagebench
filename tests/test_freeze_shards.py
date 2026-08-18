@@ -70,6 +70,27 @@ class FreezeShardTests(unittest.TestCase):
         )
         self.assertNotIn("referenceRunner", frozen_bifrost)
 
+    def test_apple_clangd_registries_use_exact_reported_banner_prefix(self):
+        active = json.loads((ROOT / "adapters/candidates.json").read_text())
+        frozen = json.loads(
+            (ROOT / "benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json").read_text()
+        )
+        for registry in (active, frozen):
+            apple_clangd = next(
+                item for item in registry["candidates"] if item["id"] == "apple-clangd-21"
+            )
+            self.assertEqual(
+                apple_clangd["resolvedVersionPrefix"], "Apple clangd version 21.0.0"
+            )
+
+    def test_freeze_setup_reads_apple_clangd_prefix_from_selected_registry(self):
+        workflow = (ROOT / ".github/workflows/freeze.yml").read_text()
+        self.assertIn(
+            'resolved_version_prefix="$(jq -er --arg candidate "$CANDIDATE"', workflow
+        )
+        self.assertIn('[[ "$actual_version" == "$resolved_version_prefix"* ]]', workflow)
+        self.assertNotIn("grep -F 'Apple clangd version 21.0.0'", workflow)
+
     def test_freeze_setup_verifies_public_bifrost_tag_identity(self):
         workflow = (ROOT / ".github/workflows/freeze.yml").read_text()
         self.assertIn("public_bifrost_source='https://github.com/BrokkAi/bifrost'", workflow)

@@ -859,7 +859,7 @@ mod tests {
             module_checksum: None,
             profile: Some("adapters/lsp/apple-clangd-21.json".to_string()),
             profile_sha256: Some("f".repeat(64)),
-            resolved_version_prefix: Some("Apple clangd 21.0.0".to_string()),
+            resolved_version_prefix: Some("Apple clangd version 21.0.0".to_string()),
             reference_runner: None,
             advertised: true,
             runtime_networking: Some("disabled".to_string()),
@@ -884,6 +884,44 @@ mod tests {
         assert!(error
             .to_string()
             .contains("resolved implementation does not match"));
+    }
+
+    #[test]
+    fn accepts_exact_apple_clangd_21_resolved_banner() {
+        let candidate = Candidate {
+            id: "apple-clangd-21".to_string(),
+            runner: CandidateRunner::Lsp,
+            name: "Apple clangd".to_string(),
+            requested_version: "21.0.0".to_string(),
+            source: "https://developer.apple.com/xcode/".to_string(),
+            revision: None,
+            module_checksum: None,
+            profile: Some("adapters/lsp/apple-clangd-21.json".to_string()),
+            profile_sha256: Some("f".repeat(64)),
+            resolved_version_prefix: Some("Apple clangd version 21.0.0".to_string()),
+            reference_runner: None,
+            advertised: true,
+            runtime_networking: Some("disabled".to_string()),
+            project_hydration: Some("fixture".to_string()),
+            ineligible_reason: None,
+        };
+        let mut report: RunReport = serde_json::from_value(sample_report()).unwrap();
+        report.runner.name = "clangd".to_string();
+        report.runner.requested_version = candidate.requested_version.clone();
+        report.runner.resolved_version =
+            "Apple clangd version 21.0.0 (clang-2100.1.1.101) mac+xpc arm64-apple-darwin25.5.0"
+                .to_string();
+        report.runner.source = candidate.source.clone();
+        report.invocation.profile = Some("apple-clangd-21".to_string());
+        report.invocation.profile_sha256 = candidate.profile_sha256.clone();
+
+        validate_report(
+            &candidate,
+            &report,
+            "0123456789abcdef0123456789abcdef01234567",
+            "v0.2.0",
+        )
+        .unwrap();
     }
 
     #[test]
