@@ -49,11 +49,10 @@ jq -e '
     "id": "bifrost",
     "runner": "bifrost",
     "name": "Bifrost",
-    "requestedVersion": "v0.10.1",
+    "requestedVersion": "v0.10.2",
     "source": "https://github.com/BrokkAi/bifrost",
-    "revision": "511adaa2733067bb1b7809ab79e06ec0e3d2a146",
+    "revision": "d1a7c0cc1cf58d0c0789476ad42a92318bb8da49",
     "advertised": true,
-    "referenceRunner": "bifrost",
     "runtimeNetworking": "disabled",
     "projectHydration": "fixture sources are staged in the released corpus"
   }]
@@ -154,6 +153,18 @@ grep -Fq 'python3 scripts/freeze-shards.py aggregate' "$freeze_workflow" || {
 }
 grep -Fq 'benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json' "$freeze_workflow" || {
   echo "v0.3.0 evaluation freeze is not bound to its historical candidate registry" >&2
+  exit 1
+}
+grep -Fq "public_bifrost_source='https://github.com/BrokkAi/bifrost'" "$freeze_workflow" || {
+  echo "freeze workflow does not pin Bifrost to the public repository" >&2
+  exit 1
+}
+grep -Fq 'refs/tags/$bifrost_requested_version^{}' "$freeze_workflow" || {
+  echo "freeze workflow does not resolve the requested public Bifrost tag" >&2
+  exit 1
+}
+grep -Fq '[[ "$bifrost_tag_revision" == "$bifrost_revision" ]]' "$freeze_workflow" || {
+  echo "freeze workflow does not compare the public Bifrost tag to the pinned revision" >&2
   exit 1
 }
 grep -Fq -- '--manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.json"' \

@@ -179,10 +179,37 @@ jobs:
           elif [[ "$CANDIDATE" == "apple-clangd-21" ]]; then
             /usr/bin/clangd --version | grep -F 'Apple clangd version 21.0.0'
           else
-            git clone https://github.com/BrokkAi/bifrost.git "$RUNNER_TEMP/bifrost"
+            public_bifrost_source='https://github.com/BrokkAi/bifrost'
+            public_bifrost_repo="$public_bifrost_source.git"
+            bifrost_source="$(jq -er '.candidates[] | select(.id == "bifrost") | .source' \
+              "${{ needs.preflight.outputs.candidate_registry }}")"
+            [[ "$bifrost_source" == "$public_bifrost_source" ]] || {
+              echo "Bifrost candidate must use the public BrokkAi/bifrost repository" >&2
+              exit 1
+            }
+            bifrost_requested_version="$(jq -er '.candidates[] | select(.id == "bifrost") | .requestedVersion' \
+              "${{ needs.preflight.outputs.candidate_registry }}")"
+            [[ "$bifrost_requested_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "Bifrost candidate must request an immutable release tag" >&2
+              exit 1
+            }
             bifrost_revision="$(jq -er '.candidates[] | select(.id == "bifrost") | .revision' \
               "${{ needs.preflight.outputs.candidate_registry }}")"
-            git -C "$RUNNER_TEMP/bifrost" cat-file -e "$bifrost_revision^{commit}"
+            [[ "$bifrost_revision" =~ ^[0-9a-f]{40}$ ]] || {
+              echo "Bifrost candidate revision must be an exact commit SHA" >&2
+              exit 1
+            }
+            git clone "$public_bifrost_repo" "$RUNNER_TEMP/bifrost"
+            [[ "$(git -C "$RUNNER_TEMP/bifrost" remote get-url origin)" == "$public_bifrost_repo" ]] || {
+              echo "Bifrost checkout is not sourced from the public BrokkAi/bifrost repository" >&2
+              exit 1
+            }
+            bifrost_tag_revision="$(git -C "$RUNNER_TEMP/bifrost" rev-parse --verify \
+              "refs/tags/$bifrost_requested_version^{}")"
+            [[ "$bifrost_tag_revision" == "$bifrost_revision" ]] || {
+              echo "Bifrost release tag does not resolve to the pinned revision" >&2
+              exit 1
+            }
           fi
           echo "$tools/bin" >> "$GITHUB_PATH"
       - name: Run bounded candidate shard

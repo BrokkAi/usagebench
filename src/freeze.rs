@@ -927,6 +927,25 @@ mod tests {
     }
 
     #[test]
+    fn accepts_identity_checked_native_bifrost_without_reference_runner() {
+        let mut candidate = sample_bifrost_candidate();
+        candidate.reference_runner = None;
+        let mut report: RunReport = serde_json::from_value(sample_report()).unwrap();
+        report.environment.execution_mode = ExecutionMode::Native;
+        report.environment.platform_scope = PlatformScope::HostSpecific;
+        report.environment.reference_environment = None;
+        report.environment.container = None;
+
+        validate_report(
+            &candidate,
+            &report,
+            "0123456789abcdef0123456789abcdef01234567",
+            "v0.2.0",
+        )
+        .unwrap();
+    }
+
+    #[test]
     fn canonical_candidate_still_requires_reference_environment_provenance() {
         let candidate = sample_bifrost_candidate();
         let mut report: RunReport = serde_json::from_value(sample_report()).unwrap();
@@ -1133,7 +1152,7 @@ mod tests {
     }
 
     #[test]
-    fn v030_evaluation_registry_preserves_frozen_candidate_identities() {
+    fn v030_evaluation_registry_uses_public_native_bifrost_identity() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let registry = load_registry(
             &root.join("benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json"),
@@ -1145,11 +1164,13 @@ mod tests {
             .find(|candidate| candidate.id == "bifrost")
             .unwrap();
 
-        assert_eq!(bifrost.requested_version, "v0.10.1");
+        assert_eq!(bifrost.requested_version, "v0.10.2");
+        assert_eq!(bifrost.source, "https://github.com/BrokkAi/bifrost");
         assert_eq!(
             bifrost.revision.as_deref(),
-            Some("511adaa2733067bb1b7809ab79e06ec0e3d2a146")
+            Some("d1a7c0cc1cf58d0c0789476ad42a92318bb8da49")
         );
+        assert!(bifrost.reference_runner.is_none());
         assert_eq!(
             registry
                 .candidates
