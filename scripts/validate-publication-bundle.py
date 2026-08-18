@@ -305,6 +305,7 @@ def verify_archive(
     expected_tag: str,
     expected_revision: str,
     extract_to: pathlib.Path,
+    historical_v1: bool = False,
 ) -> pathlib.Path:
     _require_regular_file(archive, "release archive")
     _require_regular_file(checksum, "release archive checksum")
@@ -325,8 +326,37 @@ def verify_archive(
     with tarfile.open(archive, "r:gz") as tar:
         tar.extractall(extract_to)
     bundle = extract_to / root_name
-    validate_bundle(bundle, expected_tag, expected_revision)
+    if historical_v1:
+        validate_historical_v1_bundle(bundle, expected_tag, expected_revision)
+    else:
+        validate_bundle(bundle, expected_tag, expected_revision)
     return bundle
+
+
+def validate_historical_v1_bundle(
+    bundle: pathlib.Path, expected_tag: str, expected_revision: str
+) -> None:
+    """Validate the exact pre-sidecar v0.2.0 publication shape.
+
+    v0.2.0 is the historical real-project-v1 release. It predates the corpus
+    hash sidecar required by current releases, so it cannot pass
+    ``validate_bundle``. Keep this compatibility contract exact to its known
+    tag/revision while retaining release metadata, evidence checksum, freeze
+    partition, report, and generated-page validation.
+    """
+
+    historical_revision = "6ea6056fa6b3eb52a656a2b4a62c57956771de78"
+    if expected_tag != "v0.2.0" or expected_revision != historical_revision:
+        raise ValidationError("historical v1 compatibility is only valid for v0.2.0")
+    validate_release_metadata(bundle, expected_tag, expected_revision)
+    verify_evidence_checksums(bundle)
+    manifest = validate_freeze_partition(bundle, expected_tag, expected_revision)
+    if manifest.get("snapshotKind") != "evaluation":
+        raise ValidationError("historical v1 bundle is not an evaluation snapshot")
+    audit = manifest.get("evaluationAudit")
+    if not isinstance(audit, dict) or audit.get("freezeId") != "real-project-v1":
+        raise ValidationError("historical v1 bundle has the wrong evaluation freeze ID")
+    validate_generated_results(bundle, manifest)
 
 
 def validate_bundle(bundle: pathlib.Path, expected_tag: str, expected_revision: str) -> None:
@@ -347,11 +377,18 @@ def main() -> int:
     parser.add_argument("--extract-to", type=pathlib.Path)
     parser.add_argument("--tag", required=True)
     parser.add_argument("--revision", required=True)
+    parser.add_argument(
+        "--historical-v1",
+        action="store_true",
+        help="use the exact pre-sidecar v0.2.0 compatibility contract",
+    )
     args = parser.parse_args()
     if args.archive is not None and (args.checksum is None or args.extract_to is None):
         parser.error("--archive requires --checksum and --extract-to")
     if args.bundle is not None and (args.checksum is not None or args.extract_to is not None):
         parser.error("--checksum/--extract-to are only valid with --archive")
+    if args.historical_v1 and args.bundle is not None:
+        parser.error("--historical-v1 is only valid with --archive")
     try:
         if args.archive is not None:
             bundle = verify_archive(
@@ -360,6 +397,7 @@ def main() -> int:
                 args.tag,
                 args.revision,
                 args.extract_to,
+                args.historical_v1,
             )
         else:
             bundle = args.bundle.resolve()

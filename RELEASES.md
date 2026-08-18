@@ -82,8 +82,9 @@ the curated release asset when a minimal reproducibility bundle is preferred.
 
 Use the **Freeze benchmark snapshot** manual workflow to turn a reviewed main
 revision into a release. It accepts the new benchmark version, an exact source
-revision (or `main`), `development` or `evaluation` evidence, and a
-comma-separated list of candidate IDs from `adapters/candidates.json`.
+revision (or `main`), `development`, `evaluation`, or `legacy-promoted`
+evidence, and a comma-separated list of candidate IDs from
+`adapters/candidates.json`.
 
 `adapters/candidates.json` is the release registry for analyzer identities. It
 records each candidate's requested version, source, pinned revision where one
@@ -140,6 +141,16 @@ evaluation pages remain partition-labeled and limited to descriptive
 per-profile comparisons; they exclude language-wide or ecosystem-wide
 estimates, cross-language ranking, causal defect claims, and latency, memory,
 or cold-start claims.
+
+The `legacy-promoted` path is a separate retrospective release contract. It
+is bound to `benchmarks/promotion/legacy-v1/manifest.json`, stages an
+execution-only corpus containing exactly its 110 `balanced_core` IDs across
+30 documents, and keeps overflow and control cases outside the run. Two
+checksum-bound canonical reference reports (Bifrost and gopls) run on Ubuntu;
+the nine remaining advertised profiles run one at a time on the selected
+native macOS runner. Candidate reports remain language-scoped; the frozen
+manifest's union is the 110-case balanced core. This host split is an
+execution detail, not a two-host evidence requirement.
 
 This workflow trusts the native execution environment to provision the
 requested payload behind each recorded launcher. Profile and executable hashes

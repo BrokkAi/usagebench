@@ -394,6 +394,224 @@ pub fn validate_report_against_promotion(
     Ok(())
 }
 
+/// Load the canonical language assigned to each promoted case document.
+///
+/// The language is intentionally read from the hash-bound promotion manifest
+/// rather than inferred from a report.  Reports are allowed to be stratified
+/// by registered analyzer profile, but cannot relabel a source document.
+pub fn promotion_document_languages(path: impl AsRef<Path>) -> Result<BTreeMap<String, String>> {
+    let path = path.as_ref();
+    let bytes =
+        fs::read(path).with_context(|| format!("read promotion manifest {}", path.display()))?;
+    let value: serde_json::Value =
+        serde_json::from_slice(&bytes).context("parse promotion manifest JSON")?;
+    let schema: serde_json::Value =
+        serde_json::from_str(SCHEMA).context("parse bundled promotion schema")?;
+    let compiled = jsonschema::JSONSchema::compile(&schema)
+        .map_err(|error| anyhow!("compile promotion schema: {error}"))?;
+    if let Err(errors) = compiled.validate(&value) {
+        bail!(
+            "promotion manifest schema validation failed: {}",
+            errors
+                .map(|error| error.to_string())
+                .collect::<Vec<_>>()
+                .join("; ")
+        );
+    }
+    let manifest: LegacyPromotionManifest =
+        serde_json::from_value(value).context("deserialize promotion manifest")?;
+    validate_manifest(path, &bytes, &manifest)?;
+    let mut languages = BTreeMap::new();
+    for document in manifest.documents {
+        if languages
+            .insert(document.case_file.clone(), document.language)
+            .is_some()
+        {
+            bail!(
+                "promotion manifest contains duplicate document language: {}",
+                document.case_file
+            );
+        }
+    }
+    Ok(languages)
+}
+
+/// Read the languages registered by an analyzer candidate's checked-in LSP
+/// profile.  Bifrost is the full-corpus candidate and therefore returns
+/// `None`, while an LSP profile returns its exact language set.
+pub fn registered_candidate_languages(
+    root: &Path,
+    runner: &str,
+    profile: Option<&str>,
+) -> Result<Option<BTreeSet<String>>> {
+    match runner {
+        "bifrost" => {
+            if profile.is_some() {
+                bail!("Bifrost candidate unexpectedly declares an LSP profile");
+            }
+            Ok(None)
+        }
+        "lsp" => {
+            let profile = profile.context("LSP candidate is missing its registered profile")?;
+            let relative = safe_repo_relative_path(profile, "candidate LSP profile")?;
+            let root = root
+                .canonicalize()
+                .context("canonicalize candidate registry root")?;
+            let path = root.join(relative);
+            let canonical = path
+                .canonicalize()
+                .with_context(|| format!("canonicalize candidate LSP profile {profile}"))?;
+            if !canonical.starts_with(&root) {
+                bail!("candidate LSP profile resolves outside the repository: {profile}");
+            }
+            let value: serde_json::Value = serde_json::from_slice(
+                &fs::read(&canonical)
+                    .with_context(|| format!("read candidate LSP profile {profile}"))?,
+            )
+            .with_context(|| format!("parse candidate LSP profile {profile}"))?;
+            let languages = value
+                .get("languages")
+                .and_then(serde_json::Value::as_array)
+                .context("candidate LSP profile has no languages array")?;
+            let mut result = BTreeSet::new();
+            for language in languages {
+                let language = language
+                    .as_str()
+                    .filter(|language| !language.trim().is_empty())
+                    .context("candidate LSP profile contains an invalid language")?;
+                if !result.insert(language.to_string()) {
+                    bail!("candidate LSP profile repeats language {language}");
+                }
+            }
+            if result.is_empty() {
+                bail!("candidate LSP profile declares no languages");
+            }
+            Ok(Some(result))
+        }
+        other => bail!("unsupported candidate runner {other}"),
+    }
+}
+
+/// Validate one report against the exact language slice registered for its
+/// candidate.  The returned keys can be unioned across reports to prove that
+/// the selected candidates cover the complete promotion denominator.
+pub fn validate_report_against_promotion_scope(
+    report: &RunReport,
+    audit: &LegacyPromotionAudit,
+    document_languages: &BTreeMap<String, String>,
+    allowed_languages: Option<&BTreeSet<String>>,
+) -> Result<BTreeSet<(String, String)>> {
+    let expected_files = audit
+        .case_ids_by_file
+        .keys()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    let language_files = document_languages
+        .iter()
+        .filter(|(_, language)| {
+            allowed_languages
+                .map(|allowed| allowed.contains(language.as_str()))
+                .unwrap_or(true)
+        })
+        .map(|(file, _)| file.as_str())
+        .collect::<BTreeSet<_>>();
+    if document_languages.len() != expected_files.len()
+        || !expected_files
+            .iter()
+            .all(|file| document_languages.contains_key(*file))
+    {
+        bail!("promotion document language map drifted from the promotion audit");
+    }
+
+    let listed_files = report
+        .case_files
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    if listed_files.len() != report.case_files.len() || listed_files != language_files {
+        bail!("report case-file scope does not match its registered promotion language slice");
+    }
+
+    let mut actual_documents = BTreeMap::new();
+    let mut keys = BTreeSet::new();
+    for document in &report.documents {
+        if actual_documents
+            .insert(document.case_file.as_str(), document)
+            .is_some()
+        {
+            bail!(
+                "report contains duplicate promotion document {}",
+                document.case_file
+            );
+        }
+        let expected_language = document_languages
+            .get(&document.case_file)
+            .with_context(|| {
+                format!(
+                    "report contains unknown promotion document {}",
+                    document.case_file
+                )
+            })?;
+        if document.language != *expected_language {
+            bail!(
+                "report document {} has language {}, expected {}",
+                document.case_file,
+                document.language,
+                expected_language
+            );
+        }
+        if !language_files.contains(document.case_file.as_str()) {
+            bail!(
+                "report document {} is outside the candidate's registered language slice",
+                document.case_file
+            );
+        }
+        let expected_ids = audit
+            .case_ids_by_file
+            .get(&document.case_file)
+            .with_context(|| {
+                format!(
+                    "promotion audit omits report document {}",
+                    document.case_file
+                )
+            })?
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>();
+        let mut actual_ids = BTreeSet::new();
+        for case in &document.cases {
+            if !actual_ids.insert(case.id.as_str()) {
+                bail!(
+                    "report contains duplicate promotion case {} / {}",
+                    document.case_file,
+                    case.id
+                );
+            }
+            keys.insert((document.case_file.clone(), case.id.clone()));
+        }
+        if actual_ids != expected_ids {
+            bail!(
+                "report case IDs drift from promotion manifest for {}",
+                document.case_file
+            );
+        }
+    }
+    if actual_documents.len() != language_files.len()
+        || actual_documents.keys().copied().collect::<BTreeSet<_>>() != language_files
+    {
+        bail!("report documents do not match its registered promotion language slice");
+    }
+    Ok(keys)
+}
+
+pub fn promotion_case_keys(audit: &LegacyPromotionAudit) -> BTreeSet<(String, String)> {
+    audit
+        .case_ids_by_file
+        .iter()
+        .flat_map(|(file, ids)| ids.iter().map(move |id| (file.clone(), id.clone())))
+        .collect()
+}
+
 fn validate_link(root: &Path, link: &ArtifactLink, label: &str) -> Result<()> {
     let path = safe_join(root, &link.file)?;
     let bytes = fs::read(&path).with_context(|| format!("read {label} {}", link.file))?;
@@ -429,6 +647,129 @@ fn sha256(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{
+        runners::{
+            CaseRunReport, DocumentRunReport, ExecutionEnvironment, ExecutionMode, PlatformScope,
+            RunInvocation, RunReport, RunTotals, RunnerMetadata,
+        },
+        CorpusPartition, CorpusSelection, GroundTruthReviewStatus, ReferencePolicy,
+    };
+
+    fn partition_fixture() -> (LegacyPromotionAudit, BTreeMap<String, String>) {
+        let languages = (0..11)
+            .map(|index| format!("language-{index}"))
+            .collect::<Vec<_>>();
+        let mut case_ids_by_file = BTreeMap::new();
+        let mut document_languages = BTreeMap::new();
+        let mut denominators = BTreeMap::new();
+        for language in &languages {
+            let file = format!("benchmarks/cases/{language}.yaml");
+            let ids = (0..10)
+                .map(|index| format!("{language}-{index}"))
+                .collect::<Vec<_>>();
+            case_ids_by_file.insert(file.clone(), ids);
+            document_languages.insert(file, language.clone());
+            denominators.insert(language.clone(), 10);
+        }
+        (
+            LegacyPromotionAudit {
+                promotion_id: "legacy-v1".into(),
+                claim_scope: "corpus-bounded".into(),
+                manifest: ArtifactLink {
+                    file: "manifest.json".into(),
+                    sha256: "a".repeat(64),
+                },
+                eligibility_policy: ArtifactLink {
+                    file: "policy.json".into(),
+                    sha256: "b".repeat(64),
+                },
+                balanced_core_per_language: 10,
+                balanced_core_case_count: 110,
+                overflow_case_count: 0,
+                control_case_count: 0,
+                denominators,
+                case_ids_by_file,
+            },
+            document_languages,
+        )
+    }
+
+    fn report_for_document(file: &str, language: &str, ids: &[String]) -> RunReport {
+        let cases = ids
+            .iter()
+            .map(|id| CaseRunReport {
+                id: id.clone(),
+                status: crate::runners::CaseStatus::Passed,
+                required_destination_status: None,
+                location_metrics: None,
+                expected_failure_reason: None,
+                not_planned_reason: None,
+                unsupported_reason: None,
+                declaration_to_usages: None,
+                usage_to_declaration: Vec::new(),
+                compatible_usage_to_declaration: Vec::new(),
+                type_lookups: Vec::new(),
+                diagnostics: Vec::new(),
+            })
+            .collect();
+        RunReport {
+            usagebench_version: "0.3.0".into(),
+            usagebench_revision: "0123456789abcdef0123456789abcdef01234567".into(),
+            usagebench_release: Some("v0.3.0".into()),
+            runner: RunnerMetadata {
+                name: "test-runner".into(),
+                requested_version: "1.0.0".into(),
+                resolved_version: "1.0.0".into(),
+                source: "https://example.test".into(),
+                adapter_version: "test".into(),
+                capabilities: Vec::new(),
+            },
+            invocation: RunInvocation {
+                include_unsupported: false,
+                include_definition_lookups: false,
+                scan_usages_max_duration_secs: None,
+                profile: None,
+                profile_sha256: None,
+                case_id: None,
+            },
+            timings: Default::default(),
+            completed: true,
+            requested_case_files: Vec::new(),
+            requested_totals: Default::default(),
+            semantic_pack_runs: Vec::new(),
+            environment: ExecutionEnvironment {
+                operating_system: "test".into(),
+                architecture: "test".into(),
+                execution_mode: ExecutionMode::Native,
+                platform_scope: PlatformScope::HostSpecific,
+                reference_environment: None,
+                container: None,
+                analyzer_executable: crate::runners::ExecutableProvenance {
+                    command: "test".into(),
+                    resolved_path: None,
+                    sha256: None,
+                },
+                toolchains: BTreeMap::new(),
+            },
+            bifrost_repo: None,
+            bifrost_commit: None,
+            bifrost_resolved_commit: None,
+            started_at_unix_seconds: 1,
+            finished_at_unix_seconds: 2,
+            case_files: vec![file.into()],
+            totals: RunTotals::default(),
+            documents: vec![DocumentRunReport {
+                case_file: file.into(),
+                language: language.into(),
+                source_root: "fixtures/test".into(),
+                corpus_partition: CorpusPartition::Development,
+                corpus_selection: CorpusSelection::AnalyzerInformed,
+                ground_truth_status: GroundTruthReviewStatus::LegacyUnattributed,
+                reference_policy: ReferencePolicy::BindingsOptional,
+                cases,
+            }],
+        }
+    }
 
     fn manifest() -> LegacyPromotionManifest {
         let eligible_counts = (0..11)
@@ -506,6 +847,100 @@ mod tests {
         assert!(error
             .to_string()
             .contains("historical source document hash changed"));
+    }
+
+    #[test]
+    fn accepts_the_complete_eleven_language_partition() {
+        let (audit, document_languages) = partition_fixture();
+        let mut union = BTreeSet::new();
+        for (file, language) in &document_languages {
+            let ids = audit.case_ids_by_file.get(file).unwrap();
+            let allowed = BTreeSet::from([language.clone()]);
+            union.extend(
+                validate_report_against_promotion_scope(
+                    &report_for_document(file, language, ids),
+                    &audit,
+                    &document_languages,
+                    Some(&allowed),
+                )
+                .unwrap(),
+            );
+        }
+        assert_eq!(union, promotion_case_keys(&audit));
+    }
+
+    #[test]
+    fn rejects_missing_case_from_a_candidate_report() {
+        let (audit, document_languages) = partition_fixture();
+        let (file, language) = document_languages.iter().next().unwrap();
+        let mut ids = audit.case_ids_by_file.get(file).unwrap().clone();
+        ids.pop();
+        let allowed = BTreeSet::from([language.clone()]);
+        let error = validate_report_against_promotion_scope(
+            &report_for_document(file, language, &ids),
+            &audit,
+            &document_languages,
+            Some(&allowed),
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("case IDs drift"));
+    }
+
+    #[test]
+    fn rejects_extra_case_from_a_candidate_report() {
+        let (audit, document_languages) = partition_fixture();
+        let (file, language) = document_languages.iter().next().unwrap();
+        let mut ids = audit.case_ids_by_file.get(file).unwrap().clone();
+        ids.push("not-promoted".into());
+        let allowed = BTreeSet::from([language.clone()]);
+        let error = validate_report_against_promotion_scope(
+            &report_for_document(file, language, &ids),
+            &audit,
+            &document_languages,
+            Some(&allowed),
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("case IDs drift"));
+    }
+
+    #[test]
+    fn rejects_cross_language_document_from_a_candidate_report() {
+        let (audit, document_languages) = partition_fixture();
+        let (file, language) = document_languages.iter().next().unwrap();
+        let other_language = document_languages
+            .values()
+            .find(|candidate| *candidate != language)
+            .unwrap();
+        let ids = audit.case_ids_by_file.get(file).unwrap();
+        let allowed = BTreeSet::from([language.clone()]);
+        let error = validate_report_against_promotion_scope(
+            &report_for_document(file, other_language, ids),
+            &audit,
+            &document_languages,
+            Some(&allowed),
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("expected"));
+    }
+
+    #[test]
+    fn detects_union_drift_when_a_language_report_is_omitted() {
+        let (audit, document_languages) = partition_fixture();
+        let mut union = BTreeSet::new();
+        for (file, language) in document_languages.iter().skip(1) {
+            let allowed = BTreeSet::from([language.clone()]);
+            union.extend(
+                validate_report_against_promotion_scope(
+                    &report_for_document(file, language, audit.case_ids_by_file.get(file).unwrap()),
+                    &audit,
+                    &document_languages,
+                    Some(&allowed),
+                )
+                .unwrap(),
+            );
+        }
+        assert_ne!(union, promotion_case_keys(&audit));
+        assert_eq!(union.len(), 100);
     }
 
     #[test]
