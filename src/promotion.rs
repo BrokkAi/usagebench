@@ -492,6 +492,23 @@ pub fn registered_candidate_languages(
     }
 }
 
+/// Read the immutable language scope serialized for a legacy-promoted
+/// candidate. Historical evaluation manifests may omit this field, but every
+/// legacy-promoted manifest uses schema v5 and must carry it explicitly.
+pub fn required_legacy_candidate_languages(
+    candidate_id: &str,
+    languages: Option<&[String]>,
+) -> Result<BTreeSet<String>> {
+    let languages = languages.with_context(|| {
+        format!("legacy-promoted candidate {candidate_id} is missing its registered language scope")
+    })?;
+    let languages = languages.iter().cloned().collect::<BTreeSet<_>>();
+    if languages.is_empty() {
+        bail!("legacy-promoted candidate {candidate_id} has an empty registered language scope");
+    }
+    Ok(languages)
+}
+
 /// Validate one report against the exact language slice registered for its
 /// candidate.  The returned keys can be unioned across reports to prove that
 /// the selected candidates cover the complete promotion denominator.
@@ -867,6 +884,24 @@ mod tests {
             );
         }
         assert_eq!(union, promotion_case_keys(&audit));
+    }
+
+    #[test]
+    fn legacy_candidate_scope_is_required_and_non_empty() {
+        let missing = required_legacy_candidate_languages("gopls", None).unwrap_err();
+        assert!(missing
+            .to_string()
+            .contains("missing its registered language scope"));
+
+        let empty = required_legacy_candidate_languages("gopls", Some(&[])).unwrap_err();
+        assert!(empty
+            .to_string()
+            .contains("empty registered language scope"));
+
+        assert_eq!(
+            required_legacy_candidate_languages("gopls", Some(&["go".into()])).unwrap(),
+            BTreeSet::from(["go".into()])
+        );
     }
 
     #[test]

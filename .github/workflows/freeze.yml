@@ -380,6 +380,7 @@ jobs:
             ~/.cache/usagebench-native-tools
           key: usagebench-legacy-native-${{ runner.os }}-${{ matrix.candidate }}-${{ hashFiles('adapters/candidates.json', 'adapters/lsp/*.json', 'Cargo.lock') }}
       - name: Install and verify exact native profile
+        id: provision-native
         shell: bash
         env:
           CANDIDATE: ${{ matrix.candidate }}
@@ -496,6 +497,7 @@ jobs:
           esac
           echo "$tools/bin" >> "$GITHUB_PATH"
       - name: Run bounded native legacy shard
+        id: run-native
         shell: bash
         env:
           SNAPSHOT_KIND: legacy-promoted
@@ -525,7 +527,11 @@ jobs:
           cp "$RUNNER_TEMP/legacy-output/$CANDIDATE.json" "$RUNNER_TEMP/legacy-shard/"
           (cd "$RUNNER_TEMP/legacy-shard" && shasum -a 256 *.json > SHA256SUMS)
       - name: Save native package stores for retries
-        if: always() && steps.native-cache.outputs.cache-hit != 'true'
+        if: >-
+          always() &&
+          steps.native-cache.outputs.cache-hit != 'true' &&
+          steps.provision-native.outcome == 'success' &&
+          steps.run-native.outcome == 'success'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0 (Node 24)
         with:
           path: |

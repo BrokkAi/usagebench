@@ -13,7 +13,7 @@ use crate::{
         FREEZE_MANIFEST_SCHEMA_VERSION,
     },
     promotion::{
-        promotion_case_keys, promotion_document_languages, validate_report_against_promotion,
+        promotion_case_keys, promotion_document_languages, required_legacy_candidate_languages,
         validate_report_against_promotion_scope,
     },
     runners::{CaseRunReport, CaseStatus, LocationMetrics, RequiredDestinationStatus, RunReport},
@@ -380,28 +380,16 @@ fn validate_snapshot_partition(
         }
         let mut union = BTreeSet::new();
         for loaded in reports.values() {
-            let keys = if let Some(languages) = &loaded.candidate.languages {
-                let languages = languages.iter().cloned().collect::<BTreeSet<_>>();
-                validate_report_against_promotion_scope(
-                    &loaded.report,
-                    audit,
-                    &document_languages,
-                    Some(&languages),
-                )?
-            } else {
-                validate_report_against_promotion(&loaded.report, audit)?;
-                loaded
-                    .report
-                    .documents
-                    .iter()
-                    .flat_map(|document| {
-                        document
-                            .cases
-                            .iter()
-                            .map(|case| (document.case_file.clone(), case.id.clone()))
-                    })
-                    .collect()
-            };
+            let languages = required_legacy_candidate_languages(
+                &loaded.candidate.id,
+                loaded.candidate.languages.as_deref(),
+            )?;
+            let keys = validate_report_against_promotion_scope(
+                &loaded.report,
+                audit,
+                &document_languages,
+                Some(&languages),
+            )?;
             for document in &loaded.report.documents {
                 let expected = expected_documents
                     .get(document.case_file.as_str())

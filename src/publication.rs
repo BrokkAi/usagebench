@@ -13,7 +13,7 @@ use crate::{
     freeze::{FreezeManifest, ManifestCandidate, ManifestReport, SnapshotKind},
     promotion::{
         case_memberships, promotion_case_keys, promotion_document_languages,
-        validate_report_against_promotion, validate_report_against_promotion_scope,
+        required_legacy_candidate_languages, validate_report_against_promotion_scope,
         PromotionMembership,
     },
     runners::{CaseRunReport, CaseStatus, RequiredDestinationStatus, RunReport},
@@ -735,35 +735,16 @@ fn validate_legacy_scope(
     }
     let mut union = BTreeSet::new();
     for verified in reports.values() {
-        let allowed = verified
-            .candidate
-            .languages
-            .as_ref()
-            .map(|languages| languages.iter().cloned().collect::<BTreeSet<_>>());
-        let keys = if let Some(allowed) = allowed.as_ref() {
-            validate_report_against_promotion_scope(
-                &verified.report,
-                audit,
-                &document_languages,
-                Some(allowed),
-            )?
-        } else {
-            // Historical manifests predate serialized candidate language
-            // scopes. Preserve their original full-corpus contract while new
-            // legacy manifests use the strict scoped path above.
-            validate_report_against_promotion(&verified.report, audit)?;
-            verified
-                .report
-                .documents
-                .iter()
-                .flat_map(|document| {
-                    document
-                        .cases
-                        .iter()
-                        .map(|case| (document.case_file.clone(), case.id.clone()))
-                })
-                .collect()
-        };
+        let allowed = required_legacy_candidate_languages(
+            &verified.candidate.id,
+            verified.candidate.languages.as_deref(),
+        )?;
+        let keys = validate_report_against_promotion_scope(
+            &verified.report,
+            audit,
+            &document_languages,
+            Some(&allowed),
+        )?;
         for document in &verified.report.documents {
             let expected = expected_documents
                 .get(document.case_file.as_str())
