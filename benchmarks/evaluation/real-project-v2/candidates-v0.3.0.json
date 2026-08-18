@@ -44,7 +44,7 @@
       "source": "https://developer.apple.com/xcode/",
       "profile": "adapters/lsp/apple-clangd-21.json",
       "profileSha256": "a386689abb1e83048204a1f23a7f0c9b39b575db1a548607ef119b647fa36651",
-      "resolvedVersionPrefix": "Apple clangd 21.0.0",
+      "resolvedVersionPrefix": "Apple clangd version 21.0.0",
       "advertised": true,
       "runtimeNetworking": "not required by clangd; fixture hydration is local",
       "projectHydration": "UsageBench writes compile_commands.json, opens benchmark query documents, and waits for clangd fileStatus idle in each isolated workspace"

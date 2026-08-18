@@ -88,7 +88,7 @@ jq -e '
   ([.candidates[] | select(
     .advertised
     and .id == "apple-clangd-21"
-    and .resolvedVersionPrefix == "Apple clangd 21.0.0"
+    and .resolvedVersionPrefix == "Apple clangd version 21.0.0"
   )] | length == 1)
   and ([.candidates[] | select(.id == "clangd" and (.advertised | not))] | length == 1)
 ' "$registry" >/dev/null
@@ -126,6 +126,14 @@ development_candidates="$(jq -c '.candidates' <<< "$development_scope")"
 }
 grep -Fq 'scripts/resolve-freeze-scope.sh evaluation' "$freeze_workflow" || {
   echo "freeze workflow does not consume the shared scope resolver" >&2
+  exit 1
+}
+grep -Fq 'resolved_version_prefix="$(jq -er --arg candidate "$CANDIDATE"' "$freeze_workflow" || {
+  echo "freeze workflow does not read the selected candidate version prefix" >&2
+  exit 1
+}
+grep -Fq '[[ "$actual_version" == "$resolved_version_prefix"* ]]' "$freeze_workflow" || {
+  echo "freeze workflow does not compare the candidate version prefix literally" >&2
   exit 1
 }
 grep -Fq "default: 'macos-26'" "$freeze_workflow" || {
