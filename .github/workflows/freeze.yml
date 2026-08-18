@@ -320,7 +320,7 @@ jobs:
             [[ "$candidate" == bifrost ]] && expected_cases=110
             jq -e --arg candidate "$candidate" \
               --argjson expected_cases "$expected_cases" \
-              '(.completed == true and .runner.name == $candidate and .totals.cases == $expected_cases and (.caseFiles | length > 0))' \
+              '(.completed == true and .runner.name == $candidate and .requestedTotals.plannedCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
               "$RUNNER_TEMP/legacy-output/$candidate.json" >/dev/null
             cp "$RUNNER_TEMP/legacy-output/$candidate.json" "$RUNNER_TEMP/legacy-shard/"
           done
@@ -409,6 +409,16 @@ jobs:
               [[ "$actual" == "$prefix"* ]] || { echo "Apple clangd identity drift: $actual" >&2; exit 1; }
               ;;
             roslyn)
+              # macos-26 currently exposes the preinstalled .NET 10 SDK first.
+              # Roslyn's registered profile targets net8.0, so provision the
+              # Homebrew .NET 8 keg and make that exact runtime visible to
+              # both this step and the later LSP runner step.
+              brew list --formula dotnet@8 >/dev/null 2>&1 || brew install dotnet@8
+              dotnet_root="$(brew --prefix dotnet@8)/libexec"
+              export DOTNET_ROOT="$dotnet_root"
+              export PATH="$dotnet_root:$PATH"
+              printf 'DOTNET_ROOT=%s\n' "$dotnet_root" >> "$GITHUB_ENV"
+              printf '%s\n' "$dotnet_root" >> "$GITHUB_PATH"
               dotnet_version="$(dotnet --version)"
               [[ "$dotnet_version" == 8.* ]] || { echo "Roslyn requires the registered .NET 8 runtime: $dotnet_version" >&2; exit 1; }
               roslyn_vsix="$tools/roslyn/csharp-2.140.9.vsix"
@@ -462,12 +472,19 @@ jobs:
               [[ "$node_version" == v24.* ]] || { echo "Pyright requires the registered Node 24 runtime: $node_version" >&2; exit 1; }
               ;;
             ruby-lsp)
-              brew list ruby >/dev/null 2>&1 || brew install ruby
-              ruby_prefix="$(brew --prefix ruby)"
-              echo "$ruby_prefix/bin" >> "$GITHUB_PATH"
-              export PATH="$ruby_prefix/bin:$PATH"
-              ruby_version="$(ruby --version)"
-              [[ "$ruby_version" =~ ruby\ 3\.[4-9] ]] || { echo "Ruby LSP requires a modern Ruby 3.4+ runtime: $ruby_version" >&2; exit 1; }
+              # The macos-26 image currently has Ruby 4 first on PATH.  The
+              # registered Ruby LSP profile is locked to Ruby 3.4.x, so use
+              # the keg-only Homebrew 3.4 formula explicitly in both setup
+              # and the later LSP runner step.
+              brew list --formula ruby@3.4 >/dev/null 2>&1 || brew install ruby@3.4
+              ruby_prefix="$(brew --prefix ruby@3.4)"
+              ruby_bin="$ruby_prefix/bin"
+              export PATH="$ruby_bin:$PATH"
+              ruby_version="$(ruby -e 'print RUBY_VERSION')"
+              [[ "$ruby_version" =~ ^3\.4\.[0-9]+$ ]] || { echo "Ruby LSP requires the registered Ruby 3.4.x runtime: $ruby_version" >&2; exit 1; }
+              ruby_gem_bin="$(ruby -rrubygems -e 'print Gem.bindir')"
+              export PATH="$ruby_gem_bin:$PATH"
+              printf '%s\n' "$ruby_bin" "$ruby_gem_bin" >> "$GITHUB_PATH"
               gem install --no-document bundler -v 4.0.11
               gem install --no-document ruby-lsp -v 0.26.10
               gem install --no-document debug -v 1.11.1
@@ -522,7 +539,7 @@ jobs:
           expected_cases=10
           [[ "$CANDIDATE" == typescript-language-server ]] && expected_cases=20
           jq -e --arg candidate "$CANDIDATE" --argjson expected_cases "$expected_cases" \
-            '(.completed == true and .invocation.profile == $candidate and .runner.requestedVersion != null and .totals.cases == $expected_cases and (.caseFiles | length > 0))' \
+            '(.completed == true and .invocation.profile == $candidate and .runner.requestedVersion != null and .requestedTotals.plannedCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
             "$RUNNER_TEMP/legacy-output/$CANDIDATE.json" >/dev/null
           cp "$RUNNER_TEMP/legacy-output/$CANDIDATE.json" "$RUNNER_TEMP/legacy-shard/"
           (cd "$RUNNER_TEMP/legacy-shard" && shasum -a 256 *.json > SHA256SUMS)
@@ -688,7 +705,7 @@ jobs:
             [[ "$candidate" == typescript-language-server ]] && expected_cases=20
             jq -e --arg candidate "$candidate" --arg revision "$REVISION" --arg version "$SNAPSHOT_VERSION" \
               --argjson expected_cases "$expected_cases" \
-              '(.completed == true and ((.runner.name == "bifrost" and $candidate == "bifrost") or .invocation.profile == $candidate) and .usagebenchRevision == $revision and .usagebenchRelease == $version and .totals.cases == $expected_cases and (.caseFiles | length > 0))' \
+              '(.completed == true and ((.runner.name == "bifrost" and $candidate == "bifrost") or .invocation.profile == $candidate) and .usagebenchRevision == $revision and .usagebenchRelease == $version and .requestedTotals.plannedCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
               "$report_root/$candidate.json" >/dev/null
           done
           [[ "$(find "$report_root" -maxdepth 1 -type f -name '*.json' | wc -l | tr -d ' ')" == "11" ]] || {
