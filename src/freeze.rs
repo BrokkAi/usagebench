@@ -7,7 +7,11 @@
 
 use crate::{
     evaluation::{validate_report_against_release_audit, EvaluationReleaseAudit},
-    promotion::{build_promotion_audit, validate_report_against_promotion, LegacyPromotionAudit},
+    promotion::{
+        build_promotion_audit, promotion_case_keys, promotion_document_languages,
+        registered_candidate_languages, validate_report_against_promotion_scope,
+        LegacyPromotionAudit,
+    },
     runners::{DocumentRunReport, ExecutionMode, PlatformScope, RunReport, RunnerMetadata},
     CorpusPartition, CorpusSelection, GroundTruthReviewStatus,
 };
@@ -186,6 +190,11 @@ pub struct ManifestCandidate {
     pub profile: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile_sha256: Option<String>,
+    /// Registered language scope for new legacy-promoted manifests.  `None`
+    /// remains accepted when reading historical manifests from before
+    /// language-scoped legacy reports were introduced.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub languages: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resolved_version_prefix: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -243,22 +252,31 @@ fn create_manifest_inner(
             .map(|timings| &mut timings.corpus_hashing_and_validation_ms),
         "corpus hashing and validation",
     );
-    let (evaluation_audit, legacy_promotion_audit) = match options.snapshot_kind {
-        SnapshotKind::Development => (None, None),
-        SnapshotKind::Evaluation => {
-            let corpus = options.evaluation_corpus.as_deref().context(
+    let (evaluation_audit, legacy_promotion_audit, legacy_document_languages) =
+        match options.snapshot_kind {
+            SnapshotKind::Development => (None, None, None),
+            SnapshotKind::Evaluation => {
+                let corpus = options.evaluation_corpus.as_deref().context(
                 "evaluation snapshots require --evaluation-corpus pointing to the promoted corpus",
             )?;
-            (Some(crate::evaluation::build_release_audit(corpus)?), None)
-        }
-        SnapshotKind::LegacyPromoted => {
-            let manifest = options
-                .promotion_manifest
-                .as_deref()
-                .context("legacy-promoted snapshots require --promotion-manifest")?;
-            (None, Some(build_promotion_audit(manifest)?))
-        }
-    };
+                (
+                    Some(crate::evaluation::build_release_audit(corpus)?),
+                    None,
+                    None,
+                )
+            }
+            SnapshotKind::LegacyPromoted => {
+                let manifest = options
+                    .promotion_manifest
+                    .as_deref()
+                    .context("legacy-promoted snapshots require --promotion-manifest")?;
+                (
+                    None,
+                    Some(build_promotion_audit(manifest)?),
+                    Some(promotion_document_languages(manifest)?),
+                )
+            }
+        };
     drop(corpus_timer);
     if options.candidate_ids.len() != options.report_paths.len() {
         bail!(
@@ -274,6 +292,9 @@ fn create_manifest_inner(
         "candidate registry validation",
     );
     let registry = load_registry(&options.candidates_file)?;
+    let registry_root = (options.snapshot_kind == SnapshotKind::LegacyPromoted)
+        .then(|| crate::find_repo_root_for_path(&options.candidates_file))
+        .transpose()?;
     drop(candidate_registry_timer);
     let mut known_candidates = HashMap::new();
     for candidate in registry.candidates {
@@ -290,6 +311,7 @@ fn create_manifest_inner(
     let mut reports = Vec::new();
     let mut documents = Vec::new();
     let mut contract: Option<ScoringContract> = None;
+    let mut legacy_case_keys = BTreeSet::new();
 
     let report_timer = PhaseTimer::new(
         timings
@@ -325,7 +347,26 @@ fn create_manifest_inner(
             validate_report_against_release_audit(&report, audit, &candidate.id)?;
         }
         if let Some(audit) = &legacy_promotion_audit {
-            validate_report_against_promotion(&report, audit)?;
+            let registry_root = registry_root
+                .as_deref()
+                .expect("legacy-promoted snapshots resolve a candidate registry root");
+            let languages = registered_candidate_languages(
+                registry_root,
+                match candidate.runner {
+                    CandidateRunner::Bifrost => "bifrost",
+                    CandidateRunner::Lsp => "lsp",
+                },
+                candidate.profile.as_deref(),
+            )?;
+            let document_languages = legacy_document_languages
+                .as_ref()
+                .expect("legacy promotion document languages were constructed");
+            legacy_case_keys.extend(validate_report_against_promotion_scope(
+                &report,
+                audit,
+                document_languages,
+                languages.as_ref(),
+            )?);
         }
         let report_contract = ScoringContract {
             benchmark_case_schema_version: 2,
@@ -358,7 +399,31 @@ fn create_manifest_inner(
             case_files: report.case_files,
             totals: report.totals,
         });
-        candidates.push(manifest_candidate(candidate));
+        let candidate_languages = if legacy_promotion_audit.is_some() {
+            let registry_root = registry_root
+                .as_deref()
+                .expect("legacy-promoted snapshots resolve a candidate registry root");
+            let languages = registered_candidate_languages(
+                registry_root,
+                match candidate.runner {
+                    CandidateRunner::Bifrost => "bifrost",
+                    CandidateRunner::Lsp => "lsp",
+                },
+                candidate.profile.as_deref(),
+            )?;
+            let document_languages = legacy_document_languages
+                .as_ref()
+                .expect("legacy promotion document languages were constructed");
+            Some(
+                languages
+                    .unwrap_or_else(|| document_languages.values().cloned().collect())
+                    .into_iter()
+                    .collect(),
+            )
+        } else {
+            None
+        };
+        candidates.push(manifest_candidate(candidate, candidate_languages));
     }
     drop(report_timer);
 
@@ -387,6 +452,9 @@ fn create_manifest_inner(
                 bail!(
                     "legacy-promoted reports must contain exactly the promotion manifest documents"
                 );
+            }
+            if legacy_case_keys != promotion_case_keys(audit) {
+                bail!("legacy-promoted reports must union to exactly the promotion manifest cases");
             }
         }
         SnapshotKind::Evaluation => {
@@ -740,7 +808,7 @@ fn validate_development_corpus(corpus: &[ManifestDocument]) -> Result<()> {
     Ok(())
 }
 
-fn manifest_candidate(candidate: &Candidate) -> ManifestCandidate {
+fn manifest_candidate(candidate: &Candidate, languages: Option<Vec<String>>) -> ManifestCandidate {
     ManifestCandidate {
         id: candidate.id.clone(),
         runner: match candidate.runner {
@@ -755,6 +823,7 @@ fn manifest_candidate(candidate: &Candidate) -> ManifestCandidate {
         module_checksum: candidate.module_checksum.clone(),
         profile: candidate.profile.clone(),
         profile_sha256: candidate.profile_sha256.clone(),
+        languages,
         resolved_version_prefix: candidate.resolved_version_prefix.clone(),
         reference_runner: candidate.reference_runner.clone(),
         advertised: candidate.advertised,

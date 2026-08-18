@@ -37,6 +37,41 @@ case_directory="$(cd "$corpus_root/$case_path" && pwd -P)"
   exit 1
 }
 
+# A legacy-promoted run may use a temporary, filtered execution view.  Keep
+# the immutable release corpus as the validation root: its historical source
+# bytes must remain available to --promotion-manifest while reports execute
+# against exactly the 110 balanced-core IDs.  Both roots carry the same
+# release metadata and report paths remain canonical relative to the runner
+# root.
+if [[ "$SNAPSHOT_KIND" == "legacy-promoted" ]]; then
+  [[ -n "${FREEZE_EXECUTION_CORPUS_ROOT:-}" ]] || {
+    echo "legacy-promoted execution requires a filtered execution corpus" >&2
+    exit 1
+  }
+elif [[ -n "${FREEZE_EXECUTION_CORPUS_ROOT:-}" ]]; then
+  echo "filtered execution corpus is only valid for legacy-promoted snapshots" >&2
+  exit 1
+fi
+runner_corpus_root="${FREEZE_EXECUTION_CORPUS_ROOT:-$corpus_root}"
+runner_corpus_root="$(cd "$runner_corpus_root" && pwd -P)"
+[[ -f "$runner_corpus_root/.usagebench-release.json" ]] || {
+  echo "execution corpus lacks released-corpus metadata" >&2
+  exit 1
+}
+cmp -s "$corpus_root/.usagebench-release.json" "$runner_corpus_root/.usagebench-release.json" || {
+  echo "execution corpus metadata does not match immutable release corpus" >&2
+  exit 1
+}
+[[ -d "$runner_corpus_root/$case_path" ]] || {
+  echo "case path is missing from the execution corpus: $case_path" >&2
+  exit 1
+}
+runner_case_directory="$(cd "$runner_corpus_root/$case_path" && pwd -P)"
+[[ "$runner_case_directory" == "$runner_corpus_root/"* ]] || {
+  echo "case path resolves outside the execution corpus: $case_path" >&2
+  exit 1
+}
+
 mkdir -p "$output_directory"
 IFS=',' read -r -a candidate_ids <<< "$candidate_input"
 [[ "${#candidate_ids[@]}" -gt 0 ]] || usage
@@ -70,7 +105,7 @@ for candidate_id in "${candidate_ids[@]}"; do
     bifrost_revision="$(jq -er '.revision' <<< "$candidate")"
     set +e
     bifrost_args=(
-      run-bifrost "$case_directory"
+      run-bifrost "$runner_case_directory"
       --bifrost-repo "$NATIVE_BIFROST_REPO"
       --bifrost-commit "$bifrost_revision"
       --work-dir "$output_directory/$candidate_id-work"
@@ -79,7 +114,7 @@ for candidate_id in "${candidate_ids[@]}"; do
     if [[ -n "${FREEZE_SHARD_LANGUAGE:-}" ]]; then
       bifrost_args+=(--language "$FREEZE_SHARD_LANGUAGE")
     fi
-    cargo run --locked --manifest-path "$corpus_root/Cargo.toml" -- "${bifrost_args[@]}"
+    cargo run --locked --manifest-path "$runner_corpus_root/Cargo.toml" -- "${bifrost_args[@]}"
     status=$?
     set -e
     [[ -f "$output_directory/$candidate_id.json" ]] || {
@@ -98,7 +133,7 @@ for candidate_id in "${candidate_ids[@]}"; do
     "$source_root/scripts/reference-image.sh" "$reference_runner" "$SNAPSHOT_VERSION" "$revision"
     set +e
     "$source_root/scripts/run-reference.sh" \
-      "$reference_runner" "$corpus_root" "$output_directory/$candidate_id.json" "$case_path"
+      "$reference_runner" "$runner_corpus_root" "$output_directory/$candidate_id.json" "$case_path"
     status=$?
     set -e
     [[ -f "$output_directory/$candidate_id.json" ]] || {
@@ -115,14 +150,14 @@ for candidate_id in "${candidate_ids[@]}"; do
       exit 1
     }
     profile="$(jq -er '.profile' <<< "$candidate")"
-    [[ "$profile" =~ ^adapters/lsp/[A-Za-z0-9._-]+\.json$ && -f "$corpus_root/$profile" ]] || {
+    [[ "$profile" =~ ^adapters/lsp/[A-Za-z0-9._-]+\.json$ && -f "$runner_corpus_root/$profile" ]] || {
       echo "candidate $candidate_id has an unsafe or missing LSP profile" >&2
       exit 1
     }
     set +e
-    cargo run --locked --manifest-path "$corpus_root/Cargo.toml" -- \
-      run-lsp "$corpus_root/$case_path" \
-      --profile "$corpus_root/$profile" \
+    cargo run --locked --manifest-path "$runner_corpus_root/Cargo.toml" -- \
+      run-lsp "$runner_corpus_root/$case_path" \
+      --profile "$runner_corpus_root/$profile" \
       --work-dir "$output_directory/$candidate_id-work" \
       --output "$output_directory/$candidate_id.json"
     status=$?
@@ -158,5 +193,16 @@ freeze_args=(
 )
 if [[ "$SNAPSHOT_KIND" == "evaluation" ]]; then
   freeze_args+=(--evaluation-corpus "$corpus_root/$case_path")
+elif [[ "$SNAPSHOT_KIND" == "legacy-promoted" ]]; then
+  promotion_manifest="${FREEZE_PROMOTION_MANIFEST:-benchmarks/promotion/legacy-v1/manifest.json}"
+  [[ "$promotion_manifest" == "benchmarks/promotion/legacy-v1/manifest.json" ]] || {
+    echo "legacy-promoted freezes are bound to benchmarks/promotion/legacy-v1/manifest.json" >&2
+    exit 1
+  }
+  [[ -f "$corpus_root/$promotion_manifest" ]] || {
+    echo "legacy promotion manifest is missing from the immutable corpus" >&2
+    exit 1
+  }
+  freeze_args+=(--promotion-manifest "$corpus_root/$promotion_manifest")
 fi
 cargo run --locked --manifest-path "$source_root/Cargo.toml" -- "${freeze_args[@]}"

@@ -4,9 +4,19 @@ name: Docs
 on:
   workflow_dispatch:
     inputs:
-      release_tag:
-        description: 'Immutable benchmark release whose verified results feed this publication'
+      v1_release_tag:
+        description: 'Immutable release containing the published real-project-v1 snapshot'
         required: true
+        default: 'v0.2.0'
+        type: string
+      v2_release_tag:
+        description: 'Immutable release containing the published real-project-v2 snapshot'
+        required: true
+        default: 'v0.3.0'
+        type: string
+      legacy_release_tag:
+        description: 'Optional immutable release containing the legacy_promoted snapshot'
+        required: false
         type: string
 
 permissions: {}
@@ -24,7 +34,9 @@ jobs:
       contents: read
     timeout-minutes: 30
     env:
-      RELEASE_TAG: ${{ inputs.release_tag }}
+      V1_RELEASE_TAG: ${{ inputs.v1_release_tag }}
+      V2_RELEASE_TAG: ${{ inputs.v2_release_tag }}
+      LEGACY_RELEASE_TAG: ${{ inputs.legacy_release_tag }}
     steps:
       - name: Checkout source
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -39,20 +51,33 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
-            echo "release tag must match vMAJOR.MINOR.PATCH: $RELEASE_TAG" >&2
-            exit 1
-          }
-          release_revision="$(git rev-parse --verify "refs/tags/$RELEASE_TAG^{}")"
           git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
-          git merge-base --is-ancestor "$release_revision" refs/remotes/origin/main || {
-            echo "release $RELEASE_TAG is not reachable from origin/main" >&2
-            exit 1
-          }
-          {
-            echo "revision=$release_revision"
-            echo "bundle_root=$RUNNER_TEMP/publication-extracted/usagebench-$RELEASE_TAG"
-          } >> "$GITHUB_OUTPUT"
+          for item in "v1:$V1_RELEASE_TAG" "v2:$V2_RELEASE_TAG"; do
+            slot="${item%%:*}"
+            tag="${item#*:}"
+            [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "$slot release tag must match vMAJOR.MINOR.PATCH: $tag" >&2
+              exit 1
+            }
+            revision="$(git rev-parse --verify "refs/tags/$tag^{}")"
+            git merge-base --is-ancestor "$revision" refs/remotes/origin/main || {
+              echo "$slot release $tag is not reachable from origin/main" >&2
+              exit 1
+            }
+            echo "${slot}_revision=$revision" >> "$GITHUB_OUTPUT"
+          done
+          if [[ -n "$LEGACY_RELEASE_TAG" ]]; then
+            [[ "$LEGACY_RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "legacy release tag must match vMAJOR.MINOR.PATCH: $LEGACY_RELEASE_TAG" >&2
+              exit 1
+            }
+            legacy_revision="$(git rev-parse --verify "refs/tags/$LEGACY_RELEASE_TAG^{}")"
+            git merge-base --is-ancestor "$legacy_revision" refs/remotes/origin/main || {
+              echo "legacy release $LEGACY_RELEASE_TAG is not reachable from origin/main" >&2
+              exit 1
+            }
+            echo "legacy_revision=$legacy_revision" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Download immutable publication bundle
         env:
@@ -60,30 +85,39 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/publication"
-          archive="usagebench-${RELEASE_TAG}.tar.gz"
-          gh release download "$RELEASE_TAG" \
-            --repo "$GITHUB_REPOSITORY" \
-            --pattern "$archive" \
-            --pattern "$archive.sha256" \
-            --dir "$RUNNER_TEMP/publication"
-          [[ -f "$RUNNER_TEMP/publication/$archive" && -f "$RUNNER_TEMP/publication/$archive.sha256" ]] || {
-            echo "release did not provide the expected archive and checksum" >&2
-            exit 1
+          download_and_validate() {
+            local slot="$1"
+            local tag="$2"
+            local revision="$3"
+            local download_dir="$RUNNER_TEMP/publication/$slot"
+            local extract_dir="$RUNNER_TEMP/publication-extracted/$slot"
+            local archive="usagebench-${tag}.tar.gz"
+            mkdir -p "$download_dir" "$RUNNER_TEMP/publication-extracted"
+            gh release download "$tag" \
+              --repo "$GITHUB_REPOSITORY" \
+              --pattern "$archive" \
+              --pattern "$archive.sha256" \
+              --dir "$download_dir"
+            [[ -f "$download_dir/$archive" && -f "$download_dir/$archive.sha256" ]] || {
+              echo "$slot release did not provide the expected archive and checksum" >&2
+              exit 1
+            }
+            validation_args=(
+              --archive "$download_dir/$archive"
+              --checksum "$download_dir/$archive.sha256"
+              --extract-to "$extract_dir"
+              --tag "$tag" --revision "$revision"
+            )
+            if [[ "$slot" == v1 ]]; then
+              validation_args+=(--historical-v1)
+            fi
+            python3 scripts/validate-publication-bundle.py "${validation_args[@]}"
           }
-
-      - name: Verify immutable reports and generated result provenance
-        shell: bash
-        env:
-          RELEASE_REVISION: ${{ steps.release.outputs.revision }}
-        run: |
-          set -euo pipefail
-          archive="$RUNNER_TEMP/publication/usagebench-${RELEASE_TAG}.tar.gz"
-          checksum="$archive.sha256"
-          python3 scripts/validate-publication-bundle.py \
-            --archive "$archive" --checksum "$checksum" \
-            --extract-to "$RUNNER_TEMP/publication-extracted" \
-            --tag "$RELEASE_TAG" --revision "$RELEASE_REVISION"
+          download_and_validate v1 "$V1_RELEASE_TAG" "${{ steps.release.outputs.v1_revision }}"
+          download_and_validate v2 "$V2_RELEASE_TAG" "${{ steps.release.outputs.v2_revision }}"
+          if [[ -n "$LEGACY_RELEASE_TAG" ]]; then
+            download_and_validate legacy "$LEGACY_RELEASE_TAG" "${{ steps.release.outputs.legacy_revision }}"
+          fi
 
       - name: Set up Rust for generator drift check
         uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
@@ -92,14 +126,34 @@ jobs:
 
       - name: Reject generated result drift
         shell: bash
-        env:
-          RELEASE_REVISION: ${{ steps.release.outputs.revision }}
         run: |
           set -euo pipefail
-          bundle="$RUNNER_TEMP/publication-extracted/usagebench-${RELEASE_TAG}"
-          cargo run --locked --manifest-path "$bundle/Cargo.toml" -- generate-results \
-            --manifest "$bundle/evidence/freeze-manifest.json" \
-            --output-directory "$bundle/results" --check
+          for bundle in \
+            "$RUNNER_TEMP/publication-extracted/v1/usagebench-${V1_RELEASE_TAG}" \
+            "$RUNNER_TEMP/publication-extracted/v2/usagebench-${V2_RELEASE_TAG}"; do
+            cargo run --locked --manifest-path "$bundle/Cargo.toml" -- generate-results \
+              --manifest "$bundle/evidence/freeze-manifest.json" \
+              --output-directory "$bundle/results" --check
+          done
+          if [[ -n "$LEGACY_RELEASE_TAG" ]]; then
+            bundle="$RUNNER_TEMP/publication-extracted/legacy/usagebench-${LEGACY_RELEASE_TAG}"
+            cargo run --locked --manifest-path "$bundle/Cargo.toml" -- generate-results \
+              --manifest "$bundle/evidence/freeze-manifest.json" \
+              --output-directory "$bundle/results" --check
+          fi
+
+      - name: Generate evidence map from immutable bundles
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle_args=(
+            --bundle "$RUNNER_TEMP/publication-extracted/v1/usagebench-${V1_RELEASE_TAG}"
+            --bundle "$RUNNER_TEMP/publication-extracted/v2/usagebench-${V2_RELEASE_TAG}"
+          )
+          if [[ -n "$LEGACY_RELEASE_TAG" ]]; then
+            bundle_args+=(--bundle "$RUNNER_TEMP/publication-extracted/legacy/usagebench-${LEGACY_RELEASE_TAG}")
+          fi
+          python3 scripts/generate-docs-evidence.py "${bundle_args[@]}"
 
       - name: Set up Node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
@@ -117,7 +171,16 @@ jobs:
         working-directory: docs
 
       - name: Check generated evidence map
-        run: npm run evidence:check
+        run: |
+          set -euo pipefail
+          bundle_args=(
+            --bundle "$RUNNER_TEMP/publication-extracted/v1/usagebench-${V1_RELEASE_TAG}"
+            --bundle "$RUNNER_TEMP/publication-extracted/v2/usagebench-${V2_RELEASE_TAG}"
+          )
+          if [[ -n "$LEGACY_RELEASE_TAG" ]]; then
+            bundle_args+=(--bundle "$RUNNER_TEMP/publication-extracted/legacy/usagebench-${LEGACY_RELEASE_TAG}")
+          fi
+          python3 ../scripts/generate-docs-evidence.py --check "${bundle_args[@]}"
         working-directory: docs
 
       - name: Check internal documentation links
@@ -130,7 +193,7 @@ jobs:
         env:
           PUBLIC_DOCS_SITE: https://brokkai.github.io
           PUBLIC_DOCS_BASE: /usagebench
-          USAGEBENCH_PUBLICATION_BUNDLE: ${{ steps.release.outputs.bundle_root }}
+          USAGEBENCH_PUBLICATION_BUNDLE: ${{ runner.temp }}/publication-extracted/v2/usagebench-${{ inputs.v2_release_tag }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

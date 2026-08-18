@@ -11,7 +11,11 @@
 use crate::{
     evaluation::{safe_repo_relative_path, validate_report_against_release_audit},
     freeze::{FreezeManifest, ManifestCandidate, ManifestReport, SnapshotKind},
-    promotion::{case_memberships, validate_report_against_promotion, PromotionMembership},
+    promotion::{
+        case_memberships, promotion_case_keys, promotion_document_languages,
+        required_legacy_candidate_languages, validate_report_against_promotion_scope,
+        PromotionMembership,
+    },
     runners::{CaseRunReport, CaseStatus, RequiredDestinationStatus, RunReport},
     CorpusPartition, CorpusSelection,
 };
@@ -514,7 +518,7 @@ fn load_verified_snapshot(path: &Path, input: &PublicationSliceInput) -> Result<
             bail!("freeze manifest contains duplicate report candidate IDs");
         }
     }
-    validate_scope(&manifest, &reports)?;
+    validate_scope(&manifest, &reports, &path)?;
 
     if let Some(audit) = &manifest.evaluation_audit {
         let first_case = audit
@@ -559,9 +563,6 @@ fn load_verified_snapshot(path: &Path, input: &PublicationSliceInput) -> Result<
         if rebuilt != *audit {
             bail!("legacy promotion audit does not match hash-verified evidence");
         }
-        for verified in reports.values() {
-            validate_report_against_promotion(&verified.report, audit)?;
-        }
         case_memberships(&promotion_path)?
             .into_iter()
             .map(|(key, membership)| {
@@ -590,7 +591,11 @@ fn load_verified_snapshot(path: &Path, input: &PublicationSliceInput) -> Result<
 fn validate_scope(
     manifest: &FreezeManifest,
     reports: &BTreeMap<String, VerifiedReport>,
+    manifest_path: &Path,
 ) -> Result<()> {
+    if manifest.snapshot_kind == SnapshotKind::LegacyPromoted {
+        return validate_legacy_scope(manifest, reports, manifest_path);
+    }
     let expected_files = manifest
         .corpus
         .iter()
@@ -692,6 +697,88 @@ fn validate_scope(
         } else {
             expected = Some(actual);
         }
+    }
+    Ok(())
+}
+
+fn validate_legacy_scope(
+    manifest: &FreezeManifest,
+    reports: &BTreeMap<String, VerifiedReport>,
+    manifest_path: &Path,
+) -> Result<()> {
+    let audit = manifest
+        .legacy_promotion_audit
+        .as_ref()
+        .context("legacy-promoted snapshot is missing its promotion audit")?;
+    let root = crate::find_repo_root_for_path(manifest_path)?;
+    let promotion_path = root.join(safe_repo_relative_path(
+        &audit.manifest.file,
+        "promotion manifest",
+    )?);
+    let document_languages = promotion_document_languages(&promotion_path)?;
+    let expected_documents = manifest
+        .corpus
+        .iter()
+        .map(|document| {
+            (
+                document.case_file.as_str(),
+                (
+                    document.language.as_str(),
+                    document.partition,
+                    document.selection,
+                ),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    if expected_documents.len() != manifest.corpus.len() {
+        bail!("freeze manifest contains duplicate corpus documents");
+    }
+    let mut union = BTreeSet::new();
+    for verified in reports.values() {
+        let allowed = required_legacy_candidate_languages(
+            &verified.candidate.id,
+            verified.candidate.languages.as_deref(),
+        )?;
+        let keys = validate_report_against_promotion_scope(
+            &verified.report,
+            audit,
+            &document_languages,
+            Some(&allowed),
+        )?;
+        for document in &verified.report.documents {
+            let expected = expected_documents
+                .get(document.case_file.as_str())
+                .with_context(|| {
+                    format!(
+                        "report {} contains unknown corpus document {}",
+                        verified.manifest_report.file, document.case_file
+                    )
+                })?;
+            if expected
+                != &(
+                    document.language.as_str(),
+                    document.corpus_partition,
+                    document.corpus_selection,
+                )
+            {
+                bail!(
+                    "report {} corpus metadata drifted for {}",
+                    verified.manifest_report.file,
+                    document.case_file
+                );
+            }
+        }
+        union.extend(keys);
+    }
+    if expected_documents.len() != audit.case_ids_by_file.len()
+        || expected_documents
+            .keys()
+            .any(|file| !audit.case_ids_by_file.contains_key(*file))
+    {
+        bail!("legacy freeze corpus documents drift from the promotion manifest");
+    }
+    if union != promotion_case_keys(audit) {
+        bail!("legacy reports do not union to exactly the promotion manifest cases");
     }
     Ok(())
 }

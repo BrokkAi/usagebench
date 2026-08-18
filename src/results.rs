@@ -12,6 +12,10 @@ use crate::{
         validate_canonical_environment, FreezeManifest, ManifestCandidate,
         FREEZE_MANIFEST_SCHEMA_VERSION,
     },
+    promotion::{
+        promotion_case_keys, promotion_document_languages, required_legacy_candidate_languages,
+        validate_report_against_promotion_scope,
+    },
     runners::{CaseRunReport, CaseStatus, LocationMetrics, RequiredDestinationStatus, RunReport},
 };
 use anyhow::{bail, Context, Result};
@@ -248,7 +252,7 @@ fn load_snapshot(manifest_path: &Path) -> Result<Snapshot> {
     if reports.len() != manifest.candidates.len() {
         bail!("freeze manifest does not contain one report for every candidate");
     }
-    validate_snapshot_partition(&manifest, &reports)?;
+    validate_snapshot_partition(manifest_path, &manifest, &reports)?;
     Ok(Snapshot {
         manifest,
         manifest_checksum: hex_digest(&manifest_bytes),
@@ -334,6 +338,7 @@ fn validate_rebuilt_audit(
 }
 
 fn validate_snapshot_partition(
+    manifest_path: &Path,
     manifest: &FreezeManifest,
     reports: &BTreeMap<String, LoadedReport>,
 ) -> Result<()> {
@@ -345,8 +350,72 @@ fn validate_snapshot_partition(
             .legacy_promotion_audit
             .as_ref()
             .expect("promotion audit presence was validated");
+        let root = crate::find_repo_root_for_path(manifest_path)?;
+        let promotion_path = root.join(safe_repo_relative_path(
+            &audit.manifest.file,
+            "promotion manifest",
+        )?);
+        let document_languages = promotion_document_languages(&promotion_path)?;
+        let expected_documents = manifest
+            .corpus
+            .iter()
+            .map(|document| {
+                (
+                    document.case_file.as_str(),
+                    (
+                        document.language.as_str(),
+                        document.partition,
+                        document.selection,
+                    ),
+                )
+            })
+            .collect::<BTreeMap<_, _>>();
+        if expected_documents.len() != manifest.corpus.len()
+            || expected_documents.len() != audit.case_ids_by_file.len()
+            || expected_documents
+                .keys()
+                .any(|file| !audit.case_ids_by_file.contains_key(*file))
+        {
+            bail!("legacy freeze corpus documents drift from the promotion manifest");
+        }
+        let mut union = BTreeSet::new();
         for loaded in reports.values() {
-            crate::promotion::validate_report_against_promotion(&loaded.report, audit)?;
+            let languages = required_legacy_candidate_languages(
+                &loaded.candidate.id,
+                loaded.candidate.languages.as_deref(),
+            )?;
+            let keys = validate_report_against_promotion_scope(
+                &loaded.report,
+                audit,
+                &document_languages,
+                Some(&languages),
+            )?;
+            for document in &loaded.report.documents {
+                let expected = expected_documents
+                    .get(document.case_file.as_str())
+                    .with_context(|| {
+                        format!(
+                            "report contains unknown legacy corpus document {}",
+                            document.case_file
+                        )
+                    })?;
+                if expected
+                    != &(
+                        document.language.as_str(),
+                        document.corpus_partition,
+                        document.corpus_selection,
+                    )
+                {
+                    bail!(
+                        "legacy report corpus metadata drifted for {}",
+                        document.case_file
+                    );
+                }
+            }
+            union.extend(keys);
+        }
+        if union != promotion_case_keys(audit) {
+            bail!("legacy reports do not union to exactly the promotion manifest cases");
         }
         return Ok(());
     }
@@ -1758,7 +1827,9 @@ mod tests {
             ),
         ]);
 
-        let error = validate_snapshot_partition(&manifest, &reports).unwrap_err();
+        let error =
+            validate_snapshot_partition(Path::new("freeze-manifest.json"), &manifest, &reports)
+                .unwrap_err();
 
         assert!(error.to_string().contains("substituted"));
     }
@@ -1990,6 +2061,7 @@ mod tests {
             module_checksum: None,
             profile: (runner == "lsp").then(|| format!("adapters/lsp/{id}.json")),
             profile_sha256: None,
+            languages: None,
             resolved_version_prefix: None,
             reference_runner: Some(id.to_string()),
             advertised: true,

@@ -13,7 +13,7 @@ The shortest honest answer is currently the published `real-project-v1` result: 
 | --- | --- | --- | ---: | --- |
 | Prospective v1 | `real-project-v1` · `v0.2.0` | `prospective_pre_registered` · `human_adjudicated_agent_panel` | 36 cases (12 per profile) | Historical release; [current v1 result](../) |
 | Prospective v2 | `real-project-v2` · no result release yet | `prospective_pre_registered` · `human_adjudicated_agent_panel` | 36 cases (12 per profile) | Awaiting an immutable result report |
-| Reviewed legacy core | `legacy-promotion-v1-balanced-core` | `retrospectively_selected` · `legacy_promoted` | 110 cases (10 × 11 languages) | Awaiting an immutable result report |
+| Reviewed legacy core | `legacy-promotion-v1-balanced-core` · no result release yet | `retrospectively_selected` · `legacy_promoted` | 110 cases (10 × 11 languages) | Awaiting an immutable result report |
 
 The denominators above are not interchangeable. In particular, v1 and v2 are prospective source-only selections, while the legacy core is a separately frozen retrospective promotion of analyzer-informed development cases. A later report may present a documented stratified aggregate, but it may not flatten these trust tiers into one accuracy score.
 
@@ -48,6 +48,16 @@ The immutable promotion is `legacy-promotion-v1-balanced-core`. Its balanced cor
 | scala | 10 |
 | typescript | 10 |
 
+## Immutable report provenance
+
+The entries below are derived only from checksum-verified release bundles. The generated result pages remain the score authority; this index records their exact release, snapshot, manifest, and report identities without retyping score totals.
+
+| Slice | Release | Revision | Freeze manifest SHA-256 | Report artifacts |
+| --- | --- | --- | --- | --- |
+| v1 | `v0.2.0` | — | — | historical release; bundle not supplied in this generation |
+| v2 | — | — | — | pending immutable bundle |
+| legacy | — | — | — | pending immutable bundle |
+
 ## Remaining development evidence
 
 The checked-in development corpus contains **160 cases**. The reviewed legacy core accounts for 110; the 50 cases outside that core comprise 42 frozen overflow candidates, 6 unsupported/not-planned controls, and 2 semantic-pack cases. This remainder is retained for regression and diagnosis; it is not silently added to v1, v2, or the legacy denominator.
@@ -57,6 +67,6 @@ The checked-in development corpus contains **160 cases**. The reviewed legacy co
 - Prospective v1 and v2 keep separate profile/language denominators; v2 permits only documented stratified aggregation.
 - The legacy manifest records `retrospectively_selected`, `legacy_promoted`, `source_only`, and `analyzerOutcomeUse: forbidden`; re-review cannot make the source contract preregistered.
 - Controls and overflow remain explicit partitions and cannot enter the balanced-core score.
-- Score tables must be generated from a checksum-verified immutable report artifact bound to the matching manifest. This page therefore reports readiness, not guessed scores, for v2 and legacy.
+- Score tables must be generated from a checksum-verified immutable report artifact bound to the matching manifest. This page records published provenance when such a bundle is supplied and otherwise reports readiness, never guessed scores.
 
 Manifest provenance is machine-readable in `docs/src/data/evidence.json` and is checked in CI with `scripts/generate-docs-evidence.py --check`. See the [current v1 result](../), the [historical development result](../development-2026-07-24/), and the [human ground-truth audit](../../ground-truth-review/) for retained historical evidence.

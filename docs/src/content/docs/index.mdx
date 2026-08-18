@@ -12,10 +12,13 @@ import evidence from '../../data/evidence.json';
   <span>Short answer</span>
   <strong>Published v1 is near parity; the broader evidence is deliberately stratified.</strong>
   <p>
-    The immutable v1 result reports Bifrost at <b>25 of 36 cases (69.4%)</b>
-    under the strict contract, versus <b>26 of 36 (72.2%)</b> for the reference
-    servers. Independent v2 and reviewed-legacy report artifacts are not yet
-    checked in, so they are shown as frozen evidence scope—not guessed scores.
+    The immutable v1 result and its generated comparison page are the authority
+    for v1 scores. {evidence.slices.v2.result.status === 'published_immutable_release'
+      ? `The independent v2 result is published from ${evidence.slices.v2.result.release}; its generated report pages and hashes remain separately identified.`
+      : 'Independent v2 report artifacts are not yet available, so v2 is shown as frozen evidence scope—not a guessed score.'}
+    {evidence.slices.legacy.result.status === 'published_immutable_release'
+      ? ` The reviewed legacy core is published from ${evidence.slices.legacy.result.release} as retrospective evidence.`
+      : ' The reviewed legacy core remains pending a separately verified release.'}
   </p>
 </div>
 
@@ -28,12 +31,12 @@ import evidence from '../../data/evidence.json';
   <div class="evidence-summary__item evidence-summary__item--pending">
     <span>Prospective v2</span>
     <strong>{evidence.slices.v2.caseCount}<small> cases</small></strong>
-    <p>Three independent profiles; awaiting checksum-verified result reports</p>
+    <p>{evidence.slices.v2.result.status === 'published_immutable_release' ? `Immutable result ${evidence.slices.v2.result.release}` : 'Three independent profiles; awaiting checksum-verified result reports'}</p>
   </div>
   <div class="evidence-summary__item evidence-summary__item--retrospective">
     <span>Reviewed legacy core</span>
     <strong>{evidence.slices.legacy.caseCount}<small> cases</small></strong>
-    <p>{evidence.slices.legacy.perLanguage} × {evidence.slices.legacy.languageCount} languages; retrospective only</p>
+    <p>{evidence.slices.legacy.perLanguage} × {evidence.slices.legacy.languageCount} languages; {evidence.slices.legacy.result.status === 'published_immutable_release' ? `immutable result ${evidence.slices.legacy.result.release}` : 'retrospective only; report pending'}</p>
   </div>
   <div class="evidence-summary__item evidence-summary__item--development">
     <span>Remaining development</span>
@@ -47,86 +50,23 @@ import evidence from '../../data/evidence.json';
   language denominator, the frozen manifest checksums, and the safeguards that
   keep v1, v2, the reviewed legacy core, controls, overflow, and development
   cases from being pooled. The v1 score below is historical release evidence;
-  all future score tables must be generated from checksum-verified reports.
+  v2 and legacy status/provenance are derived from immutable bundles when
+  supplied; all score tables must be generated from checksum-verified reports.
 </div>
 
-<div class="result-summary result-summary--headline" aria-label="Headline evaluation comparison">
-  <div class="result-metric">
-    <span>Full strict contract</span>
-    <div class="metric-comparison">
-      <div class="metric-side metric-side--bifrost">
-        <span>Bifrost</span>
-        <strong>25<small>/36</small></strong>
-      </div>
-      <div class="metric-side metric-side--reference">
-        <span>Reference servers</span>
-        <strong>26<small>/36</small></strong>
-      </div>
-    </div>
-    <p>Complete location set, exact token ranges, and no unallowed extras</p>
+{evidence.slices.v1.result.derivedScores && (
+  <div class="evidence-note">
+    The v1 score summary below is rendered from the generated result page in
+    the verified immutable bundle: Bifrost strict exact{' '}
+    <b>{evidence.slices.v1.result.derivedScores.strict.bifrostExact}/{evidence.slices.v1.result.derivedScores.strict.denominator}</b> and
+    reference strict exact{' '}
+    <b>{evidence.slices.v1.result.derivedScores.strict.referenceExact}/{evidence.slices.v1.result.derivedScores.strict.denominator}</b>;
+    required destinations Bifrost{' '}
+    <b>{evidence.slices.v1.result.derivedScores.required.bifrostFound}/{evidence.slices.v1.result.derivedScores.required.denominator}</b> and
+    reference{' '}
+    <b>{evidence.slices.v1.result.derivedScores.required.referenceFound}/{evidence.slices.v1.result.derivedScores.required.denominator}</b>.
   </div>
-  <div class="result-metric">
-    <span>All required destinations found</span>
-    <div class="metric-comparison">
-      <div class="metric-side metric-side--bifrost">
-        <span>Bifrost</span>
-        <strong>26<small>/36</small></strong>
-      </div>
-      <div class="metric-side metric-side--reference">
-        <span>Reference servers</span>
-        <strong>28<small>/36</small></strong>
-      </div>
-    </div>
-    <p>Required destinations reached, before range precision and extras</p>
-  </div>
-</div>
-
-## Where Bifrost leads—and where it trails
-
-<div class="profile-scorecard" aria-label="Strict contract results by language">
-  <div class="profile-result">
-    <div>
-      <span>Go</span>
-      <small>vs gopls</small>
-    </div>
-    <strong aria-label="Bifrost 8, gopls 9">
-      <span class="profile-score--bifrost">8</span>
-      <span aria-hidden="true">–</span>
-      <span class="profile-score--reference">9</span>
-    </strong>
-    <p>Reference leads by 1 case</p>
-  </div>
-  <div class="profile-result">
-    <div>
-      <span>Python</span>
-      <small>vs Pyright</small>
-    </div>
-    <strong aria-label="Bifrost 7, Pyright 10">
-      <span class="profile-score--bifrost">7</span>
-      <span aria-hidden="true">–</span>
-      <span class="profile-score--reference">10</span>
-    </strong>
-    <p>Reference leads by 3 cases</p>
-  </div>
-  <div class="profile-result profile-result--bifrost-leads">
-    <div>
-      <span>TypeScript</span>
-      <small>vs TypeScript LS</small>
-    </div>
-    <strong aria-label="Bifrost 10, TypeScript LS 7">
-      <span class="profile-score--bifrost">10</span>
-      <span aria-hidden="true">–</span>
-      <span class="profile-score--reference">7</span>
-    </strong>
-    <p>Bifrost leads by 3 cases</p>
-  </div>
-</div>
-
-<div class="scorecard-key" aria-label="Score legend">
-  <span class="scorecard-key--bifrost">Bifrost</span>
-  <span class="scorecard-key--reference">Reference server</span>
-  <span>Card border marks the leader. Each language has 12 preregistered cases.</span>
-</div>
+)}
 
 ## What this result means
 
@@ -151,61 +91,10 @@ public repositories and 36 preregistered cases. It does not estimate
 language-wide accuracy, ecosystem-wide superiority, latency, memory, or
 cold-start performance.
 
-<div class="result-summary" aria-label="UsageBench v0.2.0 evaluation scope">
-  <div class="result-metric">
-    <span>Evaluation cases</span>
-    <strong>36</strong>
-    <p>12 cases in each profile stratum</p>
-  </div>
-  <div class="result-metric">
-    <span>Public repositories</span>
-    <strong>12</strong>
-    <p>source-only sampled and commit-locked</p>
-  </div>
-  <div class="result-metric">
-    <span>Reference profiles</span>
-    <strong>3</strong>
-    <p>gopls · Pyright · TypeScript LS</p>
-  </div>
-  <div class="result-metric">
-    <span>Evidence release</span>
-    <strong>v0.2.0</strong>
-    <p>reports, manifest, audit, and checksums</p>
-  </div>
-</div>
-
-## Required destinations found
-
-This measure asks whether every reviewed destination was returned for a case.
-It is useful navigation recall, but does not hide clutter or range imprecision:
-those differences remain visible in the location-level and strict-contract
-views on the [full result page](results/).
-
-| Reference profile | Shared cases | Bifrost found | Reference found |
-|---|---:|---:|---:|
-| gopls 0.23.0 | 12 | 8/12 (66.7%) | 9/12 (75.0%) |
-| Pyright 1.1.411 | 12 | 8/12 (66.7%) | 11/12 (91.7%) |
-| typescript-language-server 5.3.0 (TypeScript 5.9.3) | 12 | 10/12 (83.3%) | 8/12 (66.7%) |
-
-## Strict UsageBench contract
-
-Strict conformance requires the complete reviewed location set, exact token
-ranges, and no unallowed extras. A separating outcome is a contract
-disagreement—not automatically an analyzer defect.
-
-| Reference profile | Shared | Both exact | Bifrost only | Reference only | Neither |
-|---|---:|---:|---:|---:|---:|
-| gopls 0.23.0 | 12 | 7 | 1 | 2 | 2 |
-| Pyright 1.1.411 | 12 | 6 | 1 | 4 | 1 |
-| typescript-language-server 5.3.0 (TypeScript 5.9.3) | 12 | 5 | 5 | 2 | 0 |
-
-<div class="evidence-note">
-  Bifrost's exact-set advantage is concentrated in the TypeScript stratum;
-  Pyright finds more required destinations and more exact sets in the Python
-  stratum, while gopls leads the Go required-destination comparison. Read the
-  profile rows independently rather than turning this small, heterogeneous
-  slice into a cross-language leaderboard.
-</div>
+The generated [v1 result page](results/) and [case comparison](results/case-comparison/)
+are the score authority. They are regenerated and provenance-checked from the
+immutable release bundle during publication; this overview intentionally does
+not duplicate score totals.
 
 ## Why this result is publication-qualified
 

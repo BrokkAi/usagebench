@@ -16,16 +16,20 @@ publication_validator="$repo_root/scripts/validate-publication-bundle.py"
   echo "publication bundle validator is missing" >&2
   exit 1
 }
-grep -Fq 'release_tag:' "$docs_workflow" || {
-  echo "docs publication must require an immutable release tag" >&2
+grep -Fq 'v1_release_tag:' "$docs_workflow" && grep -Fq 'v2_release_tag:' "$docs_workflow" || {
+  echo "docs publication must require immutable v1 and v2 release tags" >&2
   exit 1
 }
-grep -Fq 'gh release download "$RELEASE_TAG"' "$docs_workflow" || {
-  echo "docs publication does not download a release-bound bundle" >&2
+grep -Fq 'gh release download "$tag"' "$docs_workflow" || {
+  echo "docs publication does not download release-bound bundles" >&2
   exit 1
 }
 grep -Fq 'scripts/validate-publication-bundle.py' "$docs_workflow" || {
   echo "docs publication does not verify the immutable publication bundle" >&2
+  exit 1
+}
+grep -Fq -- '--historical-v1' "$docs_workflow" || {
+  echo "docs publication does not preserve the exact v0.2.0 compatibility path" >&2
   exit 1
 }
 grep -Fq -- '--output-directory "$bundle/results" --check' "$docs_workflow" || {
@@ -36,10 +40,16 @@ grep -Fq 'scripts/validate-publication-bundle.py' "$freeze_workflow" || {
   echo "freeze workflow does not verify generated publication provenance" >&2
   exit 1
 }
+grep -Fq 'actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0 (Node 24)' "$freeze_workflow" && \
+grep -Fq 'actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0 (Node 24)' "$freeze_workflow" || {
+  echo "native legacy freeze does not use the Node 24 cache provider" >&2
+  exit 1
+}
 
 python3 "$repo_root/scripts/build-real-project-v1-publication-review.py" --check
 python3 "$repo_root/scripts/build-real-project-v2-publication-review.py" --check
 python3 -m unittest "$repo_root/tests/test_publication_bundle.py"
+cargo run --locked -- validate-legacy-promotion "$repo_root/benchmarks/promotion/legacy-v1/manifest.json"
 
 jq -e '.schemaVersion == 3' "$registry" >/dev/null
 jq -e '.schemaVersion == 3' "$v030_registry" >/dev/null
@@ -103,6 +113,7 @@ grep -q 'UsageBench v0.2.0' "$current_results"
 development_scope="$(bash "$scope_resolver" development)"
 evaluation_v1_scope="$(bash "$scope_resolver" evaluation real-project-v1)"
 evaluation_scope="$(bash "$scope_resolver" evaluation real-project-v2)"
+legacy_scope="$(bash "$scope_resolver" legacy-promoted)"
 development_candidates="$(jq -c '.candidates' <<< "$development_scope")"
 [[ "$(jq -r 'length' <<< "$development_candidates")" -eq 11 ]] || {
   echo "development candidate scope must contain all eleven advertised candidates" >&2
@@ -122,6 +133,34 @@ development_candidates="$(jq -c '.candidates' <<< "$development_scope")"
 }
 [[ "$(jq -c '.candidates' <<< "$evaluation_scope")" == '["bifrost","eclipse-jdtls","rust-analyzer","apple-clangd-21"]' ]] || {
   echo "evaluation v2 candidate scope does not match Bifrost plus protocol targets" >&2
+  exit 1
+}
+[[ "$(jq -r '.casePath' <<< "$legacy_scope")" == "benchmarks/cases" ]] || {
+  echo "legacy-promoted case scope does not use the development case corpus" >&2
+  exit 1
+}
+[[ "$(jq -r '.promotionManifest' <<< "$legacy_scope")" == "benchmarks/promotion/legacy-v1/manifest.json" ]] || {
+  echo "legacy-promoted scope is not bound to the v1 promotion manifest" >&2
+  exit 1
+}
+[[ "$(jq -r '[.documents[].cases[] | select(.membership == "balanced_core")] | length' benchmarks/promotion/legacy-v1/manifest.json)" == "110" ]] || {
+  echo "legacy promotion manifest does not contain exactly 110 balanced-core cases" >&2
+  exit 1
+}
+[[ "$(jq -r '[.documents[].cases[] | select(.membership != "balanced_core")] | length' benchmarks/promotion/legacy-v1/manifest.json)" == "0" ]] || {
+  echo "legacy freeze manifest contains overflow or control cases" >&2
+  exit 1
+}
+grep -Fq 'scripts/stage-legacy-promotion-corpus.py' "$freeze_workflow" || {
+  echo "legacy freeze does not create a filtered execution corpus" >&2
+  exit 1
+}
+grep -Fq 'FREEZE_EXECUTION_CORPUS_ROOT' "$repo_root/scripts/run-freeze-candidates.sh" || {
+  echo "legacy candidate execution is not separated from source-bound validation" >&2
+  exit 1
+}
+grep -Fq -- '--promotion-manifest' "$repo_root/scripts/run-freeze-candidates.sh" || {
+  echo "legacy candidate freeze does not bind the promotion manifest" >&2
   exit 1
 }
 grep -Fq 'scripts/resolve-freeze-scope.sh evaluation' "$freeze_workflow" || {
@@ -180,7 +219,7 @@ grep -Fq -- '--manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.jso
   echo "result generation does not validate against the staged release root" >&2
   exit 1
 }
-grep -Fq -- '--manifest-path "$corpus_root/Cargo.toml"' \
+grep -Fq -- '--manifest-path "$runner_corpus_root/Cargo.toml"' \
   "$repo_root/scripts/run-freeze-candidates.sh" || {
   echo "native LSP candidates are not executed from the staged release corpus" >&2
   exit 1

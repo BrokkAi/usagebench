@@ -13,11 +13,11 @@ on:
         default: 'main'
         type: string
       snapshot_kind:
-        description: 'Development evidence or promoted evaluation release'
+        description: 'Development, prospective evaluation, or reviewed legacy release'
         required: true
         default: 'development'
         type: choice
-        options: [development, evaluation]
+        options: [development, evaluation, legacy-promoted]
       candidates:
         description: 'Comma-separated candidate IDs from adapters/candidates.json'
         required: true
@@ -55,6 +55,7 @@ jobs:
       case_path: ${{ steps.identity.outputs.case_path }}
       candidates: ${{ steps.identity.outputs.candidates }}
       candidate_registry: ${{ steps.identity.outputs.candidate_registry }}
+      promotion_manifest: ${{ steps.identity.outputs.promotion_manifest }}
     steps:
       - name: Validate inputs before checkout
         shell: bash
@@ -106,6 +107,7 @@ jobs:
           case_path="benchmarks/cases"
           candidates="$REQUESTED_CANDIDATES"
           candidate_registry="adapters/candidates.json"
+          promotion_manifest=""
           [[ "$candidates" =~ ^[a-z0-9][a-z0-9-]*(,[a-z0-9][a-z0-9-]*)*$ ]]
           if [[ "$SNAPSHOT_KIND" == "evaluation" ]]; then
             [[ "$EVALUATION_FREEZE" == "real-project-v2" ]] || { echo "only real-project-v2 uses the sharded evaluation path" >&2; exit 1; }
@@ -114,11 +116,22 @@ jobs:
             candidates="$(jq -er '.candidates | join(",")' <<< "$scope")"
             [[ "$REQUESTED_CANDIDATES" == "$candidates" ]]
             candidate_registry="benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json"
+          elif [[ "$SNAPSHOT_KIND" == "legacy-promoted" ]]; then
+            scope="$(bash scripts/resolve-freeze-scope.sh legacy-promoted)"
+            case_path="$(jq -er .casePath <<< "$scope")"
+            candidates="$(jq -er '.candidates | join(",")' <<< "$scope")"
+            [[ "$REQUESTED_CANDIDATES" == "$candidates" ]] || {
+              echo "legacy-promoted freezes must select every advertised candidate: $candidates" >&2
+              exit 1
+            }
+            promotion_manifest="$(jq -er .promotionManifest <<< "$scope")"
+            cargo run --locked -- validate-legacy-promotion "$promotion_manifest"
+            release_name="$SNAPSHOT_VERSION reviewed legacy snapshot"
           else
             release_name="$SNAPSHOT_VERSION development snapshot"
           fi
-          printf 'tag=%s\nrevision=%s\nsnapshot_kind=%s\nrelease_name=%s\ncase_path=%s\ncandidates=%s\ncandidate_registry=%s\n' \
-            "$SNAPSHOT_VERSION" "$revision" "$SNAPSHOT_KIND" "$release_name" "$case_path" "$candidates" "$candidate_registry" >> "$GITHUB_OUTPUT"
+          printf 'tag=%s\nrevision=%s\nsnapshot_kind=%s\nrelease_name=%s\ncase_path=%s\ncandidates=%s\ncandidate_registry=%s\npromotion_manifest=%s\n' \
+            "$SNAPSHOT_VERSION" "$revision" "$SNAPSHOT_KIND" "$release_name" "$case_path" "$candidates" "$candidate_registry" "$promotion_manifest" >> "$GITHUB_OUTPUT"
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
       - name: Cache cargo + target
         uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
@@ -127,6 +140,7 @@ jobs:
           cargo test --locked
           cargo run --locked -- validate benchmarks/cases
           cargo run --locked -- validate-evaluation benchmarks/cases/evaluation/real-project-v2
+          cargo run --locked -- validate-legacy-promotion benchmarks/promotion/legacy-v1/manifest.json
           bash scripts/validate-reproduction-contract.sh
           python3 -m unittest tests/test_freeze_shards.py
       - uses: citation-file-format/cffconvert-github-action@4cf11baa70a673bfdf9dad0acc7ee33b3f4b6084 # 2.0.0
@@ -256,6 +270,289 @@ jobs:
           if-no-files-found: warn
           retention-days: 90
 
+  legacy-reference:
+    name: legacy reference candidates
+    needs: preflight
+    if: needs.preflight.outputs.snapshot_kind == 'legacy-promoted'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ needs.preflight.outputs.revision }}
+          lfs: true
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - name: Cache cargo + target
+        uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - name: Authenticate checksum-addressed image publication
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Run canonical Bifrost and gopls legacy reports
+        shell: bash
+        env:
+          SNAPSHOT_KIND: legacy-promoted
+          SNAPSHOT_VERSION: ${{ needs.preflight.outputs.tag }}
+          REVISION: ${{ needs.preflight.outputs.revision }}
+          CANDIDATES: bifrost,gopls
+          FREEZE_EXECUTION_CORPUS_ROOT: ${{ runner.temp }}/legacy-execution-corpus
+          FREEZE_PROMOTION_MANIFEST: ${{ needs.preflight.outputs.promotion_manifest }}
+          FREEZE_SHARD_ONLY: '1'
+          USAGEBENCH_REFERENCE_IMAGE_PUBLISH: '1'
+        run: |
+          set -euo pipefail
+          scripts/stage-release-bundle.sh . "$RUNNER_TEMP/freeze-corpus" "$SNAPSHOT_VERSION" "$REVISION"
+          python3 scripts/corpus-hashes.py verify --root "$RUNNER_TEMP/freeze-corpus" \
+            --manifest "$RUNNER_TEMP/freeze-corpus/.usagebench-corpus-hashes.json"
+          python3 scripts/stage-legacy-promotion-corpus.py \
+            --source-root "$RUNNER_TEMP/freeze-corpus" \
+            --destination "$FREEZE_EXECUTION_CORPUS_ROOT" \
+            --promotion-manifest "$RUNNER_TEMP/freeze-corpus/$FREEZE_PROMOTION_MANIFEST"
+          mkdir -p "$RUNNER_TEMP/legacy-shard"
+          scripts/run-freeze-candidates.sh . adapters/candidates.json "$CANDIDATES" \
+            "$RUNNER_TEMP/freeze-corpus" benchmarks/cases "$RUNNER_TEMP/legacy-output" "$REVISION"
+          for candidate in bifrost gopls; do
+            expected_cases=10
+            [[ "$candidate" == bifrost ]] && expected_cases=110
+            jq -e --arg candidate "$candidate" \
+              --argjson expected_cases "$expected_cases" \
+              '(.completed == true and .runner.name == $candidate and .totals.cases == $expected_cases and (.caseFiles | length > 0))' \
+              "$RUNNER_TEMP/legacy-output/$candidate.json" >/dev/null
+            cp "$RUNNER_TEMP/legacy-output/$candidate.json" "$RUNNER_TEMP/legacy-shard/"
+          done
+          (cd "$RUNNER_TEMP/legacy-shard" && shasum -a 256 *.json > SHA256SUMS)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: freeze-legacy-reference
+          path: ${{ runner.temp }}/legacy-shard
+          if-no-files-found: warn
+          retention-days: 90
+
+  legacy-native:
+    name: native legacy ${{ matrix.candidate }}
+    needs: preflight
+    if: needs.preflight.outputs.snapshot_kind == 'legacy-promoted'
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        candidate:
+          - metals
+          - apple-clangd-21
+          - roslyn
+          - eclipse-jdtls
+          - typescript-language-server
+          - pyright
+          - ruby-lsp
+          - intelephense
+          - rust-analyzer
+    runs-on: ${{ inputs.evaluation_runner }}
+    permissions:
+      contents: read
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ needs.preflight.outputs.revision }}
+          lfs: true
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - name: Cache cargo + target
+        uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - name: Cache native package stores
+        id: native-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0 (Node 24)
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/coursier
+            ~/.cache/coursier/v1
+            ~/.bundle
+            ~/.gem
+            ~/Library/Caches/Coursier
+            ~/Library/Caches/Homebrew
+            ~/Library/Caches/gem
+            ~/.cache/usagebench-native-tools
+          key: usagebench-legacy-native-${{ runner.os }}-${{ matrix.candidate }}-${{ hashFiles('adapters/candidates.json', 'adapters/lsp/*.json', 'Cargo.lock') }}
+      - name: Install and verify exact native profile
+        id: provision-native
+        shell: bash
+        env:
+          CANDIDATE: ${{ matrix.candidate }}
+          CANDIDATE_REGISTRY: ${{ needs.preflight.outputs.candidate_registry }}
+        run: |
+          set -euo pipefail
+          tools="$HOME/.cache/usagebench-native-tools/$CANDIDATE"
+          mkdir -p "$tools/bin"
+          profile="$(jq -er --arg candidate "$CANDIDATE" '.candidates[] | select(.id == $candidate) | .profile' "$CANDIDATE_REGISTRY")"
+          expected_profile_sha="$(jq -er --arg candidate "$CANDIDATE" '.candidates[] | select(.id == $candidate) | .profileSha256' "$CANDIDATE_REGISTRY")"
+          actual_profile_sha="$(shasum -a 256 "$profile" | awk '{print $1}')"
+          [[ "$actual_profile_sha" == "$expected_profile_sha" ]] || {
+            echo "profile checksum does not match the selected candidate registry" >&2
+            exit 1
+          }
+          case "$CANDIDATE" in
+            metals)
+              command -v cs >/dev/null 2>&1 || brew install coursier/formulas/coursier
+              cs --version
+              java_version="$(java -version 2>&1 | awk -F'"' '/version/ {print $2}')"
+              [[ "$java_version" == 21.* ]] || { echo "Metals requires the registered Java 21 runtime: $java_version" >&2; exit 1; }
+              ;;
+            apple-clangd-21)
+              prefix="$(jq -er --arg candidate "$CANDIDATE" '.candidates[] | select(.id == $candidate) | .resolvedVersionPrefix' "$CANDIDATE_REGISTRY")"
+              actual="$(/usr/bin/clangd --version)"
+              [[ "$actual" == "$prefix"* ]] || { echo "Apple clangd identity drift: $actual" >&2; exit 1; }
+              ;;
+            roslyn)
+              dotnet_version="$(dotnet --version)"
+              [[ "$dotnet_version" == 8.* ]] || { echo "Roslyn requires the registered .NET 8 runtime: $dotnet_version" >&2; exit 1; }
+              roslyn_vsix="$tools/roslyn/csharp-2.140.9.vsix"
+              roslyn_sha='0fa50f6413e46f14d56ac2870cebc2c6a6395e6099daa7cd1a60e2aadd4cd2f6'
+              mkdir -p "$tools/roslyn"
+              if [[ ! -f "$roslyn_vsix" ]] || [[ "$(shasum -a 256 "$roslyn_vsix" | awk '{print $1}')" != "$roslyn_sha" ]]; then
+                curl --fail --location --compressed --retry 3 --max-time 300 \
+                  'https://marketplace.visualstudio.com/_apis/public/gallery/publishers/ms-dotnettools/vsextensions/csharp/2.140.9/vspackage?targetPlatform=darwin-arm64' \
+                  --output "$roslyn_vsix"
+              fi
+              echo "$roslyn_sha  $roslyn_vsix" | shasum -a 256 --check
+              roslyn="$tools/roslyn/extension/extension/.roslyn/Microsoft.CodeAnalysis.LanguageServer"
+              roslyn_marker="$tools/roslyn/extension/.archive-sha256"
+              if [[ ! -f "$roslyn" ]] || [[ "$(cat "$roslyn_marker" 2>/dev/null || true)" != "$roslyn_sha" ]]; then
+                rm -rf "$tools/roslyn/extension"
+                unzip -q "$roslyn_vsix" -d "$tools/roslyn/extension"
+                printf '%s' "$roslyn_sha" > "$roslyn_marker"
+              fi
+              [[ -f "$roslyn" ]] || {
+                echo "official Roslyn VSIX did not contain the expected arm64 language server" >&2
+                exit 1
+              }
+              chmod +x "$roslyn"
+              ln -sfn "$roslyn" "$tools/bin/Microsoft.CodeAnalysis.LanguageServer"
+              ;;
+            eclipse-jdtls)
+              java_version="$(java -version 2>&1 | awk -F'"' '/version/ {print $2}')"
+              [[ "$java_version" == 21.* ]] || { echo "JDT LS requires the registered Java 21 runtime: $java_version" >&2; exit 1; }
+              jdtls_archive="$tools/jdtls-1.61.0-202607142124.tar.gz"
+              jdtls_sha='4dc0747f22fb86dfada4c9214d3ef94c94f1e84eb57ce52126c26ecf2f17dce4'
+              if [[ ! -f "$jdtls_archive" ]] || [[ "$(shasum -a 256 "$jdtls_archive" | awk '{print $1}')" != "$jdtls_sha" ]]; then
+                curl --fail --location --silent --show-error --retry 3 --max-time 300 \
+                  https://download.eclipse.org/jdtls/snapshots/jdt-language-server-1.61.0-202607142124.tar.gz \
+                  --output "$jdtls_archive"
+              fi
+              echo "$jdtls_sha  $jdtls_archive" | shasum -a 256 --check
+              if [[ ! -x "$tools/jdtls/bin/jdtls" ]]; then
+                rm -rf "$tools/jdtls"
+                mkdir -p "$tools/jdtls"
+                tar -xzf "$jdtls_archive" -C "$tools/jdtls"
+              fi
+              [[ -x "$tools/jdtls/bin/jdtls" ]] || { echo "JDT LS archive lacks bin/jdtls" >&2; exit 1; }
+              ln -sfn "$tools/jdtls/bin/jdtls" "$tools/bin/jdtls"
+              ;;
+            typescript-language-server)
+              node_version="$(node --version)"
+              [[ "$node_version" == v24.* ]] || { echo "TypeScript LS requires the registered Node 24 runtime: $node_version" >&2; exit 1; }
+              ;;
+            pyright)
+              node_version="$(node --version)"
+              [[ "$node_version" == v24.* ]] || { echo "Pyright requires the registered Node 24 runtime: $node_version" >&2; exit 1; }
+              ;;
+            ruby-lsp)
+              brew list ruby >/dev/null 2>&1 || brew install ruby
+              ruby_prefix="$(brew --prefix ruby)"
+              echo "$ruby_prefix/bin" >> "$GITHUB_PATH"
+              export PATH="$ruby_prefix/bin:$PATH"
+              ruby_version="$(ruby --version)"
+              [[ "$ruby_version" =~ ruby\ 3\.[4-9] ]] || { echo "Ruby LSP requires a modern Ruby 3.4+ runtime: $ruby_version" >&2; exit 1; }
+              gem install --no-document bundler -v 4.0.11
+              gem install --no-document ruby-lsp -v 0.26.10
+              gem install --no-document debug -v 1.11.1
+              bundle _4.0.11_ --version
+              ruby-lsp --version
+              ;;
+            intelephense)
+              node_version="$(node --version)"
+              [[ "$node_version" == v24.* ]] || { echo "Intelephense requires the registered Node 24 runtime: $node_version" >&2; exit 1; }
+              ;;
+            rust-analyzer)
+              rust_analyzer_archive="$tools/rust-analyzer-2026-07-13-aarch64-apple-darwin.gz"
+              rust_analyzer_sha='9c6b3ebf06480e2c95a7b01750fa68d77834bffa34da81e4eb00cef3cdff4613'
+              if [[ ! -f "$rust_analyzer_archive" ]] || [[ "$(shasum -a 256 "$rust_analyzer_archive" | awk '{print $1}')" != "$rust_analyzer_sha" ]]; then
+                curl --fail --location --silent --show-error --retry 3 --max-time 300 \
+                  https://github.com/rust-lang/rust-analyzer/releases/download/2026-07-13/rust-analyzer-aarch64-apple-darwin.gz \
+                  --output "$rust_analyzer_archive"
+              fi
+              echo "$rust_analyzer_sha  $rust_analyzer_archive" | shasum -a 256 --check
+              gzip -dc "$rust_analyzer_archive" > "$tools/bin/rust-analyzer"
+              chmod +x "$tools/bin/rust-analyzer"
+              ;;
+            *)
+              echo "unexpected native candidate: $CANDIDATE" >&2
+              exit 1
+              ;;
+          esac
+          echo "$tools/bin" >> "$GITHUB_PATH"
+      - name: Run bounded native legacy shard
+        id: run-native
+        shell: bash
+        env:
+          SNAPSHOT_KIND: legacy-promoted
+          SNAPSHOT_VERSION: ${{ needs.preflight.outputs.tag }}
+          REVISION: ${{ needs.preflight.outputs.revision }}
+          FREEZE_EXECUTION_CORPUS_ROOT: ${{ runner.temp }}/legacy-execution-corpus
+          FREEZE_PROMOTION_MANIFEST: ${{ needs.preflight.outputs.promotion_manifest }}
+          FREEZE_SHARD_ONLY: '1'
+          CANDIDATE: ${{ matrix.candidate }}
+        run: |
+          set -euo pipefail
+          scripts/stage-release-bundle.sh . "$RUNNER_TEMP/freeze-corpus" "$SNAPSHOT_VERSION" "$REVISION"
+          python3 scripts/corpus-hashes.py verify --root "$RUNNER_TEMP/freeze-corpus" \
+            --manifest "$RUNNER_TEMP/freeze-corpus/.usagebench-corpus-hashes.json"
+          python3 scripts/stage-legacy-promotion-corpus.py \
+            --source-root "$RUNNER_TEMP/freeze-corpus" \
+            --destination "$FREEZE_EXECUTION_CORPUS_ROOT" \
+            --promotion-manifest "$RUNNER_TEMP/freeze-corpus/$FREEZE_PROMOTION_MANIFEST"
+          mkdir -p "$RUNNER_TEMP/legacy-shard"
+          scripts/run-freeze-candidates.sh . adapters/candidates.json "$CANDIDATE" \
+            "$RUNNER_TEMP/freeze-corpus" benchmarks/cases "$RUNNER_TEMP/legacy-output" "$REVISION"
+          expected_cases=10
+          [[ "$CANDIDATE" == typescript-language-server ]] && expected_cases=20
+          jq -e --arg candidate "$CANDIDATE" --argjson expected_cases "$expected_cases" \
+            '(.completed == true and .invocation.profile == $candidate and .runner.requestedVersion != null and .totals.cases == $expected_cases and (.caseFiles | length > 0))' \
+            "$RUNNER_TEMP/legacy-output/$CANDIDATE.json" >/dev/null
+          cp "$RUNNER_TEMP/legacy-output/$CANDIDATE.json" "$RUNNER_TEMP/legacy-shard/"
+          (cd "$RUNNER_TEMP/legacy-shard" && shasum -a 256 *.json > SHA256SUMS)
+      - name: Save native package stores for retries
+        if: >-
+          always() &&
+          steps.native-cache.outputs.cache-hit != 'true' &&
+          steps.provision-native.outcome == 'success' &&
+          steps.run-native.outcome == 'success'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0 (Node 24)
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/coursier
+            ~/.cache/coursier/v1
+            ~/.bundle
+            ~/.gem
+            ~/Library/Caches/Coursier
+            ~/Library/Caches/Homebrew
+            ~/Library/Caches/gem
+            ~/.cache/usagebench-native-tools
+          key: usagebench-legacy-native-${{ runner.os }}-${{ matrix.candidate }}-${{ hashFiles('adapters/candidates.json', 'adapters/lsp/*.json', 'Cargo.lock') }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: freeze-legacy-native-${{ matrix.candidate }}
+          path: ${{ runner.temp }}/legacy-shard
+          if-no-files-found: warn
+          retention-days: 90
+
   development:
     name: run development snapshot
     needs: preflight
@@ -322,6 +619,117 @@ jobs:
           if-no-files-found: warn
           retention-days: 90
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: freeze-release-assets
+          path: |
+            dist/*.tar.gz
+            dist/*.sha256
+          if-no-files-found: error
+          retention-days: 90
+
+  aggregate-legacy:
+    name: verify and aggregate eleven legacy candidate reports
+    needs: [preflight, legacy-reference, legacy-native]
+    if: needs.preflight.outputs.snapshot_kind == 'legacy-promoted'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 45
+    outputs:
+      tag: ${{ needs.preflight.outputs.tag }}
+      revision: ${{ needs.preflight.outputs.revision }}
+      snapshot_kind: ${{ needs.preflight.outputs.snapshot_kind }}
+      release_name: ${{ needs.preflight.outputs.release_name }}
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ needs.preflight.outputs.revision }}
+          lfs: true
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - name: Cache cargo + target
+        uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: freeze-legacy-*
+          path: ${{ runner.temp }}/legacy-shards
+      - name: Reject partial, duplicate, stale, or mismatched legacy evidence
+        shell: bash
+        env:
+          SNAPSHOT_VERSION: ${{ needs.preflight.outputs.tag }}
+          REVISION: ${{ needs.preflight.outputs.revision }}
+          CANDIDATES: ${{ needs.preflight.outputs.candidates }}
+          PROMOTION_MANIFEST: ${{ needs.preflight.outputs.promotion_manifest }}
+          CANDIDATE_REGISTRY: ${{ needs.preflight.outputs.candidate_registry }}
+        run: |
+          set -euo pipefail
+          report_root="$RUNNER_TEMP/freeze-evidence"
+          mkdir -p "$report_root"
+          mapfile -t checksum_files < <(find "$RUNNER_TEMP/legacy-shards" -name SHA256SUMS -type f -print)
+          [[ "${#checksum_files[@]}" -eq 10 ]] || {
+            echo "legacy freeze requires exactly 10 checksum-bound shard artifacts" >&2
+            exit 1
+          }
+          for sums in "${checksum_files[@]}"; do
+            (cd "$(dirname "$sums")" && shasum -a 256 --check SHA256SUMS)
+          done
+          IFS=',' read -r -a candidate_ids <<< "$CANDIDATES"
+          [[ "${#candidate_ids[@]}" -eq 11 ]] || { echo "legacy freeze requires exactly 11 candidates" >&2; exit 1; }
+          for candidate in "${candidate_ids[@]}"; do
+            [[ "$candidate" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "unsafe legacy candidate: $candidate" >&2; exit 1; }
+            mapfile -t reports < <(find "$RUNNER_TEMP/legacy-shards" -type f -name "$candidate.json" -print)
+            [[ "${#reports[@]}" -eq 1 ]] || {
+              echo "expected exactly one checksum-bound report for $candidate" >&2
+              exit 1
+            }
+            cp "${reports[0]}" "$report_root/$candidate.json"
+            expected_cases=10
+            [[ "$candidate" == bifrost ]] && expected_cases=110
+            [[ "$candidate" == typescript-language-server ]] && expected_cases=20
+            jq -e --arg candidate "$candidate" --arg revision "$REVISION" --arg version "$SNAPSHOT_VERSION" \
+              --argjson expected_cases "$expected_cases" \
+              '(.completed == true and ((.runner.name == "bifrost" and $candidate == "bifrost") or .invocation.profile == $candidate) and .usagebenchRevision == $revision and .usagebenchRelease == $version and .totals.cases == $expected_cases and (.caseFiles | length > 0))' \
+              "$report_root/$candidate.json" >/dev/null
+          done
+          [[ "$(find "$report_root" -maxdepth 1 -type f -name '*.json' | wc -l | tr -d ' ')" == "11" ]] || {
+            echo "legacy evidence contains an unexpected report file set" >&2
+            exit 1
+          }
+          scripts/stage-release-bundle.sh . "$RUNNER_TEMP/freeze-corpus" "$SNAPSHOT_VERSION" "$REVISION"
+          python3 scripts/corpus-hashes.py verify --root "$RUNNER_TEMP/freeze-corpus" \
+            --manifest "$RUNNER_TEMP/freeze-corpus/.usagebench-corpus-hashes.json"
+          declare -a report_args=()
+          for candidate in "${candidate_ids[@]}"; do
+            report_args+=(--report "$report_root/$candidate.json")
+          done
+          cargo run --locked -- freeze-manifest \
+            --snapshot-kind legacy-promoted \
+            --version "$SNAPSHOT_VERSION" \
+            --revision "$REVISION" \
+            --candidates-file "$CANDIDATE_REGISTRY" \
+            --candidates "$CANDIDATES" \
+            "${report_args[@]}" \
+            --promotion-manifest "$RUNNER_TEMP/freeze-corpus/$PROMOTION_MANIFEST" \
+            --output "$report_root/freeze-manifest.json"
+          jq -e \
+            '.snapshotKind == "legacy_promoted" and .legacyPromotionAudit.balancedCoreCaseCount == 110 and (.corpus | length == 30)' \
+            "$report_root/freeze-manifest.json" >/dev/null
+          mkdir -p "$RUNNER_TEMP/freeze-corpus/evidence"
+          cp "$report_root"/*.json "$RUNNER_TEMP/freeze-corpus/evidence/"
+          cargo run --locked -- generate-results \
+            --manifest "$RUNNER_TEMP/freeze-corpus/evidence/freeze-manifest.json" \
+            --output-directory "$RUNNER_TEMP/freeze-results"
+          stage="usagebench-$SNAPSHOT_VERSION"
+          scripts/stage-release-bundle.sh . "dist/$stage" "$SNAPSHOT_VERSION" "$REVISION" "$report_root" "$RUNNER_TEMP/freeze-results"
+          cargo run --locked -- generate-results \
+            --manifest "dist/$stage/evidence/freeze-manifest.json" \
+            --output-directory "dist/$stage/results" --check
+          python3 scripts/validate-publication-bundle.py \
+            --bundle "dist/$stage" --tag "$SNAPSHOT_VERSION" --revision "$REVISION"
+          tar -C dist -czf "dist/$stage.tar.gz" "$stage"
+          (cd dist && shasum -a 256 "$stage.tar.gz" > "$stage.tar.gz.sha256")
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
         with:
           name: freeze-release-assets
           path: |
@@ -408,8 +816,8 @@ jobs:
 
   publish:
     name: approve, tag, and publish
-    needs: [preflight, development, aggregate]
-    if: always() && (needs.development.result == 'success' || needs.aggregate.result == 'success')
+    needs: [preflight, development, aggregate, aggregate-legacy]
+    if: always() && (needs.development.result == 'success' || needs.aggregate.result == 'success' || needs['aggregate-legacy'].result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 import pathlib
 import subprocess
@@ -96,6 +97,97 @@ class FreezeShardTests(unittest.TestCase):
         self.assertIn("public_bifrost_source='https://github.com/BrokkAi/bifrost'", workflow)
         self.assertIn('refs/tags/$bifrost_requested_version^{}', workflow)
         self.assertIn('[[ "$bifrost_tag_revision" == "$bifrost_revision" ]]', workflow)
+
+    def test_legacy_scope_is_bound_to_the_110_case_manifest(self):
+        scope = subprocess.run(
+            [ROOT / "scripts/resolve-freeze-scope.sh", "legacy-promoted"],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(scope.returncode, 0, scope.stderr)
+        value = json.loads(scope.stdout)
+        self.assertEqual(value["casePath"], "benchmarks/cases")
+        self.assertEqual(
+            value["promotionManifest"],
+            "benchmarks/promotion/legacy-v1/manifest.json",
+        )
+        self.assertEqual(
+            value["candidates"],
+            [
+                item["id"]
+                for item in json.loads((ROOT / "adapters/candidates.json").read_text())["candidates"]
+                if item["advertised"]
+            ],
+        )
+
+    def test_legacy_execution_staging_excludes_unselected_documents_and_cases(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = pathlib.Path(directory) / "source"
+            destination = pathlib.Path(directory) / "execution"
+            manifest_path = source / "benchmarks/promotion/legacy-v1/manifest.json"
+            manifest_path.parent.mkdir(parents=True)
+            case_root = source / "benchmarks/cases"
+            case_root.mkdir(parents=True)
+            documents = []
+            expected_ids = []
+            cursor = 0
+            for index in range(30):
+                case_file = f"benchmarks/cases/legacy-{index:02d}.yaml"
+                count = 4 if index < 20 else 3
+                ids = [f"legacy-case-{number:03d}" for number in range(cursor, cursor + count)]
+                cursor += count
+                expected_ids.extend(ids)
+                source_path = source / case_file
+                source_path.write_text(
+                    "schemaVersion: 2\ncorpus:\n  partition: development\n  selection: analyzer_informed\n"
+                    "groundTruth:\n  status: legacy_unattributed\n  reviewers: []\n"
+                    "referencePolicy: bindings_optional\npositionEncoding: utf-16\n"
+                    "source:\n  kind: fixture\n  path: fixtures/test\nlanguage: rust\ncases:\n"
+                    + "".join(f"  - id: {case_id}\n    declaration: {{}}\n" for case_id in ids)
+                    + "  - id: overflow-case\n    declaration: {}\n"
+                )
+                documents.append(
+                    {
+                        "caseFile": case_file,
+                        "sourceSha256": hashlib.sha256(source_path.read_bytes()).hexdigest(),
+                        "language": "rust",
+                        "cases": [
+                            {"id": case_id, "membership": "balanced_core"} for case_id in ids
+                        ],
+                    }
+                )
+            self.assertEqual(len(expected_ids), 110)
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "promotionId": "test",
+                        "documents": documents,
+                    }
+                )
+            )
+            result = subprocess.run(
+                [
+                    ROOT / "scripts/stage-legacy-promotion-corpus.py",
+                    "--source-root",
+                    source,
+                    "--destination",
+                    destination,
+                    "--promotion-manifest",
+                    manifest_path,
+                ],
+                text=True,
+                capture_output=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            staged_files = sorted((destination / "benchmarks/cases").glob("*.yaml"))
+            self.assertEqual(len(staged_files), 30)
+            staged_ids = [
+                line.removeprefix("  - id: ")
+                for path in staged_files
+                for line in path.read_text().splitlines()
+                if line.startswith("  - id: ")
+            ]
+            self.assertEqual(staged_ids, expected_ids)
 
     def test_bifrost_reference_cache_stays_off_read_only_corpus(self):
         runner = (ROOT / "scripts/run-reference.sh").read_text()
