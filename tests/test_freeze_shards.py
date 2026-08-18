@@ -98,6 +98,30 @@ class FreezeShardTests(unittest.TestCase):
         self.assertIn('refs/tags/$bifrost_requested_version^{}', workflow)
         self.assertIn('[[ "$bifrost_tag_revision" == "$bifrost_revision" ]]', workflow)
 
+    def test_legacy_native_shards_publish_semantic_misses_but_reject_runner_errors(self):
+        workflow = (ROOT / ".github/workflows/freeze.yml").read_text()
+        self.assertIn(
+            '.requestedTotals.plannedCases == $expected_cases and .totals.errors == 0',
+            workflow,
+        )
+        self.assertNotIn('.totals.cases == $expected_cases', workflow)
+
+    def test_roslyn_native_shard_provisions_dotnet_eight_keg(self):
+        workflow = (ROOT / ".github/workflows/freeze.yml").read_text()
+        self.assertIn('brew list --formula dotnet@8 >/dev/null 2>&1 || brew install dotnet@8', workflow)
+        self.assertIn('dotnet_root="$(brew --prefix dotnet@8)/libexec"', workflow)
+        self.assertIn('printf \'DOTNET_ROOT=%s\\n\' "$dotnet_root" >> "$GITHUB_ENV"', workflow)
+        self.assertIn('[[ "$dotnet_version" == 8.* ]]', workflow)
+
+    def test_ruby_lsp_native_shard_provisions_ruby_three_four_keg(self):
+        workflow = (ROOT / ".github/workflows/freeze.yml").read_text()
+        self.assertIn('brew list --formula ruby@3.4 >/dev/null 2>&1 || brew install ruby@3.4', workflow)
+        self.assertIn('ruby_prefix="$(brew --prefix ruby@3.4)"', workflow)
+        self.assertIn('ruby_gem_bin="$(ruby -rrubygems -e \'print Gem.bindir\')"', workflow)
+        self.assertIn('[[ "$ruby_version" =~ ^3\\.4\\.[0-9]+$ ]]', workflow)
+        self.assertNotIn('brew list ruby >/dev/null', workflow)
+        self.assertNotIn('ruby\\ 3\\.[4-9]', workflow)
+
     def test_legacy_scope_is_bound_to_the_110_case_manifest(self):
         scope = subprocess.run(
             [ROOT / "scripts/resolve-freeze-scope.sh", "legacy-promoted"],
