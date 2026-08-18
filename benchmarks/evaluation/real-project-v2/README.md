@@ -84,9 +84,10 @@ and does not introduce a second-host evidence gate.
 
 The v0.3.0 execution identities are frozen separately in
 `candidates-v0.3.0.json`. Its Bifrost candidate is pinned to public release
-v0.10.1 at `511adaa2733067bb1b7809ab79e06ec0e3d2a146`. Any later Bifrost run is
-evidence for a subsequent snapshot or release, never a replacement for v0.3.0
-evidence.
+v0.10.2 at `d1a7c0cc1cf58d0c0789476ad42a92318bb8da49`. It runs natively on the
+registered macOS host and has no canonical reference runner. Any later Bifrost
+run is evidence for a subsequent snapshot or release, never a replacement for
+v0.3.0 evidence.
 
 The v1 selection is hash-linked by the v2 protocol. Every v1-selected
 repository is ineligible even if it appears in a v2 GitHub language frame.

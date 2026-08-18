@@ -5,11 +5,10 @@
       "id": "bifrost",
       "runner": "bifrost",
       "name": "Bifrost",
-      "requestedVersion": "v0.10.1",
+      "requestedVersion": "v0.10.2",
       "source": "https://github.com/BrokkAi/bifrost",
-      "revision": "511adaa2733067bb1b7809ab79e06ec0e3d2a146",
+      "revision": "d1a7c0cc1cf58d0c0789476ad42a92318bb8da49",
       "advertised": true,
-      "referenceRunner": "bifrost",
       "runtimeNetworking": "disabled",
       "projectHydration": "fixture sources are staged in the released corpus"
     },

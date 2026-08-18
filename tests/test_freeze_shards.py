@@ -48,7 +48,7 @@ class FreezeShardTests(unittest.TestCase):
             self.assertNotEqual(rejected.returncode, 0)
             self.assertIn("checksum mismatch", rejected.stderr)
 
-    def test_v030_registry_preserves_historical_bifrost_identity(self):
+    def test_v030_registry_uses_public_native_bifrost_identity(self):
         active = json.loads((ROOT / "adapters/candidates.json").read_text())
         frozen = json.loads(
             (ROOT / "benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json").read_text()
@@ -61,8 +61,20 @@ class FreezeShardTests(unittest.TestCase):
         self.assertEqual(
             active_bifrost["revision"], "511adaa2733067bb1b7809ab79e06ec0e3d2a146"
         )
-        self.assertEqual(frozen_bifrost["requestedVersion"], "v0.10.1")
-        self.assertEqual(frozen_bifrost["revision"], "511adaa2733067bb1b7809ab79e06ec0e3d2a146")
+        self.assertEqual(frozen_bifrost["requestedVersion"], "v0.10.2")
+        self.assertEqual(
+            frozen_bifrost["source"], "https://github.com/BrokkAi/bifrost"
+        )
+        self.assertEqual(
+            frozen_bifrost["revision"], "d1a7c0cc1cf58d0c0789476ad42a92318bb8da49"
+        )
+        self.assertNotIn("referenceRunner", frozen_bifrost)
+
+    def test_freeze_setup_verifies_public_bifrost_tag_identity(self):
+        workflow = (ROOT / ".github/workflows/freeze.yml").read_text()
+        self.assertIn("public_bifrost_source='https://github.com/BrokkAi/bifrost'", workflow)
+        self.assertIn('refs/tags/$bifrost_requested_version^{}', workflow)
+        self.assertIn('[[ "$bifrost_tag_revision" == "$bifrost_revision" ]]', workflow)
 
     def test_bifrost_reference_cache_stays_off_read_only_corpus(self):
         runner = (ROOT / "scripts/run-reference.sh").read_text()
