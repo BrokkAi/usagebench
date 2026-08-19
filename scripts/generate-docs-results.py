@@ -30,6 +30,16 @@ REPOSITORY = "https://github.com/BrokkAi/usagebench"
 # immutable release rather than to a sibling docs page.
 BUNDLE_RELATIVE_LINK = re.compile(r"\]\(\.\./([^)]+)\)")
 
+# Every generated page opens with the Rust generator's provenance comment.
+# Requiring it proves the content came from that generator rather than from
+# anything a publication step might have substituted.
+GENERATED_MARKER = "<!-- GENERATED FILE. DO NOT EDIT."
+
+# Starlight renders the frontmatter title as the page's H1, and results.md
+# carries its own. Demote so the document has exactly one. Safe as a plain
+# regex because these pages are tables and prose with no fenced code.
+TOP_LEVEL_HEADING = re.compile(r"^# ", re.MULTILINE)
+
 PAGES = {
     "results.md": {
         "output": "index.md",
@@ -90,8 +100,12 @@ def _provenance_note(summary: dict[str, Any], sibling_prefix: str) -> str:
 
 def _published_page(summary: dict[str, Any], source: str, spec: dict[str, str]) -> str:
     body = (summary["bundlePath"] / "results" / source).read_text(encoding="utf-8")
-    if not body.startswith("#"):
-        raise ValueError(f"generated {source} does not begin with a heading")
+    if not body.startswith(GENERATED_MARKER):
+        raise ValueError(
+            f"generated {source} does not open with the result generator's "
+            "provenance comment"
+        )
+    body = TOP_LEVEL_HEADING.sub("## ", body)
     tag = summary["release"]
     description = f"Immutable {tag} results for the reviewed evaluation slice."
     return (
