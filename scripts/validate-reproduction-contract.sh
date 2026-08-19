@@ -104,11 +104,16 @@ jq -e '
 ' "$registry" >/dev/null
 
 historical_results="$repo_root/docs/src/content/docs/results/development-2026-07-24.md"
+historical_v1_results="$repo_root/docs/src/content/docs/results/evaluation-real-project-v1.md"
 current_results="$repo_root/docs/src/content/docs/results/index.md"
 grep -q 'Historical identity limitation' "$historical_results"
 grep -q 'candidate evidence' "$historical_results"
-grep -q 'Evaluation evidence' "$current_results"
-grep -q 'UsageBench v0.2.0' "$current_results"
+# The v0.2.0 evaluation keeps its bounded claim on its own historical page.
+grep -q 'Evaluation evidence' "$historical_v1_results"
+grep -q 'UsageBench v0.2.0' "$historical_v1_results"
+# The current result page is rendered from a checksum-verified bundle, so it
+# carries a provenance boundary rather than a hand-written claim.
+grep -qE 'Immutable evidence|No published result' "$current_results"
 
 development_scope="$(bash "$scope_resolver" development)"
 evaluation_v1_scope="$(bash "$scope_resolver" evaluation real-project-v1)"

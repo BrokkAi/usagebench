@@ -316,11 +316,14 @@ jobs:
           scripts/run-freeze-candidates.sh . adapters/candidates.json "$CANDIDATES" \
             "$RUNNER_TEMP/freeze-corpus" benchmarks/cases "$RUNNER_TEMP/legacy-output" "$REVISION"
           for candidate in bifrost gopls; do
+            # Compare the authored slice, not the planned one: a candidate's
+            # report counts a case it cannot serve as unsupported rather than
+            # planned, so plannedCases understates a complete run.
             expected_cases=10
             [[ "$candidate" == bifrost ]] && expected_cases=110
             jq -e --arg candidate "$candidate" \
               --argjson expected_cases "$expected_cases" \
-              '(.completed == true and .runner.name == $candidate and .requestedTotals.plannedCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
+              '(.completed == true and .runner.name == $candidate and .requestedTotals.authoredCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
               "$RUNNER_TEMP/legacy-output/$candidate.json" >/dev/null
             cp "$RUNNER_TEMP/legacy-output/$candidate.json" "$RUNNER_TEMP/legacy-shard/"
           done
@@ -415,12 +418,37 @@ jobs:
               # both this step and the later LSP runner step.
               brew list --formula dotnet@8 >/dev/null 2>&1 || brew install dotnet@8
               dotnet_root="$(brew --prefix dotnet@8)/libexec"
+              # Resolve the keg's muxer by absolute path. Relying on PATH order
+              # hides a missing keg: the lookup falls through to the
+              # preinstalled .NET 10 muxer, which then reports its own version
+              # and reads as a policy failure rather than a provisioning one.
+              dotnet_bin="$dotnet_root/dotnet"
+              [[ -x "$dotnet_bin" ]] || {
+                echo "the dotnet@8 keg did not provide a muxer at $dotnet_bin" >&2
+                echo "brew --prefix dotnet@8: $(brew --prefix dotnet@8 2>&1)" >&2
+                echo "keg contents: $(ls -A "$dotnet_root" 2>&1 | tr '\n' ' ')" >&2
+                exit 1
+              }
               export DOTNET_ROOT="$dotnet_root"
               export PATH="$dotnet_root:$PATH"
               printf 'DOTNET_ROOT=%s\n' "$dotnet_root" >> "$GITHUB_ENV"
               printf '%s\n' "$dotnet_root" >> "$GITHUB_PATH"
-              dotnet_version="$(dotnet --version)"
-              [[ "$dotnet_version" == 8.* ]] || { echo "Roslyn requires the registered .NET 8 runtime: $dotnet_version" >&2; exit 1; }
+              # Roslyn needs the net8.0 *runtime*; `dotnet --version` reports the
+              # selected SDK, which global.json and roll-forward can move.
+              "$dotnet_bin" --list-runtimes | grep -q '^Microsoft.NETCore.App 8\.' || {
+                echo "Roslyn requires the registered .NET 8 runtime; $dotnet_bin offers:" >&2
+                "$dotnet_bin" --list-runtimes >&2
+                exit 1
+              }
+              # The later runner step resolves `dotnet` through PATH, so confirm
+              # the keg actually wins there too. Drop any hashed lookup first,
+              # or `command -v` can answer from before the PATH change.
+              hash -r
+              resolved_dotnet="$(command -v dotnet)"
+              [[ "$resolved_dotnet" == "$dotnet_bin" ]] || {
+                echo "expected dotnet to resolve to $dotnet_bin, got $resolved_dotnet" >&2
+                exit 1
+              }
               roslyn_vsix="$tools/roslyn/csharp-2.140.9.vsix"
               roslyn_sha='0fa50f6413e46f14d56ac2870cebc2c6a6395e6099daa7cd1a60e2aadd4cd2f6'
               mkdir -p "$tools/roslyn"
@@ -536,10 +564,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP/legacy-shard"
           scripts/run-freeze-candidates.sh . adapters/candidates.json "$CANDIDATE" \
             "$RUNNER_TEMP/freeze-corpus" benchmarks/cases "$RUNNER_TEMP/legacy-output" "$REVISION"
+          # Compare the authored slice, not the planned one: a candidate's
+          # report counts a case it cannot serve as unsupported rather than
+          # planned, so plannedCases understates a complete run.
           expected_cases=10
           [[ "$CANDIDATE" == typescript-language-server ]] && expected_cases=20
           jq -e --arg candidate "$CANDIDATE" --argjson expected_cases "$expected_cases" \
-            '(.completed == true and .invocation.profile == $candidate and .runner.requestedVersion != null and .requestedTotals.plannedCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
+            '(.completed == true and .invocation.profile == $candidate and .runner.requestedVersion != null and .requestedTotals.authoredCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
             "$RUNNER_TEMP/legacy-output/$CANDIDATE.json" >/dev/null
           cp "$RUNNER_TEMP/legacy-output/$CANDIDATE.json" "$RUNNER_TEMP/legacy-shard/"
           (cd "$RUNNER_TEMP/legacy-shard" && shasum -a 256 *.json > SHA256SUMS)
@@ -700,12 +731,15 @@ jobs:
               exit 1
             }
             cp "${reports[0]}" "$report_root/$candidate.json"
+            # Compare the authored slice, not the planned one: a candidate's
+            # report counts a case it cannot serve as unsupported rather than
+            # planned, so plannedCases understates a complete run.
             expected_cases=10
             [[ "$candidate" == bifrost ]] && expected_cases=110
             [[ "$candidate" == typescript-language-server ]] && expected_cases=20
             jq -e --arg candidate "$candidate" --arg revision "$REVISION" --arg version "$SNAPSHOT_VERSION" \
               --argjson expected_cases "$expected_cases" \
-              '(.completed == true and ((.runner.name == "bifrost" and $candidate == "bifrost") or .invocation.profile == $candidate) and .usagebenchRevision == $revision and .usagebenchRelease == $version and .requestedTotals.plannedCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
+              '(.completed == true and ((.runner.name == "bifrost" and $candidate == "bifrost") or .invocation.profile == $candidate) and .usagebenchRevision == $revision and .usagebenchRelease == $version and .requestedTotals.authoredCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
               "$report_root/$candidate.json" >/dev/null
           done
           [[ "$(find "$report_root" -maxdepth 1 -type f -name '*.json' | wc -l | tr -d ' ')" == "11" ]] || {

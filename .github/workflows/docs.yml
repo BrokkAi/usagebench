@@ -155,6 +155,13 @@ jobs:
           fi
           python3 scripts/generate-docs-evidence.py "${bundle_args[@]}"
 
+      - name: Render the published result pages from the v2 bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/generate-docs-results.py \
+            --bundle "$RUNNER_TEMP/publication-extracted/v2/usagebench-${V2_RELEASE_TAG}"
+
       - name: Set up Node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
@@ -183,6 +190,13 @@ jobs:
           python3 ../scripts/generate-docs-evidence.py --check "${bundle_args[@]}"
         working-directory: docs
 
+      - name: Check rendered result pages
+        run: |
+          set -euo pipefail
+          python3 ../scripts/generate-docs-results.py --check \
+            --bundle "$RUNNER_TEMP/publication-extracted/v2/usagebench-${V2_RELEASE_TAG}"
+        working-directory: docs
+
       - name: Check internal documentation links
         run: npm run links:check
         working-directory: docs
@@ -193,7 +207,6 @@ jobs:
         env:
           PUBLIC_DOCS_SITE: https://brokkai.github.io
           PUBLIC_DOCS_BASE: /usagebench
-          USAGEBENCH_PUBLICATION_BUNDLE: ${{ runner.temp }}/publication-extracted/v2/usagebench-${{ inputs.v2_release_tag }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

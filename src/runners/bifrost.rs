@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::{
-    collections::{hash_map::DefaultHasher, BTreeMap, BTreeSet},
+    collections::{hash_map::DefaultHasher, BTreeMap, BTreeSet, HashSet},
     env, fs,
     hash::{Hash, Hasher},
     io::{Read, Write},
@@ -977,7 +977,11 @@ fn run_declaration_to_usages(
             }
         };
 
-    let selector = match resolve_declaration_selector(session, declaration) {
+    let selector = match resolve_declaration_selector(
+        session,
+        declaration,
+        reference_context.map(|(language, _)| language),
+    ) {
         Ok(selector) => selector,
         Err(error) => {
             let readiness_error = is_snapshot_not_ready_error(&error);
@@ -1436,14 +1440,19 @@ fn skipped_type_lookup(lookup: &crate::TypeLookup) -> TypeLookupReport {
 fn resolve_declaration_selector(
     session: &mut impl SearchToolsClient,
     declaration: &SymbolLocation,
+    language: Option<&str>,
 ) -> Result<ResolvedSelector> {
     let expected_path = benchmark_source_path(&declaration.location.uri)?;
     let expected_path = path_to_slash(&expected_path);
     let expected_line = declaration.location.range.start.line as usize + 1;
+    // Search under every name the declaration may be indexed as, so a language
+    // whose sigil Bifrost drops still reaches the symbol. The path, line, and
+    // kind filters below keep the extra patterns from widening what matches.
+    let patterns = declaration_name_candidates(&declaration.display_name, language);
     let result = session.call_tool(
         "search_symbols",
         json!({
-            "patterns": [declaration.display_name],
+            "patterns": patterns,
             "include_tests": true,
             "limit": 100,
         }),
@@ -1459,7 +1468,8 @@ fn resolve_declaration_selector(
                 .map(move |hit| (file.path.clone(), hit))
         })
         .filter(|(_, hit)| {
-            hit.line == expected_line && symbol_name_matches(&hit.symbol, &declaration.display_name)
+            hit.line == expected_line
+                && symbol_name_matches(&hit.symbol, &declaration.display_name, language)
         })
         .collect::<Vec<_>>();
     candidates.extend(
@@ -1470,7 +1480,11 @@ fn resolve_declaration_selector(
                 model.location.path == expected_path
                     && model.location.range.start_line == expected_line
                     && model_kind_matches(&model.kind, &declaration.kind)
-                    && symbol_name_matches(&model.qualified_name, &declaration.display_name)
+                    && symbol_name_matches(
+                        &model.qualified_name,
+                        &declaration.display_name,
+                        language,
+                    )
             })
             .map(|model| {
                 (
@@ -1483,6 +1497,12 @@ fn resolve_declaration_selector(
                 )
             }),
     );
+
+    // Searching several patterns, and merging file hits with model symbols, can
+    // surface the same symbol twice. Collapse those so an ambiguity bail below
+    // reports genuinely distinct declarations.
+    let mut seen = HashSet::new();
+    candidates.retain(|(path, hit)| seen.insert((path.clone(), hit.symbol.clone(), hit.line)));
 
     let selected = match candidates.as_slice() {
         [(path, hit)] => Some((path, hit)),
@@ -2063,15 +2083,66 @@ fn type_name_matches(actual: &NormalizedLocation, expected: &NormalizedLocation)
         .display_name
         .as_deref()
         .zip(expected.display_name.as_deref())
-        .is_some_and(|(actual_name, expected_name)| symbol_name_matches(actual_name, expected_name))
+        // Type names are class-like and never sigil-prefixed in the corpus, and
+        // no language is threaded to type lookups, so match on separators only.
+        .is_some_and(|(actual_name, expected_name)| {
+            symbol_name_matches(actual_name, expected_name, None)
+        })
 }
 
-fn symbol_name_matches(symbol: &str, display_name: &str) -> bool {
+/// Separators Bifrost may use to join the segments of a qualified name.
+///
+/// `$` appears here as a *separator* (Ruby and JVM-style nested owners), which
+/// is why it cannot also be read as a leading sigil by these rules alone.
+const SYMBOL_SEGMENT_SEPARATORS: [&str; 4] = [".", "::", "$", "#"];
+
+/// Leading sigils a language keeps in an authored declaration name but that
+/// Bifrost may omit from the symbol it indexes.
+///
+/// Kept per-language deliberately: `$` is a property sigil in PHP but a segment
+/// separator elsewhere, so stripping it everywhere would let unrelated symbols
+/// match. Languages are added here only once a real case demonstrates the
+/// mismatch — Ruby authors `$global`/`@ivar` names but no reviewed case has
+/// needed sigil-insensitive matching for them.
+fn declaration_sigils(language: &str) -> &'static [&'static str] {
+    match language {
+        "php" => &["$"],
+        _ => &[],
+    }
+}
+
+/// Names a declaration may be searched and matched under, most authored first.
+///
+/// Always includes the authored `display_name`; adds the de-sigiled form when
+/// the language authors a leading sigil that Bifrost may drop.
+fn declaration_name_candidates(display_name: &str, language: Option<&str>) -> Vec<String> {
+    let mut names = vec![display_name.to_string()];
+    for sigil in language.map(declaration_sigils).unwrap_or_default() {
+        if let Some(bare) = display_name.strip_prefix(sigil) {
+            if !bare.is_empty() && !names.iter().any(|name| name == bare) {
+                names.push(bare.to_string());
+            }
+        }
+    }
+    names
+}
+
+/// True when `display_name` is `symbol` or its trailing segment.
+fn symbol_tail_matches(symbol: &str, display_name: &str) -> bool {
     symbol == display_name
-        || symbol.ends_with(&format!(".{display_name}"))
-        || symbol.ends_with(&format!("::{display_name}"))
-        || symbol.ends_with(&format!("${display_name}"))
-        || symbol.ends_with(&format!("#{display_name}"))
+        || SYMBOL_SEGMENT_SEPARATORS
+            .iter()
+            .any(|separator| symbol.ends_with(&format!("{separator}{display_name}")))
+}
+
+/// True when a Bifrost symbol names the authored declaration.
+///
+/// `language` is `None` where no language is threaded to the call site, which
+/// keeps matching strictly separator-based.
+fn symbol_name_matches(symbol: &str, display_name: &str, language: Option<&str>) -> bool {
+    declaration_name_candidates(display_name, language)
+        .iter()
+        .any(|name| symbol_tail_matches(symbol, name))
 }
 
 fn apply_case_expectation(
@@ -3183,6 +3254,153 @@ for line in sys.stdin:
         fs::write(&final_output, "stale report").unwrap();
         remove_stale_report(&final_output).unwrap();
         assert!(!final_output.exists());
+    }
+
+    fn php_fields_json(path: &str, symbol: &str, line: usize) -> Value {
+        json!({
+            "patterns": ["$last", "last"],
+            "truncated": false,
+            "total_files": 1,
+            "files": [{
+                "path": path,
+                "loc": 10,
+                "classes": [],
+                "functions": [],
+                "fields": [{"symbol": symbol, "signature": "", "line": line}],
+                "modules": [],
+                "macros": []
+            }]
+        })
+    }
+
+    #[test]
+    fn symbol_name_matches_trailing_segment_for_each_separator() {
+        for symbol in [
+            "last",
+            "Repository.last",
+            "Repository::last",
+            "Repository$last",
+            "Repository#last",
+        ] {
+            assert!(
+                symbol_name_matches(symbol, "last", None),
+                "expected `{symbol}` to match `last`"
+            );
+        }
+        assert!(!symbol_name_matches("Repository.lastSeen", "last", None));
+        assert!(!symbol_name_matches("lastRepository", "last", None));
+    }
+
+    #[test]
+    fn php_declaration_sigil_is_matched_against_a_desigiled_symbol() {
+        // Bifrost indexes the PHP property `$last` as `Example.Repository.last`;
+        // the reviewed ground truth authors the sigil.
+        assert!(symbol_name_matches(
+            "Example.Repository.last",
+            "$last",
+            Some("php")
+        ));
+        assert!(symbol_name_matches("$last", "$last", Some("php")));
+    }
+
+    #[test]
+    fn sigil_stripping_is_confined_to_languages_that_author_one() {
+        // Without a language, and for languages with no declared sigil, `$` is
+        // only ever a segment separator.
+        assert!(!symbol_name_matches(
+            "Example.Repository.last",
+            "$last",
+            None
+        ));
+        assert!(!symbol_name_matches(
+            "Example.Repository.last",
+            "$last",
+            Some("ruby")
+        ));
+        // A `$`-separated symbol still must not match a differently named field.
+        assert!(!symbol_name_matches(
+            "Example.Repository.lastSeen",
+            "$last",
+            Some("php")
+        ));
+    }
+
+    #[test]
+    fn declaration_name_candidates_keep_the_authored_name_first() {
+        assert_eq!(
+            declaration_name_candidates("$last", Some("php")),
+            vec!["$last".to_string(), "last".to_string()]
+        );
+        assert_eq!(
+            declaration_name_candidates("last", Some("php")),
+            vec!["last".to_string()]
+        );
+        assert_eq!(
+            declaration_name_candidates("$last", None),
+            vec!["$last".to_string()]
+        );
+        // A bare sigil has no de-sigiled form to search under.
+        assert_eq!(
+            declaration_name_candidates("$", Some("php")),
+            vec!["$".to_string()]
+        );
+    }
+
+    #[test]
+    fn php_declaration_search_includes_the_desigiled_pattern() {
+        let declaration = symbol_location("src/Service.php", 11, 18, "$last", SymbolKind::Property);
+        let mut client = MockClient::new(vec![tool(
+            "search_symbols",
+            php_fields_json("src/Service.php", "Example.Repository.last", 12),
+        )]);
+
+        let selector =
+            resolve_declaration_selector(&mut client, &declaration, Some("php")).unwrap();
+
+        assert_eq!(selector.selector, "Example.Repository.last");
+        assert_eq!(client.calls[0].1["patterns"], json!(["$last", "last"]));
+    }
+
+    #[test]
+    fn one_symbol_found_twice_does_not_read_as_an_ambiguous_declaration() {
+        // File hits and model symbols are merged into one candidate list, so a
+        // symbol carried by both arrives twice. That is one declaration.
+        let declaration = symbol_location("src/Service.php", 11, 18, "$last", SymbolKind::Property);
+        let mut payload = php_fields_json("src/Service.php", "Example.Repository.last", 12);
+        payload["model_symbols"] = json!([{
+            "qualified_name": "Example.Repository.last",
+            "kind": "field",
+            "location": {"path": "src/Service.php", "range": {"start_line": 12}}
+        }]);
+        let mut client = MockClient::new(vec![tool("search_symbols", payload)]);
+
+        let selector =
+            resolve_declaration_selector(&mut client, &declaration, Some("php")).unwrap();
+
+        assert!(
+            selector.selector.ends_with("Example.Repository.last"),
+            "unexpected selector: {}",
+            selector.selector
+        );
+    }
+
+    #[test]
+    fn distinct_declarations_on_one_line_still_report_ambiguity() {
+        let declaration = symbol_location("src/Service.php", 11, 18, "$last", SymbolKind::Property);
+        let mut ambiguous = php_fields_json("src/Service.php", "Example.Repository.last", 12);
+        ambiguous["files"][0]["fields"]
+            .as_array_mut()
+            .unwrap()
+            .push(json!({"symbol": "Example.Cache.last", "signature": "", "line": 12}));
+        let mut client = MockClient::new(vec![tool("search_symbols", ambiguous)]);
+
+        let error =
+            resolve_declaration_selector(&mut client, &declaration, Some("php")).unwrap_err();
+
+        assert!(
+            format!("{error:#}").contains("multiple Bifrost symbols matched"),
+            "unexpected error: {error:#}"
+        );
     }
 
     #[test]
