@@ -40,6 +40,11 @@ export default defineConfig({
             { label: 'Evidence map (generated)', slug: 'results/evidence' },
             { label: 'Current evaluation result', slug: 'results' },
             { label: 'Evaluation case comparison', slug: 'results/case-comparison' },
+            { label: 'Historical v0.2.0 result', slug: 'results/evaluation-real-project-v1' },
+            {
+              label: 'Historical v0.2.0 cases',
+              slug: 'results/evaluation-real-project-v1-case-comparison',
+            },
             { label: 'Historical development result', slug: 'results/development-2026-07-24' },
             { label: 'Historical development cases', slug: 'results/development-case-comparison' },
           ],

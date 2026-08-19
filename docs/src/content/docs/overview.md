@@ -72,6 +72,6 @@ expectations or a tool-specific scoring exception.
 - That every real-world program construct is represented by the current corpus.
 
 The [comparison methodology](../methodology/) defines the evidence threshold for
-stronger claims. The [current result](../results/) reports the frozen v0.2.0
+stronger claims. The [historical v0.2.0 result](../results/evaluation-real-project-v1/) reports that frozen
 evaluation, while the language pages explain case-level deltas from the broader
 historical development run.
