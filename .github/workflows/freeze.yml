@@ -316,11 +316,14 @@ jobs:
           scripts/run-freeze-candidates.sh . adapters/candidates.json "$CANDIDATES" \
             "$RUNNER_TEMP/freeze-corpus" benchmarks/cases "$RUNNER_TEMP/legacy-output" "$REVISION"
           for candidate in bifrost gopls; do
+            # Compare the authored slice, not the planned one: a candidate's
+            # report counts a case it cannot serve as unsupported rather than
+            # planned, so plannedCases understates a complete run.
             expected_cases=10
             [[ "$candidate" == bifrost ]] && expected_cases=110
             jq -e --arg candidate "$candidate" \
               --argjson expected_cases "$expected_cases" \
-              '(.completed == true and .runner.name == $candidate and .requestedTotals.plannedCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
+              '(.completed == true and .runner.name == $candidate and .requestedTotals.authoredCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
               "$RUNNER_TEMP/legacy-output/$candidate.json" >/dev/null
             cp "$RUNNER_TEMP/legacy-output/$candidate.json" "$RUNNER_TEMP/legacy-shard/"
           done
@@ -536,10 +539,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP/legacy-shard"
           scripts/run-freeze-candidates.sh . adapters/candidates.json "$CANDIDATE" \
             "$RUNNER_TEMP/freeze-corpus" benchmarks/cases "$RUNNER_TEMP/legacy-output" "$REVISION"
+          # Compare the authored slice, not the planned one: a candidate's
+          # report counts a case it cannot serve as unsupported rather than
+          # planned, so plannedCases understates a complete run.
           expected_cases=10
           [[ "$CANDIDATE" == typescript-language-server ]] && expected_cases=20
           jq -e --arg candidate "$CANDIDATE" --argjson expected_cases "$expected_cases" \
-            '(.completed == true and .invocation.profile == $candidate and .runner.requestedVersion != null and .requestedTotals.plannedCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
+            '(.completed == true and .invocation.profile == $candidate and .runner.requestedVersion != null and .requestedTotals.authoredCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
             "$RUNNER_TEMP/legacy-output/$CANDIDATE.json" >/dev/null
           cp "$RUNNER_TEMP/legacy-output/$CANDIDATE.json" "$RUNNER_TEMP/legacy-shard/"
           (cd "$RUNNER_TEMP/legacy-shard" && shasum -a 256 *.json > SHA256SUMS)
@@ -700,12 +706,15 @@ jobs:
               exit 1
             }
             cp "${reports[0]}" "$report_root/$candidate.json"
+            # Compare the authored slice, not the planned one: a candidate's
+            # report counts a case it cannot serve as unsupported rather than
+            # planned, so plannedCases understates a complete run.
             expected_cases=10
             [[ "$candidate" == bifrost ]] && expected_cases=110
             [[ "$candidate" == typescript-language-server ]] && expected_cases=20
             jq -e --arg candidate "$candidate" --arg revision "$REVISION" --arg version "$SNAPSHOT_VERSION" \
               --argjson expected_cases "$expected_cases" \
-              '(.completed == true and ((.runner.name == "bifrost" and $candidate == "bifrost") or .invocation.profile == $candidate) and .usagebenchRevision == $revision and .usagebenchRelease == $version and .requestedTotals.plannedCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
+              '(.completed == true and ((.runner.name == "bifrost" and $candidate == "bifrost") or .invocation.profile == $candidate) and .usagebenchRevision == $revision and .usagebenchRelease == $version and .requestedTotals.authoredCases == $expected_cases and .totals.errors == 0 and (.caseFiles | length > 0))' \
               "$report_root/$candidate.json" >/dev/null
           done
           [[ "$(find "$report_root" -maxdepth 1 -type f -name '*.json' | wc -l | tr -d ' ')" == "11" ]] || {
