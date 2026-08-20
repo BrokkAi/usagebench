@@ -101,7 +101,7 @@ class FreezeShardTests(unittest.TestCase):
     def test_legacy_native_shards_publish_semantic_misses_but_reject_runner_errors(self):
         workflow = (ROOT / ".github/workflows/freeze.yml").read_text()
         self.assertIn(
-            '.requestedTotals.plannedCases == $expected_cases and .totals.errors == 0',
+            '.requestedTotals.authoredCases == $expected_cases and .totals.errors == 0',
             workflow,
         )
         self.assertNotIn('.totals.cases == $expected_cases', workflow)
@@ -111,7 +111,26 @@ class FreezeShardTests(unittest.TestCase):
         self.assertIn('brew list --formula dotnet@8 >/dev/null 2>&1 || brew install dotnet@8', workflow)
         self.assertIn('dotnet_root="$(brew --prefix dotnet@8)/libexec"', workflow)
         self.assertIn('printf \'DOTNET_ROOT=%s\\n\' "$dotnet_root" >> "$GITHUB_ENV"', workflow)
-        self.assertIn('[[ "$dotnet_version" == 8.* ]]', workflow)
+        # Roslyn targets net8.0, so the gate reads the runtime list rather than
+        # `dotnet --version`, which reports the SDK and moves with roll-forward.
+        self.assertIn(
+            '"$dotnet_bin" --list-runtimes | grep -q \'^Microsoft.NETCore.App 8\\.\'', workflow
+        )
+        self.assertIn('[[ "$resolved_dotnet" == "$dotnet_bin" ]]', workflow)
+        self.assertNotIn('[[ "$dotnet_version" == 8.* ]]', workflow)
+
+    def test_native_toolchain_probe_checks_the_roslyn_dotnet_contract(self):
+        probe = (ROOT / ".github/workflows/native-toolchain-probe.yml").read_text()
+        self.assertIn("runs-on: macos-26", probe)
+        # The probe exists to answer the questions the freeze log could not:
+        # whether the keg provides a muxer, and whether the prepend wins.
+        self.assertIn('prefix="$(brew --prefix dotnet@8 2>&1)"', probe)
+        self.assertIn("command -v dotnet before prepend", probe)
+        self.assertIn("command -v dotnet after prepend", probe)
+        self.assertIn(
+            '"$dotnet_bin" --list-runtimes | grep -q \'^Microsoft.NETCore.App 8\\.\'', probe
+        )
+        self.assertIn('[[ "$resolved_dotnet" == "$dotnet_bin" ]]', probe)
 
     def test_ruby_lsp_native_shard_provisions_ruby_three_four_keg(self):
         workflow = (ROOT / ".github/workflows/freeze.yml").read_text()

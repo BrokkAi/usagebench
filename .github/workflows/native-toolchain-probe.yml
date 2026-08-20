@@ -1,0 +1,119 @@
+name: Native toolchain probe
+
+# Diagnostic-only companion to the legacy freeze. The freeze provisions the
+# Homebrew .NET 8 keg for the Roslyn shard inside a multi-hour run, so a
+# provisioning regression is expensive to discover there. This workflow runs
+# the same provisioning sequence on its own, reports what the macos-26 image
+# actually exposes, and then asserts the contract the freeze depends on.
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+concurrency:
+  group: usagebench-native-toolchain-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dotnet8:
+    name: probe the Roslyn .NET 8 keg
+    runs-on: macos-26
+    permissions:
+      contents: read
+    timeout-minutes: 20
+    steps:
+      - name: Report the preinstalled toolchain
+        shell: bash
+        run: |
+          # GitHub runs `bash -eo pipefail`, and the diagnostic steps must not
+          # stop at the first failing probe.
+          set +e -uo pipefail
+          # Deliberately not `set -e`: every line here is evidence, including
+          # the ones that fail. The contract is asserted in the next step.
+          echo "runner image: $(sw_vers -productName) $(sw_vers -productVersion) $(uname -m)"
+          echo "preinstalled dotnet: $(command -v dotnet || echo '<none on PATH>')"
+          echo "DOTNET_ROOT before provisioning: ${DOTNET_ROOT:-<unset>}"
+          echo "--- preinstalled dotnet --list-runtimes ---"
+          dotnet --list-runtimes 2>&1 || echo "exit $?"
+          echo "--- preinstalled dotnet --list-sdks ---"
+          dotnet --list-sdks 2>&1 || echo "exit $?"
+          echo "--- preinstalled dotnet --version ---"
+          dotnet --version 2>&1 || echo "exit $?"
+
+      - name: Probe the dotnet@8 keg on a cold runner
+        shell: bash
+        run: |
+          set +e -uo pipefail
+          # The failing freeze step completed in 0.45s, which is fast for
+          # `brew list` + `brew --prefix` + a muxer call. Time each part so a
+          # short run can be read as a cache hit or as a call that never ran.
+          echo "--- brew list --formula dotnet@8 (cold) ---"
+          cold_start="$(date +%s)"
+          brew list --formula dotnet@8 2>&1
+          cold_status=$?
+          echo "brew list --formula dotnet@8 exit: $cold_status after $(( $(date +%s) - cold_start ))s"
+          echo "--- brew install dotnet@8 (skipped when already installed) ---"
+          install_start="$(date +%s)"
+          if [[ "$cold_status" -ne 0 ]]; then
+            brew install dotnet@8 2>&1 || echo "brew install dotnet@8 exit $?"
+          else
+            echo "already installed; install skipped"
+          fi
+          echo "install phase took $(( $(date +%s) - install_start ))s"
+          echo "--- brew --prefix dotnet@8 ---"
+          prefix="$(brew --prefix dotnet@8 2>&1)"
+          prefix_status=$?
+          echo "brew --prefix dotnet@8: $prefix (exit $prefix_status)"
+          echo "keg libexec contents: $(ls -A "$prefix/libexec" 2>&1 | tr '\n' ' ')"
+          for path in "$prefix/libexec/dotnet" "$prefix/bin/dotnet"; do
+            if [[ -e "$path" ]]; then
+              echo "$path exists (executable: $([[ -x "$path" ]] && echo yes || echo no), $(ls -ld "$path" | awk '{print $1}'))"
+            else
+              echo "$path does not exist"
+            fi
+          done
+          echo "--- keg muxer --list-runtimes ---"
+          "$prefix/libexec/dotnet" --list-runtimes 2>&1 || echo "exit $?"
+          echo "--- keg muxer --list-sdks ---"
+          "$prefix/libexec/dotnet" --list-sdks 2>&1 || echo "exit $?"
+
+      - name: Probe how the PATH prepend resolves
+        shell: bash
+        run: |
+          set +e -uo pipefail
+          dotnet_root="$(brew --prefix dotnet@8)/libexec"
+          echo "command -v dotnet before prepend: $(command -v dotnet || echo '<none>')"
+          export PATH="$dotnet_root:$PATH"
+          # `command -v` can answer from a hashed lookup taken before the PATH
+          # change, which is exactly how a lost prepend hides itself.
+          hash -r
+          echo "command -v dotnet after prepend: $(command -v dotnet || echo '<none>')"
+          echo "--- resolved dotnet --list-runtimes ---"
+          dotnet --list-runtimes 2>&1 || echo "exit $?"
+
+      - name: Assert the contract the Roslyn freeze shard depends on
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Mirrors the roslyn branch of the freeze provisioning step. A green
+          # run here means that step's guards hold on this image.
+          brew list --formula dotnet@8 >/dev/null 2>&1 || brew install dotnet@8
+          dotnet_root="$(brew --prefix dotnet@8)/libexec"
+          dotnet_bin="$dotnet_root/dotnet"
+          [[ -x "$dotnet_bin" ]] || {
+            echo "the dotnet@8 keg did not provide a muxer at $dotnet_bin" >&2
+            exit 1
+          }
+          export PATH="$dotnet_root:$PATH"
+          "$dotnet_bin" --list-runtimes | grep -q '^Microsoft.NETCore.App 8\.' || {
+            echo "the dotnet@8 keg does not offer a .NET 8 runtime:" >&2
+            "$dotnet_bin" --list-runtimes >&2
+            exit 1
+          }
+          hash -r
+          resolved_dotnet="$(command -v dotnet)"
+          [[ "$resolved_dotnet" == "$dotnet_bin" ]] || {
+            echo "expected dotnet to resolve to $dotnet_bin, got $resolved_dotnet" >&2
+            exit 1
+          }
+          echo "dotnet@8 provisioning holds on $(sw_vers -productName) $(sw_vers -productVersion)"

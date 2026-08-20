@@ -16,6 +16,11 @@ that must be configured in GitHub. The settings snapshot below was observed on
 - `benchmark.yml`, `docs.yml`, and `freeze.yml` accept manual or scheduled work
   only from `refs/heads/main`. User inputs are passed through action inputs or
   environment variables rather than interpolated into shell programs.
+- `native-toolchain-probe.yml` is manual-only, checks out nothing, takes no
+  inputs, and runs on a GitHub-hosted `macos-26` runner with a read-only
+  `contents` token. It reports what the image exposes for the freeze's native
+  toolchains and executes no repository or pull-request code, so it may be
+  dispatched from any ref by a user who already has write access.
 - The `real-project-v2` freeze may select an explicitly approved repository
   runner label. The input accepts only `macos-26` or a random, one-job label
   matching `usagebench-ephemeral-macos-arm64-<32 lowercase hex characters>`;
