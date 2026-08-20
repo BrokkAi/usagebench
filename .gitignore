@@ -33,3 +33,4 @@ dataset/**
 /pygen/
 
 /.vscode
+__pycache__/
