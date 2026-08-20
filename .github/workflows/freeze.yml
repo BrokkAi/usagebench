@@ -412,10 +412,12 @@ jobs:
               [[ "$actual" == "$prefix"* ]] || { echo "Apple clangd identity drift: $actual" >&2; exit 1; }
               ;;
             roslyn)
-              # macos-26 currently exposes the preinstalled .NET 10 SDK first.
-              # Roslyn's registered profile targets net8.0, so provision the
-              # Homebrew .NET 8 keg and make that exact runtime visible to
-              # both this step and the later LSP runner step.
+              # macos-26 carries several .NET runtimes and selects the newest
+              # SDK, so bare `dotnet` reports 10.x even though an 8.x runtime is
+              # present. Roslyn's registered profile targets net8.0, so pin the
+              # exact runtime with the Homebrew .NET 8 keg rather than depending
+              # on whichever 8.x the image happens to ship, and make it visible
+              # to both this step and the later LSP runner step.
               brew list --formula dotnet@8 >/dev/null 2>&1 || brew install dotnet@8
               dotnet_root="$(brew --prefix dotnet@8)/libexec"
               # Resolve the keg's muxer by absolute path. Relying on PATH order
