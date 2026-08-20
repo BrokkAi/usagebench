@@ -44,9 +44,11 @@ jobs:
         shell: bash
         run: |
           set +e -uo pipefail
-          # The failing freeze step completed in 0.45s, which is fast for
-          # `brew list` + `brew --prefix` + a muxer call. Time each part so a
-          # short run can be read as a cache hit or as a call that never ran.
+          # The 0.45s freeze failure predates keg provisioning: that revision
+          # only ran `dotnet --version`, so its speed was never evidence of a
+          # skipped install. Time each phase anyway, so a future short run can
+          # be read as a warm keg rather than a call that never happened.
+          # Measured cold on image 20260728.0273.1: ~3s list miss, ~10s install.
           echo "--- brew list --formula dotnet@8 (cold) ---"
           cold_start="$(date +%s)"
           brew list --formula dotnet@8 2>&1
