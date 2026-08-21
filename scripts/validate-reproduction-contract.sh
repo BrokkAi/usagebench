@@ -70,8 +70,8 @@ jq -e '
 jq -e '
   [.candidates[] | select(
     .id == "bifrost"
-    and .requestedVersion == "v0.10.1"
-    and .revision == "511adaa2733067bb1b7809ab79e06ec0e3d2a146"
+    and .requestedVersion == "v0.10.5"
+    and .revision == "d775e3b4656f418c7025c06577ce707e1556da91"
   )] | length == 1
 ' "$registry" >/dev/null
 

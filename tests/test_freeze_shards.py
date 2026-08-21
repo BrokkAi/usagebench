@@ -57,10 +57,10 @@ class FreezeShardTests(unittest.TestCase):
         active_bifrost = next(item for item in active["candidates"] if item["id"] == "bifrost")
         frozen_bifrost = next(item for item in frozen["candidates"] if item["id"] == "bifrost")
         self.assertEqual(
-            active_bifrost["requestedVersion"], "v0.10.1"
+            active_bifrost["requestedVersion"], "v0.10.5"
         )
         self.assertEqual(
-            active_bifrost["revision"], "511adaa2733067bb1b7809ab79e06ec0e3d2a146"
+            active_bifrost["revision"], "d775e3b4656f418c7025c06577ce707e1556da91"
         )
         self.assertEqual(frozen_bifrost["requestedVersion"], "v0.10.2")
         self.assertEqual(
