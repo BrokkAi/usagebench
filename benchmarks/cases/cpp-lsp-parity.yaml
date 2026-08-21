@@ -334,8 +334,6 @@ cases:
         Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp macro and function-reference scenarios.
         Server profile: clangd 22.1.6; measured locally with Apple clangd 21.0.0 (clang-2100.1.1.101).
   - id: cpp-parity-function-like-macro-expanded-call
-    expectedFailure:
-      reason: Bifrost finds the PARITY_CALL function-name argument as a line-level usage, but reverse navigation from that macro argument does not resolve to the expanded_label definition.
     declaration:
       location:
         uri: benchmark://source/include/parity.h
@@ -384,6 +382,14 @@ cases:
         Upstream reference: clang-tools-extra/clangd/unittests/XRefsTests.cpp macro-expansion references and definition scenarios.
         Server profile: clangd 22.1.6; measured locally with Apple clangd 21.0.0 (clang-2100.1.1.101).
         Maturity: expanded_label is a file-backed macro argument that PARITY_CALL expands into a normal function call; no virtual document is required.
+        Expected-failure retired on 2026-08-21. The annotation recorded that
+        reverse navigation from the macro argument did not resolve to the
+        expanded_label definition. Bifrost v0.10.5
+        (d775e3b4656f418c7025c06577ce707e1556da91) resolves it to the authored
+        include/parity.h:45:20, measured over the 110-case balanced core
+        against v0.10.1, where the same lookup returned no_definition. The
+        authored contract is unchanged; only the claim about what Bifrost
+        cannot do was stale.
   - id: cpp-parity-compile-commands-unsupported
     unsupported:
       reason: This configured regression case requires -DENABLE_PARITY_FEATURE and is excluded from default cross-tool scoring; run it explicitly with adapters/lsp/clangd-configured.json and --include-unsupported.
