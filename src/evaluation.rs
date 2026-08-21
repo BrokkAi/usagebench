@@ -4124,6 +4124,7 @@ mod tests {
                 }],
                 type_lookups: Vec::new(),
                 expected_failure: None,
+                expected_pass_reason: None,
                 not_planned: None,
                 unsupported: None,
                 verification: None,

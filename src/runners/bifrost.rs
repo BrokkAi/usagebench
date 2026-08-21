@@ -59,6 +59,7 @@ pub struct RunBifrostOptions {
     pub keep_worktrees: bool,
     pub case_id: Option<String>,
     pub language: Option<String>,
+    pub expected_passes: Option<PathBuf>,
 }
 
 impl RunBifrostOptions {
@@ -78,8 +79,23 @@ impl RunBifrostOptions {
             keep_worktrees: false,
             case_id: None,
             language: None,
+            expected_passes: None,
         }
     }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ExpectedPassManifest {
+    schema_version: u32,
+    expected_passes: Vec<ExpectedPass>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ExpectedPass {
+    case_id: String,
+    reason: String,
 }
 
 pub type BifrostRunReport = RunReport;
@@ -105,7 +121,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     let repo_root = find_repo_root_for_path(&options.case_path)?;
     let usagebench_provenance = resolve_usagebench_provenance(&repo_root)?;
     let case_files = crate::validate_path(&options.case_path)?;
-    let benchmark_documents = case_files
+    let mut benchmark_documents = case_files
         .iter()
         .map(|case_file| {
             let yaml = fs::read_to_string(case_file)
@@ -115,6 +131,11 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
             Ok((case_file.clone(), document))
         })
         .collect::<Result<Vec<_>>>()?;
+    apply_expected_passes(
+        &mut benchmark_documents,
+        &repo_root,
+        options.expected_passes.as_deref(),
+    )?;
     let requested_totals = requested_run_totals(
         benchmark_documents
             .iter()
@@ -380,6 +401,85 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     }
 
     Ok(report)
+}
+
+fn apply_expected_passes(
+    documents: &mut [(PathBuf, BenchmarkDocument)],
+    repo_root: &Path,
+    manifest_path: Option<&Path>,
+) -> Result<()> {
+    let Some(manifest_path) = manifest_path else {
+        return Ok(());
+    };
+    let manifest_path = if manifest_path.is_absolute() {
+        manifest_path.to_path_buf()
+    } else {
+        repo_root.join(manifest_path)
+    };
+    let source = fs::read_to_string(&manifest_path)
+        .with_context(|| format!("read expected-pass overlay {}", manifest_path.display()))?;
+    let manifest = serde_yaml::from_str::<ExpectedPassManifest>(&source)
+        .with_context(|| format!("parse expected-pass overlay {}", manifest_path.display()))?;
+    if manifest.schema_version != 1 {
+        bail!(
+            "expected-pass overlay {} has unsupported schemaVersion {}",
+            manifest_path.display(),
+            manifest.schema_version
+        );
+    }
+
+    let mut expected_passes = BTreeMap::new();
+    for expected_pass in manifest.expected_passes {
+        if expected_pass.case_id.trim().is_empty() || expected_pass.reason.trim().is_empty() {
+            bail!(
+                "expected-pass overlay {} requires non-empty caseId and reason",
+                manifest_path.display()
+            );
+        }
+        if expected_passes
+            .insert(expected_pass.case_id.clone(), expected_pass.reason)
+            .is_some()
+        {
+            bail!(
+                "expected-pass overlay {} repeats caseId {}",
+                manifest_path.display(),
+                expected_pass.case_id
+            );
+        }
+    }
+
+    let mut applied = BTreeSet::new();
+    for (_, document) in documents {
+        for case in &mut document.cases {
+            let Some(reason) = expected_passes.get(&case.id) else {
+                continue;
+            };
+            if case.expected_failure.is_none() {
+                bail!(
+                    "expected-pass overlay {} may only promote an authored expectedFailure: {}",
+                    manifest_path.display(),
+                    case.id
+                );
+            }
+            case.expected_failure = None;
+            case.expected_pass_reason = Some(reason.clone());
+            applied.insert(case.id.clone());
+        }
+    }
+
+    let missing = expected_passes
+        .keys()
+        .filter(|case_id| !applied.contains(*case_id))
+        .cloned()
+        .collect::<Vec<_>>();
+    if !missing.is_empty() {
+        bail!(
+            "expected-pass overlay {} references case IDs absent from this run: {}",
+            manifest_path.display(),
+            missing.join(", ")
+        );
+    }
+    Ok(())
 }
 
 fn document_failure_cases(
@@ -867,6 +967,13 @@ fn run_case_with_scan_duration(
         .expected_failure
         .as_ref()
         .map(|expected_failure| expected_failure.reason.clone());
+    let expected_pass_reason = case.expected_pass_reason.clone();
+    if let Some(reason) = &expected_pass_reason {
+        diagnostics.push(RunDiagnostic {
+            kind: "expected_pass_override".to_string(),
+            message: format!("current Bifrost expected-pass overlay applied: {reason}"),
+        });
+    }
     let not_planned_reason = case
         .not_planned
         .as_ref()
@@ -898,6 +1005,7 @@ fn run_case_with_scan_duration(
         id: case.id.clone(),
         status,
         expected_failure_reason,
+        expected_pass_reason,
         not_planned_reason,
         unsupported_reason: case
             .unsupported
@@ -3148,6 +3256,7 @@ for line in sys.stdin:
                     status: CaseStatus::Passed,
                     location_metrics: None,
                     expected_failure_reason: None,
+                    expected_pass_reason: None,
                     not_planned_reason: None,
                     unsupported_reason: None,
                     declaration_to_usages: Some(DeclarationUsageReport {
@@ -4169,6 +4278,92 @@ for line in sys.stdin:
     }
 
     #[test]
+    fn expected_pass_override_is_reported_as_passed() {
+        let mut case = benchmark_case();
+        case.expected_pass_reason = Some("verified current behavior".to_string());
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages_by_location",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+        ]);
+
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(
+            report.expected_pass_reason.as_deref(),
+            Some("verified current behavior")
+        );
+        assert_eq!(report.diagnostics[0].kind, "expected_pass_override");
+    }
+
+    #[test]
+    fn expected_pass_override_does_not_mask_a_regression() {
+        let mut case = benchmark_case();
+        case.expected_pass_reason = Some("verified current behavior".to_string());
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages_by_location",
+                scan_usages_json(Vec::new(), false),
+            ),
+        ]);
+
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(report.diagnostics[0].kind, "expected_pass_override");
+    }
+
+    #[test]
+    fn expected_pass_overlay_promotes_only_authored_expected_failures() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let manifest_path = tempdir.path().join("expected-passes.yaml");
+        fs::write(
+            &manifest_path,
+            "schemaVersion: 1\nexpectedPasses:\n  - caseId: expected-case\n    reason: verified\n",
+        )
+        .unwrap();
+        let mut documents = vec![(
+            PathBuf::from("benchmarks/cases/sample.yaml"),
+            serde_yaml::from_str::<BenchmarkDocument>(
+                "schemaVersion: 2\ncorpus:\n  partition: development\n  selection: analyzer_informed\ngroundTruth:\n  status: legacy_unattributed\n  reviewers: []\nreferencePolicy: bindings_optional\nsource:\n  kind: fixture\n  path: fixtures/sample\nlanguage: rust\ncases:\n  - id: expected-case\n    expectedFailure:\n      reason: historical gap\n",
+            )
+            .unwrap(),
+        )];
+
+        apply_expected_passes(&mut documents, tempdir.path(), Some(&manifest_path)).unwrap();
+
+        let case = &documents[0].1.cases[0];
+        assert!(case.expected_failure.is_none());
+        assert_eq!(case.expected_pass_reason.as_deref(), Some("verified"));
+    }
+
+    #[test]
     fn unsupported_case_reports_boundary_status_by_default() {
         let mut case = benchmark_case();
         case.unsupported = Some(crate::UnsupportedReason {
@@ -5153,6 +5348,7 @@ for line in sys.stdin:
             }],
             type_lookups: Vec::new(),
             expected_failure: None,
+            expected_pass_reason: None,
             not_planned: None,
             unsupported: None,
             verification: None,

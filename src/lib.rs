@@ -194,6 +194,11 @@ pub struct BenchmarkCase {
     pub type_lookups: Vec<TypeLookup>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expected_failure: Option<ExpectedFailure>,
+    /// Current-run expectation supplied by the Bifrost expected-pass overlay.
+    /// This is intentionally not part of an authored benchmark document: some
+    /// legacy documents are content-addressed by frozen promotion evidence.
+    #[serde(skip)]
+    pub expected_pass_reason: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub not_planned: Option<NotPlannedReason>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

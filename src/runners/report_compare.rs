@@ -500,6 +500,7 @@ mod tests {
                     id: "sample-case".to_string(),
                     status: super::super::CaseStatus::Passed,
                     expected_failure_reason: None,
+                    expected_pass_reason: None,
                     not_planned_reason: None,
                     unsupported_reason: None,
                     declaration_to_usages: None,
