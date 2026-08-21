@@ -274,7 +274,8 @@ The workflow:
 * validates `benchmarks/cases`
 * checks out `BrokkAi/bifrost`
 * builds `usagebench`
-* runs `usagebench run-bifrost benchmarks/cases`
+* runs `usagebench run-bifrost benchmarks/cases` with the versioned current
+  expected-pass overlay
 * uploads the JSON report from `benchmark-output`
 * publishes a GitHub step summary
 * optionally posts a payload to Slack

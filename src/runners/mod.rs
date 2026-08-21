@@ -682,6 +682,8 @@ pub struct CaseRunReport {
     pub location_metrics: Option<LocationMetrics>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expected_failure_reason: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expected_pass_reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub not_planned_reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -858,6 +860,7 @@ pub(crate) fn runner_failure_case(
             .expected_failure
             .as_ref()
             .map(|item| item.reason.clone()),
+        expected_pass_reason: case.expected_pass_reason.clone(),
         not_planned_reason: case.not_planned.as_ref().map(|item| item.reason.clone()),
         unsupported_reason: case.unsupported.as_ref().map(|item| item.reason.clone()),
         declaration_to_usages: None,
@@ -886,6 +889,7 @@ pub(crate) fn excluded_case(case: &BenchmarkCase, status: CaseStatus) -> CaseRun
             .expected_failure
             .as_ref()
             .map(|item| item.reason.clone()),
+        expected_pass_reason: case.expected_pass_reason.clone(),
         not_planned_reason: case.not_planned.as_ref().map(|item| item.reason.clone()),
         unsupported_reason: case.unsupported.as_ref().map(|item| item.reason.clone()),
         declaration_to_usages: None,

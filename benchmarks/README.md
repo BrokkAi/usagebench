@@ -218,6 +218,10 @@ Each case supports both benchmark directions:
 - `expectedFailure.reason` keeps a known analyzer gap in the baseline while
   still running the case and reporting it as improved if it unexpectedly starts
   passing.
+- `benchmarks/expectations/bifrost-expected-passes.yaml` can promote a frozen
+  historical `expectedFailure` to a current Bifrost required pass without
+  mutating content-addressed legacy benchmark documents. A matching case must
+  pass; any regression is reported as a normal failure.
 - `notPlanned.reason` keeps runtime-dynamic or generated-code expectations in
   the corpus and runs them without including them in the planned-case total.
 - `unsupported.reason` documents out-of-boundary cases and reports them as
