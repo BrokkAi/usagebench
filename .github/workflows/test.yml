@@ -31,6 +31,13 @@ jobs:
           toolchain: stable
       - name: Run Rust tests
         run: cargo test --locked
+      - name: Run Python tests
+        # The docs generators and the freeze-shard helpers are Python, and
+        # their suites ran nowhere on a pull request: only the reference
+        # environment, freeze, and reproduction-contract workflows invoked
+        # unittest, and each names a single file. Discovery keeps a new suite
+        # from being added and silently never run.
+        run: python3 -m unittest discover --start-directory tests --pattern 'test_*.py' --verbose
       - name: Validate benchmark cases
         run: cargo run --locked -- validate benchmarks/cases
       - name: Validate citation metadata
