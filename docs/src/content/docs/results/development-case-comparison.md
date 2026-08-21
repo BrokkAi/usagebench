@@ -16,6 +16,26 @@ contract result, not an automatic defect verdict.
 Import, re-export, and export-metadata bindings are optional. They remain
 visible in reports but do not make an otherwise exact case non-exact.
 
+:::caution[The PHP row predates the PHP ground-truth audit]
+This page reports PHP as ten shared cases with nine exact for both sides and
+none exact for the language server alone, which reads as Bifrost satisfying
+every PHP case. That cannot describe the corpus as it stands.
+
+The PHP human ground-truth audit landed on 22 July 2026, two days before this
+run, and rewrote `php-property-access` and `php-parity-static-property-access`
+to expect sigil-inclusive ranges (`$last`, `$sent`). Every Bifrost version
+measured since has failed at least one of them: both under v0.10.1, and
+`php-parity-static-property-access` alone under v0.10.5, which fixed the
+declaration side but not the static usage side.
+
+So this row reflects a corpus state from before that audit, or a shared
+denominator that excluded those two cases for a reason this page does not
+record. Either way it is not evidence that Bifrost passed them, and it should
+not be used to date a regression — doing exactly that produced a false
+regression hypothesis that took a source-level check across two Bifrost tags
+to disprove.
+:::
+
 ## Shared-case overview
 
 | Language | Shared | Both exact | Bifrost only | LSP only | Neither |
