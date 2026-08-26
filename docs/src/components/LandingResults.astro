@@ -24,8 +24,9 @@ const legacyResult = (legacy?.result ?? {}) as SliceResult;
 const published = legacyResult.status === 'published_immutable_release';
 const profiles: ProfileScore[] = legacyResult.derivedScores?.profiles ?? [];
 
-// A rival's registered profile name carries its version; the short name is what
-// a reader scans for. Keyed on the profile string the result generator emits.
+// A reference profile's registered name carries its version; the short name is
+// what a reader scans for. Keyed on the profile string the result generator
+// emits.
 const shortNames: [RegExp, string][] = [
   [/^Apple clangd/, 'clangd'],
   [/^Eclipse JDT LS/, 'Eclipse JDT LS'],
@@ -53,7 +54,7 @@ function version(reference: string): string {
 type Row = ProfileScore & {
   name: string;
   toolVersion: string;
-  /** Cases exact for Bifrost but not the rival, and the reverse. */
+  /** Cases exact for Bifrost but not the reference server, and the reverse. */
   bifrostOnly: number;
   referenceOnly: number;
   bothExact: number;
@@ -78,12 +79,12 @@ const rows: Row[] = profiles
 
 const totalShared = rows.reduce((sum, row) => sum + row.strict.shared, 0);
 const bifrostAhead = rows.filter((row) => row.bifrostOnly > row.referenceOnly).length;
-const rivalAhead = rows.filter((row) => row.referenceOnly > row.bifrostOnly).length;
-const level = rows.length - bifrostAhead - rivalAhead;
+const referenceAhead = rows.filter((row) => row.referenceOnly > row.bifrostOnly).length;
+const level = rows.length - bifrostAhead - referenceAhead;
 const behind = rows.filter((row) => row.referenceOnly > row.bifrostOnly);
 
 // Each bar is a share of its own card's shared denominator, never of the
-// widest card. Rivals answer different populations -- 5 shared cases for gopls,
+// widest card. Reference servers answer different populations -- 5 shared cases for gopls,
 // 16 for the TypeScript server -- so a cross-card scale made 9 of 9 render at
 // 56% and read as a 56% score. Bar lengths are comparable within a card, which
 // is the only comparison the denominators support.
@@ -102,11 +103,13 @@ function width(value: number, shared: number): string {
       <p class="label">Short answer</p>
       <p class="verdict">
         Against ten reference language servers on the reviewed legacy core,
-        Bifrost is exact on more cases than the rival in <strong>{bifrostAhead}</strong>
-        {' '}of {rows.length} comparisons, level in {level}, and behind in {rivalAhead}
+        Bifrost is exact on more cases than the reference server in{' '}
+        <strong>{bifrostAhead}</strong>
+        {' '}of {rows.length} comparisons, level in {level}, and behind in {referenceAhead}
         {behind.length > 0 ? ` (${behind.map((row) => row.name).join(', ')})` : ''}.
         Each language server is compared only on the cases it and Bifrost both
-        answer, so a rival is never charged for an operation it does not offer.
+        answer, so a reference server is never charged for an operation it does
+        not offer.
       </p>
       <p>
         UsageBench is <a href="https://github.com/BrokkAi">BrokkAi</a>'s own
@@ -126,9 +129,9 @@ function width(value: number, shared: number): string {
       </p>
     </aside>
 
-    <div class="rivals">
+    <div class="references">
       {rows.map((row) => (
-        <article class="rival">
+        <article class="reference">
           <header>
             <h3>{row.name}</h3>
             <span class="ver" title={row.reference}>{row.toolVersion}</span>
@@ -141,14 +144,14 @@ function width(value: number, shared: number): string {
             <span class="num">{row.strict.bifrostExact}<small>/{row.strict.shared}</small></span>
             <span class="who">{row.name}</span>
             <div class="track">
-              <div class="fill rival" style={`width:${width(row.strict.referenceExact, row.strict.shared)}`}></div>
+              <div class="fill reference" style={`width:${width(row.strict.referenceExact, row.strict.shared)}`}></div>
             </div>
             <span class="num">{row.strict.referenceExact}<small>/{row.strict.shared}</small></span>
           </div>
           <dl class="split">
             <div><dt>Both exact</dt><dd>{row.bothExact}</dd></div>
             <div><dt>Bifrost only</dt><dd>{row.bifrostOnly}</dd></div>
-            <div><dt>Rival only</dt><dd>{row.referenceOnly}</dd></div>
+            <div><dt>Reference only</dt><dd>{row.referenceOnly}</dd></div>
           </dl>
         </article>
       ))}
@@ -216,32 +219,35 @@ function width(value: number, shared: number): string {
     padding-top: 0.6rem;
   }
 
-  .rivals {
+  .references {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
     gap: 1rem;
     margin-bottom: 1.5rem;
   }
-  .rival {
+  .reference {
     border: 1px solid var(--sl-color-gray-5);
     border-radius: 0.5rem;
     padding: 0.9rem 1rem;
   }
   /* Starlight's markdown flow adds a top margin to every sibling after the
-     first, which inside this grid left the first card a different height from
-     the rest. The grid's own gap owns the spacing here. */
-  .rivals > .rival {
+     first. Inside these grids that left the first card taller than the rest,
+     and then the first breakdown column sitting 16px above its neighbours.
+     Every grid here owns its spacing through gap, so reset the children. */
+  .references > .reference,
+  .reference .split > div,
+  .reference .bars > * {
     margin: 0;
   }
-  .rival header {
+  .reference header {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 0.5rem;
     margin-bottom: 0.6rem;
   }
-  .rival h3 { font-size: 1rem; margin: 0; }
-  .rival .ver {
+  .reference h3 { font-size: 1rem; margin: 0; }
+  .reference .ver {
     font-size: 0.7rem;
     color: var(--sl-color-gray-3);
     font-variant-numeric: tabular-nums;
@@ -273,7 +279,7 @@ function width(value: number, shared: number): string {
   }
   .fill { height: 100%; border-radius: 0.2rem; }
   .fill.bifrost { background: var(--sl-color-accent); }
-  .fill.rival { background: var(--sl-color-gray-4); }
+  .fill.reference { background: var(--sl-color-gray-4); }
   .bars .num {
     font-size: 0.85rem;
     font-variant-numeric: tabular-nums;
@@ -282,7 +288,7 @@ function width(value: number, shared: number): string {
   }
   .bars .num small { color: var(--sl-color-gray-3); }
   /* Fixed slots, so every card is the same height whatever the numbers say. */
-  .rival .split {
+  .reference .split {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0.4rem;
@@ -290,8 +296,8 @@ function width(value: number, shared: number): string {
     padding-top: 0.6rem;
     border-top: 1px solid var(--sl-color-gray-5);
   }
-  .rival .split div { min-width: 0; }
-  .rival .split dt {
+  .reference .split div { min-width: 0; }
+  .reference .split dt {
     font-size: 0.68rem;
     color: var(--sl-color-gray-3);
     margin: 0;
@@ -299,7 +305,7 @@ function width(value: number, shared: number): string {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .rival .split dd {
+  .reference .split dd {
     margin: 0.1rem 0 0;
     font-size: 0.95rem;
     font-variant-numeric: tabular-nums;
