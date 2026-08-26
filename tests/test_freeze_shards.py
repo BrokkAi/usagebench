@@ -106,31 +106,50 @@ class FreezeShardTests(unittest.TestCase):
         )
         self.assertNotIn('.totals.cases == $expected_cases', workflow)
 
-    def test_roslyn_native_shard_provisions_dotnet_eight_keg(self):
+    def test_roslyn_native_shard_provisions_the_runtime_its_build_requires(self):
         workflow = (ROOT / ".github/workflows/freeze.yml").read_text()
-        self.assertIn('brew list --formula dotnet@8 >/dev/null 2>&1 || brew install dotnet@8', workflow)
-        self.assertIn('dotnet_root="$(brew --prefix dotnet@8)/libexec"', workflow)
-        self.assertIn('printf \'DOTNET_ROOT=%s\\n\' "$dotnet_root" >> "$GITHUB_ENV"', workflow)
-        # Roslyn targets net8.0, so the gate reads the runtime list rather than
-        # `dotnet --version`, which reports the SDK and moves with roll-forward.
+        # The framework comes from the server's own runtimeconfig. An earlier
+        # revision asserted net8.0 from a comment and pinned the .NET 8 keg,
+        # which passed its own gate and then failed at launch because
+        # vscode-csharp 2.140.9 targets net10.0 with rollForward: Major.
         self.assertIn(
-            '"$dotnet_bin" --list-runtimes | grep -q \'^Microsoft.NETCore.App 8\\.\'', workflow
+            'required_framework="$(jq -er \'.runtimeOptions.framework.version\' '
+            '"$roslyn_runtimeconfig")"',
+            workflow,
+        )
+        self.assertIn('required_major="${required_framework%%.*}"', workflow)
+        self.assertIn('dotnet_root="$(brew --prefix "$dotnet_formula")/libexec"', workflow)
+        self.assertIn('printf \'DOTNET_ROOT=%s\\n\' "$dotnet_root" >> "$GITHUB_ENV"', workflow)
+        # The gate reads the runtime list rather than `dotnet --version`, which
+        # reports the SDK and moves with roll-forward.
+        self.assertIn(
+            '"$dotnet_bin" --list-runtimes | grep -q '
+            '"^Microsoft.NETCore.App ${required_major}\\."',
+            workflow,
         )
         self.assertIn('[[ "$resolved_dotnet" == "$dotnet_bin" ]]', workflow)
         self.assertNotIn('[[ "$dotnet_version" == 8.* ]]', workflow)
+        # No restated framework version may survive in the Roslyn provisioning.
+        self.assertNotIn('brew --prefix dotnet@8', workflow)
+        self.assertNotIn('^Microsoft.NETCore.App 8\\.', workflow)
 
     def test_native_toolchain_probe_checks_the_roslyn_dotnet_contract(self):
         probe = (ROOT / ".github/workflows/native-toolchain-probe.yml").read_text()
         self.assertIn("runs-on: macos-26", probe)
         # The probe exists to answer the questions the freeze log could not:
         # whether the keg provides a muxer, and whether the prepend wins.
-        self.assertIn('prefix="$(brew --prefix dotnet@8 2>&1)"', probe)
+        self.assertIn('prefix="$(brew --prefix "$dotnet_formula" 2>&1)"', probe)
         self.assertIn("command -v dotnet before prepend", probe)
         self.assertIn("command -v dotnet after prepend", probe)
+        # The probe must derive the framework the same way the freeze does, or
+        # it rehearses a contract the freeze no longer depends on.
         self.assertIn(
-            '"$dotnet_bin" --list-runtimes | grep -q \'^Microsoft.NETCore.App 8\\.\'', probe
+            '"$dotnet_bin" --list-runtimes | grep -q '
+            '"^Microsoft.NETCore.App ${required_major}\\."',
+            probe,
         )
         self.assertIn('[[ "$resolved_dotnet" == "$dotnet_bin" ]]', probe)
+        self.assertNotIn('brew --prefix dotnet@8', probe)
 
     def test_ruby_lsp_native_shard_provisions_ruby_three_four_keg(self):
         workflow = (ROOT / ".github/workflows/freeze.yml").read_text()
