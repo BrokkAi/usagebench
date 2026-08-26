@@ -160,6 +160,53 @@ class FreezeShardTests(unittest.TestCase):
         self.assertNotIn('brew list ruby >/dev/null', workflow)
         self.assertNotIn('ruby\\ 3\\.[4-9]', workflow)
 
+    def test_release_bundle_stages_every_artifact_a_promotion_manifest_binds(self):
+        """A bundle must contain what its manifests hash-bind.
+
+        The v0.3.1 freeze reached aggregation and failed on `canonicalize
+        promotion artifact docs/legacy-promotion-selection-policy.md`: the
+        legacy manifest binds an eligibility policy under docs/, and the
+        staging step copies benchmarks, fixtures, adapters, schema, src,
+        containers, and scripts but not docs.
+        """
+
+        staging = (ROOT / "scripts/stage-release-bundle.sh").read_text()
+        # Derived from the manifests rather than a hardcoded docs/ path, so a
+        # newly bound artifact is staged without editing this script.
+        self.assertIn(
+            "jq -r '.. | objects | select(has(\"file\")) | .file' \"$promotion_manifest\"",
+            staging,
+        )
+        self.assertIn('cp -- "$source_root/$bound_artifact" "$destination/$bound_artifact"', staging)
+        # All of docs/ would drag in node_modules and build output.
+        self.assertNotIn('"$source_root/docs" \\', staging)
+
+        promotion_root = ROOT / "benchmarks/promotion"
+        staged_prefixes = (
+            "benchmarks/", "fixtures/", "adapters/", "schema/", "src/",
+            "containers/", "scripts/",
+        )
+        bound = set()
+
+        def walk(node):
+            if isinstance(node, dict):
+                value = node.get("file")
+                if isinstance(value, str):
+                    bound.add(value)
+                for child in node.values():
+                    walk(child)
+            elif isinstance(node, list):
+                for child in node:
+                    walk(child)
+
+        for manifest in sorted(promotion_root.rglob("*.json")):
+            walk(json.loads(manifest.read_text()))
+        outside = sorted(p for p in bound if not p.startswith(staged_prefixes))
+        # Every such artifact must exist, or the freeze fails at aggregation.
+        for relative in outside:
+            self.assertTrue((ROOT / relative).is_file(), f"bound artifact missing: {relative}")
+        self.assertIn("docs/legacy-promotion-selection-policy.md", outside)
+
     def test_legacy_scope_is_bound_to_the_110_case_manifest(self):
         scope = subprocess.run(
             [ROOT / "scripts/resolve-freeze-scope.sh", "legacy-promoted"],
