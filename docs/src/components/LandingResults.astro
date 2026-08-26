@@ -77,6 +77,39 @@ const rows: Row[] = profiles
   })
   .sort((a, b) => b.bifrostOnly - a.bifrostOnly || b.strict.shared - a.strict.shared);
 
+// The cards below detail one slice. Showing only that slice's size would make
+// it read as the whole evidence base, which is the failure this page is meant
+// to avoid -- so name every frozen slice and keep the tiers distinct.
+const breadth = ['v1', 'v2', 'legacy']
+  .map((id) => {
+    const slice = slices[id];
+    if (!slice) return null;
+    const result = (slice.result ?? {}) as SliceResult;
+    const prospective = slice.selectionRegime === 'prospective_pre_registered';
+    return {
+      id,
+      label:
+        id === 'legacy'
+          ? 'Reviewed legacy core'
+          : `Prospective ${id}`,
+      caseCount: slice.caseCount as number,
+      release: result.release ?? null,
+      prospective,
+      tier: prospective ? 'Preregistered' : 'Retrospective',
+      detailed: id === 'legacy',
+    };
+  })
+  .filter(Boolean) as {
+  id: string;
+  label: string;
+  caseCount: number;
+  release: string | null;
+  prospective: boolean;
+  tier: string;
+  detailed: boolean;
+}[];
+const breadthTotal = breadth.reduce((sum, slice) => sum + slice.caseCount, 0);
+
 const totalShared = rows.reduce((sum, row) => sum + row.strict.shared, 0);
 const bifrostAhead = rows.filter((row) => row.bifrostOnly > row.referenceOnly).length;
 const referenceAhead = rows.filter((row) => row.referenceOnly > row.bifrostOnly).length;
@@ -128,6 +161,29 @@ function width(value: number, shared: number): string {
         that stronger claim over fewer languages.
       </p>
     </aside>
+
+    <section class="breadth" aria-label="Frozen evidence breadth">
+      <h2>Frozen evidence · {breadthTotal} cases</h2>
+      <ul>
+        {breadth.map((slice) => (
+          <li class:list={['slice', slice.prospective ? 'prospective' : 'retrospective', { detailed: slice.detailed }]}>
+            <p class="tier">{slice.tier}</p>
+            <p class="count">{slice.caseCount}<span> cases</span></p>
+            <p class="which">{slice.label}</p>
+            <p class="rel">
+              {slice.release ? <code>{slice.release}</code> : 'no published result'}
+              {slice.detailed ? ' · detailed below' : ''}
+            </p>
+          </li>
+        ))}
+      </ul>
+      <p class="note">
+        Each slice keeps its own denominator and they are never pooled. The
+        preregistered slices select and review sources before any analyzer runs;
+        the legacy core was selected retrospectively and re-reviewed from source
+        alone.
+      </p>
+    </section>
 
     <div class="references">
       {rows.map((row) => (
@@ -219,6 +275,57 @@ function width(value: number, shared: number): string {
     padding-top: 0.6rem;
   }
 
+  .breadth { margin-bottom: 1.75rem; }
+  .breadth h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--sl-color-gray-3);
+    margin: 0 0 0.6rem;
+    border: none;
+  }
+  .breadth ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.75rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .breadth li {
+    margin: 0;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    /* The tier is carried by a border, not only by the word, so the two
+       regimes stay distinct at a glance. */
+    border-left-width: 4px;
+  }
+  .breadth li.prospective { border-left-color: var(--sl-color-accent); }
+  .breadth li.retrospective { border-left-color: var(--sl-color-gray-4); }
+  .breadth li.detailed { background: var(--sl-color-gray-7, transparent); }
+  .breadth .tier {
+    margin: 0;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sl-color-gray-3);
+  }
+  .breadth .count {
+    margin: 0.15rem 0 0;
+    font-size: 1.4rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .breadth .count span { font-size: 0.8rem; color: var(--sl-color-gray-3); }
+  .breadth .which { margin: 0.1rem 0 0; font-size: 0.85rem; }
+  .breadth .rel { margin: 0.25rem 0 0; font-size: 0.72rem; color: var(--sl-color-gray-3); }
+  .breadth .note {
+    margin: 0.7rem 0 0;
+    font-size: 0.8rem;
+    color: var(--sl-color-gray-2);
+  }
+
   .references {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
@@ -236,7 +343,8 @@ function width(value: number, shared: number): string {
      Every grid here owns its spacing through gap, so reset the children. */
   .references > .reference,
   .reference .split > div,
-  .reference .bars > * {
+  .reference .bars > *,
+  .breadth ul > li {
     margin: 0;
   }
   .reference header {
