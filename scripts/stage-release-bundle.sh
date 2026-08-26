@@ -43,6 +43,35 @@ cp \
   "$source_root/.dockerignore" \
   "$destination/"
 
+# Promotion manifests hash-bind an eligibility policy that lives under docs/,
+# which is otherwise outside the staged tree. A bundle has to contain every
+# artifact its manifests bind or freeze-manifest cannot canonicalize them, so
+# copy exactly those files. Not all of docs/: that also carries node_modules
+# and build output, which bloats the bundle and gives the analyzer a large
+# unrelated tree to index.
+promotion_root="$source_root/benchmarks/promotion"
+if [[ -d "$promotion_root" ]]; then
+  bound_list="$(mktemp)"
+  trap 'rm -f "$bound_list"' EXIT
+  find "$promotion_root" -type f -name '*.json' -print | sort | while IFS= read -r promotion_manifest; do
+    jq -r '.. | objects | select(has("file")) | .file' "$promotion_manifest"
+  done | sort -u | grep -Ev '^(benchmarks|fixtures|adapters|schema|src|containers|scripts)/' > "$bound_list" || true
+  while IFS= read -r bound_artifact; do
+    [[ -n "$bound_artifact" ]] || continue
+    [[ "$bound_artifact" != /* && "$bound_artifact" != *..* ]] || {
+      echo "promotion manifest binds an unsafe artifact path: $bound_artifact" >&2
+      exit 1
+    }
+    [[ -f "$source_root/$bound_artifact" ]] || {
+      echo "promotion manifest binds a missing artifact: $bound_artifact" >&2
+      exit 1
+    }
+    mkdir -p "$destination/$(dirname "$bound_artifact")"
+    cp -- "$source_root/$bound_artifact" "$destination/$bound_artifact"
+    echo "staged bound promotion artifact: $bound_artifact"
+  done < "$bound_list"
+fi
+
 jq -n \
   --arg releaseTag "$release_tag" \
   --arg releaseVersion "${release_tag#v}" \
