@@ -23,10 +23,11 @@ every PHP case. That cannot describe the corpus as it stands.
 
 The PHP human ground-truth audit landed on 22 July 2026, two days before this
 run, and rewrote `php-property-access` and `php-parity-static-property-access`
-to expect sigil-inclusive ranges (`$last`, `$sent`). Every Bifrost version
-measured since has failed at least one of them: both under v0.10.1, and
-`php-parity-static-property-access` alone under v0.10.5, which fixed the
-declaration side but not the static usage side.
+to expect sigil-inclusive ranges (`$last`, `$sent`). No Bifrost version
+contemporary with this run satisfied them: both failed under v0.10.1, and
+`php-parity-static-property-access` still failed under v0.10.5, which corrected
+the declaration side but not the static usage side. Both pass from v0.10.6,
+which is later than anything this page could describe.
 
 So this row reflects a corpus state from before that audit, or a shared
 denominator that excluded those two cases for a reason this page does not
