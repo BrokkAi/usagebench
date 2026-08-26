@@ -1,0 +1,278 @@
+---
+// Results-first landing view. Every count and rate below is computed from the
+// evidence map's derived scores for a published slice; only the short answer is
+// hand-written. When a slice has no verified bundle the scores are absent, and
+// the page reports readiness rather than inventing a number.
+import evidence from '../data/evidence.json';
+
+interface ProfileScore {
+  reference: string;
+  strict: { shared: number; bifrostExact: number; referenceExact: number };
+  required: { shared: number; bifrostFound: number; referenceFound: number };
+}
+
+interface SliceResult {
+  status: string;
+  release?: string | null;
+  revision?: string;
+  derivedScores?: { profiles: ProfileScore[] };
+}
+
+const slices = evidence.slices as Record<string, any>;
+const legacy = slices.legacy;
+const legacyResult = (legacy?.result ?? {}) as SliceResult;
+const published = legacyResult.status === 'published_immutable_release';
+const profiles: ProfileScore[] = legacyResult.derivedScores?.profiles ?? [];
+
+// A rival's registered profile name carries its version; the short name is what
+// a reader scans for. Keyed on the profile string the result generator emits.
+const shortNames: [RegExp, string][] = [
+  [/^Apple clangd/, 'clangd'],
+  [/^Eclipse JDT LS/, 'Eclipse JDT LS'],
+  [/^gopls/, 'gopls'],
+  [/^Intelephense/, 'Intelephense'],
+  [/^Metals/, 'Metals'],
+  [/^Pyright/, 'Pyright'],
+  [/^Microsoft\.CodeAnalysis\.LanguageServer/, 'Roslyn'],
+  [/^Ruby LSP/, 'Ruby LSP'],
+  [/^rust-analyzer/, 'rust-analyzer'],
+  [/^typescript-language-server/, 'TypeScript LS'],
+];
+function shortName(reference: string): string {
+  for (const [pattern, name] of shortNames) if (pattern.test(reference)) return name;
+  return reference.split(' ')[0];
+}
+/** The version tail the registered profile name carries after its tool name. */
+function version(reference: string): string {
+  const short = shortName(reference);
+  const matched = shortNames.find(([pattern]) => pattern.test(reference));
+  if (!matched) return '';
+  return reference.replace(matched[0], '').trim() || reference.replace(short, '').trim();
+}
+
+type Row = ProfileScore & {
+  name: string;
+  toolVersion: string;
+  /** Cases exact for Bifrost but not the rival, and the reverse. */
+  bifrostOnly: number;
+  referenceOnly: number;
+  bothExact: number;
+};
+
+const rows: Row[] = profiles
+  .map((profile) => {
+    const { shared, bifrostExact, referenceExact } = profile.strict;
+    // bifrostExact and referenceExact each count "both exact" plus that side's
+    // own wins, so the overlap follows from the shared denominator.
+    const bothExact = Math.max(0, bifrostExact + referenceExact - shared);
+    return {
+      ...profile,
+      name: shortName(profile.reference),
+      toolVersion: version(profile.reference),
+      bothExact,
+      bifrostOnly: bifrostExact - bothExact,
+      referenceOnly: referenceExact - bothExact,
+    };
+  })
+  .sort((a, b) => b.bifrostOnly - a.bifrostOnly || b.strict.shared - a.strict.shared);
+
+const totalShared = rows.reduce((sum, row) => sum + row.strict.shared, 0);
+const bifrostAhead = rows.filter((row) => row.bifrostOnly > row.referenceOnly).length;
+const rivalAhead = rows.filter((row) => row.referenceOnly > row.bifrostOnly).length;
+const level = rows.length - bifrostAhead - rivalAhead;
+const behind = rows.filter((row) => row.referenceOnly > row.bifrostOnly);
+
+/** Widest bar in a row, so the two sides stay on one comparable scale. */
+const widest = Math.max(1, ...rows.map((row) => row.strict.shared));
+function width(value: number): string {
+  return `${(100 * value) / widest}%`;
+}
+---
+
+<p class="eyebrow">
+  Immutable evidence · UsageBench {published ? legacyResult.release : '(unpublished)'}
+</p>
+
+{published && rows.length > 0 ? (
+  <>
+    <aside class="short-answer">
+      <p class="label">Short answer</p>
+      <p class="verdict">
+        Against ten reference language servers on the reviewed legacy core,
+        Bifrost is exact on more cases than the rival in <strong>{bifrostAhead}</strong>
+        {' '}of {rows.length} comparisons, level in {level}, and behind in {rivalAhead}
+        {behind.length > 0 ? ` (${behind.map((row) => row.name).join(', ')})` : ''}.
+        Each language server is compared only on the cases it and Bifrost both
+        answer, so a rival is never charged for an operation it does not offer.
+      </p>
+      <p>
+        UsageBench is <a href="https://github.com/BrokkAi">BrokkAi</a>'s own
+        benchmark: we build it to measure where <a href="https://brokk.ai">Bifrost</a>
+        {' '}stands against established language servers, and to keep ourselves
+        honest while doing it. Every number here is generated from
+        digest-bound freeze evidence we cannot edit after the fact — our own
+        misses and regressions included.
+      </p>
+      <p class="tier-note">
+        <strong>Tier:</strong> these {legacy.caseCount} cases are the
+        <em> reviewed legacy core</em> — retrospectively selected from an
+        analyzer-informed corpus, then re-reviewed from source alone. It is the
+        broadest comparison we publish, and deliberately not a preregistered
+        one. The <a href="/usagebench/results/">prospective slices</a> carry
+        that stronger claim over fewer languages.
+      </p>
+    </aside>
+
+    <div class="rivals">
+      {rows.map((row) => (
+        <article class="rival">
+          <header>
+            <h3>{row.name}</h3>
+            <span class="ver">{row.toolVersion}</span>
+          </header>
+          <div class="bars">
+            <div class="bar-row">
+              <span class="who">Bifrost</span>
+              <div class="track">
+                <div class="fill bifrost" style={`width:${width(row.strict.bifrostExact)}`}></div>
+              </div>
+              <span class="num">{row.strict.bifrostExact}<small>/{row.strict.shared}</small></span>
+            </div>
+            <div class="bar-row">
+              <span class="who">{row.name}</span>
+              <div class="track">
+                <div class="fill rival" style={`width:${width(row.strict.referenceExact)}`}></div>
+              </div>
+              <span class="num">{row.strict.referenceExact}<small>/{row.strict.shared}</small></span>
+            </div>
+          </div>
+          <p class="caption">
+            {row.bothExact} exact for both
+            {row.bifrostOnly > 0 ? ` · ${row.bifrostOnly} Bifrost only` : ''}
+            {row.referenceOnly > 0 ? ` · ${row.referenceOnly} ${row.name} only` : ''}
+          </p>
+        </article>
+      ))}
+    </div>
+
+    <p class="foot">
+      Strict-contract conformance across {totalShared} shared case comparisons,
+      from release <code>{legacyResult.release}</code> at revision{' '}
+      <code>{(legacyResult.revision ?? '').slice(0, 12)}</code>. A case counts as
+      exact only with complete token ranges, no unallowed extras, and the one
+      reviewed navigation target. Disagreement is a contract result, not an
+      automatic defect verdict — see the{' '}
+      <a href="/usagebench/results/evidence/">evidence map</a> for every hash and
+      denominator.
+    </p>
+  </>
+) : (
+  <aside class="short-answer">
+    <p class="label">No published comparison</p>
+    <p class="verdict">
+      This page renders scores only from a checksum-verified immutable release.
+      None was supplied to this build, so no comparison is shown.
+    </p>
+    <p>
+      The <a href="/usagebench/results/evidence/">evidence map</a> records which
+      slices have a verified result and which are still pending.
+    </p>
+  </aside>
+)}
+
+<style>
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    color: var(--sl-color-gray-3);
+    margin-bottom: 0.5rem;
+  }
+  .short-answer {
+    border: 1px solid var(--sl-color-gray-5);
+    border-left: 4px solid var(--sl-color-accent);
+    border-radius: 0.5rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    background: var(--sl-color-gray-7, transparent);
+  }
+  .short-answer .label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.7rem;
+    color: var(--sl-color-gray-3);
+    margin: 0 0 0.35rem;
+  }
+  .short-answer .verdict {
+    font-size: 1.15rem;
+    line-height: 1.5;
+    margin: 0 0 0.75rem;
+  }
+  .short-answer p { margin: 0 0 0.6rem; }
+  .short-answer p:last-child { margin-bottom: 0; }
+  .tier-note {
+    font-size: 0.9rem;
+    color: var(--sl-color-gray-2);
+    border-top: 1px solid var(--sl-color-gray-5);
+    padding-top: 0.6rem;
+  }
+
+  .rivals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .rival {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    padding: 0.9rem 1rem;
+  }
+  .rival header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+  }
+  .rival h3 { font-size: 1rem; margin: 0; }
+  .rival .ver {
+    font-size: 0.7rem;
+    color: var(--sl-color-gray-3);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .bars { display: grid; gap: 0.35rem; }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr 3.5rem;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .bar-row .who { font-size: 0.8rem; color: var(--sl-color-gray-2); }
+  .track {
+    background: var(--sl-color-gray-6);
+    border-radius: 0.2rem;
+    height: 0.7rem;
+    overflow: hidden;
+  }
+  .fill { height: 100%; border-radius: 0.2rem; }
+  .fill.bifrost { background: var(--sl-color-accent); }
+  .fill.rival { background: var(--sl-color-gray-4); }
+  .bar-row .num {
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .bar-row .num small { color: var(--sl-color-gray-3); }
+  .rival .caption {
+    font-size: 0.75rem;
+    color: var(--sl-color-gray-3);
+    margin: 0.6rem 0 0;
+  }
+  .foot { font-size: 0.85rem; color: var(--sl-color-gray-2); }
+
+  @media (max-width: 30rem) {
+    .bar-row { grid-template-columns: 4.5rem 1fr 3rem; }
+  }
+</style>

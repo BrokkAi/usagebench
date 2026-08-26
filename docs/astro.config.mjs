@@ -40,13 +40,22 @@ export default defineConfig({
             { label: 'Evidence map (generated)', slug: 'results/evidence' },
             { label: 'Current evaluation result', slug: 'results' },
             { label: 'Evaluation case comparison', slug: 'results/case-comparison' },
-            { label: 'Historical v0.2.0 result', slug: 'results/evaluation-real-project-v1' },
+          ],
+        },
+        {
+          // Superseded snapshots stay reachable and stay collapsed. They are
+          // older analyzer versions against older corpora, and leaving them
+          // beside the current result invited reading them as current.
+          label: 'Superseded snapshots',
+          collapsed: true,
+          items: [
+            { label: 'v0.2.0 evaluation result', slug: 'results/evaluation-real-project-v1' },
             {
-              label: 'Historical v0.2.0 cases',
+              label: 'v0.2.0 evaluation cases',
               slug: 'results/evaluation-real-project-v1-case-comparison',
             },
-            { label: 'Historical development result', slug: 'results/development-2026-07-24' },
-            { label: 'Historical development cases', slug: 'results/development-case-comparison' },
+            { label: '24 July development result', slug: 'results/development-2026-07-24' },
+            { label: '24 July development cases', slug: 'results/development-case-comparison' },
           ],
         },
         {
