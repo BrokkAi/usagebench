@@ -1,10 +1,15 @@
 name: Native toolchain probe
 
 # Diagnostic-only companion to the legacy freeze. The freeze provisions the
-# Homebrew .NET 8 keg for the Roslyn shard inside a multi-hour run, so a
-# provisioning regression is expensive to discover there. This workflow runs
-# the same provisioning sequence on its own, reports what the macos-26 image
-# actually exposes, and then asserts the contract the freeze depends on.
+# Roslyn shard's .NET runtime inside a multi-hour run, so a provisioning
+# regression is expensive to discover there. This workflow runs the same
+# sequence on its own, reports what the macos-26 image actually exposes, and
+# asserts the contract the freeze depends on.
+#
+# The required framework is read from the pinned server's runtimeconfig, never
+# restated here. An earlier revision hard-coded .NET 8 from a comment; the
+# freeze then provisioned the one runtime vscode-csharp 2.140.9 cannot use and
+# failed at launch, and this probe would have rehearsed that same mistake.
 
 on:
   workflow_dispatch:
@@ -15,8 +20,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  dotnet8:
-    name: probe the Roslyn .NET 8 keg
+  roslyn_runtime:
+    name: probe the Roslyn .NET runtime
     runs-on: macos-26
     permissions:
       contents: read
@@ -40,7 +45,31 @@ jobs:
           echo "--- preinstalled dotnet --version ---"
           dotnet --version 2>&1 || echo "exit $?"
 
-      - name: Probe the dotnet@8 keg on a cold runner
+      - name: Resolve the framework the pinned Roslyn build requires
+        id: framework
+        shell: bash
+        run: |
+          set -euo pipefail
+          vsix="$RUNNER_TEMP/csharp-2.140.9.vsix"
+          sha='0fa50f6413e46f14d56ac2870cebc2c6a6395e6099daa7cd1a60e2aadd4cd2f6'
+          curl --fail --location --compressed --retry 3 --max-time 300 \
+            'https://marketplace.visualstudio.com/_apis/public/gallery/publishers/ms-dotnettools/vsextensions/csharp/2.140.9/vspackage?targetPlatform=darwin-arm64' \
+            --output "$vsix"
+          echo "$sha  $vsix" | shasum -a 256 --check
+          unzip -q "$vsix" -d "$RUNNER_TEMP/roslyn"
+          runtimeconfig="$RUNNER_TEMP/roslyn/extension/.roslyn/Microsoft.CodeAnalysis.LanguageServer.runtimeconfig.json"
+          required_framework="$(jq -er '.runtimeOptions.framework.version' "$runtimeconfig")"
+          required_major="${required_framework%%.*}"
+          echo "Roslyn requires Microsoft.NETCore.App $required_framework (major $required_major)"
+          jq -c '.runtimeOptions | {tfm, framework, rollForward}' "$runtimeconfig"
+          if [[ "$required_major" == 10 ]]; then formula="dotnet"; else formula="dotnet@$required_major"; fi
+          echo "required_major=$required_major" >> "$GITHUB_OUTPUT"
+          echo "dotnet_formula=$formula" >> "$GITHUB_OUTPUT"
+
+      - name: Probe the selected .NET keg on a cold runner
+        env:
+          dotnet_formula: ${{ steps.framework.outputs.dotnet_formula }}
+          required_major: ${{ steps.framework.outputs.required_major }}
         shell: bash
         run: |
           set +e -uo pipefail
@@ -49,23 +78,23 @@ jobs:
           # skipped install. Time each phase anyway, so a future short run can
           # be read as a warm keg rather than a call that never happened.
           # Measured cold on image 20260728.0273.1: ~3s list miss, ~10s install.
-          echo "--- brew list --formula dotnet@8 (cold) ---"
+          echo "--- brew list --formula $dotnet_formula (cold) ---"
           cold_start="$(date +%s)"
-          brew list --formula dotnet@8 2>&1
+          brew list --formula "$dotnet_formula" 2>&1
           cold_status=$?
-          echo "brew list --formula dotnet@8 exit: $cold_status after $(( $(date +%s) - cold_start ))s"
-          echo "--- brew install dotnet@8 (skipped when already installed) ---"
+          echo "brew list --formula "$dotnet_formula" exit: $cold_status after $(( $(date +%s) - cold_start ))s"
+          echo "--- brew install $dotnet_formula (skipped when already installed) ---"
           install_start="$(date +%s)"
           if [[ "$cold_status" -ne 0 ]]; then
-            brew install dotnet@8 2>&1 || echo "brew install dotnet@8 exit $?"
+            brew install "$dotnet_formula" 2>&1 || echo "brew install $dotnet_formula exit $?"
           else
             echo "already installed; install skipped"
           fi
           echo "install phase took $(( $(date +%s) - install_start ))s"
-          echo "--- brew --prefix dotnet@8 ---"
-          prefix="$(brew --prefix dotnet@8 2>&1)"
+          echo "--- brew --prefix $dotnet_formula ---"
+          prefix="$(brew --prefix "$dotnet_formula" 2>&1)"
           prefix_status=$?
-          echo "brew --prefix dotnet@8: $prefix (exit $prefix_status)"
+          echo "brew --prefix $dotnet_formula: $prefix (exit $prefix_status)"
           echo "keg libexec contents: $(ls -A "$prefix/libexec" 2>&1 | tr '\n' ' ')"
           for path in "$prefix/libexec/dotnet" "$prefix/bin/dotnet"; do
             if [[ -e "$path" ]]; then
@@ -80,10 +109,13 @@ jobs:
           "$prefix/libexec/dotnet" --list-sdks 2>&1 || echo "exit $?"
 
       - name: Probe how the PATH prepend resolves
+        env:
+          dotnet_formula: ${{ steps.framework.outputs.dotnet_formula }}
+          required_major: ${{ steps.framework.outputs.required_major }}
         shell: bash
         run: |
           set +e -uo pipefail
-          dotnet_root="$(brew --prefix dotnet@8)/libexec"
+          dotnet_root="$(brew --prefix "$dotnet_formula")/libexec"
           echo "command -v dotnet before prepend: $(command -v dotnet || echo '<none>')"
           export PATH="$dotnet_root:$PATH"
           # `command -v` can answer from a hashed lookup taken before the PATH
@@ -94,21 +126,24 @@ jobs:
           dotnet --list-runtimes 2>&1 || echo "exit $?"
 
       - name: Assert the contract the Roslyn freeze shard depends on
+        env:
+          dotnet_formula: ${{ steps.framework.outputs.dotnet_formula }}
+          required_major: ${{ steps.framework.outputs.required_major }}
         shell: bash
         run: |
           set -euo pipefail
           # Mirrors the roslyn branch of the freeze provisioning step. A green
           # run here means that step's guards hold on this image.
-          brew list --formula dotnet@8 >/dev/null 2>&1 || brew install dotnet@8
-          dotnet_root="$(brew --prefix dotnet@8)/libexec"
+          brew list --formula "$dotnet_formula" >/dev/null 2>&1 || brew install "$dotnet_formula"
+          dotnet_root="$(brew --prefix "$dotnet_formula")/libexec"
           dotnet_bin="$dotnet_root/dotnet"
           [[ -x "$dotnet_bin" ]] || {
-            echo "the dotnet@8 keg did not provide a muxer at $dotnet_bin" >&2
+            echo "the $dotnet_formula keg did not provide a muxer at $dotnet_bin" >&2
             exit 1
           }
           export PATH="$dotnet_root:$PATH"
-          "$dotnet_bin" --list-runtimes | grep -q '^Microsoft.NETCore.App 8\.' || {
-            echo "the dotnet@8 keg does not offer a .NET 8 runtime:" >&2
+          "$dotnet_bin" --list-runtimes | grep -q "^Microsoft.NETCore.App ${required_major}\." || {
+            echo "the $dotnet_formula keg does not offer a .NET $required_major runtime:" >&2
             "$dotnet_bin" --list-runtimes >&2
             exit 1
           }
@@ -118,4 +153,4 @@ jobs:
             echo "expected dotnet to resolve to $dotnet_bin, got $resolved_dotnet" >&2
             exit 1
           }
-          echo "dotnet@8 provisioning holds on $(sw_vers -productName) $(sw_vers -productVersion)"
+          echo "$dotnet_formula provisioning holds on $(sw_vers -productName) $(sw_vers -productVersion)"

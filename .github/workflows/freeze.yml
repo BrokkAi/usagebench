@@ -412,45 +412,12 @@ jobs:
               [[ "$actual" == "$prefix"* ]] || { echo "Apple clangd identity drift: $actual" >&2; exit 1; }
               ;;
             roslyn)
-              # macos-26 carries several .NET runtimes and selects the newest
-              # SDK, so bare `dotnet` reports 10.x even though an 8.x runtime is
-              # present. Roslyn's registered profile targets net8.0, so pin the
-              # exact runtime with the Homebrew .NET 8 keg rather than depending
-              # on whichever 8.x the image happens to ship, and make it visible
-              # to both this step and the later LSP runner step.
-              brew list --formula dotnet@8 >/dev/null 2>&1 || brew install dotnet@8
-              dotnet_root="$(brew --prefix dotnet@8)/libexec"
-              # Resolve the keg's muxer by absolute path. Relying on PATH order
-              # hides a missing keg: the lookup falls through to the
-              # preinstalled .NET 10 muxer, which then reports its own version
-              # and reads as a policy failure rather than a provisioning one.
-              dotnet_bin="$dotnet_root/dotnet"
-              [[ -x "$dotnet_bin" ]] || {
-                echo "the dotnet@8 keg did not provide a muxer at $dotnet_bin" >&2
-                echo "brew --prefix dotnet@8: $(brew --prefix dotnet@8 2>&1)" >&2
-                echo "keg contents: $(ls -A "$dotnet_root" 2>&1 | tr '\n' ' ')" >&2
-                exit 1
-              }
-              export DOTNET_ROOT="$dotnet_root"
-              export PATH="$dotnet_root:$PATH"
-              printf 'DOTNET_ROOT=%s\n' "$dotnet_root" >> "$GITHUB_ENV"
-              printf '%s\n' "$dotnet_root" >> "$GITHUB_PATH"
-              # Roslyn needs the net8.0 *runtime*; `dotnet --version` reports the
-              # selected SDK, which global.json and roll-forward can move.
-              "$dotnet_bin" --list-runtimes | grep -q '^Microsoft.NETCore.App 8\.' || {
-                echo "Roslyn requires the registered .NET 8 runtime; $dotnet_bin offers:" >&2
-                "$dotnet_bin" --list-runtimes >&2
-                exit 1
-              }
-              # The later runner step resolves `dotnet` through PATH, so confirm
-              # the keg actually wins there too. Drop any hashed lookup first,
-              # or `command -v` can answer from before the PATH change.
-              hash -r
-              resolved_dotnet="$(command -v dotnet)"
-              [[ "$resolved_dotnet" == "$dotnet_bin" ]] || {
-                echo "expected dotnet to resolve to $dotnet_bin, got $resolved_dotnet" >&2
-                exit 1
-              }
+              # Stage the pinned Roslyn build first, then provision the runtime
+              # it actually asks for. An earlier revision of this step asserted
+              # net8.0 from a comment rather than from the server, pinned the
+              # .NET 8 keg, passed its own gate, and then failed at launch with
+              # "You must install or update .NET ... version '10.0.0'".
+              # vscode-csharp 2.140.9 targets net10.0.
               roslyn_vsix="$tools/roslyn/csharp-2.140.9.vsix"
               roslyn_sha='0fa50f6413e46f14d56ac2870cebc2c6a6395e6099daa7cd1a60e2aadd4cd2f6'
               mkdir -p "$tools/roslyn"
@@ -473,6 +440,60 @@ jobs:
               }
               chmod +x "$roslyn"
               ln -sfn "$roslyn" "$tools/bin/Microsoft.CodeAnalysis.LanguageServer"
+              # Take the required framework from the server's own runtimeconfig,
+              # so a future VSIX bump moves the runtime with it instead of
+              # failing at launch against a version restated here.
+              roslyn_runtimeconfig="$roslyn.runtimeconfig.json"
+              [[ -f "$roslyn_runtimeconfig" ]] || {
+                echo "Roslyn server has no runtimeconfig at $roslyn_runtimeconfig" >&2
+                exit 1
+              }
+              required_framework="$(jq -er '.runtimeOptions.framework.version' "$roslyn_runtimeconfig")"
+              required_major="${required_framework%%.*}"
+              [[ "$required_major" =~ ^[0-9]+$ ]] || {
+                echo "could not read a framework major from $roslyn_runtimeconfig: $required_framework" >&2
+                exit 1
+              }
+              # Homebrew ships the current major unsuffixed and older ones as
+              # dotnet@N.
+              if [[ "$required_major" == 10 ]]; then
+                dotnet_formula="dotnet"
+              else
+                dotnet_formula="dotnet@$required_major"
+              fi
+              brew list --formula "$dotnet_formula" >/dev/null 2>&1 || brew install "$dotnet_formula"
+              dotnet_root="$(brew --prefix "$dotnet_formula")/libexec"
+              # Resolve the keg's muxer by absolute path. Relying on PATH order
+              # hides a missing keg: the lookup falls through to a preinstalled
+              # muxer, which then reports its own version and reads as a policy
+              # failure rather than a provisioning one.
+              dotnet_bin="$dotnet_root/dotnet"
+              [[ -x "$dotnet_bin" ]] || {
+                echo "the $dotnet_formula keg did not provide a muxer at $dotnet_bin" >&2
+                echo "brew --prefix $dotnet_formula: $(brew --prefix "$dotnet_formula" 2>&1)" >&2
+                echo "keg contents: $(ls -A "$dotnet_root" 2>&1 | tr '\n' ' ')" >&2
+                exit 1
+              }
+              export DOTNET_ROOT="$dotnet_root"
+              export PATH="$dotnet_root:$PATH"
+              printf 'DOTNET_ROOT=%s\n' "$dotnet_root" >> "$GITHUB_ENV"
+              printf '%s\n' "$dotnet_root" >> "$GITHUB_PATH"
+              # Check the runtime, not `dotnet --version`, which reports the
+              # selected SDK and moves with global.json and roll-forward.
+              "$dotnet_bin" --list-runtimes | grep -q "^Microsoft.NETCore.App ${required_major}\." || {
+                echo "Roslyn requires Microsoft.NETCore.App $required_major (runtimeconfig asks for $required_framework); $dotnet_bin offers:" >&2
+                "$dotnet_bin" --list-runtimes >&2
+                exit 1
+              }
+              # The later runner step resolves `dotnet` through PATH, so confirm
+              # the keg actually wins there too. Drop any hashed lookup first,
+              # or `command -v` can answer from before the PATH change.
+              hash -r
+              resolved_dotnet="$(command -v dotnet)"
+              [[ "$resolved_dotnet" == "$dotnet_bin" ]] || {
+                echo "expected dotnet to resolve to $dotnet_bin, got $resolved_dotnet" >&2
+                exit 1
+              }
               ;;
             eclipse-jdtls)
               java_version="$(java -version 2>&1 | awk -F'"' '/version/ {print $2}')"
