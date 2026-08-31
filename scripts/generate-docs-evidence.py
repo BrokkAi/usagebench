@@ -394,6 +394,10 @@ def development_case_ids() -> list[str]:
 
 
 def build_legacy(bundles: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    # The published legacy result is the authority for this slice, so the map
+    # describes the manifest that snapshot was frozen under, not the one the
+    # next freeze will use. Move this forward together with the legacy release
+    # that supersedes it.
     manifest_path = "benchmarks/promotion/legacy-v1/manifest.json"
     cohort_path = "benchmarks/promotion/legacy-v1/cohort.json"
     manifest = read_json(manifest_path)

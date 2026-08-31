@@ -141,6 +141,7 @@ jobs:
           cargo run --locked -- validate benchmarks/cases
           cargo run --locked -- validate-evaluation benchmarks/cases/evaluation/real-project-v2
           cargo run --locked -- validate-legacy-promotion benchmarks/promotion/legacy-v1/manifest.json
+          cargo run --locked -- validate-legacy-promotion benchmarks/promotion/legacy-v2/manifest.json
           bash scripts/validate-reproduction-contract.sh
           python3 -m unittest tests/test_freeze_shards.py
       - uses: citation-file-format/cffconvert-github-action@4cf11baa70a673bfdf9dad0acc7ee33b3f4b6084 # 2.0.0

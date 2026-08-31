@@ -218,7 +218,7 @@ class FreezeShardTests(unittest.TestCase):
         self.assertEqual(value["casePath"], "benchmarks/cases")
         self.assertEqual(
             value["promotionManifest"],
-            "benchmarks/promotion/legacy-v1/manifest.json",
+            "benchmarks/promotion/legacy-v2/manifest.json",
         )
         self.assertEqual(
             value["candidates"],
@@ -233,7 +233,7 @@ class FreezeShardTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             source = pathlib.Path(directory) / "source"
             destination = pathlib.Path(directory) / "execution"
-            manifest_path = source / "benchmarks/promotion/legacy-v1/manifest.json"
+            manifest_path = source / "benchmarks/promotion/legacy-v2/manifest.json"
             manifest_path.parent.mkdir(parents=True)
             case_root = source / "benchmarks/cases"
             case_root.mkdir(parents=True)
@@ -297,6 +297,105 @@ class FreezeShardTests(unittest.TestCase):
                 if line.startswith("  - id: ")
             ]
             self.assertEqual(staged_ids, expected_ids)
+
+    def test_legacy_execution_staging_retires_the_annotations_the_manifest_names(self):
+        annotated = (
+            "  - id: legacy-case-000\n"
+            "    expectedFailure:\n"
+            "      reason: stale expectation\n"
+            "    declaration: {}\n"
+            "  - id: legacy-case-001\n"
+            "    expectedFailure:\n"
+            "      reason: still failing\n"
+            "    declaration: {}\n"
+        )
+        staged = self._stage_two_case_document(
+            annotated, retired={"legacy-case-000"}
+        )
+        # The retired annotation is gone; the one the manifest does not name
+        # survives, along with every other key on the retired case.
+        self.assertNotIn("stale expectation", staged)
+        self.assertIn("still failing", staged)
+        self.assertEqual(staged.count("expectedFailure:"), 1)
+        self.assertEqual(staged.count("    declaration: {}"), 2)
+        self.assertIn("  - id: legacy-case-000\n    declaration: {}", staged)
+
+    def test_legacy_execution_staging_refuses_to_retire_an_absent_annotation(self):
+        with self.assertRaises(AssertionError):
+            self._stage_two_case_document(
+                "  - id: legacy-case-000\n    declaration: {}\n"
+                "  - id: legacy-case-001\n    declaration: {}\n",
+                retired={"legacy-case-000"},
+            )
+
+    def _stage_two_case_document(self, cases: str, retired: set) -> str:
+        """Stage a one-document, two-case manifest and return the staged YAML."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            source = pathlib.Path(directory) / "source"
+            destination = pathlib.Path(directory) / "execution"
+            manifest_path = source / "benchmarks/promotion/legacy-v2/manifest.json"
+            manifest_path.parent.mkdir(parents=True)
+            case_root = source / "benchmarks/cases"
+            case_root.mkdir(parents=True)
+            documents = []
+            cursor = 0
+            for index in range(30):
+                case_file = f"benchmarks/cases/legacy-{index:02d}.yaml"
+                source_path = source / case_file
+                if index == 0:
+                    ids = ["legacy-case-000", "legacy-case-001"]
+                    body = cases
+                    cursor = 2
+                else:
+                    count = 4 if index < 22 else 3
+                    ids = [f"legacy-case-{number:03d}" for number in range(cursor, cursor + count)]
+                    cursor += count
+                    body = "".join(
+                        f"  - id: {case_id}\n    declaration: {{}}\n" for case_id in ids
+                    )
+                source_path.write_text(
+                    "schemaVersion: 2\ncorpus:\n  partition: development\n  selection: analyzer_informed\n"
+                    "groundTruth:\n  status: legacy_unattributed\n  reviewers: []\n"
+                    "referencePolicy: bindings_optional\npositionEncoding: utf-16\n"
+                    "source:\n  kind: fixture\n  path: fixtures/test\nlanguage: rust\ncases:\n"
+                    + body
+                )
+                documents.append(
+                    {
+                        "caseFile": case_file,
+                        "sourceSha256": hashlib.sha256(source_path.read_bytes()).hexdigest(),
+                        "language": "rust",
+                        "cases": [
+                            dict(
+                                {"id": case_id, "membership": "balanced_core"},
+                                **(
+                                    {"retiredExpectedFailure": {"supersededReason": "x"}}
+                                    if case_id in retired
+                                    else {}
+                                ),
+                            )
+                            for case_id in ids
+                        ],
+                    }
+                )
+            self.assertEqual(cursor, 110)
+            manifest_path.write_text(json.dumps({"promotionId": "test", "documents": documents}))
+            result = subprocess.run(
+                [
+                    ROOT / "scripts/stage-legacy-promotion-corpus.py",
+                    "--source-root",
+                    source,
+                    "--destination",
+                    destination,
+                    "--promotion-manifest",
+                    manifest_path,
+                ],
+                text=True,
+                capture_output=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return (destination / "benchmarks/cases/legacy-00.yaml").read_text()
 
     def test_bifrost_reference_cache_stays_off_read_only_corpus(self):
         runner = (ROOT / "scripts/run-reference.sh").read_text()

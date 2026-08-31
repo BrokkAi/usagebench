@@ -143,9 +143,13 @@ estimates, cross-language ranking, causal defect claims, and latency, memory,
 or cold-start claims.
 
 The `legacy-promoted` path is a separate retrospective release contract. It
-is bound to `benchmarks/promotion/legacy-v1/manifest.json`, stages an
-execution-only corpus containing exactly its 110 `balanced_core` IDs across
-30 documents, and keeps overflow and control cases outside the run. Two
+is bound to the current promotion manifest,
+`benchmarks/promotion/legacy-v2/manifest.json`, stages an execution-only
+corpus containing exactly its 110 `balanced_core` IDs across 30 documents, and
+keeps overflow and control cases outside the run. Superseded manifests stay in
+the tree and stay valid: corrections are append-only, so a later manifest is a
+new `legacy-vN` directory carrying a hash-bound `supersedes` link rather than
+an edit to its predecessor. Two
 checksum-bound canonical reference reports (Bifrost and gopls) run on Ubuntu;
 the nine remaining advertised profiles run one at a time on the selected
 native macOS runner. Candidate reports remain language-scoped; the frozen

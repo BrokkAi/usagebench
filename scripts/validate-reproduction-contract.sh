@@ -50,6 +50,7 @@ python3 "$repo_root/scripts/build-real-project-v1-publication-review.py" --check
 python3 "$repo_root/scripts/build-real-project-v2-publication-review.py" --check
 python3 -m unittest "$repo_root/tests/test_publication_bundle.py"
 cargo run --locked -- validate-legacy-promotion "$repo_root/benchmarks/promotion/legacy-v1/manifest.json"
+cargo run --locked -- validate-legacy-promotion "$repo_root/benchmarks/promotion/legacy-v2/manifest.json"
 
 jq -e '.schemaVersion == 3' "$registry" >/dev/null
 jq -e '.schemaVersion == 3' "$v030_registry" >/dev/null
@@ -144,15 +145,15 @@ development_candidates="$(jq -c '.candidates' <<< "$development_scope")"
   echo "legacy-promoted case scope does not use the development case corpus" >&2
   exit 1
 }
-[[ "$(jq -r '.promotionManifest' <<< "$legacy_scope")" == "benchmarks/promotion/legacy-v1/manifest.json" ]] || {
-  echo "legacy-promoted scope is not bound to the v1 promotion manifest" >&2
+[[ "$(jq -r '.promotionManifest' <<< "$legacy_scope")" == "benchmarks/promotion/legacy-v2/manifest.json" ]] || {
+  echo "legacy-promoted scope is not bound to the current promotion manifest" >&2
   exit 1
 }
-[[ "$(jq -r '[.documents[].cases[] | select(.membership == "balanced_core")] | length' benchmarks/promotion/legacy-v1/manifest.json)" == "110" ]] || {
+[[ "$(jq -r '[.documents[].cases[] | select(.membership == "balanced_core")] | length' benchmarks/promotion/legacy-v2/manifest.json)" == "110" ]] || {
   echo "legacy promotion manifest does not contain exactly 110 balanced-core cases" >&2
   exit 1
 }
-[[ "$(jq -r '[.documents[].cases[] | select(.membership != "balanced_core")] | length' benchmarks/promotion/legacy-v1/manifest.json)" == "0" ]] || {
+[[ "$(jq -r '[.documents[].cases[] | select(.membership != "balanced_core")] | length' benchmarks/promotion/legacy-v2/manifest.json)" == "0" ]] || {
   echo "legacy freeze manifest contains overflow or control cases" >&2
   exit 1
 }

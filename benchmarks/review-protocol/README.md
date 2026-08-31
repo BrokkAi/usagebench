@@ -61,10 +61,12 @@ status and never changes this source-derived contract.
 
 The completed review contains milestones 1 through 10: 110 balanced-core
 cases, 220 fresh provider-native sessions, mechanical comparison, and accountable
-human adjudication. The final hash-bound
+human adjudication. The hash-bound
 `benchmarks/promotion/legacy-v1/manifest.json` publishes that complete cohort as
 the corpus-bounded `legacy_promoted` tier without changing the immutable
 `N = 10` denominator or its retrospective selection provenance.
+`benchmarks/promotion/legacy-v2/manifest.json` supersedes it, carrying the same
+reviewed membership and retiring one stale `expectedFailure` annotation.
 
 Validate each adjudicated milestone with:
 
@@ -78,4 +80,5 @@ Validate the complete promotion manifest with:
 
 ```bash
 cargo run -- validate-legacy-promotion benchmarks/promotion/legacy-v1/manifest.json
+cargo run -- validate-legacy-promotion benchmarks/promotion/legacy-v2/manifest.json
 ```

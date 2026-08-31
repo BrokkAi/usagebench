@@ -42,6 +42,26 @@ pub enum ControlStatus {
     NotPlanned,
 }
 
+/// Retirement of a stale `expectedFailure` annotation carried by a frozen
+/// historical case document.
+///
+/// The annotation records an analyzer outcome, not reviewed ground truth, so it
+/// can outlive the defect it describes. The historical YAML is content-addressed
+/// and must never be edited, so a retirement is recorded here instead: the
+/// manifest repeats the superseded reason verbatim and binds the evidence that
+/// the annotated navigation now succeeds. Execution staging drops the annotation
+/// from its filtered copy, which makes the case score as an ordinary pass.
+///
+/// Retirement only ever tightens the corpus. It removes an excuse and can never
+/// add one, and a superseding manifest may not restore one its predecessor
+/// retired.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RetiredExpectedFailure {
+    pub superseded_reason: String,
+    pub evidence: ArtifactLink,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PromotionCase {
@@ -52,6 +72,8 @@ pub struct PromotionCase {
     pub strata: BTreeMap<String, String>,
     pub review_records: Vec<ArtifactLink>,
     pub adjudication: ArtifactLink,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retired_expected_failure: Option<RetiredExpectedFailure>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -102,6 +124,10 @@ pub struct LegacyPromotionAudit {
     pub control_case_count: usize,
     pub denominators: BTreeMap<String, usize>,
     pub case_ids_by_file: BTreeMap<String, Vec<String>>,
+    /// Case IDs whose historical `expectedFailure` annotation this manifest
+    /// retires, in sorted order.
+    #[serde(default)]
+    pub retired_expected_failures: Vec<String>,
 }
 
 pub fn build_promotion_audit(path: impl AsRef<Path>) -> Result<LegacyPromotionAudit> {
@@ -228,6 +254,7 @@ fn validate_manifest(
         .collect::<BTreeMap<_, _>>();
     let mut ids = BTreeSet::new();
     let mut by_file = BTreeMap::new();
+    let mut retired = BTreeSet::new();
     let (mut overflow, mut controls) = (0, 0);
     for document in &manifest.documents {
         let source_path = safe_join(&root, &document.case_file)?;
@@ -324,6 +351,32 @@ fn validate_manifest(
                 bail!("promotion case {} reuses review evidence", case.id);
             }
             validate_link(&root, &case.adjudication, "adjudication evidence")?;
+            if let Some(retirement) = &case.retired_expected_failure {
+                // A retirement is a correction, and corrections are append-only.
+                if manifest.supersedes.is_none() {
+                    bail!(
+                        "retiring an expected failure requires a supersedes link: {}",
+                        case.id
+                    );
+                }
+                let Some(annotation) = &source_case.expected_failure else {
+                    bail!(
+                        "promotion case {} retires an expected failure its historical document does not author",
+                        case.id
+                    );
+                };
+                // Repeating the reason verbatim is what makes the retirement a
+                // record rather than a deletion: it cannot silently drift away
+                // from the annotation it supersedes.
+                if annotation.reason != retirement.superseded_reason {
+                    bail!(
+                        "retired expected-failure reason does not match the historical document: {}",
+                        case.id
+                    );
+                }
+                validate_link(&root, &retirement.evidence, "expected-failure retirement evidence")?;
+                retired.insert(case.id.clone());
+            }
             file_ids.push(case.id.clone());
         }
         if by_file
@@ -339,6 +392,16 @@ fn validate_manifest(
     if denominators.values().any(|count| *count != expected_n) {
         bail!("balanced core must contain exactly N={expected_n} cases for every legacy language");
     }
+    if let Some(previous) = &manifest.supersedes {
+        // Retirement is one-way. A later manifest may retire more expectations,
+        // never quietly restore one, which would lower the bar for a case the
+        // corpus has already held to an ordinary pass.
+        for case_id in retired_case_ids(&root, previous)? {
+            if !retired.contains(&case_id) {
+                bail!("superseding manifest restores a retired expected failure: {case_id}");
+            }
+        }
+    }
     Ok(LegacyPromotionAudit {
         promotion_id: manifest.promotion_id.clone(),
         claim_scope: manifest.claim_scope.clone(),
@@ -353,7 +416,27 @@ fn validate_manifest(
         control_case_count: controls,
         denominators,
         case_ids_by_file: by_file,
+        retired_expected_failures: retired.into_iter().collect(),
     })
+}
+
+/// Read the case IDs a already-validated manifest link retires.
+///
+/// The link is hash-bound and was verified before this runs, so the file is
+/// parsed for its retirements alone rather than validated a second time.
+fn retired_case_ids(root: &Path, link: &ArtifactLink) -> Result<BTreeSet<String>> {
+    let path = safe_join(root, &link.file)?;
+    let bytes =
+        fs::read(&path).with_context(|| format!("read superseded manifest {}", link.file))?;
+    let manifest: LegacyPromotionManifest =
+        serde_json::from_slice(&bytes).context("parse superseded promotion manifest")?;
+    Ok(manifest
+        .documents
+        .iter()
+        .flat_map(|document| &document.cases)
+        .filter(|case| case.retired_expected_failure.is_some())
+        .map(|case| case.id.clone())
+        .collect())
 }
 
 pub fn validate_report_against_promotion(
@@ -706,6 +789,7 @@ mod tests {
                 control_case_count: 0,
                 denominators,
                 case_ids_by_file,
+                retired_expected_failures: Vec::new(),
             },
             document_languages,
         )
@@ -834,6 +918,90 @@ mod tests {
             },
             documents: vec![],
         }
+    }
+
+    const PUBLISHED_MANIFEST: &str = "benchmarks/promotion/legacy-v2/manifest.json";
+    const RETIRED_CASE: &str = "cpp-parity-function-like-macro-expanded-call";
+
+    /// Load the published superseding manifest for mutation.
+    ///
+    /// Validation resolves hash-bound paths from the repository root found via
+    /// the manifest path, so tests mutate the real value in memory and revalidate
+    /// it in place rather than relocating it.
+    fn published_manifest() -> LegacyPromotionManifest {
+        serde_json::from_slice(&fs::read(PUBLISHED_MANIFEST).unwrap()).unwrap()
+    }
+
+    fn revalidate(manifest: &LegacyPromotionManifest) -> Result<LegacyPromotionAudit> {
+        validate_manifest(Path::new(PUBLISHED_MANIFEST), b"{}", manifest)
+    }
+
+    fn retired_case(manifest: &mut LegacyPromotionManifest) -> &mut PromotionCase {
+        manifest
+            .documents
+            .iter_mut()
+            .flat_map(|document| &mut document.cases)
+            .find(|case| case.id == RETIRED_CASE)
+            .expect("published manifest retires the stale C++ macro expectation")
+    }
+
+    #[test]
+    fn the_published_manifest_retires_exactly_the_stale_macro_expectation() {
+        let audit = revalidate(&published_manifest()).unwrap();
+        assert_eq!(audit.retired_expected_failures, vec![RETIRED_CASE]);
+    }
+
+    #[test]
+    fn retiring_an_expected_failure_requires_a_supersedes_link() {
+        let mut value = published_manifest();
+        value.supersedes = None;
+        let error = revalidate(&value).unwrap_err();
+        assert!(error.to_string().contains("requires a supersedes link"));
+    }
+
+    #[test]
+    fn retired_reason_must_repeat_the_historical_annotation_verbatim() {
+        let mut value = published_manifest();
+        let case = retired_case(&mut value);
+        let retirement = case.retired_expected_failure.as_mut().unwrap();
+        retirement.superseded_reason.push('.');
+        let error = revalidate(&value).unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("does not match the historical document"));
+    }
+
+    #[test]
+    fn refuses_to_retire_an_expectation_the_historical_document_never_authored() {
+        let mut value = published_manifest();
+        let retirement = retired_case(&mut value).retired_expected_failure.take().unwrap();
+        let moved = value
+            .documents
+            .iter_mut()
+            .flat_map(|document| &mut document.cases)
+            .find(|case| case.id != RETIRED_CASE)
+            .unwrap();
+        moved.retired_expected_failure = Some(retirement);
+        let error = revalidate(&value).unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("does not author"));
+    }
+
+    #[test]
+    fn a_superseding_manifest_cannot_restore_a_retired_expected_failure() {
+        let mut value = published_manifest();
+        // A hypothetical v3 that supersedes the published manifest but drops its
+        // retirement, reinstating an excuse for a case already held to a pass.
+        value.supersedes = Some(ArtifactLink {
+            file: PUBLISHED_MANIFEST.into(),
+            sha256: sha256(&fs::read(PUBLISHED_MANIFEST).unwrap()),
+        });
+        retired_case(&mut value).retired_expected_failure = None;
+        let error = revalidate(&value).unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("restores a retired expected failure"));
     }
 
     #[test]

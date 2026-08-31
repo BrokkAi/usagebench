@@ -1,0 +1,28 @@
+{
+  "caseId": "cpp-parity-function-like-macro-expanded-call",
+  "caseFile": "benchmarks/cases/cpp-lsp-parity.yaml",
+  "supersededReason": "Bifrost finds the PARITY_CALL function-name argument as a line-level usage, but reverse navigation from that macro argument does not resolve to the expanded_label definition.",
+  "finding": "Reverse navigation from the macro argument now resolves to the authored declaration, so the annotation describes a defect the analyzer no longer has.",
+  "observedIn": {
+    "release": "v0.3.1",
+    "releaseTarball": "usagebench-v0.3.1.tar.gz",
+    "releaseTarballSha256": "0ad2e02017b064066bbc674b5d183d24a5f2b2fd80083094db3de6905bc9bb60",
+    "report": "evidence/bifrost.json",
+    "reportSha256": "593cc3580d5a8e97ca6d3852629c181f0d362eff1f9ae17e3d14c5a43e99cd7a",
+    "executionMode": "container",
+    "platformScope": "canonical_reference",
+    "referenceEnvironmentDigest": "sha256:3859af74db43f64499f05045bad3e8962471203b25309c31f3ea225631772c5c"
+  },
+  "observation": {
+    "status": "improved",
+    "declarationToUsages": "passed",
+    "usageToDeclaration": "passed",
+    "queries": 2,
+    "successfulQueries": 2,
+    "exactSetQueries": 2,
+    "falsePositives": 0,
+    "falseNegatives": 0,
+    "resolvedDeclaration": "include/parity.h:45:20"
+  },
+  "notes": "The frozen v0.3.1 legacy snapshot is the reference-container run the retirement rests on, so no fresh native measurement is relied upon. `improved` is precisely the runner's signal for a case that passes while annotated expectedFailure. Retirement removes the annotation from the execution-only staged corpus; benchmarks/cases/cpp-lsp-parity.yaml stays byte-identical and legacy-promotion-v1-balanced-core continues to validate against it."
+}

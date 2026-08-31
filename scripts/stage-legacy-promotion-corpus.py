@@ -21,13 +21,17 @@ from pathlib import Path
 
 CASE_ITEM = re.compile(r"^  - id: ([A-Za-z0-9][A-Za-z0-9_-]*)\s*$", re.MULTILINE)
 EXPECTED_CASE_COUNT = 110
+CASE_KEY = re.compile(r"^    (?=\S)", re.MULTILINE)
+EXPECTED_FAILURE_KEY = "    expectedFailure:"
 
 
 def fail(message: str) -> None:
     raise SystemExit(message)
 
 
-def balanced_case_ids(manifest_path: Path) -> tuple[dict[str, set[str]], dict[str, str]]:
+def balanced_case_ids(
+    manifest_path: Path,
+) -> tuple[dict[str, set[str]], dict[str, str], set[str]]:
     try:
         manifest = json.loads(manifest_path.read_text())
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
@@ -38,6 +42,7 @@ def balanced_case_ids(manifest_path: Path) -> tuple[dict[str, set[str]], dict[st
 
     by_file: dict[str, set[str]] = {}
     source_hashes: dict[str, str] = {}
+    retired: set[str] = set()
     all_ids: set[str] = set()
     for document in documents:
         if not isinstance(document, dict):
@@ -74,6 +79,8 @@ def balanced_case_ids(manifest_path: Path) -> tuple[dict[str, set[str]], dict[st
                 fail(f"legacy promotion case ID is duplicated: {case_id}")
             selected.add(case_id)
             all_ids.add(case_id)
+            if "retiredExpectedFailure" in case:
+                retired.add(case_id)
         if not selected:
             fail(f"legacy promotion document has no balanced_core cases: {case_file}")
         if case_file in by_file:
@@ -86,10 +93,39 @@ def balanced_case_ids(manifest_path: Path) -> tuple[dict[str, set[str]], dict[st
             "legacy promotion execution requires exactly "
             f"{EXPECTED_CASE_COUNT} balanced_core cases, got {len(all_ids)}"
         )
-    return by_file, source_hashes
+    return by_file, source_hashes, retired
 
 
-def filter_document(source: Path, destination: Path, expected_ids: set[str]) -> None:
+def retire_expected_failure(block: str, case_id: str) -> str:
+    """Drop the ``expectedFailure`` mapping from one staged case block.
+
+    The historical document is content-addressed and is never edited.  A
+    promotion manifest that retires the annotation removes it from this
+    execution-only copy, so the case is scored as an ordinary pass instead of
+    reporting ``improved`` against an expectation it no longer fails.
+    """
+
+    keys = [match.start() for match in CASE_KEY.finditer(block)]
+    starts = [start for start in keys if block.startswith(EXPECTED_FAILURE_KEY, start)]
+    if len(starts) != 1:
+        fail(
+            f"case {case_id} does not author exactly one expectedFailure to retire: "
+            f"found {len(starts)}"
+        )
+    start = starts[0]
+    following = [key for key in keys if key > start]
+    end = following[0] if following else len(block)
+    retired = block[:start] + block[end:]
+    if EXPECTED_FAILURE_KEY in retired:
+        fail(f"retiring the expectedFailure for {case_id} left the annotation behind")
+    if CASE_ITEM.search(block[start:end]):
+        fail(f"retiring the expectedFailure for {case_id} would remove another case")
+    return retired
+
+
+def filter_document(
+    source: Path, destination: Path, expected_ids: set[str], retired_ids: set[str]
+) -> None:
     text = source.read_text()
     matches = list(CASE_ITEM.finditer(text))
     if not matches:
@@ -103,11 +139,16 @@ def filter_document(source: Path, destination: Path, expected_ids: set[str]) -> 
             f"expected at least {sorted(expected_ids)}, got {sorted(actual_ids)}"
         )
     header = text[: matches[0].start()]
-    blocks = [
-        text[match.start() : (matches[index + 1].start() if index + 1 < len(matches) else len(text))]
-        for index, match in enumerate(matches)
-        if match.group(1) in expected_ids
-    ]
+    blocks = []
+    for index, match in enumerate(matches):
+        case_id = match.group(1)
+        if case_id not in expected_ids:
+            continue
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        block = text[match.start() : end]
+        if case_id in retired_ids:
+            block = retire_expected_failure(block, case_id)
+        blocks.append(block)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(header + "".join(blocks))
     staged_ids = [match.group(1) for match in CASE_ITEM.finditer(destination.read_text())]
@@ -146,10 +187,16 @@ def main() -> int:
         relative_manifest = manifest.relative_to(source_root)
     except ValueError:
         fail("promotion manifest must be inside the source corpus root")
-    if relative_manifest.as_posix() != "benchmarks/promotion/legacy-v1/manifest.json":
-        fail("legacy execution is bound to benchmarks/promotion/legacy-v1/manifest.json")
+    # Corrections to the promotion tier are append-only, so a superseding
+    # manifest lives beside its predecessor under a new legacy-vN directory.
+    # The rail stays: execution is bound to a promotion manifest, never to an
+    # arbitrary path.
+    if not re.fullmatch(
+        r"benchmarks/promotion/legacy-v[0-9]+/manifest\.json", relative_manifest.as_posix()
+    ):
+        fail("legacy execution is bound to benchmarks/promotion/legacy-vN/manifest.json")
 
-    selected, source_hashes = balanced_case_ids(manifest)
+    selected, source_hashes, retired = balanced_case_ids(manifest)
     shutil.copytree(source_root, destination, symlinks=False, dirs_exist_ok=True)
     case_root = destination / "benchmarks/cases"
     selected_files = set(selected)
@@ -167,7 +214,7 @@ def main() -> int:
         source_digest = hashlib.sha256(source.read_bytes()).hexdigest()
         if source_digest != source_hashes[case_file]:
             fail(f"legacy promotion source hash does not match manifest: {case_file}")
-        filter_document(source, target, case_ids)
+        filter_document(source, target, case_ids, retired)
     staged_files = {
         path.relative_to(destination).as_posix()
         for path in case_root.rglob("*.yaml")
