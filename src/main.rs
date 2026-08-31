@@ -290,6 +290,12 @@ fn main() -> Result<()> {
                 "validated legacy promotion {} with {} balanced-core cases",
                 audit.promotion_id, audit.balanced_core_case_count
             );
+            if !audit.retired_expected_failures.is_empty() {
+                println!(
+                    "retired expected failures: {}",
+                    audit.retired_expected_failures.join(", ")
+                );
+            }
         }
         Command::GenerateLegacyPromotionCohort { cases, output } => {
             let cohort = usagebench::promotion_cohort::generate(&cases, &output)?;

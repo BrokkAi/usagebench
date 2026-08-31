@@ -31,6 +31,7 @@
   "$defs": {
     "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "artifactLink": { "type": "object", "additionalProperties": false, "required": ["file", "sha256"], "properties": { "file": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" } } },
+    "retiredExpectedFailure": { "type": "object", "additionalProperties": false, "required": ["supersededReason", "evidence"], "properties": { "supersededReason": { "type": "string", "minLength": 1 }, "evidence": { "$ref": "#/$defs/artifactLink" } } },
     "document": {
       "type": "object", "additionalProperties": false, "required": ["caseFile", "sourceSha256", "language", "cases"],
       "properties": {
@@ -46,7 +47,8 @@
         "controlStatus": { "enum": ["unsupported", "not_planned"] },
         "strata": { "type": "object", "minProperties": 6, "additionalProperties": { "type": "string", "minLength": 1 } },
         "reviewRecords": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/artifactLink" } },
-        "adjudication": { "$ref": "#/$defs/artifactLink" }
+        "adjudication": { "$ref": "#/$defs/artifactLink" },
+        "retiredExpectedFailure": { "$ref": "#/$defs/retiredExpectedFailure" }
       },
       "allOf": [
         { "if": { "properties": { "membership": { "const": "control" } }, "required": ["membership"] }, "then": { "required": ["controlStatus"] }, "else": { "not": { "required": ["controlStatus"] } } }

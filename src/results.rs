@@ -1739,6 +1739,7 @@ mod tests {
             control_case_count: 0,
             denominators: BTreeMap::new(),
             case_ids_by_file: BTreeMap::new(),
+            retired_expected_failures: Vec::new(),
         });
         let error = validate_snapshot_audit(&manifest_path, &manifest).unwrap_err();
         assert!(error

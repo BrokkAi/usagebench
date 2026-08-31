@@ -40,7 +40,7 @@ case "$snapshot_kind" in
       '{casePath: $case_path, candidates: $candidates}'
     ;;
   legacy-promoted)
-    promotion_manifest="benchmarks/promotion/legacy-v1/manifest.json"
+    promotion_manifest="benchmarks/promotion/legacy-v2/manifest.json"
     promotion_path="$repo_root/$promotion_manifest"
     [[ -f "$promotion_path" ]] || {
       echo "legacy promotion manifest is missing: $promotion_manifest" >&2

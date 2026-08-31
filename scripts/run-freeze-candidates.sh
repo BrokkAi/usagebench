@@ -194,9 +194,12 @@ freeze_args=(
 if [[ "$SNAPSHOT_KIND" == "evaluation" ]]; then
   freeze_args+=(--evaluation-corpus "$corpus_root/$case_path")
 elif [[ "$SNAPSHOT_KIND" == "legacy-promoted" ]]; then
-  promotion_manifest="${FREEZE_PROMOTION_MANIFEST:-benchmarks/promotion/legacy-v1/manifest.json}"
-  [[ "$promotion_manifest" == "benchmarks/promotion/legacy-v1/manifest.json" ]] || {
-    echo "legacy-promoted freezes are bound to benchmarks/promotion/legacy-v1/manifest.json" >&2
+  promotion_manifest="${FREEZE_PROMOTION_MANIFEST:-benchmarks/promotion/legacy-v2/manifest.json}"
+  # Corrections are append-only, so a superseding manifest is a new legacy-vN
+  # directory rather than an edit. The rail keeps freezes bound to a promotion
+  # manifest under the promotion root.
+  [[ "$promotion_manifest" =~ ^benchmarks/promotion/legacy-v[0-9]+/manifest\.json$ ]] || {
+    echo "legacy-promoted freezes are bound to benchmarks/promotion/legacy-vN/manifest.json" >&2
     exit 1
   }
   [[ -f "$corpus_root/$promotion_manifest" ]] || {

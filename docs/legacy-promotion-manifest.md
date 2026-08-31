@@ -32,3 +32,37 @@ reviewed entry in a later manifest and cannot change an already frozen N.
 Allowed wording is “reviewed conformance on the named promoted legacy corpus.”
 The tier does not support claims of preregistration, general accuracy,
 language-wide accuracy, ecosystem coverage, or analyzer superiority.
+
+## Retiring a stale expected failure
+
+`expectedFailure` in a historical case document records an analyzer outcome,
+not reviewed ground truth, so it can outlive the defect it describes. The
+runner already surfaces that: a case that passes while annotated is reported
+`improved` rather than counted as a pass.
+
+The annotation cannot be edited away. The document is content-addressed by
+every manifest that binds it, and history is not rewritten. A superseding
+manifest retires it instead, through `retiredExpectedFailure` on the case
+entry:
+
+- `supersededReason` repeats the annotation verbatim, so the retirement is a
+  record of what was withdrawn rather than a deletion, and cannot drift from
+  the frozen text.
+- `evidence` binds the artifact showing the annotated navigation now succeeds.
+- The manifest must carry `supersedes`. A retirement is a correction, and
+  corrections are append-only.
+
+Execution staging drops the annotation from its filtered, execution-only copy
+of the corpus, so the case is scored as an ordinary pass. The historical YAML
+stays byte-identical and every earlier manifest keeps validating against it.
+
+Retirement is one-way and only ever tightens the corpus: it removes an excuse
+and can never add one. A superseding manifest may retire more expectations, but
+may not restore one its predecessor retired — the validator rejects that,
+so a later manifest cannot quietly reinstate an excuse for a case already held
+to an ordinary pass.
+
+`legacy-promotion-v2-balanced-core` supersedes
+`legacy-promotion-v1-balanced-core` on exactly these terms. It carries the same
+110 reviewed balanced-core cases and retires one annotation, on
+`cpp-parity-function-like-macro-expanded-call`.
