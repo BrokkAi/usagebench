@@ -1170,10 +1170,9 @@ fn run_declaration_to_usages(
     };
 
     // Bifrost rejects a per-request `max_duration_secs` and leaves deadline
-    // policy to the frontend, so the requested scan budget is applied here as
-    // a client-side deadline instead of being asked of the server.
-    session.set_request_timeout(Duration::from_secs(scan_usages_max_duration_secs));
-    let result = match session.call_tool(
+    // policy to the frontend, so the requested scan budget bounds this call
+    // without changing the timeout of later MCP requests.
+    let result = match session.call_tool_with_timeout(
         "scan_usages_by_location",
         json!({
             "targets": [target],
@@ -1181,6 +1180,7 @@ fn run_declaration_to_usages(
             "include_same_owner": true,
             "include_bindings": reference_policy != ReferencePolicy::ExternalUsages,
         }),
+        Duration::from_secs(scan_usages_max_duration_secs),
     ) {
         Ok(result) => result,
         Err(error) => {
@@ -3561,6 +3561,57 @@ for line in sys.stdin:
     }
 
     #[test]
+    fn scan_timeout_becomes_an_explicit_case_error() {
+        struct ScanTimeoutClient {
+            calls: usize,
+        }
+
+        impl SearchToolsClient for ScanTimeoutClient {
+            fn call_tool(&mut self, name: &str, _arguments: Value) -> Result<Value> {
+                assert_eq!(name, "search_symbols");
+                self.calls += 1;
+                Ok(search_symbols_json(
+                    "src/service.rs",
+                    "example.build_service",
+                    30,
+                ))
+            }
+
+            fn call_tool_with_timeout(
+                &mut self,
+                name: &str,
+                _arguments: Value,
+                timeout: std::time::Duration,
+            ) -> Result<Value> {
+                assert_eq!(name, "scan_usages_by_location");
+                assert_eq!(timeout, std::time::Duration::ZERO);
+                self.calls += 1;
+                Err(anyhow!("timed out waiting for Bifrost MCP response"))
+            }
+        }
+
+        let case = benchmark_case();
+        let mut client = ScanTimeoutClient { calls: 0 };
+        let mut diagnostics = Vec::new();
+        let report = run_declaration_to_usages(
+            &case,
+            case.declaration.as_ref().unwrap(),
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            0,
+            &mut diagnostics,
+        );
+
+        assert_eq!(client.calls, 2);
+        assert_eq!(report.status, CaseStatus::Error);
+        assert_eq!(report.raw_statuses, vec!["scan_usages_failed"]);
+        assert_eq!(diagnostics[0].kind, "scan_usages_failed");
+        assert!(diagnostics[0].message.contains("timed out"));
+    }
+
+    #[test]
     fn compatible_navigation_is_reported_without_replacing_canonical_status() {
         let mut case = benchmark_case();
         case.usage_lookups[0].operation = crate::NavigationOperation::Declaration;
@@ -5287,8 +5338,14 @@ for line in sys.stdin:
     }
 
     impl SearchToolsClient for MockClient {
-        fn set_request_timeout(&mut self, timeout: std::time::Duration) {
+        fn call_tool_with_timeout(
+            &mut self,
+            name: &str,
+            arguments: Value,
+            timeout: std::time::Duration,
+        ) -> Result<Value> {
             self.request_timeouts.push(timeout);
+            self.call_tool(name, arguments)
         }
 
         fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value> {
@@ -5305,6 +5362,15 @@ for line in sys.stdin:
 
     impl SearchToolsClient for ErrorClient {
         fn call_tool(&mut self, _name: &str, _arguments: Value) -> Result<Value> {
+            Err(anyhow!(self.message.clone()))
+        }
+
+        fn call_tool_with_timeout(
+            &mut self,
+            _name: &str,
+            _arguments: Value,
+            _timeout: std::time::Duration,
+        ) -> Result<Value> {
             Err(anyhow!(self.message.clone()))
         }
     }
