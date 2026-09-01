@@ -393,6 +393,28 @@ def development_case_ids() -> list[str]:
     return ids
 
 
+def _semantic_pack_clause(development: dict[str, Any]) -> str:
+    """Mention semantic-pack cases only while the corpus carries any.
+
+    The category is empty once the published v0.9.1 packs are retired, and a
+    sentence that reports zero of something reads as an oversight rather than a
+    boundary.
+    """
+
+    count = development["semanticPackCases"]
+    if not count:
+        return ""
+    return (
+        f" The remaining development corpus also contains {count} semantic-pack "
+        "cases that were never part of that inventory."
+    )
+
+
+def _semantic_pack_tail(development: dict[str, Any]) -> str:
+    count = development["semanticPackCases"]
+    return f", and {count} semantic-pack cases" if count else ""
+
+
 def build_legacy(bundles: dict[str, dict[str, Any]]) -> dict[str, Any]:
     # The published legacy result is the authority for this slice, so the map
     # describes the manifest that snapshot was frozen under, not the one the
@@ -564,7 +586,7 @@ def markdown(data: dict[str, Any]) -> str:
         "",
         "## Reviewed legacy boundaries",
         "",
-        f"The immutable promotion is `{legacy['promotionId']}`. Its balanced core is **{legacy['caseCount']} cases**, with **{legacy['overflowCases']} overflow** candidates and **{legacy['controlCases']} controls** kept outside the correctness denominator. The source-only legacy inventory contains {legacy['inventoryCases']} cases; the remaining development corpus also contains {development['semanticPackCases']} semantic-pack cases that were never part of that inventory.",
+        f"The immutable promotion is `{legacy['promotionId']}`. Its balanced core is **{legacy['caseCount']} cases**, with **{legacy['overflowCases']} overflow** candidates and **{legacy['controlCases']} controls** kept outside the correctness denominator. The source-only legacy inventory contains {legacy['inventoryCases']} cases.{_semantic_pack_clause(development)}",
         "",
         "| Language | Balanced-core cases |",
         "| --- | ---: |",
@@ -603,7 +625,7 @@ def markdown(data: dict[str, Any]) -> str:
         "",
         "## Remaining development evidence",
         "",
-        f"The checked-in development corpus contains **{development['caseCount']} cases**. The reviewed legacy core accounts for {development['balancedCoreCases']}; the {development['remainingCases']} cases outside that core comprise {development['overflowCases']} frozen overflow candidates, {development['controlCases']} unsupported/not-planned controls, and {development['semanticPackCases']} semantic-pack cases. This remainder is retained for regression and diagnosis; it is not silently added to v1, v2, or the legacy denominator.",
+        f"The checked-in development corpus contains **{development['caseCount']} cases**. The reviewed legacy core accounts for {development['balancedCoreCases']}; the {development['remainingCases']} cases outside that core comprise {development['overflowCases']} frozen overflow candidates and {development['controlCases']} unsupported/not-planned controls{_semantic_pack_tail(development)}. This remainder is retained for regression and diagnosis; it is not silently added to v1, v2, or the legacy denominator.",
         "",
         "## Publication safeguards",
         "",
