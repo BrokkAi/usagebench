@@ -32,7 +32,7 @@ Each profile remains visible before any aggregate. The numbers here are selected
 
 ## Reviewed legacy boundaries
 
-The immutable promotion is `legacy-promotion-v1-balanced-core`. Its balanced core is **110 cases**, with **42 overflow** candidates and **6 controls** kept outside the correctness denominator. The source-only legacy inventory contains 158 cases; the remaining development corpus also contains 2 semantic-pack cases that were never part of that inventory.
+The immutable promotion is `legacy-promotion-v1-balanced-core`. Its balanced core is **110 cases**, with **42 overflow** candidates and **6 controls** kept outside the correctness denominator. The source-only legacy inventory contains 158 cases.
 
 | Language | Balanced-core cases |
 | --- | ---: |
@@ -60,7 +60,7 @@ The entries below are derived only from checksum-verified release bundles. The g
 
 ## Remaining development evidence
 
-The checked-in development corpus contains **160 cases**. The reviewed legacy core accounts for 110; the 50 cases outside that core comprise 42 frozen overflow candidates, 6 unsupported/not-planned controls, and 2 semantic-pack cases. This remainder is retained for regression and diagnosis; it is not silently added to v1, v2, or the legacy denominator.
+The checked-in development corpus contains **158 cases**. The reviewed legacy core accounts for 110; the 48 cases outside that core comprise 42 frozen overflow candidates and 6 unsupported/not-planned controls. This remainder is retained for regression and diagnosis; it is not silently added to v1, v2, or the legacy denominator.
 
 ## Publication safeguards
 

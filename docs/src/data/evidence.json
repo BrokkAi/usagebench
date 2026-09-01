@@ -1,12 +1,12 @@
 {
   "development": {
     "balancedCoreCases": 110,
-    "caseCount": 160,
+    "caseCount": 158,
     "controlCases": 6,
     "legacyInventoryCases": 158,
     "overflowCases": 42,
-    "remainingCases": 50,
-    "semanticPackCases": 2
+    "remainingCases": 48,
+    "semanticPackCases": 0
   },
   "generatedBy": "scripts/generate-docs-evidence.py",
   "guardrails": [

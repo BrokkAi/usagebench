@@ -2979,9 +2979,9 @@ mod tests {
         let totals =
             requested_run_totals(documents.iter().map(|(_, document)| document), false, None);
 
-        assert_eq!(totals.documents, 61);
-        assert_eq!(totals.authored_cases, 232);
-        assert_eq!(totals.planned_cases, 226);
+        assert_eq!(totals.documents, 59);
+        assert_eq!(totals.authored_cases, 230);
+        assert_eq!(totals.planned_cases, 224);
         assert_eq!(
             totals.development_planned_cases + totals.evaluation_planned_cases,
             totals.planned_cases
