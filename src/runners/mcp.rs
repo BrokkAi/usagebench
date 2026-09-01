@@ -17,6 +17,11 @@ use std::{
 // cooperative shutdown, serialization, and response delivery. Match the
 // runner's ten-minute process envelope so cold-workspace cleanup cannot turn
 // structured incomplete evidence into a client-side timeout.
+//
+// This is the envelope, not the scan budget. Bifrost no longer accepts a
+// per-request deadline -- it leaves deadline policy to the frontend -- so a
+// caller that wants a tighter bound on one call sets it with
+// `ToolClient::set_request_timeout`.
 const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 const SNAPSHOT_NOT_READY_CODE: i64 = -32603;
 const SNAPSHOT_NOT_READY_MESSAGE: &str =
@@ -68,6 +73,13 @@ pub(crate) fn is_snapshot_not_ready_error(error: &anyhow::Error) -> bool {
 
 pub(crate) trait ToolClient {
     fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value>;
+
+    /// Bound the wall clock of subsequent calls.
+    ///
+    /// Bifrost stopped accepting a per-request `max_duration_secs` and leaves
+    /// deadline policy to the frontend, so a budget the caller wants honoured
+    /// has to be enforced here. Clients with no clock of their own ignore it.
+    fn set_request_timeout(&mut self, _timeout: Duration) {}
 }
 
 pub(crate) struct McpSession {
@@ -78,6 +90,7 @@ pub(crate) struct McpSession {
     next_id: u64,
     snapshot_not_ready: Option<McpResponseError>,
     workspace_readiness_duration: Duration,
+    request_timeout: Duration,
 }
 
 impl McpSession {
@@ -144,6 +157,7 @@ impl McpSession {
             next_id: 1,
             snapshot_not_ready: None,
             workspace_readiness_duration: Duration::ZERO,
+            request_timeout: MCP_REQUEST_TIMEOUT,
         })
     }
 
@@ -176,7 +190,12 @@ impl McpSession {
             .cloned()
             .context("JSON-RPC request missing id")?;
         self.write_line(&payload)?;
-        read_json_rpc_response(&self.stdout_lines, expected_id, &self.label)
+        read_json_rpc_response(
+            &self.stdout_lines,
+            expected_id,
+            &self.label,
+            self.request_timeout,
+        )
     }
 
     fn notify(&mut self, payload: Value) -> Result<()> {
@@ -194,14 +213,15 @@ fn read_json_rpc_response(
     stdout_lines: &Receiver<Result<String, String>>,
     expected_id: Value,
     label: &str,
+    timeout: Duration,
 ) -> Result<Value> {
-    let deadline = Instant::now() + MCP_REQUEST_TIMEOUT;
+    let deadline = Instant::now() + timeout;
     loop {
         let remaining = deadline.saturating_duration_since(Instant::now());
         if remaining.is_zero() {
             bail!(
                 "timed out after {} seconds waiting for {label} MCP response",
-                MCP_REQUEST_TIMEOUT.as_secs()
+                timeout.as_secs()
             );
         }
         let line = stdout_lines
@@ -209,7 +229,7 @@ fn read_json_rpc_response(
             .with_context(|| {
                 format!(
                     "timed out after {} seconds waiting for {label} MCP response",
-                    MCP_REQUEST_TIMEOUT.as_secs()
+                    timeout.as_secs()
                 )
             })?
             .map_err(|message| anyhow!(message))?;
@@ -222,6 +242,12 @@ fn read_json_rpc_response(
 }
 
 impl ToolClient for McpSession {
+    fn set_request_timeout(&mut self, timeout: Duration) {
+        // Never widen the process envelope: a caller may tighten its own
+        // deadline, but the run still has to finish inside the runner's.
+        self.request_timeout = timeout.min(MCP_REQUEST_TIMEOUT);
+    }
+
     fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value> {
         if let Some(error) = &self.snapshot_not_ready {
             return Err(error.clone().into());
@@ -373,7 +399,8 @@ mod tests {
             ))
             .unwrap();
 
-        let response = read_json_rpc_response(&receiver, json!(7), "test").unwrap();
+        let response =
+            read_json_rpc_response(&receiver, json!(7), "test", MCP_REQUEST_TIMEOUT).unwrap();
 
         assert_eq!(response["result"]["ok"], true);
     }
@@ -443,6 +470,7 @@ mod tests {
             next_id: 1,
             snapshot_not_ready: None,
             workspace_readiness_duration: Duration::ZERO,
+            request_timeout: MCP_REQUEST_TIMEOUT,
         };
 
         let result = retry_snapshot_not_ready(
