@@ -1169,6 +1169,10 @@ fn run_declaration_to_usages(
         }
     };
 
+    // Bifrost rejects a per-request `max_duration_secs` and leaves deadline
+    // policy to the frontend, so the requested scan budget is applied here as
+    // a client-side deadline instead of being asked of the server.
+    session.set_request_timeout(Duration::from_secs(scan_usages_max_duration_secs));
     let result = match session.call_tool(
         "scan_usages_by_location",
         json!({
@@ -1176,7 +1180,6 @@ fn run_declaration_to_usages(
             "include_tests": true,
             "include_same_owner": true,
             "include_bindings": reference_policy != ReferencePolicy::ExternalUsages,
-            "max_duration_secs": scan_usages_max_duration_secs,
         }),
     ) {
         Ok(result) => result,
@@ -3548,7 +3551,13 @@ for line in sys.stdin:
         );
         assert_eq!(client.calls[1].1["include_same_owner"], true);
         assert_eq!(client.calls[1].1["include_bindings"], true);
-        assert_eq!(client.calls[1].1["max_duration_secs"], 42);
+        // Bifrost rejects a per-request deadline outright, so the scan budget
+        // must reach it as a client-side timeout and never as an argument.
+        assert!(client.calls[1].1.get("max_duration_secs").is_none());
+        assert_eq!(
+            client.request_timeouts,
+            vec![std::time::Duration::from_secs(42)]
+        );
     }
 
     #[test]
@@ -5264,6 +5273,7 @@ for line in sys.stdin:
     struct MockClient {
         responses: VecDeque<(String, Value)>,
         calls: Vec<(String, Value)>,
+        request_timeouts: Vec<std::time::Duration>,
     }
 
     impl MockClient {
@@ -5271,11 +5281,16 @@ for line in sys.stdin:
             Self {
                 responses: VecDeque::from(responses),
                 calls: Vec::new(),
+                request_timeouts: Vec::new(),
             }
         }
     }
 
     impl SearchToolsClient for MockClient {
+        fn set_request_timeout(&mut self, timeout: std::time::Duration) {
+            self.request_timeouts.push(timeout);
+        }
+
         fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value> {
             let (expected_name, value) = self.responses.pop_front().unwrap();
             assert_eq!(expected_name, name);

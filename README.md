@@ -162,11 +162,16 @@ cargo run -- run-bifrost benchmarks/cases \
   --bifrost-working-tree
 ```
 
-`run-bifrost` supplies an explicit 300-second wall-clock budget to each
-`scan_usages_by_location` call. This batch-oriented default avoids inheriting
-Bifrost's five-second interactive budget and is recorded in report invocation
-metadata. Use `--scan-usages-max-duration-secs <0-300>` to select a smaller
-per-scan budget for development runs. When `--output` is set, the runner also
+`run-bifrost` applies an explicit 300-second wall-clock budget to each
+`scan_usages_by_location` call, and records it in report invocation metadata.
+Use `--scan-usages-max-duration-secs <0-300>` to select a smaller per-scan
+budget for development runs.
+
+The budget is enforced client-side. Bifrost stopped accepting a per-request
+`max_duration_secs` and leaves deadline policy to the frontend, so the runner
+holds the clock itself. One consequence is worth knowing: a scan that exhausts
+the budget is now an aborted call rather than a truncated result, so it is
+reported as a case error instead of scored against partial evidence. When `--output` is set, the runner also
 atomically updates a sibling `*.partial.json` checkpoint after each completed
 benchmark document so interrupted batch runs retain valid evidence. Checkpoints
 record `completed: false` plus the full `requestedCaseFiles` scope and are
