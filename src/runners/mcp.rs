@@ -6,7 +6,7 @@ use std::{
     io::{BufRead, BufReader, Read, Write},
     process::{Child, ChildStdin, Command, Stdio},
     sync::{
-        mpsc::{self, Receiver},
+        mpsc::{self, Receiver, RecvTimeoutError},
         Arc, Mutex,
     },
     thread,
@@ -20,8 +20,8 @@ use std::{
 //
 // This is the envelope, not the scan budget. Bifrost no longer accepts a
 // per-request deadline -- it leaves deadline policy to the frontend -- so a
-// caller that wants a tighter bound on one call sets it with
-// `ToolClient::set_request_timeout`.
+// caller that wants a tighter bound on one call uses
+// `ToolClient::call_tool_with_timeout`.
 const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 const SNAPSHOT_NOT_READY_CODE: i64 = -32603;
 const SNAPSHOT_NOT_READY_MESSAGE: &str =
@@ -63,6 +63,25 @@ impl fmt::Display for McpResponseError {
 
 impl StdError for McpResponseError {}
 
+#[derive(Debug)]
+struct McpRequestTimeout {
+    label: String,
+    timeout: Duration,
+}
+
+impl fmt::Display for McpRequestTimeout {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            formatter,
+            "timed out after {} seconds waiting for {} MCP response",
+            self.timeout.as_secs(),
+            self.label
+        )
+    }
+}
+
+impl StdError for McpRequestTimeout {}
+
 pub(crate) fn is_snapshot_not_ready_error(error: &anyhow::Error) -> bool {
     error.chain().any(|cause| {
         cause
@@ -74,12 +93,13 @@ pub(crate) fn is_snapshot_not_ready_error(error: &anyhow::Error) -> bool {
 pub(crate) trait ToolClient {
     fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value>;
 
-    /// Bound the wall clock of subsequent calls.
-    ///
-    /// Bifrost stopped accepting a per-request `max_duration_secs` and leaves
-    /// deadline policy to the frontend, so a budget the caller wants honoured
-    /// has to be enforced here. Clients with no clock of their own ignore it.
-    fn set_request_timeout(&mut self, _timeout: Duration) {}
+    /// Bound the wall clock of this call without changing later calls.
+    fn call_tool_with_timeout(
+        &mut self,
+        name: &str,
+        arguments: Value,
+        timeout: Duration,
+    ) -> Result<Value>;
 }
 
 pub(crate) struct McpSession {
@@ -90,7 +110,6 @@ pub(crate) struct McpSession {
     next_id: u64,
     snapshot_not_ready: Option<McpResponseError>,
     workspace_readiness_duration: Duration,
-    request_timeout: Duration,
 }
 
 impl McpSession {
@@ -157,7 +176,6 @@ impl McpSession {
             next_id: 1,
             snapshot_not_ready: None,
             workspace_readiness_duration: Duration::ZERO,
-            request_timeout: MCP_REQUEST_TIMEOUT,
         })
     }
 
@@ -185,17 +203,43 @@ impl McpSession {
     }
 
     fn request(&mut self, payload: Value) -> Result<Value> {
+        self.request_with_timeout(payload, MCP_REQUEST_TIMEOUT)
+    }
+
+    fn request_with_timeout(&mut self, payload: Value, timeout: Duration) -> Result<Value> {
         let expected_id = payload
             .get("id")
             .cloned()
             .context("JSON-RPC request missing id")?;
         self.write_line(&payload)?;
-        read_json_rpc_response(
+        match read_json_rpc_response(
             &self.stdout_lines,
-            expected_id,
+            expected_id.clone(),
             &self.label,
-            self.request_timeout,
-        )
+            timeout,
+        ) {
+            Err(error) if error.downcast_ref::<McpRequestTimeout>().is_some() => {
+                let cancellation = json!({
+                    "jsonrpc": "2.0",
+                    "method": "notifications/cancelled",
+                    "params": {
+                        "requestId": expected_id,
+                        "reason": format!(
+                            "UsageBench request timed out after {} seconds",
+                            timeout.as_secs()
+                        ),
+                    }
+                });
+                if let Err(cancel_error) = self.notify(cancellation) {
+                    return Err(error).context(format!(
+                        "also failed to cancel timed-out {} MCP request: {cancel_error:#}",
+                        self.label
+                    ));
+                }
+                Err(error)
+            }
+            result => result,
+        }
     }
 
     fn notify(&mut self, payload: Value) -> Result<()> {
@@ -219,20 +263,26 @@ fn read_json_rpc_response(
     loop {
         let remaining = deadline.saturating_duration_since(Instant::now());
         if remaining.is_zero() {
-            bail!(
-                "timed out after {} seconds waiting for {label} MCP response",
-                timeout.as_secs()
-            );
+            return Err(McpRequestTimeout {
+                label: label.to_string(),
+                timeout,
+            }
+            .into());
         }
-        let line = stdout_lines
-            .recv_timeout(remaining)
-            .with_context(|| {
-                format!(
-                    "timed out after {} seconds waiting for {label} MCP response",
-                    timeout.as_secs()
-                )
-            })?
-            .map_err(|message| anyhow!(message))?;
+        let line = match stdout_lines.recv_timeout(remaining) {
+            Ok(line) => line,
+            Err(RecvTimeoutError::Timeout) => {
+                return Err(McpRequestTimeout {
+                    label: label.to_string(),
+                    timeout,
+                }
+                .into());
+            }
+            Err(RecvTimeoutError::Disconnected) => {
+                bail!("{label} MCP response channel disconnected")
+            }
+        }
+        .map_err(|message| anyhow!(message))?;
         let response: Value = serde_json::from_str(&line)
             .with_context(|| format!("parse MCP JSON response: {line}"))?;
         if response.get("id") == Some(&expected_id) {
@@ -242,21 +292,36 @@ fn read_json_rpc_response(
 }
 
 impl ToolClient for McpSession {
-    fn set_request_timeout(&mut self, timeout: Duration) {
-        // Never widen the process envelope: a caller may tighten its own
-        // deadline, but the run still has to finish inside the runner's.
-        self.request_timeout = timeout.min(MCP_REQUEST_TIMEOUT);
+    fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value> {
+        self.call_tool_with_timeout(name, arguments, MCP_REQUEST_TIMEOUT)
     }
 
-    fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value> {
+    fn call_tool_with_timeout(
+        &mut self,
+        name: &str,
+        arguments: Value,
+        timeout: Duration,
+    ) -> Result<Value> {
         if let Some(error) = &self.snapshot_not_ready {
             return Err(error.clone().into());
         }
+        // A benchmark may tighten a request deadline, but may not widen the
+        // runner's process envelope.
+        let timeout = timeout.min(MCP_REQUEST_TIMEOUT);
         let mut readiness_duration = Duration::ZERO;
-        let result = retry_snapshot_not_ready(
-            || self.call_tool_once(name, arguments.clone()),
+        let label = self.label.clone();
+        let result = retry_snapshot_not_ready_until(
+            timeout,
+            |remaining| self.call_tool_once(name, arguments.clone(), remaining),
             thread::sleep,
             |duration| readiness_duration += duration,
+            || {
+                McpRequestTimeout {
+                    label: label.clone(),
+                    timeout,
+                }
+                .into()
+            },
         );
         self.workspace_readiness_duration += readiness_duration;
         if let Err(error) = &result {
@@ -280,18 +345,21 @@ impl McpSession {
         self.snapshot_not_ready.take().map(Into::into)
     }
 
-    fn call_tool_once(&mut self, name: &str, arguments: Value) -> Result<Value> {
+    fn call_tool_once(&mut self, name: &str, arguments: Value, timeout: Duration) -> Result<Value> {
         let id = self.next_id;
         self.next_id += 1;
-        let response = self.request(json!({
-            "jsonrpc": "2.0",
-            "id": id,
-            "method": "tools/call",
-            "params": {
-                "name": name,
-                "arguments": arguments,
-            }
-        }))?;
+        let response = self.request_with_timeout(
+            json!({
+                "jsonrpc": "2.0",
+                "id": id,
+                "method": "tools/call",
+                "params": {
+                    "name": name,
+                    "arguments": arguments,
+                }
+            }),
+            timeout,
+        )?;
         if let Some(error) = response.get("error") {
             let code = error.get("code").and_then(Value::as_i64);
             let message = error.get("message").and_then(Value::as_str);
@@ -333,6 +401,7 @@ impl McpSession {
     }
 }
 
+#[cfg(test)]
 fn retry_snapshot_not_ready<T>(
     mut operation: impl FnMut() -> Result<T>,
     mut sleep: impl FnMut(Duration),
@@ -350,6 +419,54 @@ fn retry_snapshot_not_ready<T>(
         }
     }
     match operation() {
+        Err(error) if is_snapshot_not_ready_error(&error) => Err(error).with_context(|| {
+            format!(
+                "workspace readiness retries exhausted after {} attempts",
+                SNAPSHOT_NOT_READY_RETRY_DELAYS.len() + 1
+            )
+        }),
+        result => result,
+    }
+}
+
+fn retry_snapshot_not_ready_until<T>(
+    timeout: Duration,
+    mut operation: impl FnMut(Duration) -> Result<T>,
+    mut sleep: impl FnMut(Duration),
+    mut record_readiness: impl FnMut(Duration),
+    timeout_error: impl Fn() -> anyhow::Error,
+) -> Result<T> {
+    let deadline = Instant::now() + timeout;
+    let mut attempted = false;
+    for delay in SNAPSHOT_NOT_READY_RETRY_DELAYS {
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if attempted && remaining.is_zero() {
+            return Err(timeout_error());
+        }
+        attempted = true;
+        let attempt_started = Instant::now();
+        match operation(remaining) {
+            Err(error) if is_snapshot_not_ready_error(&error) => {
+                let attempt_duration = attempt_started.elapsed();
+                let remaining = deadline.saturating_duration_since(Instant::now());
+                if remaining.is_zero() {
+                    return Err(timeout_error());
+                }
+                let bounded_delay = delay.min(remaining);
+                sleep(bounded_delay);
+                record_readiness(attempt_duration.saturating_add(bounded_delay));
+                if bounded_delay < delay {
+                    return Err(timeout_error());
+                }
+            }
+            result => return result,
+        }
+    }
+    let remaining = deadline.saturating_duration_since(Instant::now());
+    if remaining.is_zero() {
+        return Err(timeout_error());
+    }
+    match operation(remaining) {
         Err(error) if is_snapshot_not_ready_error(&error) => Err(error).with_context(|| {
             format!(
                 "workspace readiness retries exhausted after {} attempts",
@@ -403,6 +520,119 @@ mod tests {
             read_json_rpc_response(&receiver, json!(7), "test", MCP_REQUEST_TIMEOUT).unwrap();
 
         assert_eq!(response["result"]["ok"], true);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn timed_out_call_is_cancelled_without_poisoning_the_next_call() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let requests_path = tempdir.path().join("requests.jsonl");
+        let mut child = Command::new("sh")
+            .args(["-c", "tee \"$1\" >/dev/null", "usagebench-mcp-test"])
+            .arg(&requests_path)
+            .stdin(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let stdin = child.stdin.take().unwrap();
+        let (sender, receiver) = mpsc::channel();
+        sender
+            .send(Ok(
+                r#"{"jsonrpc":"2.0","id":1,"result":{"structuredContent":{"late":true}}}"#
+                    .to_string(),
+            ))
+            .unwrap();
+        sender
+            .send(Ok(
+                r#"{"jsonrpc":"2.0","id":2,"result":{"structuredContent":{"ready":true}}}"#
+                    .to_string(),
+            ))
+            .unwrap();
+        let mut session = McpSession {
+            label: "Bifrost".to_string(),
+            child,
+            stdin,
+            stdout_lines: receiver,
+            next_id: 1,
+            snapshot_not_ready: None,
+            workspace_readiness_duration: Duration::ZERO,
+        };
+
+        let error = session
+            .call_tool_with_timeout("scan_usages_by_location", json!({}), Duration::ZERO)
+            .unwrap_err();
+        assert!(error.downcast_ref::<McpRequestTimeout>().is_some());
+
+        let next = session.call_tool("search_symbols", json!({})).unwrap();
+        assert_eq!(next["ready"], true);
+        session.stdin.flush().unwrap();
+
+        let mut written = None;
+        for _ in 0..100 {
+            if let Ok(contents) = std::fs::read_to_string(&requests_path) {
+                if contents.lines().count() == 3 {
+                    written = Some(contents);
+                    break;
+                }
+            }
+            thread::sleep(Duration::from_millis(5));
+        }
+        let written = written.expect("MCP requests were not written");
+        let messages = written
+            .lines()
+            .map(|line| serde_json::from_str::<Value>(line).unwrap())
+            .collect::<Vec<_>>();
+
+        assert_eq!(messages[0]["id"], 1);
+        assert_eq!(messages[0]["params"]["name"], "scan_usages_by_location");
+        assert_eq!(messages[1]["method"], "notifications/cancelled");
+        assert_eq!(messages[1]["params"]["requestId"], 1);
+        assert_eq!(
+            messages[1]["params"]["reason"],
+            "UsageBench request timed out after 0 seconds"
+        );
+        assert!(messages[1].get("id").is_none());
+        assert_eq!(messages[2]["id"], 2);
+        assert_eq!(messages[2]["params"]["name"], "search_symbols");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn readiness_retries_share_one_logical_call_deadline() {
+        let mut child = Command::new("sh")
+            .arg("-c")
+            .arg("cat >/dev/null")
+            .stdin(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let stdin = child.stdin.take().unwrap();
+        let (sender, receiver) = mpsc::channel();
+        sender
+            .send(Ok(format!(
+                r#"{{"jsonrpc":"2.0","id":1,"error":{{"code":{SNAPSHOT_NOT_READY_CODE},"message":"{SNAPSHOT_NOT_READY_MESSAGE}"}}}}"#
+            )))
+            .unwrap();
+        let mut session = McpSession {
+            label: "Bifrost".to_string(),
+            child,
+            stdin,
+            stdout_lines: receiver,
+            next_id: 1,
+            snapshot_not_ready: None,
+            workspace_readiness_duration: Duration::ZERO,
+        };
+
+        let started = Instant::now();
+        let error = session
+            .call_tool_with_timeout(
+                "scan_usages_by_location",
+                json!({}),
+                Duration::from_millis(20),
+            )
+            .unwrap_err();
+
+        assert!(error.downcast_ref::<McpRequestTimeout>().is_some());
+        assert_eq!(session.next_id, 2, "deadline must prevent a second attempt");
+        assert!(started.elapsed() < Duration::from_secs(1));
     }
 
     fn snapshot_not_ready_error() -> anyhow::Error {
@@ -470,11 +700,10 @@ mod tests {
             next_id: 1,
             snapshot_not_ready: None,
             workspace_readiness_duration: Duration::ZERO,
-            request_timeout: MCP_REQUEST_TIMEOUT,
         };
 
         let result = retry_snapshot_not_ready(
-            || session.call_tool_once("search_symbols", json!({})),
+            || session.call_tool_once("search_symbols", json!({}), MCP_REQUEST_TIMEOUT),
             |_| {},
             |_| {},
         )
