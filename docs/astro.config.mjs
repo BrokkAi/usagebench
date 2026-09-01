@@ -1,8 +1,8 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
-const site = process.env.PUBLIC_DOCS_SITE ?? 'https://brokkai.github.io';
-const productionBase = process.env.PUBLIC_DOCS_BASE ?? '/usagebench';
+const site = process.env.PUBLIC_DOCS_SITE ?? 'https://usagebench.brokk.ai';
+const productionBase = process.env.PUBLIC_DOCS_BASE ?? '/';
 const isDev = process.argv.includes('dev');
 
 export default defineConfig({

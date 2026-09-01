@@ -11,5 +11,4 @@ npm run build
 npm run dev
 ```
 
-Production builds use `https://brokkai.github.io/usagebench` as their default
-site and base path. Local development uses `/`.
+Production builds use `https://usagebench.brokk.ai` at the root path.
