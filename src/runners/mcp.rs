@@ -24,8 +24,9 @@ use std::{
 // `ToolClient::call_tool_with_timeout`.
 const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 
-/// The runner's process envelope, exposed so callers choosing their own
+/// The runner's process envelope, exposed so tests choosing their own
 /// deadline can check theirs still fits inside it.
+#[cfg(test)]
 pub(crate) fn request_envelope() -> Duration {
     MCP_REQUEST_TIMEOUT
 }
@@ -210,6 +211,31 @@ impl McpSession {
 
     fn request(&mut self, payload: Value) -> Result<Value> {
         self.request_with_timeout(payload, MCP_REQUEST_TIMEOUT)
+    }
+
+    /// List the server's tool descriptors via the standard `tools/list`
+    /// request.
+    ///
+    /// The descriptor set is how an MCP server states which arguments each of
+    /// its tools accepts, so a caller that must adapt to the server it was
+    /// given probes this once per session instead of keeping a version table.
+    pub(crate) fn tool_descriptors(&mut self) -> Result<Value> {
+        let id = self.next_id;
+        self.next_id += 1;
+        let response = self.request(json!({
+            "jsonrpc": "2.0",
+            "id": id,
+            "method": "tools/list",
+            "params": {}
+        }))?;
+        if let Some(error) = response.get("error") {
+            bail!("{} tools/list failed: {error}", self.label);
+        }
+        response
+            .get("result")
+            .and_then(|result| result.get("tools"))
+            .cloned()
+            .with_context(|| format!("{} tools/list response lacks result.tools", self.label))
     }
 
     fn request_with_timeout(&mut self, payload: Value, timeout: Duration) -> Result<Value> {
