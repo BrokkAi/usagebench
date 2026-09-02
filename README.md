@@ -167,11 +167,15 @@ cargo run -- run-bifrost benchmarks/cases \
 Use `--scan-usages-max-duration-secs <0-300>` to select a smaller per-scan
 budget for development runs.
 
-The budget is enforced client-side. Bifrost stopped accepting a per-request
-`max_duration_secs` and leaves deadline policy to the frontend, so the runner
-holds the clock itself. One consequence is worth knowing: a scan that exhausts
-the budget is now an aborted call rather than a truncated result, so it is
-reported as a case error instead of scored against partial evidence. When `--output` is set, the runner also
+The budget reaches Bifrost through `BIFROST_MCP_REQUEST_BUDGET_SECS`, set on the
+server the runner launches. Bifrost stopped accepting a per-request
+`max_duration_secs` and leaves deadline policy to the frontend, which chooses it
+once per server rather than once per call. Raising it matters: a cold workspace
+otherwise falls back to a 4.5-second budget meant for interactive use, and a
+large repository answers with partial usage sets that score as failures rather
+than as the timeouts they are. The runner also holds a backstop deadline of the
+budget plus a minute, so Bifrost's own budget expires first and reports
+incomplete evidence instead of the call being abandoned. When `--output` is set, the runner also
 atomically updates a sibling `*.partial.json` checkpoint after each completed
 benchmark document so interrupted batch runs retain valid evidence. Checkpoints
 record `completed: false` plus the full `requestedCaseFiles` scope and are

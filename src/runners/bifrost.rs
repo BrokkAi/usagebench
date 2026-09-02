@@ -41,6 +41,16 @@ const GET_DEFINITIONS_BY_LOCATION_TOOL: &str = "get_definitions_by_location";
 const GET_TYPE_BY_LOCATION_TOOL: &str = "get_type_by_location";
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(10 * 60);
 pub const DEFAULT_SCAN_USAGES_MAX_DURATION_SECS: u64 = 300;
+/// Bifrost's per-request analyzer budget, chosen by the frontend at server
+/// launch. It supersedes the removed `max_duration_secs` request argument.
+const BIFROST_REQUEST_BUDGET_ENV: &str = "BIFROST_MCP_REQUEST_BUDGET_SECS";
+/// Headroom between Bifrost's request budget and the runner's own deadline.
+///
+/// The server budget must expire first: it ends a long scan by returning
+/// structured incomplete evidence, where the client deadline can only abandon
+/// the call. Without this margin the two race and a scan that Bifrost would
+/// have reported on becomes a case error.
+const SCAN_DEADLINE_GRACE_SECS: u64 = 60;
 pub const MAX_SCAN_USAGES_MAX_DURATION_SECS: u64 = 300;
 
 #[derive(Debug, Clone)]
@@ -574,6 +584,27 @@ struct TimedDocumentRun {
     analyzer_query_millis: u64,
 }
 
+/// Raise Bifrost's per-request analyzer budget to the scan budget this run asked
+/// for.
+///
+/// Without it a cold workspace falls back to a 4.5-second budget meant for
+/// interactive use, and a large repository answers with partial usage sets that
+/// score as failures rather than as the timeouts they are. This environment
+/// variable replaced the removed `max_duration_secs` request argument: the
+/// deadline is still the frontend's to choose, it is simply chosen once per
+/// server instead of once per call.
+///
+/// Bifrost panics on a zero budget, so zero means "leave Bifrost's default
+/// alone" rather than "no time at all".
+fn request_budget_env(scan_usages_max_duration_secs: u64) -> Option<(&'static str, String)> {
+    (scan_usages_max_duration_secs > 0).then(|| {
+        (
+            BIFROST_REQUEST_BUDGET_ENV,
+            scan_usages_max_duration_secs.to_string(),
+        )
+    })
+}
+
 fn run_document_cases(
     document: &BenchmarkDocument,
     source_root: &Path,
@@ -619,6 +650,9 @@ fn run_document_cases(
         .arg("searchtools");
     if !workspace_models.is_empty() {
         command.env("BIFROST_WORKSPACE_SEMANTIC_MODELS", "on");
+    }
+    if let Some((key, value)) = request_budget_env(scan_usages_max_duration_secs) {
+        command.env(key, value);
     }
     if let Some(semantic_pack) = semantic_pack {
         command
@@ -1169,9 +1203,12 @@ fn run_declaration_to_usages(
         }
     };
 
-    // Bifrost rejects a per-request `max_duration_secs` and leaves deadline
-    // policy to the frontend, so the requested scan budget bounds this call
-    // without changing the timeout of later MCP requests.
+    // The scan budget itself reaches Bifrost through its request-budget
+    // environment variable, set when the server was launched. This deadline is
+    // only the backstop for a server that never answers, so it is deliberately
+    // the budget plus grace: Bifrost's own budget has to expire first, because
+    // that path returns structured incomplete evidence instead of abandoning
+    // the call.
     let result = match session.call_tool_with_timeout(
         "scan_usages_by_location",
         json!({
@@ -1180,7 +1217,7 @@ fn run_declaration_to_usages(
             "include_same_owner": true,
             "include_bindings": reference_policy != ReferencePolicy::ExternalUsages,
         }),
-        Duration::from_secs(scan_usages_max_duration_secs),
+        Duration::from_secs(scan_usages_max_duration_secs + SCAN_DEADLINE_GRACE_SECS),
     ) {
         Ok(result) => result,
         Err(error) => {
@@ -2963,6 +3000,37 @@ mod tests {
     }
 
     #[test]
+    fn the_scan_budget_is_raised_on_the_server_that_enforces_it() {
+        // Bifrost's cold-workspace default is 4.5 seconds, meant for
+        // interactive use. A real-project scan measured under it returns a
+        // partial usage set, which scores as a failure rather than a timeout,
+        // so the budget has to be raised where Bifrost reads it.
+        let (key, value) = request_budget_env(DEFAULT_SCAN_USAGES_MAX_DURATION_SECS).unwrap();
+        assert_eq!(key, "BIFROST_MCP_REQUEST_BUDGET_SECS");
+        assert_eq!(value, "300");
+        assert_eq!(request_budget_env(42).unwrap().1, "42");
+    }
+
+    #[test]
+    fn a_zero_budget_leaves_bifrosts_default_alone() {
+        // Bifrost panics on a zero budget, so zero must mean "do not raise"
+        // rather than reaching the server as a literal zero.
+        assert!(request_budget_env(0).is_none());
+    }
+
+    #[test]
+    fn the_client_deadline_outlives_the_budget_it_backstops() {
+        // Equal deadlines race, and the client losing that race turns evidence
+        // Bifrost would have reported into a case error.
+        assert!(SCAN_DEADLINE_GRACE_SECS > 0);
+        assert!(
+            Duration::from_secs(MAX_SCAN_USAGES_MAX_DURATION_SECS + SCAN_DEADLINE_GRACE_SECS)
+                <= crate::runners::mcp::request_envelope(),
+            "the backstop must still fit inside the runner's process envelope"
+        );
+    }
+
+    #[test]
     fn requested_totals_cover_the_full_authored_corpus() {
         let mut case_files = Vec::new();
         crate::collect_case_files(Path::new("benchmarks/cases"), &mut case_files).unwrap();
@@ -3551,12 +3619,14 @@ for line in sys.stdin:
         );
         assert_eq!(client.calls[1].1["include_same_owner"], true);
         assert_eq!(client.calls[1].1["include_bindings"], true);
-        // Bifrost rejects a per-request deadline outright, so the scan budget
-        // must reach it as a client-side timeout and never as an argument.
+        // Bifrost rejects a per-request deadline outright, so the budget must
+        // never travel as an argument.
         assert!(client.calls[1].1.get("max_duration_secs").is_none());
+        // The client deadline trails the server budget so Bifrost's own budget
+        // expires first and reports incomplete evidence.
         assert_eq!(
             client.request_timeouts,
-            vec![std::time::Duration::from_secs(42)]
+            vec![std::time::Duration::from_secs(42 + SCAN_DEADLINE_GRACE_SECS)]
         );
     }
 
@@ -3584,7 +3654,12 @@ for line in sys.stdin:
                 timeout: std::time::Duration,
             ) -> Result<Value> {
                 assert_eq!(name, "scan_usages_by_location");
-                assert_eq!(timeout, std::time::Duration::ZERO);
+                // This case runs with no raised budget, so Bifrost keeps its
+                // own default and the runner's deadline is the bare grace.
+                assert_eq!(
+                    timeout,
+                    std::time::Duration::from_secs(SCAN_DEADLINE_GRACE_SECS)
+                );
                 self.calls += 1;
                 Err(anyhow!("timed out waiting for Bifrost MCP response"))
             }

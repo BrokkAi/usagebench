@@ -108,10 +108,14 @@ cargo run -- run-lsp benchmarks/cases \
 The Bifrost runner records and applies a 300-second wall-clock budget for each
 usage scan by default. For a quicker development pass, override the per-scan
 budget with `--scan-usages-max-duration-secs <0-300>`; the effective value is
-retained in the report's invocation metadata. The runner enforces the budget
-itself: Bifrost no longer accepts a per-request deadline and leaves deadline
-policy to the frontend, so exhausting the budget aborts the call and reports a
-case error rather than scoring truncated evidence. Runs with `--output` atomically update a
+retained in the report's invocation metadata. The budget is applied through
+`BIFROST_MCP_REQUEST_BUDGET_SECS` on the Bifrost server the runner launches:
+Bifrost no longer accepts a per-request deadline and leaves deadline policy to
+the frontend, which sets it once per server. Raising it matters, because a cold
+workspace otherwise falls back to a 4.5-second interactive budget under which a
+large repository returns partial usage sets that score as failures. The runner
+keeps a backstop deadline a minute longer than the budget so Bifrost reports
+incomplete evidence rather than having the call abandoned. Runs with `--output` atomically update a
 sibling `*.partial.json` checkpoint after each completed benchmark document;
 the requested output path is written only when the full run completes.
 Checkpoints identify themselves with `completed: false`, retain the full
