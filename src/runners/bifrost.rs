@@ -44,6 +44,45 @@ pub const DEFAULT_SCAN_USAGES_MAX_DURATION_SECS: u64 = 300;
 /// Bifrost's per-request analyzer budget, chosen by the frontend at server
 /// launch. It supersedes the removed `max_duration_secs` request argument.
 const BIFROST_REQUEST_BUDGET_ENV: &str = "BIFROST_MCP_REQUEST_BUDGET_SECS";
+/// How the requested usage-scan budget reaches the Bifrost server.
+///
+/// The mechanism changed across Bifrost releases: through v0.10.7 the scan
+/// tools accept a per-call `max_duration_secs` argument, and from v0.10.8 that
+/// argument is rejected and the budget is read from
+/// `BIFROST_MCP_REQUEST_BUDGET_SECS` at server launch. Freezes pin candidate
+/// registries to exact revisions on both sides of that change, so the runner
+/// must serve both. Which side it is on is read from the server's own
+/// `tools/list` descriptors rather than from a version table the runner would
+/// have to keep true.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct ScanBudgetPolicy {
+    max_duration_secs: u64,
+    /// The server's `scan_usages_by_location` descriptor advertises a
+    /// `max_duration_secs` argument.
+    server_accepts_duration_argument: bool,
+}
+
+/// Derive the scan-budget policy from the server's advertised tool descriptors.
+///
+/// A server that does not advertise the scan tool at all cannot be measured,
+/// and the refusal must be loud: guessing either way silently mismeasures --
+/// sending an unadvertised argument errors every scan, withholding a required
+/// one truncates every large scan into failures.
+fn scan_budget_policy(tools: &Value, max_duration_secs: u64) -> Result<ScanBudgetPolicy> {
+    let scan_tool = tools
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|tool| tool.get("name").and_then(Value::as_str) == Some("scan_usages_by_location"))
+        .context("Bifrost tools/list does not advertise scan_usages_by_location")?;
+    Ok(ScanBudgetPolicy {
+        max_duration_secs,
+        server_accepts_duration_argument: scan_tool
+            .pointer("/inputSchema/properties/max_duration_secs")
+            .is_some(),
+    })
+}
+
 /// Headroom between Bifrost's request budget and the runner's own deadline.
 ///
 /// The server budget must expire first: it ends a long scan by returning
@@ -665,6 +704,10 @@ fn run_document_cases(
     let readiness_started = Instant::now();
     let mut session = McpSession::start(&mut command, "Bifrost")?;
     session.initialize()?;
+    let scan_budget = scan_budget_policy(
+        &session.tool_descriptors()?,
+        scan_usages_max_duration_secs,
+    )?;
     let initialization_duration = readiness_started.elapsed();
     let query_started = Instant::now();
     if let Some(requirement) = document.semantic_packs.as_ref() {
@@ -685,7 +728,7 @@ fn run_document_cases(
             &mut session,
             include_unsupported,
             include_definition_lookups,
-            scan_usages_max_duration_secs,
+            scan_budget,
         ));
         if let Some(error) = session.take_snapshot_not_ready_error() {
             return Err(error).context("Bifrost workspace readiness retries were exhausted");
@@ -913,7 +956,10 @@ fn run_case(
         session,
         include_unsupported,
         include_definition_lookups,
-        DEFAULT_SCAN_USAGES_MAX_DURATION_SECS,
+        ScanBudgetPolicy {
+            max_duration_secs: DEFAULT_SCAN_USAGES_MAX_DURATION_SECS,
+            server_accepts_duration_argument: false,
+        },
     )
 }
 
@@ -925,7 +971,7 @@ fn run_case_with_scan_duration(
     session: &mut impl SearchToolsClient,
     include_unsupported: bool,
     include_definition_lookups: bool,
-    scan_usages_max_duration_secs: u64,
+    scan_budget: ScanBudgetPolicy,
 ) -> CaseRunReport {
     if case.unsupported.is_some() && !include_unsupported {
         return excluded_case(case, CaseStatus::Unsupported);
@@ -940,7 +986,7 @@ fn run_case_with_scan_duration(
             reference_policy,
             reference_context,
             session,
-            scan_usages_max_duration_secs,
+            scan_budget,
             &mut diagnostics,
         )
     });
@@ -1062,7 +1108,7 @@ fn run_declaration_to_usages(
     reference_policy: ReferencePolicy,
     reference_context: Option<(&str, &Path)>,
     session: &mut impl SearchToolsClient,
-    scan_usages_max_duration_secs: u64,
+    scan_budget: ScanBudgetPolicy,
     diagnostics: &mut Vec<RunDiagnostic>,
 ) -> DeclarationUsageReport {
     let expected = case
@@ -1203,21 +1249,26 @@ fn run_declaration_to_usages(
         }
     };
 
-    // The scan budget itself reaches Bifrost through its request-budget
-    // environment variable, set when the server was launched. This deadline is
-    // only the backstop for a server that never answers, so it is deliberately
-    // the budget plus grace: Bifrost's own budget has to expire first, because
-    // that path returns structured incomplete evidence instead of abandoning
-    // the call.
+    // The scan budget reaches Bifrost by whichever mechanism this server
+    // advertises: the per-call argument on servers whose descriptor accepts
+    // it, and the request-budget environment variable set at launch otherwise.
+    // The client deadline here is only the backstop for a server that never
+    // answers, so it is deliberately the budget plus grace: Bifrost's own
+    // budget has to expire first, because that path returns structured
+    // incomplete evidence instead of abandoning the call.
+    let mut scan_arguments = json!({
+        "targets": [target],
+        "include_tests": true,
+        "include_same_owner": true,
+        "include_bindings": reference_policy != ReferencePolicy::ExternalUsages,
+    });
+    if scan_budget.server_accepts_duration_argument {
+        scan_arguments["max_duration_secs"] = json!(scan_budget.max_duration_secs);
+    }
     let result = match session.call_tool_with_timeout(
         "scan_usages_by_location",
-        json!({
-            "targets": [target],
-            "include_tests": true,
-            "include_same_owner": true,
-            "include_bindings": reference_policy != ReferencePolicy::ExternalUsages,
-        }),
-        Duration::from_secs(scan_usages_max_duration_secs + SCAN_DEADLINE_GRACE_SECS),
+        scan_arguments,
+        Duration::from_secs(scan_budget.max_duration_secs + SCAN_DEADLINE_GRACE_SECS),
     ) {
         Ok(result) => result,
         Err(error) => {
@@ -3187,6 +3238,12 @@ for line in sys.stdin:
         continue
     if request.get("method") == "initialize":
         response = {{"jsonrpc": "2.0", "id": request["id"], "result": {{}}}}
+    elif request.get("method") == "tools/list":
+        # Real servers serve descriptors statically, before and regardless of
+        # workspace readiness, so the cold document still answers this.
+        response = {{"jsonrpc": "2.0", "id": request["id"], "result": {{"tools": [
+            {{"name": "scan_usages_by_location", "inputSchema": {{"properties": {{}}}}}}
+        ]}}}}
     elif cold:
         response = {{"jsonrpc": "2.0", "id": request["id"], "error": {{"code": -32603, "message": {message:?}}}}}
     else:
@@ -3609,7 +3666,10 @@ for line in sys.stdin:
             &mut client,
             false,
             true,
-            42,
+            ScanBudgetPolicy {
+                max_duration_secs: 42,
+                server_accepts_duration_argument: false,
+            },
         );
 
         assert_eq!(report.status, CaseStatus::Passed);
@@ -3619,14 +3679,95 @@ for line in sys.stdin:
         );
         assert_eq!(client.calls[1].1["include_same_owner"], true);
         assert_eq!(client.calls[1].1["include_bindings"], true);
-        // Bifrost rejects a per-request deadline outright, so the budget must
-        // never travel as an argument.
+        // A server whose descriptor does not advertise the argument rejects
+        // it outright, so the budget must never travel in the request.
         assert!(client.calls[1].1.get("max_duration_secs").is_none());
         // The client deadline trails the server budget so Bifrost's own budget
         // expires first and reports incomplete evidence.
         assert_eq!(
             client.request_timeouts,
             vec![std::time::Duration::from_secs(42 + SCAN_DEADLINE_GRACE_SECS)]
+        );
+    }
+
+    #[test]
+    fn a_server_that_advertises_the_duration_argument_receives_it() {
+        let case = benchmark_case();
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                search_symbols_json("src/service.rs", "example.build_service", 30),
+            ),
+            tool(
+                "scan_usages_by_location",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+            tool(
+                GET_DEFINITIONS_BY_LOCATION_TOOL,
+                get_definitions_by_location_json("resolved", vec![("src/service.rs", 30)]),
+            ),
+        ]);
+
+        let report = run_case_with_scan_duration(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            true,
+            ScanBudgetPolicy {
+                max_duration_secs: 42,
+                server_accepts_duration_argument: true,
+            },
+        );
+
+        // Older Bifrost servers enforce the scan budget only through this
+        // argument; withholding it re-measures them under the 4.5-second
+        // interactive default, which truncates large scans into failures.
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(client.calls[1].1["max_duration_secs"], 42);
+        assert_eq!(
+            client.request_timeouts,
+            vec![std::time::Duration::from_secs(42 + SCAN_DEADLINE_GRACE_SECS)]
+        );
+    }
+
+    #[test]
+    fn the_budget_mechanism_is_read_from_the_servers_own_descriptors() {
+        // Shaped like Bifrost v0.10.2, which authors the argument in its
+        // scan-tool schema.
+        let advertising = json!([{
+            "name": "scan_usages_by_location",
+            "inputSchema": { "properties": { "max_duration_secs": { "type": "integer" } } }
+        }]);
+        // Shaped like Bifrost v0.10.8, whose own tests assert the property is
+        // absent from the descriptor.
+        let rejecting = json!([{
+            "name": "scan_usages_by_location",
+            "inputSchema": { "properties": { "targets": { "type": "array" } } }
+        }]);
+
+        assert!(
+            scan_budget_policy(&advertising, 300)
+                .unwrap()
+                .server_accepts_duration_argument
+        );
+        assert!(
+            !scan_budget_policy(&rejecting, 300)
+                .unwrap()
+                .server_accepts_duration_argument
+        );
+    }
+
+    #[test]
+    fn a_server_without_the_scan_tool_is_refused_rather_than_guessed_at() {
+        // Either guess mismeasures: sending an unadvertised argument errors
+        // every scan, withholding a required one truncates large scans.
+        let error = scan_budget_policy(&json!([{ "name": "search_symbols" }]), 300).unwrap_err();
+        assert!(
+            format!("{error:#}").contains("does not advertise scan_usages_by_location"),
+            "unexpected error: {error:#}"
         );
     }
 
@@ -3675,7 +3816,10 @@ for line in sys.stdin:
             ReferencePolicy::BindingsOptional,
             None,
             &mut client,
-            0,
+            ScanBudgetPolicy {
+                max_duration_secs: 0,
+                server_accepts_duration_argument: false,
+            },
             &mut diagnostics,
         );
 
