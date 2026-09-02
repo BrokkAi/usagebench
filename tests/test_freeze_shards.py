@@ -71,12 +71,52 @@ class FreezeShardTests(unittest.TestCase):
         )
         self.assertNotIn("referenceRunner", frozen_bifrost)
 
+    def test_v034_registry_advances_only_the_bifrost_pin(self):
+        """The superseding registry moves the measured Bifrost and nothing else.
+
+        candidates-v0.3.0.json stays byte-identical as the historical record of
+        what v0.3.0 measured; the v0.3.4 registry is a new frozen identity set,
+        not an edit.
+        """
+        previous = json.loads(
+            (ROOT / "benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json").read_text()
+        )
+        current = json.loads(
+            (ROOT / "benchmarks/evaluation/real-project-v2/candidates-v0.3.4.json").read_text()
+        )
+        bifrost = next(item for item in current["candidates"] if item["id"] == "bifrost")
+        self.assertEqual(bifrost["requestedVersion"], "v0.10.8")
+        self.assertEqual(bifrost["revision"], "8ddf13625653caf927137a0de1966401055debad")
+        self.assertNotIn("referenceRunner", bifrost)
+        # The active development pin and the evaluation pin now agree.
+        active = json.loads((ROOT / "adapters/candidates.json").read_text())
+        active_bifrost = next(item for item in active["candidates"] if item["id"] == "bifrost")
+        self.assertEqual(bifrost["revision"], active_bifrost["revision"])
+        # Every non-Bifrost identity is unchanged from the superseded registry.
+        strip = lambda registry: [
+            item for item in registry["candidates"] if item["id"] != "bifrost"
+        ]
+        self.assertEqual(strip(current), strip(previous))
+
+    def test_freeze_workflow_selects_the_v034_evaluation_registry(self):
+        workflow = (ROOT / ".github/workflows/freeze.yml").read_text()
+        self.assertIn(
+            "benchmarks/evaluation/real-project-v2/candidates-v0.3.4.json", workflow
+        )
+        self.assertNotIn(
+            'candidate_registry="benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json"',
+            workflow,
+        )
+
     def test_apple_clangd_registries_use_exact_reported_banner_prefix(self):
         active = json.loads((ROOT / "adapters/candidates.json").read_text())
         frozen = json.loads(
             (ROOT / "benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json").read_text()
         )
-        for registry in (active, frozen):
+        superseding = json.loads(
+            (ROOT / "benchmarks/evaluation/real-project-v2/candidates-v0.3.4.json").read_text()
+        )
+        for registry in (active, frozen, superseding):
             apple_clangd = next(
                 item for item in registry["candidates"] if item["id"] == "apple-clangd-21"
             )

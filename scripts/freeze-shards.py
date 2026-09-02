@@ -25,6 +25,7 @@ FROZEN_FILES = [
     "benchmarks/evaluation/real-project-v2/sources.json",
     "benchmarks/evaluation/real-project-v2/declarations.json",
     "benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json",
+    "benchmarks/evaluation/real-project-v2/candidates-v0.3.4.json",
 ]
 
 
@@ -76,7 +77,7 @@ def identity(root, version, revision, shard, corpus_hashes=None):
                 raise ValueError(f"staged corpus hashes omit case file: {name}")
             hashes[name] = staged_hashes[name]
     registry = json.loads(
-        (root / "benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json").read_text()
+        (root / "benchmarks/evaluation/real-project-v2/candidates-v0.3.4.json").read_text()
     )
     profile = next(item for item in registry["candidates"] if item["id"] == candidate)
     result = {
