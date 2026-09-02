@@ -9,8 +9,8 @@ authors:
 contact:
   - name: "Brokk, Inc."
     website: "https://brokk.ai"
-version: "0.3.2"
-date-released: "2026-09-01"
+version: "0.3.3"
+date-released: "2026-09-02"
 repository-code: "https://github.com/BrokkAi/usagebench"
 repository-artifact: "https://github.com/BrokkAi/usagebench/releases"
 url: "https://usagebench.brokk.ai/"
