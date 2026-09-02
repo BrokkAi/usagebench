@@ -23,6 +23,12 @@ use std::{
 // caller that wants a tighter bound on one call uses
 // `ToolClient::call_tool_with_timeout`.
 const MCP_REQUEST_TIMEOUT: Duration = Duration::from_secs(10 * 60);
+
+/// The runner's process envelope, exposed so callers choosing their own
+/// deadline can check theirs still fits inside it.
+pub(crate) fn request_envelope() -> Duration {
+    MCP_REQUEST_TIMEOUT
+}
 const SNAPSHOT_NOT_READY_CODE: i64 = -32603;
 const SNAPSHOT_NOT_READY_MESSAGE: &str =
     "workspace snapshot was not ready within the request-wide time budget; retry after workspace initialization completes";
