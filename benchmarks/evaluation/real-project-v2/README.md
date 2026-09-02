@@ -89,6 +89,15 @@ registered macOS host and has no canonical reference runner. Any later Bifrost
 run is evidence for a subsequent snapshot or release, never a replacement for
 v0.3.0 evidence.
 
+`candidates-v0.3.4.json` is that subsequent identity set. It advances the
+measured Bifrost to public release v0.10.8 at
+`8ddf13625653caf927137a0de1966401055debad` -- the same identity the active
+development registry pins -- and changes nothing else: every reference-server
+identity is byte-identical to the v0.3.0 registry, and the corpus, protocol,
+selection, and reviewed ground truth are untouched. Freezes run under it
+publish as a new release; `candidates-v0.3.0.json` remains the immutable record
+of what v0.3.0 measured.
+
 The v1 selection is hash-linked by the v2 protocol. Every v1-selected
 repository is ineligible even if it appears in a v2 GitHub language frame.
 Capture, rank, and replacement decisions use public source metadata only.

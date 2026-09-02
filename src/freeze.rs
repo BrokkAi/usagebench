@@ -1259,6 +1259,28 @@ mod tests {
     }
 
     #[test]
+    fn v034_evaluation_registry_advances_the_measured_bifrost() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let registry = load_registry(
+            &root.join("benchmarks/evaluation/real-project-v2/candidates-v0.3.4.json"),
+        )
+        .unwrap();
+        let bifrost = registry
+            .candidates
+            .iter()
+            .find(|candidate| candidate.id == "bifrost")
+            .unwrap();
+
+        assert_eq!(bifrost.requested_version, "v0.10.8");
+        assert_eq!(bifrost.source, "https://github.com/BrokkAi/bifrost");
+        assert_eq!(
+            bifrost.revision.as_deref(),
+            Some("8ddf13625653caf927137a0de1966401055debad")
+        );
+        assert!(bifrost.reference_runner.is_none());
+    }
+
+    #[test]
     fn v030_evaluation_registry_uses_public_native_bifrost_identity() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let registry = load_registry(

@@ -115,7 +115,7 @@ jobs:
             case_path="$(jq -er .casePath <<< "$scope")"
             candidates="$(jq -er '.candidates | join(",")' <<< "$scope")"
             [[ "$REQUESTED_CANDIDATES" == "$candidates" ]]
-            candidate_registry="benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json"
+            candidate_registry="benchmarks/evaluation/real-project-v2/candidates-v0.3.4.json"
           elif [[ "$SNAPSHOT_KIND" == "legacy-promoted" ]]; then
             scope="$(bash scripts/resolve-freeze-scope.sh legacy-promoted)"
             case_path="$(jq -er .casePath <<< "$scope")"

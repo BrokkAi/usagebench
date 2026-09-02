@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 3,
+  "candidates": [
+    {
+      "id": "bifrost",
+      "runner": "bifrost",
+      "name": "Bifrost",
+      "requestedVersion": "v0.10.8",
+      "source": "https://github.com/BrokkAi/bifrost",
+      "revision": "8ddf13625653caf927137a0de1966401055debad",
+      "advertised": true,
+      "runtimeNetworking": "disabled",
+      "projectHydration": "fixture sources are staged in the released corpus"
+    },
+    {
+      "id": "eclipse-jdtls",
+      "runner": "lsp",
+      "name": "Eclipse JDT LS",
+      "requestedVersion": "1.61.0-202607142124",
+      "source": "https://download.eclipse.org/jdtls/snapshots/",
+      "profile": "adapters/lsp/eclipse-jdtls.json",
+      "profileSha256": "a04864d9c9c03fda591e1929766a8cc698417da2b4495dce8285024b9766743e",
+      "advertised": true,
+      "runtimeNetworking": "not required after the JDT LS distribution is installed",
+      "projectHydration": "JDT LS imports each generated fixture project into isolated workspace data"
+    },
+    {
+      "id": "rust-analyzer",
+      "runner": "lsp",
+      "name": "rust-analyzer",
+      "requestedVersion": "2026-07-13",
+      "source": "https://github.com/rust-lang/rust-analyzer/releases/tag/2026-07-13",
+      "profile": "adapters/lsp/rust-analyzer.json",
+      "profileSha256": "ff3d13a0530ca57c0710931e7e6bee6cde3e842c4a72b078f34e0e69f0c6673f",
+      "advertised": true,
+      "runtimeNetworking": "not required after the requested rust-analyzer binary and Rust toolchain are installed",
+      "projectHydration": "rust-analyzer loads the generated Cargo fixture workspace"
+    },
+    {
+      "id": "apple-clangd-21",
+      "runner": "lsp",
+      "name": "Apple clangd",
+      "requestedVersion": "21.0.0",
+      "source": "https://developer.apple.com/xcode/",
+      "profile": "adapters/lsp/apple-clangd-21.json",
+      "profileSha256": "a386689abb1e83048204a1f23a7f0c9b39b575db1a548607ef119b647fa36651",
+      "resolvedVersionPrefix": "Apple clangd version 21.0.0",
+      "advertised": true,
+      "runtimeNetworking": "not required by clangd; fixture hydration is local",
+      "projectHydration": "UsageBench writes compile_commands.json, opens benchmark query documents, and waits for clangd fileStatus idle in each isolated workspace"
+    }
+  ]
+}

@@ -10,6 +10,7 @@ scope_resolver="$repo_root/scripts/resolve-freeze-scope.sh"
 freeze_workflow="$repo_root/.github/workflows/freeze.yml"
 docs_workflow="$repo_root/.github/workflows/docs.yml"
 v030_registry="$repo_root/benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json"
+v034_registry="$repo_root/benchmarks/evaluation/real-project-v2/candidates-v0.3.4.json"
 publication_validator="$repo_root/scripts/validate-publication-bundle.py"
 
 [[ -f "$publication_validator" ]] || {
@@ -54,6 +55,22 @@ cargo run --locked -- validate-legacy-promotion "$repo_root/benchmarks/promotion
 
 jq -e '.schemaVersion == 3' "$registry" >/dev/null
 jq -e '.schemaVersion == 3' "$v030_registry" >/dev/null
+jq -e '.schemaVersion == 3' "$v034_registry" >/dev/null
+# The superseding evaluation registry advances only the measured Bifrost, to
+# the same identity the active development registry pins; every other frozen
+# candidate identity is byte-identical to the historical v0.3.0 registry.
+jq -e '
+  [.candidates[] | select(
+    .id == "bifrost"
+    and .requestedVersion == "v0.10.8"
+    and .revision == "8ddf13625653caf927137a0de1966401055debad"
+  )] | length == 1
+' "$v034_registry" >/dev/null
+diff <(jq -S '[.candidates[] | select(.id != "bifrost")]' "$v030_registry") \
+     <(jq -S '[.candidates[] | select(.id != "bifrost")]' "$v034_registry") >/dev/null || {
+  echo "superseding evaluation registry changes a non-Bifrost identity" >&2
+  exit 1
+}
 jq -e '
   [.candidates[] | select(.id == "bifrost")]
   == [{
@@ -204,8 +221,8 @@ grep -Fq 'python3 scripts/freeze-shards.py aggregate' "$freeze_workflow" || {
   echo "freeze workflow does not verify shard identity and coverage before aggregation" >&2
   exit 1
 }
-grep -Fq 'benchmarks/evaluation/real-project-v2/candidates-v0.3.0.json' "$freeze_workflow" || {
-  echo "v0.3.0 evaluation freeze is not bound to its historical candidate registry" >&2
+grep -Fq 'candidate_registry="benchmarks/evaluation/real-project-v2/candidates-v0.3.4.json"' "$freeze_workflow" || {
+  echo "evaluation freeze is not bound to the superseding candidate registry" >&2
   exit 1
 }
 grep -Fq "public_bifrost_source='https://github.com/BrokkAi/bifrost'" "$freeze_workflow" || {
