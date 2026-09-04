@@ -197,6 +197,9 @@ enum Command {
         /// Run only benchmark documents for this language.
         #[arg(long)]
         language: Option<String>,
+        /// Current Bifrost failures applied without mutating frozen benchmark documents.
+        #[arg(long)]
+        expected_failures: Option<PathBuf>,
         /// Versioned overlay that promotes historical expected failures to current required passes.
         #[arg(long)]
         expected_passes: Option<PathBuf>,
@@ -457,6 +460,7 @@ fn main() -> Result<()> {
             keep_worktrees,
             case_id,
             language,
+            expected_failures,
             expected_passes,
         } => {
             let mut options = RunBifrostOptions::with_defaults(path);
@@ -472,6 +476,7 @@ fn main() -> Result<()> {
             options.keep_worktrees = keep_worktrees;
             options.case_id = case_id;
             options.language = language;
+            options.expected_failures = expected_failures;
             options.expected_passes = expected_passes;
             let report = run_bifrost(options)?;
             println!(

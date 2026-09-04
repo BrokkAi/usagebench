@@ -108,6 +108,7 @@ pub struct RunBifrostOptions {
     pub keep_worktrees: bool,
     pub case_id: Option<String>,
     pub language: Option<String>,
+    pub expected_failures: Option<PathBuf>,
     pub expected_passes: Option<PathBuf>,
 }
 
@@ -128,6 +129,7 @@ impl RunBifrostOptions {
             keep_worktrees: false,
             case_id: None,
             language: None,
+            expected_failures: None,
             expected_passes: None,
         }
     }
@@ -143,6 +145,20 @@ struct ExpectedPassManifest {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct ExpectedPass {
+    case_id: String,
+    reason: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ExpectedFailureManifest {
+    schema_version: u32,
+    expected_failures: Vec<ExpectedFailureOverride>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ExpectedFailureOverride {
     case_id: String,
     reason: String,
 }
@@ -184,6 +200,11 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         &mut benchmark_documents,
         &repo_root,
         options.expected_passes.as_deref(),
+    )?;
+    apply_expected_failures(
+        &mut benchmark_documents,
+        &repo_root,
+        options.expected_failures.as_deref(),
     )?;
     let requested_totals = requested_run_totals(
         benchmark_documents
@@ -450,6 +471,90 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     }
 
     Ok(report)
+}
+
+fn apply_expected_failures(
+    documents: &mut [(PathBuf, BenchmarkDocument)],
+    repo_root: &Path,
+    manifest_path: Option<&Path>,
+) -> Result<()> {
+    let Some(manifest_path) = manifest_path else {
+        return Ok(());
+    };
+    let manifest_path = if manifest_path.is_absolute() {
+        manifest_path.to_path_buf()
+    } else {
+        repo_root.join(manifest_path)
+    };
+    let source = fs::read_to_string(&manifest_path)
+        .with_context(|| format!("read expected-failure overlay {}", manifest_path.display()))?;
+    let manifest = serde_yaml::from_str::<ExpectedFailureManifest>(&source)
+        .with_context(|| format!("parse expected-failure overlay {}", manifest_path.display()))?;
+    if manifest.schema_version != 1 {
+        bail!(
+            "expected-failure overlay {} has unsupported schemaVersion {}",
+            manifest_path.display(),
+            manifest.schema_version
+        );
+    }
+
+    let mut expected_failures = BTreeMap::new();
+    for expected_failure in manifest.expected_failures {
+        if expected_failure.case_id.trim().is_empty() || expected_failure.reason.trim().is_empty() {
+            bail!(
+                "expected-failure overlay {} requires non-empty caseId and reason",
+                manifest_path.display()
+            );
+        }
+        if expected_failures
+            .insert(expected_failure.case_id.clone(), expected_failure.reason)
+            .is_some()
+        {
+            bail!(
+                "expected-failure overlay {} repeats caseId {}",
+                manifest_path.display(),
+                expected_failure.case_id
+            );
+        }
+    }
+
+    let mut applied = BTreeSet::new();
+    for (_, document) in documents {
+        for case in &mut document.cases {
+            let Some(reason) = expected_failures.get(&case.id) else {
+                continue;
+            };
+            if case.expected_failure.is_some()
+                || case.expected_pass_reason.is_some()
+                || case.not_planned.is_some()
+                || case.unsupported.is_some()
+            {
+                bail!(
+                    "expected-failure overlay {} may only mark an unclassified case: {}",
+                    manifest_path.display(),
+                    case.id
+                );
+            }
+            case.expected_failure = Some(crate::ExpectedFailure {
+                reason: reason.clone(),
+            });
+            applied.insert(case.id.clone());
+        }
+    }
+
+    let missing = expected_failures
+        .keys()
+        .filter(|case_id| !applied.contains(*case_id))
+        .cloned()
+        .collect::<Vec<_>>();
+    if !missing.is_empty() {
+        bail!(
+            "expected-failure overlay {} references case IDs absent from this run: {}",
+            manifest_path.display(),
+            missing.join(", ")
+        );
+    }
+    Ok(())
 }
 
 fn apply_expected_passes(
@@ -4616,6 +4721,99 @@ for line in sys.stdin:
 
         assert_eq!(report.status, CaseStatus::Failed);
         assert_eq!(report.diagnostics[0].kind, "expected_pass_override");
+    }
+
+    #[test]
+    fn expected_failure_overlay_marks_an_unclassified_case() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let manifest_path = tempdir.path().join("expected-failures.yaml");
+        fs::write(
+            &manifest_path,
+            "schemaVersion: 1\nexpectedFailures:\n  - caseId: current-gap\n    reason: current regression\n",
+        )
+        .unwrap();
+        let mut documents = vec![(
+            PathBuf::from("benchmarks/cases/sample.yaml"),
+            serde_yaml::from_str::<BenchmarkDocument>(
+                "schemaVersion: 2\ncorpus:\n  partition: development\n  selection: analyzer_informed\ngroundTruth:\n  status: legacy_unattributed\n  reviewers: []\nreferencePolicy: bindings_optional\nsource:\n  kind: fixture\n  path: fixtures/sample\nlanguage: rust\ncases:\n  - id: current-gap\n",
+            )
+            .unwrap(),
+        )];
+
+        apply_expected_failures(&mut documents, tempdir.path(), Some(&manifest_path)).unwrap();
+
+        assert_eq!(
+            documents[0].1.cases[0]
+                .expected_failure
+                .as_ref()
+                .map(|expected| expected.reason.as_str()),
+            Some("current regression")
+        );
+    }
+
+    #[test]
+    fn expected_failure_overlay_does_not_replace_an_authored_marker() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let manifest_path = tempdir.path().join("expected-failures.yaml");
+        fs::write(
+            &manifest_path,
+            "schemaVersion: 1\nexpectedFailures:\n  - caseId: existing-gap\n    reason: replacement\n",
+        )
+        .unwrap();
+        let mut documents = vec![(
+            PathBuf::from("benchmarks/cases/sample.yaml"),
+            serde_yaml::from_str::<BenchmarkDocument>(
+                "schemaVersion: 2\ncorpus:\n  partition: development\n  selection: analyzer_informed\ngroundTruth:\n  status: legacy_unattributed\n  reviewers: []\nreferencePolicy: bindings_optional\nsource:\n  kind: fixture\n  path: fixtures/sample\nlanguage: rust\ncases:\n  - id: existing-gap\n    expectedFailure:\n      reason: authored gap\n",
+            )
+            .unwrap(),
+        )];
+
+        let error = apply_expected_failures(&mut documents, tempdir.path(), Some(&manifest_path))
+            .unwrap_err();
+
+        assert!(error
+            .to_string()
+            .contains("may only mark an unclassified case"));
+    }
+
+    #[test]
+    fn checked_in_expected_failure_overlay_marks_all_current_regressions() {
+        let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let case_files = [
+            "benchmarks/cases/evaluation/real-project-v2/cpp-01.yaml",
+            "benchmarks/cases/evaluation/real-project-v2/cpp-02.yaml",
+            "benchmarks/cases/evaluation/real-project-v2/cpp-04.yaml",
+            "benchmarks/cases/evaluation/real-project-v2/rust-04.yaml",
+            "benchmarks/cases/rust-baseline.yaml",
+            "benchmarks/cases/rust-lsp-parity.yaml",
+            "benchmarks/cases/scala-lsp-parity.yaml",
+            "benchmarks/cases/typescript-lsp-parity.yaml",
+        ];
+        let mut documents = case_files
+            .iter()
+            .map(|case_file| {
+                let path = repo_root.join(case_file);
+                let source = fs::read_to_string(&path).unwrap();
+                let document = serde_yaml::from_str::<BenchmarkDocument>(&source).unwrap();
+                (path, document)
+            })
+            .collect::<Vec<_>>();
+
+        apply_expected_failures(
+            &mut documents,
+            &repo_root,
+            Some(Path::new(
+                "benchmarks/expectations/bifrost-expected-failures.yaml",
+            )),
+        )
+        .unwrap();
+
+        let overlaid = documents
+            .iter()
+            .flat_map(|(_, document)| &document.cases)
+            .filter(|case| case.expected_failure.is_some())
+            .count();
+        assert_eq!(overlaid, 10);
     }
 
     #[test]
