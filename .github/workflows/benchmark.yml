@@ -105,6 +105,7 @@ jobs:
             --bifrost-working-tree
             --work-dir target/usagebench
             --scan-usages-max-duration-secs 300
+            --expected-failures benchmarks/expectations/bifrost-expected-failures.yaml
             --expected-passes benchmarks/expectations/bifrost-expected-passes.yaml
             --output "benchmark-output/run-${GITHUB_RUN_ID}.json"
           )

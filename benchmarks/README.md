@@ -218,6 +218,9 @@ Each case supports both benchmark directions:
 - `expectedFailure.reason` keeps a known analyzer gap in the baseline while
   still running the case and reporting it as improved if it unexpectedly starts
   passing.
+- `benchmarks/expectations/bifrost-expected-failures.yaml` records current
+  Bifrost regressions without changing content-addressed legacy or evaluation
+  case documents. The scheduled benchmark applies this overlay before scoring.
 - `benchmarks/expectations/bifrost-expected-passes.yaml` can promote a frozen
   historical `expectedFailure` to a current Bifrost required pass without
   mutating content-addressed legacy benchmark documents. A matching case must
