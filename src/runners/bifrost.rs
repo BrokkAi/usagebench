@@ -809,10 +809,8 @@ fn run_document_cases(
     let readiness_started = Instant::now();
     let mut session = McpSession::start(&mut command, "Bifrost")?;
     session.initialize()?;
-    let scan_budget = scan_budget_policy(
-        &session.tool_descriptors()?,
-        scan_usages_max_duration_secs,
-    )?;
+    let scan_budget =
+        scan_budget_policy(&session.tool_descriptors()?, scan_usages_max_duration_secs)?;
     let initialization_duration = readiness_started.elapsed();
     let query_started = Instant::now();
     if let Some(requirement) = document.semantic_packs.as_ref() {
@@ -1776,31 +1774,23 @@ fn resolve_declaration_selector(
                 && symbol_name_matches(&hit.symbol, &declaration.display_name, language)
         })
         .collect::<Vec<_>>();
-    candidates.extend(
-        search
-            .model_symbols
-            .into_iter()
-            .filter(|model| {
-                model.location.path == expected_path
-                    && model.location.range.start_line == expected_line
-                    && model_kind_matches(&model.kind, &declaration.kind)
-                    && symbol_name_matches(
-                        &model.qualified_name,
-                        &declaration.display_name,
-                        language,
-                    )
-            })
-            .map(|model| {
-                (
-                    model.location.path,
-                    SearchSymbolHit {
-                        symbol: model.qualified_name,
-                        is_type_alias: model.kind == "type_alias",
-                        line: model.location.range.start_line,
-                    },
-                )
-            }),
-    );
+    candidates.extend(search.model_symbols.into_iter().filter_map(|model| {
+        let (path, range) = model.location.into_authored()?;
+        (path == expected_path
+            && range.start_line == expected_line
+            && model_kind_matches(&model.kind, &declaration.kind)
+            && symbol_name_matches(&model.qualified_name, &declaration.display_name, language))
+        .then(|| {
+            (
+                path,
+                SearchSymbolHit {
+                    symbol: model.qualified_name,
+                    is_type_alias: model.kind == "type_alias",
+                    line: range.start_line,
+                },
+            )
+        })
+    }));
 
     // Searching several patterns, and merging file hits with model symbols, can
     // surface the same symbol twice. Collapse those so an ambiguity bail below
@@ -1863,9 +1853,38 @@ struct SearchModelSymbol {
 }
 
 #[derive(Debug, Deserialize)]
-struct SearchModelLocation {
-    path: String,
-    range: SearchModelRange,
+#[serde(tag = "kind", rename_all = "snake_case")]
+enum SearchModelLocation {
+    Authored {
+        path: String,
+        symbol: String,
+        range: SearchModelRange,
+    },
+    Model {
+        uri: String,
+        range: SearchModelRange,
+    },
+}
+
+impl SearchModelLocation {
+    // Virtual model declarations are valid search results, but they cannot
+    // identify a source-backed UsageBench declaration.
+    fn into_authored(self) -> Option<(String, SearchModelRange)> {
+        match self {
+            Self::Authored {
+                path,
+                symbol,
+                range,
+            } => {
+                drop(symbol);
+                Some((path, range))
+            }
+            Self::Model { uri, range } => {
+                drop((uri, range));
+                None
+            }
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -3712,7 +3731,12 @@ for line in sys.stdin:
         payload["model_symbols"] = json!([{
             "qualified_name": "Example.Repository.last",
             "kind": "field",
-            "location": {"path": "src/Service.php", "range": {"start_line": 12}}
+            "location": {
+                "kind": "authored",
+                "path": "src/Service.php",
+                "symbol": "Example.Repository.last",
+                "range": {"start_line": 12}
+            }
         }]);
         let mut client = MockClient::new(vec![tool("search_symbols", payload)]);
 
@@ -3791,7 +3815,9 @@ for line in sys.stdin:
         // expires first and reports incomplete evidence.
         assert_eq!(
             client.request_timeouts,
-            vec![std::time::Duration::from_secs(42 + SCAN_DEADLINE_GRACE_SECS)]
+            vec![std::time::Duration::from_secs(
+                42 + SCAN_DEADLINE_GRACE_SECS
+            )]
         );
     }
 
@@ -3834,7 +3860,9 @@ for line in sys.stdin:
         assert_eq!(client.calls[1].1["max_duration_secs"], 42);
         assert_eq!(
             client.request_timeouts,
-            vec![std::time::Duration::from_secs(42 + SCAN_DEADLINE_GRACE_SECS)]
+            vec![std::time::Duration::from_secs(
+                42 + SCAN_DEADLINE_GRACE_SECS
+            )]
         );
     }
 
@@ -5414,6 +5442,7 @@ for line in sys.stdin:
                         "location": {
                             "kind": "authored",
                             "path": "src/service.rs",
+                            "symbol": "example.build_service",
                             "range": {"start_line": 30}
                         }
                     }]
@@ -5440,6 +5469,112 @@ for line in sys.stdin:
             report.declaration_to_usages.unwrap().selector.as_deref(),
             Some("example.build_service")
         );
+    }
+
+    #[test]
+    fn source_less_model_symbols_do_not_break_authored_declaration_resolution() {
+        let case = benchmark_case();
+        let mut client = MockClient::new(vec![
+            tool(
+                "search_symbols",
+                json!({
+                    "files": [{
+                        "path": "src/service.rs",
+                        "loc": 10,
+                        "classes": [],
+                        "functions": [
+                            {"symbol": "example.build_service", "signature": "", "line": 30}
+                        ],
+                        "fields": [],
+                        "modules": [],
+                        "macros": []
+                    }],
+                    "model_symbols": [{
+                        "qualified_name": "java.lang.AutoCloseable.close",
+                        "kind": "method",
+                        "location": {
+                            "kind": "model",
+                            "uri": "bifrost-model://v1/java/lang/AutoCloseable/close",
+                            "range": {"start_line": 1}
+                        }
+                    }]
+                }),
+            ),
+            tool(
+                "scan_usages_by_location",
+                scan_usages_json(vec![("src/lib.rs", 8)], false),
+            ),
+        ]);
+
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
+
+        assert_eq!(report.status, CaseStatus::Passed);
+        assert_eq!(
+            report.declaration_to_usages.unwrap().selector.as_deref(),
+            Some("example.build_service")
+        );
+    }
+
+    #[test]
+    fn authored_model_symbols_still_require_source_identity() {
+        let error = parse_search_symbols(&json!({
+            "files": [],
+            "model_symbols": [{
+                "qualified_name": "example.build_service",
+                "kind": "function",
+                "location": {
+                    "kind": "authored",
+                    "symbol": "example.build_service",
+                    "range": {"start_line": 30}
+                }
+            }]
+        }))
+        .unwrap_err();
+
+        assert!(format!("{error:#}").contains("missing field `path`"));
+    }
+
+    #[test]
+    fn same_named_authored_model_symbol_in_another_file_is_not_selected() {
+        let case = benchmark_case();
+        let mut client = MockClient::new(vec![tool(
+            "search_symbols",
+            json!({
+                "files": [],
+                "model_symbols": [{
+                    "qualified_name": "example.build_service",
+                    "kind": "function",
+                    "location": {
+                        "kind": "authored",
+                        "path": "src/generated.rs",
+                        "symbol": "example.build_service",
+                        "range": {"start_line": 30}
+                    }
+                }]
+            }),
+        )]);
+
+        let report = run_case(
+            &case,
+            PositionEncoding::Utf16,
+            ReferencePolicy::BindingsOptional,
+            None,
+            &mut client,
+            false,
+            false,
+        );
+
+        assert_eq!(report.status, CaseStatus::Failed);
+        assert_eq!(report.diagnostics[0].kind, "symbol_resolution_failed");
+        assert_eq!(client.calls.len(), 1);
     }
 
     #[test]
