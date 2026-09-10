@@ -4841,7 +4841,7 @@ for line in sys.stdin:
             .flat_map(|(_, document)| &document.cases)
             .filter(|case| case.expected_failure.is_some())
             .count();
-        assert_eq!(overlaid, 10);
+        assert_eq!(overlaid, 9);
     }
 
     #[test]

@@ -23,10 +23,6 @@ expectedFailures:
   - caseId: rust-struct-construction
     reason: >
       Bifrost declaration-to-usages misses the two Self references.
-  - caseId: rust-parity-module-declaration-definition
-    reason: >
-      Bifrost module declaration lookup returns a zero-width range instead of
-      the authored module token.
   - caseId: rust-parity-macro-generated-function-reference
     reason: >
       Bifrost does not index or resolve the macro-generated function.
