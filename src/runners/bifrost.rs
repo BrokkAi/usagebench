@@ -4811,6 +4811,8 @@ for line in sys.stdin:
             "benchmarks/cases/evaluation/real-project-v2/cpp-01.yaml",
             "benchmarks/cases/evaluation/real-project-v2/cpp-02.yaml",
             "benchmarks/cases/evaluation/real-project-v2/cpp-04.yaml",
+            "benchmarks/cases/evaluation/real-project-v2/rust-01.yaml",
+            "benchmarks/cases/evaluation/real-project-v2/rust-02.yaml",
             "benchmarks/cases/evaluation/real-project-v2/rust-04.yaml",
             "benchmarks/cases/rust-baseline.yaml",
             "benchmarks/cases/rust-lsp-parity.yaml",
@@ -4841,7 +4843,7 @@ for line in sys.stdin:
             .flat_map(|(_, document)| &document.cases)
             .filter(|case| case.expected_failure.is_some())
             .count();
-        assert_eq!(overlaid, 9);
+        assert_eq!(overlaid, 6);
     }
 
     #[test]
