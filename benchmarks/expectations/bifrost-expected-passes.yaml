@@ -4,3 +4,7 @@ expectedPasses:
     reason: >
       Promoted after scheduled runs 32240334240 and 32356646488 passed, then a
       focused replay passed exactly against Bifrost 79ea68cf5e2e7cda9cd90de4188836bb02fe0d6c.
+  - caseId: csharp-parity-extension-method-call
+    reason: >
+      Promoted after scheduled run 34568436261 passed exactly against Bifrost
+      667e311bd33d722a7f33d465ec4d68b942ca6d17.

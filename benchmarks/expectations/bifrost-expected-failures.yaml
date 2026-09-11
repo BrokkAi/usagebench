@@ -1,35 +1,24 @@
 schemaVersion: 1
 expectedFailures:
-  - caseId: real-project-v2-cpp-01-2
+  - caseId: real-project-v2-rust-01-1
     reason: >
-      Bifrost cannot resolve the ImGui_ImplSDL3_CloseGamepads declaration symbol,
-      although forward definition lookup succeeds.
-  - caseId: real-project-v2-cpp-02-1
+      Bifrost returns Self references that the frozen source-only v2 ground truth
+      does not classify as usages of StarshipConfig.
+  - caseId: real-project-v2-rust-01-3
     reason: >
-      Bifrost does not navigate from the TessPageIteratorDelete header declaration
-      to its implementation body.
-  - caseId: real-project-v2-cpp-02-3
+      Bifrost returns a Self reference that the frozen source-only v2 ground truth
+      does not classify as a usage of StyleElement.
+  - caseId: real-project-v2-rust-02-1
     reason: >
-      Bifrost does not navigate from the TessResultIteratorSymbolIsSubscript header
-      declaration to its implementation body.
-  - caseId: real-project-v2-cpp-04-3
-    reason: >
-      Bifrost cannot resolve the MountFilesystem declaration symbol, although
-      forward definition lookup succeeds.
+      Bifrost returns Self references that the frozen source-only v2 ground truth
+      does not classify as usages of UnsizedHandler.
   - caseId: real-project-v2-rust-04-3
     reason: >
       Bifrost cannot resolve the ServerEvents usage across the indexed Rust
       crate boundary.
-  - caseId: rust-struct-construction
-    reason: >
-      Bifrost declaration-to-usages misses the two Self references.
   - caseId: rust-parity-macro-generated-function-reference
     reason: >
       Bifrost does not index or resolve the macro-generated function.
-  - caseId: scala-parity-case-class-generated-construction-and-copy
-    reason: >
-      Bifrost reverse usage includes the synthetic copy call as an unexpected
-      extra location.
   - caseId: ts-parity-interface-property-access
     reason: >
       Bifrost cannot resolve the user.name interface property usage to its
