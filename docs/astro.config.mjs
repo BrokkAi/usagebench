@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import { rehypeTableScroll } from './src/plugins/rehype-table-scroll.mjs';
 
 const site = process.env.PUBLIC_DOCS_SITE ?? 'https://usagebench.brokk.ai';
 const productionBase = process.env.PUBLIC_DOCS_BASE ?? '/';
@@ -8,12 +9,26 @@ const isDev = process.argv.includes('dev');
 export default defineConfig({
   site,
   base: isDev ? '/' : productionBase,
+  markdown: {
+    // Each table in a scroll box, so a wide one pans instead of overflowing.
+    rehypePlugins: [rehypeTableScroll],
+  },
   integrations: [
     starlight({
       title: 'UsageBench',
       description: 'LSP-parity and recurring regression evidence for Bifrost usage analysis.',
-      customCss: ['./src/styles/usagebench.css'],
+      // The foundation is shared with DataFlowBench and kept identical to its
+      // copy; usagebench.css layers this site's own accent and pages on top.
+      customCss: ['./src/styles/foundation.css', './src/styles/usagebench.css'],
       favicon: '/favicon.svg',
+      logo: { src: './src/assets/mark.svg', alt: '' },
+      expressiveCode: {
+        styleOverrides: {
+          borderRadius: '0px',
+          codeFontFamily: "'JetBrains Mono', ui-monospace, monospace",
+          uiFontFamily: "'Apfel Grotezk', ui-sans-serif, system-ui, sans-serif",
+        },
+      },
       editLink: {
         baseUrl: 'https://github.com/BrokkAi/usagebench/edit/main/docs/',
       },
