@@ -11,4 +11,4 @@ npm run build
 npm run dev
 ```
 
-Production builds use `https://usagebench.brokk.ai` at the root path.
+Production builds use `https://usagebench.slopcop.com` at the root path.

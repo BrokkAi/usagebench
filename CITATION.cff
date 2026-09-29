@@ -13,7 +13,7 @@ version: "0.3.5"
 date-released: "2026-09-03"
 repository-code: "https://github.com/BrokkAi/usagebench"
 repository-artifact: "https://github.com/BrokkAi/usagebench/releases"
-url: "https://usagebench.brokk.ai/"
+url: "https://usagebench.slopcop.com/"
 license: MIT
 keywords:
   - static analysis
