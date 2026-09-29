@@ -205,7 +205,7 @@ jobs:
         run: npm run build
         working-directory: docs
         env:
-          PUBLIC_DOCS_SITE: https://usagebench.brokk.ai
+          PUBLIC_DOCS_SITE: https://usagebench.slopcop.com
           PUBLIC_DOCS_BASE: /
 
       - name: Upload Pages artifact

@@ -44,12 +44,15 @@ PAGES = {
     "results.md": {
         "output": "index.md",
         "title": "Current evaluation result",
+        # Completes "Immutable <tag> …" in the page's search description.
+        "summary": "results for the reviewed evaluation slice",
         # Rendered at /results/, so sibling pages are one segment away.
         "sibling_prefix": "",
     },
     "case-comparison.md": {
         "output": "case-comparison.md",
         "title": "Evaluation case comparison",
+        "summary": "cases separating Bifrost from the reference servers",
         # Rendered at /results/case-comparison/, so siblings need to climb.
         "sibling_prefix": "../",
     },
@@ -107,7 +110,7 @@ def _published_page(summary: dict[str, Any], source: str, spec: dict[str, str]) 
         )
     body = TOP_LEVEL_HEADING.sub("## ", body)
     tag = summary["release"]
-    description = f"Immutable {tag} results for the reviewed evaluation slice."
+    description = f"Immutable {tag} {spec['summary']}."
     return (
         _frontmatter(spec["title"], description)
         + _provenance_note(summary, spec["sibling_prefix"])

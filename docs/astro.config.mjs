@@ -2,9 +2,11 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import { rehypeTableScroll } from './src/plugins/rehype-table-scroll.mjs';
 
-const site = process.env.PUBLIC_DOCS_SITE ?? 'https://usagebench.brokk.ai';
+const site = process.env.PUBLIC_DOCS_SITE ?? 'https://usagebench.slopcop.com';
 const productionBase = process.env.PUBLIC_DOCS_BASE ?? '/';
 const isDev = process.argv.includes('dev');
+/** The published root, for the absolute URLs social cards need. */
+const siteRoot = new URL(productionBase.replace(/\/?$/, '/'), site);
 
 export default defineConfig({
   site,
@@ -21,6 +23,27 @@ export default defineConfig({
       // copy; usagebench.css layers this site's own accent and pages on top.
       customCss: ['./src/styles/foundation.css', './src/styles/usagebench.css'],
       favicon: '/favicon.svg',
+      // Starlight writes the title, description and canonical URL per page;
+      // this adds the card a shared link previews with, and names the site
+      // and its publisher for search results.
+      head: [
+        { tag: 'meta', attrs: { property: 'og:image', content: new URL('og-image.png', siteRoot).href } },
+        { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+        { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+        { tag: 'meta', attrs: { property: 'og:image:alt', content: 'UsageBench: how does Bifrost measure up against language servers?' } },
+        { tag: 'meta', attrs: { name: 'twitter:image', content: new URL('og-image.png', siteRoot).href } },
+        {
+          tag: 'script',
+          attrs: { type: 'application/ld+json' },
+          content: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'UsageBench',
+            url: siteRoot.href,
+            publisher: { '@type': 'Organization', name: 'SlopCop', url: 'https://slopcop.com' },
+          }),
+        },
+      ],
       logo: { src: './src/assets/mark.svg', alt: '' },
       expressiveCode: {
         styleOverrides: {
