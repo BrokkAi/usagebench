@@ -2138,6 +2138,10 @@ fn scan_usages_incomplete_diagnostic(result: &Value) -> RunDiagnostic {
         message.push_str("; candidate_files_sample=");
         message.push_str(&sample.to_string());
     }
+    if let Some(notes) = result.get("notes") {
+        message.push_str("; notes=");
+        message.push_str(&notes.to_string());
+    }
     RunDiagnostic {
         kind: "scan_usages_incomplete".to_string(),
         message,
@@ -5411,6 +5415,34 @@ for line in sys.stdin:
         assert!(parsed.diagnostics[0]
             .message
             .contains(r#"candidate_files_sample={"omitted":["src/c.py"],"omitted_count":7,"scanned":["src/a.py","src/b.py"]}"#));
+    }
+
+    #[test]
+    fn parse_scan_usages_preserves_semantic_incompleteness_notes() {
+        let note =
+            "selected reference enumeration is incomplete: [InverseIndexResolutionIncomplete]";
+        let parsed = parse_scan_usages(&json!({
+            "summary": {"partial": true},
+            "results": [{
+                "status": "found",
+                "complete": false,
+                "incomplete_reason": "semantic_analysis",
+                "notes": [note],
+                "files": [{
+                    "path": "src/lib.rs",
+                    "hits": [{"line": 3, "column": 24}]
+                }]
+            }]
+        }));
+
+        assert!(parsed.partial);
+        assert_eq!(parsed.locations.len(), 1);
+        assert_eq!(parsed.diagnostics.len(), 1);
+        assert!(parsed.diagnostics[0].message.contains(note));
+        assert!(parsed.diagnostics[0]
+            .message
+            .contains("reason=semantic_analysis"));
+        assert!(parsed.raw_statuses.iter().any(|status| status == "partial"));
     }
 
     #[test]
