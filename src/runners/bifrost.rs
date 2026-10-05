@@ -2038,6 +2038,9 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
             );
             if let Some(status) = result.get("status").and_then(Value::as_str) {
                 raw_statuses.push(status.to_string());
+                if status == "failure" {
+                    diagnostics.push(scan_usages_failure_diagnostic(result));
+                }
             }
             if result
                 .get("complete")
@@ -2077,12 +2080,14 @@ fn parse_scan_usages(value: &Value) -> ParsedScanUsages {
         }
 
         for key in ["not_found", "ambiguous", "failures", "too_many_callsites"] {
-            if value
+            if let Some(items) = value
                 .get(key)
                 .and_then(Value::as_array)
-                .map(|items| !items.is_empty())
-                .unwrap_or(false)
+                .filter(|items| !items.is_empty())
             {
+                if key == "failures" {
+                    diagnostics.extend(items.iter().map(scan_usages_failure_diagnostic));
+                }
                 raw_statuses.push(
                     match key {
                         "failures" => "failure",
@@ -2135,6 +2140,40 @@ fn scan_usages_incomplete_diagnostic(result: &Value) -> RunDiagnostic {
     }
     RunDiagnostic {
         kind: "scan_usages_incomplete".to_string(),
+        message,
+    }
+}
+
+fn scan_usages_failure_diagnostic(result: &Value) -> RunDiagnostic {
+    let mut details = Vec::new();
+    if let Some(reason_kind) = result.get("reason_kind").and_then(Value::as_str) {
+        details.push(format!("reason_kind={reason_kind}"));
+    }
+    if let Some(reason) = result.get("reason").and_then(Value::as_str) {
+        details.push(format!("reason={reason}"));
+    }
+    if let Some(message) = result.get("message").and_then(Value::as_str) {
+        details.push(format!("message={message}"));
+    }
+    if let Some(input_kind) = result.get("input_kind").and_then(Value::as_str) {
+        details.push(format!("input_kind={input_kind}"));
+    }
+    if let Some(input) = result.get("input") {
+        details.push(format!("input={input}"));
+    }
+    if let Some(symbol) = result.get("symbol").and_then(Value::as_str) {
+        details.push(format!("symbol={symbol}"));
+    }
+    if let Some(fq_name) = result.get("fq_name").and_then(Value::as_str) {
+        details.push(format!("fq_name={fq_name}"));
+    }
+    let message = if details.is_empty() {
+        "Bifrost reported a scan failure without structured details".to_string()
+    } else {
+        format!("Bifrost scan usages failure: {}", details.join("; "))
+    };
+    RunDiagnostic {
+        kind: "scan_usages_failure".to_string(),
         message,
     }
 }
@@ -5300,6 +5339,38 @@ for line in sys.stdin:
     }
 
     #[test]
+    fn parse_scan_usages_preserves_current_failure_details() {
+        let parsed = parse_scan_usages(&json!({
+            "summary": {"partial": false},
+            "results": [{
+                "fq_name": "github.com/gohugoio/hugo/hugolib.shortcodeParseInfo.addName",
+                "input": {"column": 30, "line": 296, "path": "hugolib/shortcode.go"},
+                "input_kind": "target",
+                "message": "GoUsageGraphStrategy: Go graph indexed source was unavailable",
+                "reason_kind": "unavailable_canonical_facts",
+                "status": "failure",
+                "symbol": "github.com/gohugoio/hugo/hugolib.shortcodeParseInfo.addName"
+            }]
+        }));
+
+        assert_eq!(parsed.raw_statuses, vec!["failure".to_string()]);
+        assert!(parsed.has_failure_status());
+        assert!(!parsed.partial);
+        assert_eq!(parsed.diagnostics.len(), 1);
+        assert_eq!(parsed.diagnostics[0].kind, "scan_usages_failure");
+        assert!(parsed.diagnostics[0]
+            .message
+            .contains("reason_kind=unavailable_canonical_facts"));
+        assert!(parsed.diagnostics[0]
+            .message
+            .contains("message=GoUsageGraphStrategy: Go graph indexed source was unavailable"));
+        assert!(parsed.diagnostics[0].message.contains("input_kind=target"));
+        assert!(parsed.diagnostics[0]
+            .message
+            .contains(r#"input={"column":30,"line":296,"path":"hugolib/shortcode.go"}"#));
+    }
+
+    #[test]
     fn parse_scan_usages_marks_incomplete_results_partial() {
         let parsed =
             parse_scan_usages(&scan_usages_results_json("found", Vec::new(), false, false));
@@ -5384,6 +5455,38 @@ for line in sys.stdin:
         );
         assert_eq!(parsed.raw_statuses, vec!["ok".to_string()]);
         assert!(!parsed.partial);
+    }
+
+    #[test]
+    fn parse_scan_usages_preserves_legacy_failure_details() {
+        let parsed = parse_scan_usages(&json!({
+            "summary": {"partial": false},
+            "failures": [{
+                "fq_name": "example.build_service",
+                "reason": "legacy usage graph unavailable",
+                "reason_kind": "unavailable_canonical_facts",
+                "symbol": "example.build_service"
+            }],
+            "usages": []
+        }));
+
+        assert_eq!(parsed.raw_statuses, vec!["failure".to_string()]);
+        assert!(parsed.has_failure_status());
+        assert!(!parsed.partial);
+        assert_eq!(parsed.diagnostics.len(), 1);
+        assert_eq!(parsed.diagnostics[0].kind, "scan_usages_failure");
+        assert!(parsed.diagnostics[0]
+            .message
+            .contains("reason_kind=unavailable_canonical_facts"));
+        assert!(parsed.diagnostics[0]
+            .message
+            .contains("reason=legacy usage graph unavailable"));
+        assert!(parsed.diagnostics[0]
+            .message
+            .contains("symbol=example.build_service"));
+        assert!(parsed.diagnostics[0]
+            .message
+            .contains("fq_name=example.build_service"));
     }
 
     #[test]
