@@ -39,6 +39,105 @@ fn render_counts(report: serde_json::Value) -> serde_json::Value {
     serde_json::from_slice(&output.stdout).unwrap()
 }
 
+fn render_failing_cases(report: serde_json::Value) -> String {
+    let tempdir = tempfile::tempdir().unwrap();
+    let report_path = tempdir.path().join("report.json");
+    fs::write(&report_path, serde_json::to_vec(&report).unwrap()).unwrap();
+    let output = Command::new("bash")
+        .arg(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/scripts/render-benchmark-summary.sh"
+        ))
+        .arg("--failing-cases")
+        .arg(report_path)
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    String::from_utf8(output.stdout).unwrap()
+}
+
+#[test]
+fn summary_reports_the_exact_new_bifrost_revision() {
+    let revision = "0123456789abcdef0123456789abcdef01234567";
+    let summary = render(json!({
+        "runner": {
+            "name": "bifrost",
+            "resolvedVersion": "legacy-runner-value"
+        },
+        "bifrostResolvedCommit": revision,
+        "totals": {},
+        "documents": []
+    }));
+
+    assert!(summary.contains(&format!("- Bifrost resolved revision: `{revision}`")));
+    assert!(!summary.contains("legacy-runner-value"));
+}
+
+#[test]
+fn summary_uses_legacy_runner_revision_and_omits_unusable_values() {
+    let legacy_summary = render(json!({
+        "runner": {
+            "name": "bifrost",
+            "resolvedVersion": " legacy-resolved-value "
+        },
+        "totals": {},
+        "documents": []
+    }));
+    assert!(legacy_summary.contains("- Bifrost resolved revision: `legacy-resolved-value`"));
+
+    let unavailable_summary = render(json!({
+        "runner": {
+            "name": "bifrost",
+            "resolvedVersion": "UNKNOWN"
+        },
+        "bifrostResolvedCommit": "  ",
+        "totals": {},
+        "documents": []
+    }));
+    assert!(!unavailable_summary.contains("Bifrost resolved revision:"));
+}
+
+#[test]
+fn provenance_does_not_change_counts_or_failing_case_modes() {
+    let report = json!({
+        "runner": {
+            "name": "bifrost",
+            "resolvedVersion": "legacy-runner-value"
+        },
+        "bifrostResolvedCommit": "0123456789abcdef0123456789abcdef01234567",
+        "completed": true,
+        "requestedCaseFiles": ["case.yaml"],
+        "totals": {
+            "documents": 1,
+            "cases": 1,
+            "passed": 0,
+            "failed": 1
+        },
+        "documents": [{
+            "caseFile": "case.yaml",
+            "cases": [{"id": "bad-case", "status": "failed"}]
+        }]
+    });
+
+    assert_eq!(
+        render_counts(report.clone()),
+        json!({
+            "report_complete": true,
+            "processed_documents_count": 1,
+            "requested_documents_count": 1,
+            "processed_cases_count": 1,
+            "requested_authored_cases_count": 1,
+            "requested_planned_cases_count": 1,
+            "requested_development_cases_count": 0,
+            "requested_evaluation_cases_count": 0
+        })
+    );
+    assert_eq!(
+        render_failing_cases(report),
+        "- failed: bad-case (case.yaml)\n"
+    );
+}
+
 #[test]
 fn incomplete_summary_distinguishes_processed_and_requested_scope() {
     let summary = render(json!({
