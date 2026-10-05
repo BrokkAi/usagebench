@@ -58,8 +58,9 @@ pub fn write_differences(path: &Path, differences: &[ReportDifference]) -> Resul
 }
 
 fn compare_values(expected: Value, actual: Value) -> Vec<ReportDifference> {
-    let expected = semantic_value(expected);
-    let actual = semantic_value(actual);
+    let mut expected = semantic_value(expected);
+    let mut actual = semantic_value(actual);
+    normalize_equivalent_image_references(&mut expected, &mut actual);
     let mut differences = Vec::new();
     collect_differences("$", &expected, &actual, &mut differences);
     differences
@@ -101,12 +102,6 @@ fn semantic_value(mut value: Value) -> Value {
     }
 
     if let Some(Value::Object(environment)) = root.get_mut("environment") {
-        if let Some(Value::Object(container)) = environment.get_mut("container") {
-            container.insert(
-                "imageDigest".to_string(),
-                Value::String("<locally-built-image>".to_string()),
-            );
-        }
         if let Some(Value::Object(executable)) = environment.get_mut("analyzerExecutable") {
             executable.remove("resolvedPath");
         }
@@ -118,6 +113,89 @@ fn semantic_value(mut value: Value) -> Value {
 
     sort_arrays(&mut value);
     value
+}
+
+fn normalize_equivalent_image_references(expected: &mut Value, actual: &mut Value) {
+    let Some(expected_container) = container_object(expected) else {
+        return;
+    };
+    let Some(actual_container) = container_object(actual) else {
+        return;
+    };
+
+    let Some(expected_digest) = expected_container
+        .get("imageDigest")
+        .and_then(Value::as_str)
+    else {
+        return;
+    };
+    let Some(actual_digest) = actual_container.get("imageDigest").and_then(Value::as_str) else {
+        return;
+    };
+    if expected_digest != actual_digest
+        || !is_sha256_digest(expected_digest)
+        || !is_sha256_digest(actual_digest)
+    {
+        return;
+    }
+
+    let Some(expected_reference) = expected_container
+        .get("imageReference")
+        .and_then(Value::as_str)
+    else {
+        return;
+    };
+    let Some(actual_reference) = actual_container
+        .get("imageReference")
+        .and_then(Value::as_str)
+    else {
+        return;
+    };
+    if expected_reference == actual_reference
+        || (is_immutable_image_reference(expected_reference)
+            && is_immutable_image_reference(actual_reference))
+    {
+        return;
+    }
+
+    let canonical_reference = Value::String("<same-image-reference>".to_string());
+    if let Some(container) = container_object_mut(expected) {
+        container.insert("imageReference".to_string(), canonical_reference.clone());
+    }
+    if let Some(container) = container_object_mut(actual) {
+        container.insert("imageReference".to_string(), canonical_reference);
+    }
+}
+
+fn container_object(value: &Value) -> Option<&Map<String, Value>> {
+    value
+        .get("environment")
+        .and_then(Value::as_object)
+        .and_then(|environment| environment.get("container"))
+        .and_then(Value::as_object)
+}
+
+fn container_object_mut(value: &mut Value) -> Option<&mut Map<String, Value>> {
+    value
+        .get_mut("environment")
+        .and_then(Value::as_object_mut)
+        .and_then(|environment| environment.get_mut("container"))
+        .and_then(Value::as_object_mut)
+}
+
+fn is_immutable_image_reference(value: &str) -> bool {
+    value
+        .rsplit_once('@')
+        .is_some_and(|(_, digest)| is_sha256_digest(digest))
+}
+
+fn is_sha256_digest(value: &str) -> bool {
+    value.strip_prefix("sha256:").is_some_and(|hex| {
+        hex.len() == 64
+            && hex
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    })
 }
 
 fn keyed_documents(documents: Vec<Value>) -> Value {
@@ -316,14 +394,148 @@ mod tests {
         actual.started_at_unix_seconds = 99;
         actual.finished_at_unix_seconds = 100;
         actual.documents[0].source_root = "/another/run/source".to_string();
-        actual.environment.container.as_mut().unwrap().image_digest =
-            format!("sha256:{}", "d".repeat(64));
         actual.environment.analyzer_executable.resolved_path =
             Some("/another/bin/bifrost".to_string());
         actual.timings.analyzer_query_millis = 42;
         actual.timings.measured_total_millis = 42;
 
         assert!(compare_reports(&expected, &actual).is_empty());
+    }
+
+    #[test]
+    fn compares_image_digest_while_allowing_local_and_registry_references() {
+        let mut expected = report();
+        expected
+            .environment
+            .container
+            .as_mut()
+            .unwrap()
+            .image_reference = format!(
+            "ghcr.io/brokkai/usagebench-reference@sha256:{}",
+            "f".repeat(64)
+        );
+        let actual = report();
+
+        assert!(compare_reports(&expected, &actual).is_empty());
+
+        let mut different_image = actual.clone();
+        different_image
+            .environment
+            .container
+            .as_mut()
+            .unwrap()
+            .image_digest = format!("sha256:{}", "e".repeat(64));
+        let differences = compare_reports(&expected, &different_image);
+        assert!(differences
+            .iter()
+            .any(|difference| difference.path == "$.environment.container.imageDigest"));
+    }
+
+    #[test]
+    fn compares_different_immutable_image_references() {
+        let mut expected = report();
+        expected
+            .environment
+            .container
+            .as_mut()
+            .unwrap()
+            .image_reference = format!(
+            "ghcr.io/brokkai/usagebench-reference@sha256:{}",
+            "f".repeat(64)
+        );
+        let mut actual = expected.clone();
+        actual
+            .environment
+            .container
+            .as_mut()
+            .unwrap()
+            .image_reference = format!(
+            "ghcr.io/brokkai/usagebench-reference@sha256:{}",
+            "e".repeat(64)
+        );
+
+        let differences = compare_reports(&expected, &actual);
+
+        assert_eq!(differences.len(), 1);
+        assert_eq!(
+            differences[0].path,
+            "$.environment.container.imageReference"
+        );
+    }
+
+    #[test]
+    fn compares_same_image_reference_when_the_digest_changes() {
+        let expected = report();
+        let mut actual = expected.clone();
+        actual.environment.container.as_mut().unwrap().image_digest =
+            format!("sha256:{}", "e".repeat(64));
+
+        let differences = compare_reports(&expected, &actual);
+
+        assert_eq!(differences.len(), 1);
+        assert_eq!(differences[0].path, "$.environment.container.imageDigest");
+    }
+
+    #[test]
+    fn compares_different_local_image_references_when_the_digest_changes() {
+        let expected = report();
+        let mut actual = expected.clone();
+        actual
+            .environment
+            .container
+            .as_mut()
+            .unwrap()
+            .image_reference = "usagebench-reference:another-image".to_string();
+        actual.environment.container.as_mut().unwrap().image_digest =
+            format!("sha256:{}", "e".repeat(64));
+
+        let differences = compare_reports(&expected, &actual);
+
+        assert!(differences
+            .iter()
+            .any(|difference| difference.path == "$.environment.container.imageDigest"));
+        assert!(differences
+            .iter()
+            .any(|difference| difference.path == "$.environment.container.imageReference"));
+    }
+
+    #[test]
+    fn does_not_relax_references_without_matching_valid_digests() {
+        let expected_reference = "ghcr.io/brokkai/usagebench-reference@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        let actual_reference = "usagebench-reference:v0.1.0-env1-gopls";
+        for (label, expected_digest, actual_digest) in [
+            ("missing", None, None),
+            ("null", Some(Value::Null), Some(Value::Null)),
+            (
+                "malformed",
+                Some(Value::String("not-a-digest".to_string())),
+                Some(Value::String("not-a-digest".to_string())),
+            ),
+        ] {
+            let mut expected_container = serde_json::json!({
+                "imageReference": expected_reference,
+            });
+            let mut actual_container = serde_json::json!({
+                "imageReference": actual_reference,
+            });
+            if let Some(digest) = expected_digest {
+                expected_container["imageDigest"] = digest;
+            }
+            if let Some(digest) = actual_digest {
+                actual_container["imageDigest"] = digest;
+            }
+
+            let differences = compare_values(
+                serde_json::json!({"environment": {"container": expected_container}}),
+                serde_json::json!({"environment": {"container": actual_container}}),
+            );
+            assert!(
+                differences
+                    .iter()
+                    .any(|difference| difference.path == "$.environment.container.imageReference"),
+                "{label} digest must not relax image references"
+            );
+        }
     }
 
     #[test]
