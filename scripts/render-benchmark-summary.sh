@@ -85,8 +85,33 @@ fi
 jq -r --argjson counts "$counts_json" '
   (if has("completed") then .completed else true end) as $complete
   | def count_or_unknown($value): if $value == null then "unknown" else ($value | tostring) end;
+    def usable_revision:
+      if type == "string" then
+        gsub("^\\s+|\\s+$"; "") as $revision
+        | if ($revision | length) > 0 and (($revision | ascii_downcase) != "unknown") then
+            $revision
+          else
+            null
+          end
+      else
+        null
+      end;
+    (.bifrostResolvedCommit | usable_revision) as $resolved_commit
+    | (if $resolved_commit != null then
+         $resolved_commit
+       elif .runner.name? == "bifrost" then
+         (.runner.resolvedVersion | usable_revision)
+       else
+         null
+       end) as $bifrost_revision
+    |
     if $complete then "## Totals" else "## INCOMPLETE - Processed Totals" end,
     "",
+    (if $bifrost_revision != null then
+       "- Bifrost resolved revision: `\($bifrost_revision)`"
+     else
+       empty
+     end),
     "- Documents processed/requested: \($counts.processed_documents_count)/\(count_or_unknown($counts.requested_documents_count))",
     "- Authored cases requested: \(count_or_unknown($counts.requested_authored_cases_count))",
     "- Planned cases processed/requested: \($counts.processed_cases_count)/\(count_or_unknown($counts.requested_planned_cases_count))",
