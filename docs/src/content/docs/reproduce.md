@@ -122,6 +122,13 @@ Checkpoints identify themselves with `completed: false`, retain the full
 `requestedCaseFiles` scope, and cannot be used as completed snapshot or release
 evidence.
 
+The runner also launches Bifrost with `BIFROST_MAX_LINE_LENGTH=0` and
+`BIFROST_ADMIT_NUL_BYTES=1`. Bifrost's interactive defaults refuse to parse a
+file with a line over 16,000 bytes or with a NUL byte, and one refused file can
+make a language's whole usage index unavailable. Benchmark repositories contain
+both in valid source (a long SVG path string in JSX, a raw NUL inside a string
+literal), so the benchmark admits them and measures the repository as written.
+
 Keep `--work-dir` stable across focused profiling invocations to reuse an exact
 Bifrost build and its verified executable digest. Reuse is invalidated by a
 different resolved revision, toolchain, build plan/environment, or executable
