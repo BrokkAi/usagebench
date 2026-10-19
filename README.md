@@ -175,7 +175,16 @@ otherwise falls back to a 4.5-second budget meant for interactive use, and a
 large repository answers with partial usage sets that score as failures rather
 than as the timeouts they are. The runner also holds a backstop deadline of the
 budget plus a minute, so Bifrost's own budget expires first and reports
-incomplete evidence instead of the call being abandoned. When `--output` is set, the runner also
+incomplete evidence instead of the call being abandoned.
+
+The runner also launches Bifrost with `BIFROST_MAX_LINE_LENGTH=0` and
+`BIFROST_ADMIT_NUL_BYTES=1`. Bifrost's interactive defaults refuse to parse a
+file with a line over 16,000 bytes or with a NUL byte, and one refused file can
+make a language's whole usage index unavailable. Benchmark repositories contain
+both in valid source (a long SVG path string in JSX, a raw NUL inside a string
+literal), so the benchmark admits them and measures the repository as written.
+
+When `--output` is set, the runner also
 atomically updates a sibling `*.partial.json` checkpoint after each completed
 benchmark document so interrupted batch runs retain valid evidence. Checkpoints
 record `completed: false` plus the full `requestedCaseFiles` scope and are

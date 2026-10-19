@@ -44,6 +44,19 @@ pub const DEFAULT_SCAN_USAGES_MAX_DURATION_SECS: u64 = 300;
 /// Bifrost's per-request analyzer budget, chosen by the frontend at server
 /// launch. It supersedes the removed `max_duration_secs` request argument.
 const BIFROST_REQUEST_BUDGET_ENV: &str = "BIFROST_MCP_REQUEST_BUDGET_SECS";
+/// Source-admission settings for the Bifrost server the runner launches.
+///
+/// Bifrost's interactive defaults refuse to parse a file with a physical line
+/// over 16,000 bytes or with any NUL byte, and a refused file can leave a whole
+/// language's usage index unavailable. Real benchmark repositories contain both
+/// in otherwise valid source: a long SVG path string in JSX, or a raw NUL inside
+/// a string literal. The benchmark measures usage lookup on the repository as
+/// written, so it turns the line limit off and admits NUL bytes as whitespace.
+/// A Bifrost revision that predates a setting ignores it.
+const BIFROST_SOURCE_ADMISSION_ENV: [(&str, &str); 2] = [
+    ("BIFROST_MAX_LINE_LENGTH", "0"),
+    ("BIFROST_ADMIT_NUL_BYTES", "1"),
+];
 /// How the requested usage-scan budget reaches the Bifrost server.
 ///
 /// The mechanism changed across Bifrost releases: through v0.10.7 the scan
@@ -791,7 +804,8 @@ fn run_document_cases(
         .arg("--root")
         .arg(source_root)
         .arg("--server")
-        .arg("searchtools");
+        .arg("searchtools")
+        .envs(BIFROST_SOURCE_ADMISSION_ENV);
     if !workspace_models.is_empty() {
         command.env("BIFROST_WORKSPACE_SEMANTIC_MODELS", "on");
     }
