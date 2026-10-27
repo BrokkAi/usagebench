@@ -190,6 +190,47 @@ benchmark document so interrupted batch runs retain valid evidence. Checkpoints
 record `completed: false` plus the full `requestedCaseFiles` scope and are
 rejected by snapshot and release tooling as completed evidence.
 
+Each invocation owns a unique `run-*` directory under `--work-dir`. Completed
+source units are reclaimed after their last selected document, after the MCP
+process has stopped and compact results have been saved and validated. Ordinary
+Git and fixture documents for the same source retain their analyzer store until
+the last consumer, including non-adjacent documents. Evaluation archives keep
+the existing fresh-extraction boundary per document. `--keep-worktrees` retains
+this invocation's state; it does not bypass disk admission checks. Existing
+shared source directories, compilation caches and other invocations are never
+cleanup candidates.
+
+By default, analyzer stores and temporary child-process files belong to their
+source unit. An explicitly supplied `BIFROST_CACHE_DIR` or `BIFROST_CACHE_ROOT`
+remains externally owned and warm; the harness does not reclaim it. Dependency
+and tool caches outside the unit likewise remain untouched. Retained or
+external caches can therefore still cause a disk admission stop. The runner
+does not claim a cold measurement when an external cache override is present.
+
+Durable evidence lives outside disposable state in a unique directory beneath
+`--evidence-dir`, defaulting to `OUTPUT.evidence` (or `WORK_DIR/evidence` without
+an output file). It contains each document's input, reproduction settings,
+result, analyzer stderr and cleanup decision, plus synced `disk.jsonl` samples.
+Samples record free bytes/inodes, relevant paths' logical and allocated sizes,
+per-filesystem usage, and sampled peaks. A sampled filesystem decrease is not
+attributed to cleanup; each cleanup record separately reports the removed
+unit's measured bytes. Boundary samples do not establish a continuous peak.
+Unix capacity sampling requires `df`; inode counts are recorded where the host
+provides them.
+
+Before another document starts, `--minimum-free-bytes` (default 536870912) and
+`--minimum-free-inodes` (default 1024, where available) reserve headroom on the
+work, report and evidence volumes. These are reporting reserves, not a promise
+that any next corpus fits. Two allocated 1 MiB emergency files protect compact
+stop reporting. Infrastructure failure writes `infrastructure-stop.json`,
+returns nonzero and retains the last valid incomplete checkpoint, including the
+full requested denominator. A later write failure never replaces that
+checkpoint with partial JSON. Forced termination may leave an isolated work
+root; later invocations never sweep it or touch a still-running child through
+stale cleanup. Logs and the last checkpoint remain outside that root. Full
+runner-capacity qualification still requires a complete corpus run with its
+disk budget and telemetry; the small-budget regressions do not certify it.
+
 Source-based runs also retain a Bifrost build cache in `--work-dir`. A build is
 reused only when the resolved commit, Cargo and rustc identity, build plan,
 target/profile/compiler environment, and cached executable metadata still

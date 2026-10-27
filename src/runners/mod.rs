@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fs, path::Path, process::Command};
 
 pub mod bifrost;
+mod disk;
 mod environment;
 pub mod lsp;
 mod lsp_protocol;
