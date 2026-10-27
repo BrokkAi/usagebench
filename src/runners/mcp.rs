@@ -3,12 +3,11 @@ use serde_json::{json, Value};
 use std::{
     error::Error as StdError,
     fmt,
-    io::{BufRead, BufReader, Read, Write},
+    fs::{File, OpenOptions},
+    io::{BufRead, BufReader, Read, Seek, SeekFrom, Write},
+    path::{Path, PathBuf},
     process::{Child, ChildStdin, Command, Stdio},
-    sync::{
-        mpsc::{self, Receiver, RecvTimeoutError},
-        Arc, Mutex,
-    },
+    sync::mpsc::{self, Receiver, RecvTimeoutError},
     thread,
     time::{Duration, Instant},
 };
@@ -38,6 +37,9 @@ const SNAPSHOT_NOT_READY_RETRY_DELAYS: [Duration; 3] = [
     Duration::from_secs(2),
     Duration::from_secs(4),
 ];
+const MCP_STDERR_TAIL_BYTES: u64 = 64 * 1024;
+const MCP_STDOUT_READER_JOIN_TIMEOUT: Duration = Duration::from_secs(1);
+const MCP_STDOUT_READER_JOIN_POLL_INTERVAL: Duration = Duration::from_millis(10);
 
 #[derive(Debug, Clone)]
 struct McpResponseError {
@@ -89,6 +91,25 @@ impl fmt::Display for McpRequestTimeout {
 
 impl StdError for McpRequestTimeout {}
 
+#[derive(Debug)]
+struct McpCleanupFailure {
+    details: String,
+}
+
+impl fmt::Display for McpCleanupFailure {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(formatter, "MCP session cleanup failed: {}", self.details)
+    }
+}
+
+impl StdError for McpCleanupFailure {}
+
+pub(crate) fn is_cleanup_error(error: &anyhow::Error) -> bool {
+    error
+        .chain()
+        .any(|cause| cause.downcast_ref::<McpCleanupFailure>().is_some())
+}
+
 pub(crate) fn is_snapshot_not_ready_error(error: &anyhow::Error) -> bool {
     error.chain().any(|cause| {
         cause
@@ -114,51 +135,65 @@ pub(crate) struct McpSession {
     child: Child,
     stdin: ChildStdin,
     stdout_lines: Receiver<Result<String, String>>,
+    stdout_reader: Option<thread::JoinHandle<()>>,
+    stderr_path: PathBuf,
+    finished: bool,
+    cleanup_failure: Option<String>,
     next_id: u64,
     snapshot_not_ready: Option<McpResponseError>,
     workspace_readiness_duration: Duration,
 }
 
 impl McpSession {
-    pub(crate) fn start(command: &mut Command, label: impl Into<String>) -> Result<Self> {
+    /// Start an MCP server while retaining all stderr at `evidence_path`.
+    /// The path must not already exist; this prevents silently overwriting
+    /// evidence from another run.
+    pub(crate) fn start_with_evidence(
+        command: &mut Command,
+        label: impl Into<String>,
+        evidence_path: &Path,
+    ) -> Result<Self> {
+        let stderr_file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(evidence_path)
+            .with_context(|| {
+                format!(
+                    "create MCP stderr evidence file {}",
+                    evidence_path.display()
+                )
+            })?;
+        let stderr_path = evidence_path.to_path_buf();
         let label = label.into();
         let mut child = command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+            .stderr(Stdio::from(stderr_file))
             .spawn()
             .with_context(|| format!("spawn {label} MCP server"))?;
         let stdin = child.stdin.take().context("missing MCP stdin")?;
         let stdout = child.stdout.take().context("missing MCP stdout")?;
-        let stderr = child.stderr.take().context("missing MCP stderr")?;
-        let stderr_output = Arc::new(Mutex::new(String::new()));
-        let stderr_capture = Arc::clone(&stderr_output);
-        thread::spawn(move || {
-            let mut bytes = Vec::new();
-            let _ = BufReader::new(stderr)
-                .take(64 * 1024)
-                .read_to_end(&mut bytes);
-            *stderr_capture.lock().expect("MCP stderr lock poisoned") =
-                String::from_utf8_lossy(&bytes).into_owned();
-        });
         let (sender, stdout_lines) = mpsc::channel();
         let reader_label = label.clone();
-        let reader_stderr = Arc::clone(&stderr_output);
-        thread::spawn(move || {
+        let reader_stderr_path = stderr_path.clone();
+        let stdout_reader = thread::spawn(move || {
             let mut reader = BufReader::new(stdout);
             loop {
                 let mut line = String::new();
                 match reader.read_line(&mut line) {
                     Ok(0) => {
-                        thread::yield_now();
-                        let stderr = reader_stderr.lock().expect("MCP stderr lock poisoned");
-                        let message = if stderr.trim().is_empty() {
-                            format!("{reader_label} MCP server closed stdout")
-                        } else {
-                            format!(
+                        let message = match read_stderr_tail(&reader_stderr_path) {
+                            Ok(stderr) if stderr.trim().is_empty() => {
+                                format!("{reader_label} MCP server closed stdout")
+                            }
+                            Ok(stderr) => format!(
                                 "{reader_label} MCP server closed stdout; stderr: {}",
                                 stderr.trim()
-                            )
+                            ),
+                            Err(error) => format!(
+                                "{reader_label} MCP server closed stdout; failed to read stderr log {}: {error:#}",
+                                reader_stderr_path.display()
+                            ),
                         };
                         let _ = sender.send(Err(message));
                         break;
@@ -180,10 +215,116 @@ impl McpSession {
             child,
             stdin,
             stdout_lines,
+            stdout_reader: Some(stdout_reader),
+            stderr_path,
+            finished: false,
+            cleanup_failure: None,
             next_id: 1,
             snapshot_not_ready: None,
             workspace_readiness_duration: Duration::ZERO,
         })
+    }
+
+    /// Stop the server and join its stdout reader before the caller removes
+    /// any workspace state the server may have been using.
+    pub(crate) fn finish(&mut self) -> Result<()> {
+        if self.finished {
+            return match &self.cleanup_failure {
+                Some(details) => Err(McpCleanupFailure {
+                    details: details.clone(),
+                }
+                .into()),
+                None => Ok(()),
+            };
+        }
+
+        let mut errors = Vec::new();
+        match self.child.try_wait() {
+            Ok(Some(_)) => {}
+            Ok(None) => {
+                if let Err(error) = self.child.kill() {
+                    // `kill` reports InvalidInput when the process exited in
+                    // the small interval after try_wait; wait below confirms
+                    // and reaps it.
+                    if error.kind() != std::io::ErrorKind::InvalidInput {
+                        errors.push(
+                            anyhow!(error).context(format!("kill {} MCP server", self.label)),
+                        );
+                    }
+                }
+            }
+            Err(error) => {
+                errors.push(
+                    anyhow!(error).context(format!("check {} MCP server status", self.label)),
+                );
+                if let Err(error) = self.child.kill() {
+                    if error.kind() != std::io::ErrorKind::InvalidInput {
+                        errors.push(
+                            anyhow!(error).context(format!("kill {} MCP server", self.label)),
+                        );
+                    }
+                }
+            }
+        }
+
+        let waited = match self.child.wait() {
+            Ok(_) => true,
+            Err(error) => {
+                errors.push(anyhow!(error).context(format!("wait for {} MCP server", self.label)));
+                false
+            }
+        };
+        if waited && !self.stderr_path.as_os_str().is_empty() {
+            if let Err(error) = sync_stderr_evidence(&self.stderr_path) {
+                errors.push(error.context(format!("sync {} MCP stderr evidence", self.label)));
+            }
+        }
+        if let Some(stdout_reader) = self.stdout_reader.take() {
+            let deadline = Instant::now() + MCP_STDOUT_READER_JOIN_TIMEOUT;
+            while !stdout_reader.is_finished() && Instant::now() < deadline {
+                thread::sleep(MCP_STDOUT_READER_JOIN_POLL_INTERVAL);
+            }
+            if stdout_reader.is_finished() {
+                if stdout_reader.join().is_err() {
+                    errors.push(anyhow!("stdout reader thread panicked"));
+                }
+            } else {
+                // A descendant may have inherited stdout and kept the pipe
+                // open after the MCP process exited. Do not let that block
+                // workspace cleanup; this reader only reads stdout and never
+                // writes the retained stderr evidence file.
+                let (_sender, replacement_receiver) = mpsc::channel();
+                drop(std::mem::replace(
+                    &mut self.stdout_lines,
+                    replacement_receiver,
+                ));
+                drop(stdout_reader);
+                errors.push(anyhow!(
+                    "stdout reader did not stop within {} ms after {} MCP server exited",
+                    MCP_STDOUT_READER_JOIN_TIMEOUT.as_millis(),
+                    self.label
+                ));
+            }
+        }
+        self.finished = waited && self.stdout_reader.is_none();
+
+        if errors.is_empty() {
+            self.cleanup_failure = None;
+            Ok(())
+        } else {
+            let primary = errors.remove(0);
+            let mut details = vec![format!("{primary:#}")];
+            details.extend(errors.iter().map(|error| format!("{error:#}")));
+            let details = format!(
+                "finish {} MCP session: {}",
+                self.label,
+                details.join("; additional cleanup errors: ")
+            );
+            if self.finished {
+                self.cleanup_failure = Some(details.clone());
+            }
+            Err(McpCleanupFailure { details }.into())
+        }
     }
 
     pub(crate) fn initialize(&mut self) -> Result<()> {
@@ -321,6 +462,31 @@ fn read_json_rpc_response(
             return Ok(response);
         }
     }
+}
+
+fn read_stderr_tail(path: &Path) -> Result<String> {
+    let mut file = File::open(path).with_context(|| format!("open {}", path.display()))?;
+    let length = file
+        .metadata()
+        .with_context(|| format!("read metadata for {}", path.display()))?
+        .len();
+    let tail_length = length.min(MCP_STDERR_TAIL_BYTES);
+    file.seek(SeekFrom::End(-(tail_length as i64)))
+        .with_context(|| format!("seek to stderr tail in {}", path.display()))?;
+    let mut bytes = Vec::with_capacity(tail_length as usize);
+    file.take(MCP_STDERR_TAIL_BYTES)
+        .read_to_end(&mut bytes)
+        .with_context(|| format!("read stderr tail from {}", path.display()))?;
+    Ok(String::from_utf8_lossy(&bytes).into_owned())
+}
+
+fn sync_stderr_evidence(path: &Path) -> Result<()> {
+    OpenOptions::new()
+        .write(true)
+        .open(path)
+        .with_context(|| format!("open {} for sync", path.display()))?
+        .sync_all()
+        .with_context(|| format!("sync {}", path.display()))
 }
 
 impl ToolClient for McpSession {
@@ -511,9 +677,12 @@ fn retry_snapshot_not_ready_until<T>(
 
 impl Drop for McpSession {
     fn drop(&mut self) {
-        let _ = self.stdin.flush();
-        let _ = self.child.kill();
-        let _ = self.child.wait();
+        if self.finished {
+            return;
+        }
+        if let Err(error) = self.finish() {
+            eprintln!("failed to finish {} MCP session: {error:#}", self.label);
+        }
     }
 }
 
@@ -584,6 +753,10 @@ mod tests {
             child,
             stdin,
             stdout_lines: receiver,
+            stdout_reader: None,
+            stderr_path: PathBuf::new(),
+            finished: false,
+            cleanup_failure: None,
             next_id: 1,
             snapshot_not_ready: None,
             workspace_readiness_duration: Duration::ZERO,
@@ -648,6 +821,10 @@ mod tests {
             child,
             stdin,
             stdout_lines: receiver,
+            stdout_reader: None,
+            stderr_path: PathBuf::new(),
+            finished: false,
+            cleanup_failure: None,
             next_id: 1,
             snapshot_not_ready: None,
             workspace_readiness_duration: Duration::ZERO,
@@ -729,6 +906,10 @@ mod tests {
             child,
             stdin,
             stdout_lines: receiver,
+            stdout_reader: None,
+            stderr_path: PathBuf::new(),
+            finished: false,
+            cleanup_failure: None,
             next_id: 1,
             snapshot_not_ready: None,
             workspace_readiness_duration: Duration::ZERO,
@@ -794,5 +975,108 @@ mod tests {
             assert!(result.is_err());
             assert_eq!(attempts, 1);
         }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn stderr_evidence_survives_finish_after_large_write_and_rpc_reply() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let evidence_path = tempdir.path().join("mcp.stderr.log");
+        let mut command = Command::new("sh");
+        command.args([
+            "-c",
+            "IFS= read -r request; head -c 131072 /dev/zero | tr '\\000' x >&2; printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"structuredContent\":{\"ok\":true}}}'; exec cat >/dev/null",
+        ]);
+        let mut session =
+            McpSession::start_with_evidence(&mut command, "test", &evidence_path).unwrap();
+
+        let result = session.call_tool("search_symbols", json!({})).unwrap();
+        assert_eq!(result["ok"], true);
+        session.finish().unwrap();
+
+        let evidence = std::fs::read(&evidence_path).unwrap();
+        assert!(evidence.len() >= 131_072);
+        assert!(evidence.iter().all(|byte| *byte == b'x'));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn abnormal_stdout_eof_includes_bounded_stderr_tail_and_retains_evidence() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let evidence_path = tempdir.path().join("mcp.stderr.log");
+        let mut command = Command::new("sh");
+        command.args([
+            "-c",
+            "IFS= read -r request; head -c 131072 /dev/zero | tr '\\000' z >&2; printf 'abnormal-evidence-marker\\n' >&2; exit 19",
+        ]);
+        let mut session =
+            McpSession::start_with_evidence(&mut command, "test", &evidence_path).unwrap();
+
+        let error = session
+            .call_tool_with_timeout("search_symbols", json!({}), Duration::from_secs(2))
+            .unwrap_err();
+        assert!(format!("{error:#}").contains("abnormal-evidence-marker"));
+        session.finish().unwrap();
+
+        let evidence = std::fs::read_to_string(&evidence_path).unwrap();
+        assert!(evidence.len() > 64 * 1024);
+        assert!(evidence.ends_with("abnormal-evidence-marker\n"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn timeout_evidence_survives_finish() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let evidence_path = tempdir.path().join("mcp.stderr.log");
+        let mut command = Command::new("sh");
+        command.args([
+            "-c",
+            "printf 'timeout-evidence-marker\\n' >&2; exec sleep 30",
+        ]);
+        let mut session =
+            McpSession::start_with_evidence(&mut command, "test", &evidence_path).unwrap();
+
+        let error = session
+            .call_tool_with_timeout("search_symbols", json!({}), Duration::from_millis(30))
+            .unwrap_err();
+        assert!(error.downcast_ref::<McpRequestTimeout>().is_some());
+        session.finish().unwrap();
+
+        let evidence = std::fs::read_to_string(&evidence_path).unwrap();
+        assert!(evidence.contains("timeout-evidence-marker"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn inherited_stdout_cleanup_failure_is_typed_and_bounded() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let evidence_path = tempdir.path().join("mcp.stderr.log");
+        let mut command = Command::new("sh");
+        command.args([
+            "-c",
+            "printf 'descendant-evidence-marker\\n' >&2; sleep 3 & exit 0",
+        ]);
+        let mut session =
+            McpSession::start_with_evidence(&mut command, "test", &evidence_path).unwrap();
+
+        let deadline = Instant::now() + Duration::from_secs(2);
+        let mut child_exited = false;
+        while Instant::now() < deadline {
+            if session.child.try_wait().unwrap().is_some() {
+                child_exited = true;
+                break;
+            }
+            thread::sleep(Duration::from_millis(10));
+        }
+        assert!(child_exited, "MCP shell did not exit before its descendant");
+
+        let finish_started = Instant::now();
+        let error = session.finish().unwrap_err();
+        assert!(is_cleanup_error(&error));
+        assert!(format!("{error:#}").contains("stdout reader did not stop"));
+        assert!(finish_started.elapsed() < Duration::from_secs(2));
+        assert!(std::fs::read_to_string(&evidence_path)
+            .unwrap()
+            .contains("descendant-evidence-marker"));
     }
 }

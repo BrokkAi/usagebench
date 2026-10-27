@@ -1,4 +1,7 @@
-use super::mcp::{is_snapshot_not_ready_error, McpSession, ToolClient as SearchToolsClient};
+use super::disk::DiskMonitor;
+use super::mcp::{
+    is_cleanup_error, is_snapshot_not_ready_error, McpSession, ToolClient as SearchToolsClient,
+};
 use super::{
     case_location_metrics, combine_case_status, compute_totals, excluded_case, location_match,
     normalize_symbol_location, path_to_slash, report_case_path, requested_run_totals,
@@ -119,6 +122,9 @@ pub struct RunBifrostOptions {
     pub include_definition_lookups: bool,
     pub scan_usages_max_duration_secs: u64,
     pub keep_worktrees: bool,
+    pub evidence_dir: Option<PathBuf>,
+    pub minimum_free_bytes: u64,
+    pub minimum_free_inodes: u64,
     pub case_id: Option<String>,
     pub language: Option<String>,
     pub expected_failures: Option<PathBuf>,
@@ -140,6 +146,9 @@ impl RunBifrostOptions {
             include_definition_lookups: true,
             scan_usages_max_duration_secs: DEFAULT_SCAN_USAGES_MAX_DURATION_SECS,
             keep_worktrees: false,
+            evidence_dir: None,
+            minimum_free_bytes: 512 * 1024 * 1024,
+            minimum_free_inodes: 1024,
             case_id: None,
             language: None,
             expected_failures: None,
@@ -244,7 +253,7 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
     }
     if let Some(output) = &output {
         remove_stale_report(output)?;
-        remove_stale_report(&partial_report_path(output))?;
+        // Replace the previous checkpoint only after a new one is fully written.
     }
 
     let work_dir = if options.work_dir.is_absolute() {
@@ -253,11 +262,66 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
         repo_root.join(&options.work_dir)
     };
     fs::create_dir_all(&work_dir).with_context(|| format!("create {}", work_dir.display()))?;
-    let _source_cleanup = CleanupGuard::new(work_dir.join("sources"), !options.keep_worktrees);
+    // This invocation never owns pre-existing work_dir/sources or caches.
+    let mut run_root = tempfile::Builder::new()
+        .prefix("run-")
+        .tempdir_in(&work_dir)
+        .context("create invocation-owned work directory")?;
+    run_root.disable_cleanup(options.keep_worktrees);
+    let evidence_parent = options.evidence_dir.clone().unwrap_or_else(|| {
+        output.as_ref().map_or_else(
+            || work_dir.join("evidence"),
+            |output| output.with_extension("evidence"),
+        )
+    });
+    fs::create_dir_all(&evidence_parent)
+        .with_context(|| format!("create evidence directory {}", evidence_parent.display()))?;
+    let evidence_root = tempfile::Builder::new()
+        .prefix("run-")
+        .tempdir_in(&evidence_parent)
+        .context("create durable invocation evidence directory")?
+        .keep();
+    eprintln!("UsageBench evidence: {}", evidence_root.display());
+    let report_root = output
+        .as_deref()
+        .and_then(Path::parent)
+        .unwrap_or(&evidence_root);
+    let mut disk = DiskMonitor::new(
+        &work_dir,
+        report_root,
+        &evidence_root,
+        options.minimum_free_bytes,
+        options.minimum_free_inodes,
+    )?;
 
-    let mut timings = RunTimings::default();
-    let (bifrost_source, bifrost_resolved_commit, bifrost_binary) =
-        if let Some(binary) = &options.bifrost_binary {
+    // Real allocated files reserve enough space for a compact stop record even
+    // if setup or a child fills either output volume. These are not sparse.
+    let reporting_reserve = (
+        reporting_reserve(report_root)?,
+        reporting_reserve(&evidence_root)?,
+    );
+    write_json_atomic(
+        &evidence_root.join("invocation.json"),
+        &json!({
+            "completed": false,
+            "usagebenchRevision": usagebench_provenance.revision,
+            "bifrostRequestedCommit": options.bifrost_commit,
+            "bifrostResolvedCommit": options.bifrost_resolved_commit,
+            "casePath": options.case_path,
+            "requestedTotals": requested_totals,
+            "minimumFreeBytes": options.minimum_free_bytes,
+            "minimumFreeInodes": options.minimum_free_inodes,
+        }),
+    )?;
+    let stop_totals = requested_totals.clone();
+    let mut completed_documents = 0;
+    let mut cleanup_uncertain = false;
+    let execution = (|| -> Result<BifrostRunReport> {
+        disk.record("before_setup", "setup", &[("work", &work_dir)])?;
+        let mut timings = RunTimings::default();
+        let (bifrost_source, bifrost_resolved_commit, bifrost_binary) = if let Some(binary) =
+            &options.bifrost_binary
+        {
             if !binary.is_file() {
                 bail!("Bifrost executable does not exist: {}", binary.display());
             }
@@ -299,191 +363,318 @@ pub fn run_bifrost(options: RunBifrostOptions) -> Result<BifrostRunReport> {
                 bifrost_binary_path(&bifrost_checkout),
             )
         };
-    let timed_provenance = super::environment::cached_executable_provenance(
-        &Command::new(&bifrost_binary),
-        &work_dir.join("bifrost-provenance-cache.json"),
-    )?;
-    timings.provenance_hashing_millis = duration_millis(timed_provenance.hashing_duration);
-    timings.provenance_cache_hit = timed_provenance.cache_hit;
-    let environment = super::environment::capture_execution_environment(
-        timed_provenance.provenance,
-        &["rustc", "cargo"],
-        "bifrost",
-        &usagebench_provenance.revision,
-        usagebench_provenance.release.as_deref(),
-    )?;
+        let timed_provenance = super::environment::cached_executable_provenance(
+            &Command::new(&bifrost_binary),
+            &work_dir.join("bifrost-provenance-cache.json"),
+        )?;
+        timings.provenance_hashing_millis = duration_millis(timed_provenance.hashing_duration);
+        timings.provenance_cache_hit = timed_provenance.cache_hit;
+        let environment = super::environment::capture_execution_environment(
+            timed_provenance.provenance,
+            &["rustc", "cargo"],
+            "bifrost",
+            &usagebench_provenance.revision,
+            usagebench_provenance.release.as_deref(),
+        )?;
 
-    let requested_version = if options.bifrost_binary.is_some() {
-        bifrost_resolved_commit.clone()
-    } else {
-        options.bifrost_commit.clone()
-    };
-    let runner = bifrost_runner_metadata(
-        requested_version.clone(),
-        bifrost_resolved_commit.clone(),
-        bifrost_source.clone(),
-    );
-    let requested_case_files = benchmark_documents
-        .iter()
-        .filter(|(_, document)| {
-            options
-                .language
-                .as_ref()
-                .is_none_or(|language| &document.language == language)
-        })
-        .map(|(path, _)| report_case_path(path, &repo_root))
-        .collect();
-
-    let mut report = BifrostRunReport {
-        usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
-        usagebench_revision: usagebench_provenance.revision,
-        usagebench_release: usagebench_provenance.release,
-        runner,
-        invocation: RunInvocation {
-            include_unsupported: options.include_unsupported,
-            include_definition_lookups: options.include_definition_lookups,
-            scan_usages_max_duration_secs: Some(options.scan_usages_max_duration_secs),
-            profile: None,
-            profile_sha256: None,
-            case_id: options.case_id.clone(),
-        },
-        timings: timings.clone(),
-        completed: false,
-        requested_case_files,
-        requested_totals,
-        semantic_pack_runs: Vec::new(),
-        environment,
-        bifrost_repo: Some(bifrost_source),
-        bifrost_commit: Some(requested_version),
-        bifrost_resolved_commit: Some(bifrost_resolved_commit.clone()),
-        started_at_unix_seconds: started_at,
-        finished_at_unix_seconds: started_at,
-        case_files: Vec::new(),
-        totals: RunTotals::default(),
-        documents: Vec::new(),
-    };
-    if let Some(output) = &output {
-        write_report_atomic(&partial_report_path(output), &report)?;
-    }
-    for (case_file, document) in &benchmark_documents {
-        if options
-            .language
-            .as_ref()
-            .is_some_and(|language| &document.language != language)
-        {
-            continue;
-        }
-        let source_root =
-            match crate::evaluation::materialized_source_root(document, &repo_root, &work_dir)? {
-                Some(source_root) => source_root,
-                None => prepare_source_root(&document.source, &repo_root, &work_dir)?,
-            };
-        let semantic_pack = document
-            .semantic_packs
-            .as_ref()
-            .map(|requirement| {
-                prepare_semantic_packs(
-                    requirement,
-                    &work_dir,
-                    &bifrost_binary,
-                    &bifrost_resolved_commit,
-                )
-            })
-            .transpose();
-        let (cases, semantic_pack) = match semantic_pack {
-            Ok(semantic_pack) => {
-                let cases = match run_document_cases(
-                    document,
-                    &source_root,
-                    &bifrost_binary,
-                    options.include_unsupported,
-                    options.include_definition_lookups,
-                    options.scan_usages_max_duration_secs,
-                    options.case_id.as_deref(),
-                    semantic_pack.as_ref(),
-                ) {
-                    Ok(document_run) => {
-                        timings.workspace_readiness_millis = timings
-                            .workspace_readiness_millis
-                            .saturating_add(document_run.workspace_readiness_millis);
-                        timings.analyzer_query_millis = timings
-                            .analyzer_query_millis
-                            .saturating_add(document_run.analyzer_query_millis);
-                        document_run.cases
-                    }
-                    Err(error) => {
-                        let kind = if is_snapshot_not_ready_error(&error) {
-                            "workspace_snapshot_not_ready"
-                        } else {
-                            "document_runner_failed"
-                        };
-                        document_failure_cases(
-                            document,
-                            options.include_unsupported,
-                            options.case_id.as_deref(),
-                            kind,
-                            &format!("run benchmark cases {}: {error:#}", case_file.display()),
-                        )
-                    }
-                };
-                (cases, semantic_pack)
-            }
-            Err(error) => (
-                document_failure_cases(
-                    document,
-                    options.include_unsupported,
-                    options.case_id.as_deref(),
-                    "semantic_pack_setup_failed",
-                    &format!(
-                        "prepare semantic packs for {}: {error:#}",
-                        case_file.display()
-                    ),
-                ),
-                None,
-            ),
+        let requested_version = if options.bifrost_binary.is_some() {
+            bifrost_resolved_commit.clone()
+        } else {
+            options.bifrost_commit.clone()
         };
-        report.documents.push(DocumentRunReport {
-            case_file: report_case_path(case_file, &repo_root),
-            language: document.language.clone(),
-            source_root: display_path(&source_root),
-            corpus_partition: document.corpus.partition,
-            corpus_selection: document.corpus.selection,
-            ground_truth_status: document.ground_truth.status,
-            reference_policy: document.reference_policy,
-            cases,
-        });
-        if let Some(mut semantic_pack) = semantic_pack {
-            semantic_pack.evidence.analyzer_visible_model_destinations = cases_model_destinations(
-                report.documents.last().expect("document was just appended"),
-            );
-            semantic_pack.evidence.activation_state =
-                if semantic_pack.evidence.analyzer_visible_model_destinations > 0 {
-                    "analyzer_visible".to_string()
-                } else {
-                    "empty".to_string()
-                };
-            report.semantic_pack_runs.push(semantic_pack.evidence);
-        }
-        report
-            .case_files
-            .push(report_case_path(case_file, &repo_root));
-        report.finished_at_unix_seconds = unix_seconds_now()?;
-        timings.refresh_total();
-        report.timings = timings.clone();
-        report.totals = compute_totals(&report.documents);
+        let runner = bifrost_runner_metadata(
+            requested_version.clone(),
+            bifrost_resolved_commit.clone(),
+            bifrost_source.clone(),
+        );
+        let requested_case_files = benchmark_documents
+            .iter()
+            .filter(|(_, document)| {
+                options
+                    .language
+                    .as_ref()
+                    .is_none_or(|language| &document.language == language)
+            })
+            .map(|(path, _)| report_case_path(path, &repo_root))
+            .collect();
+
+        let mut report = BifrostRunReport {
+            usagebench_version: env!("CARGO_PKG_VERSION").to_string(),
+            usagebench_revision: usagebench_provenance.revision,
+            usagebench_release: usagebench_provenance.release,
+            runner,
+            invocation: RunInvocation {
+                include_unsupported: options.include_unsupported,
+                include_definition_lookups: options.include_definition_lookups,
+                scan_usages_max_duration_secs: Some(options.scan_usages_max_duration_secs),
+                profile: None,
+                profile_sha256: None,
+                case_id: options.case_id.clone(),
+            },
+            timings: timings.clone(),
+            completed: false,
+            requested_case_files,
+            requested_totals,
+            semantic_pack_runs: Vec::new(),
+            environment,
+            bifrost_repo: Some(bifrost_source),
+            bifrost_commit: Some(requested_version),
+            bifrost_resolved_commit: Some(bifrost_resolved_commit.clone()),
+            started_at_unix_seconds: started_at,
+            finished_at_unix_seconds: started_at,
+            case_files: Vec::new(),
+            totals: RunTotals::default(),
+            documents: Vec::new(),
+        };
         if let Some(output) = &output {
             write_report_atomic(&partial_report_path(output), &report)?;
         }
+        for (index, (case_file, document)) in benchmark_documents.iter().enumerate() {
+            if options
+                .language
+                .as_ref()
+                .is_some_and(|language| &document.language != language)
+            {
+                continue;
+            }
+            let unit_id = source_unit_id(index, document, &benchmark_documents);
+            let unit_root = run_root.path().join(format!("unit-{unit_id}"));
+            fs::create_dir_all(&unit_root)?;
+            let case_name = report_case_path(case_file, &repo_root);
+            let unit_evidence = evidence_root.join(format!("document-{index}"));
+            fs::create_dir(&unit_evidence)?;
+            write_json_atomic(&unit_evidence.join("input.json"), document)?;
+            disk.record(
+                "before_prepare",
+                &case_name,
+                &[("run", run_root.path()), ("work", &work_dir)],
+            )?;
+            disk.ensure_headroom(&case_name)?;
+            let source_root = match crate::evaluation::materialized_source_root(
+                document, &repo_root, &unit_root,
+            )? {
+                Some(source_root) => source_root,
+                None => prepare_source_root(&document.source, &repo_root, &unit_root)?,
+            };
+            write_json_atomic(
+                &unit_evidence.join("reproduction.json"),
+                &json!({
+                    "sourceRoot": source_root,
+                    "bifrostBinary": bifrost_binary,
+                    "bifrostResolvedCommit": bifrost_resolved_commit,
+                    "scanUsagesMaxDurationSecs": options.scan_usages_max_duration_secs,
+                    "unitRoot": unit_root,
+                    "input": "input.json",
+                }),
+            )?;
+            disk.record(
+                "prepared",
+                &case_name,
+                &[("unit", &unit_root), ("source", &source_root)],
+            )?;
+            let semantic_pack = document
+                .semantic_packs
+                .as_ref()
+                .map(|requirement| {
+                    prepare_semantic_packs(
+                        requirement,
+                        &unit_root,
+                        &bifrost_binary,
+                        &bifrost_resolved_commit,
+                    )
+                })
+                .transpose();
+            let (cases, mut semantic_pack) = match semantic_pack {
+                Ok(semantic_pack) => {
+                    let cases = match run_document_cases(
+                        document,
+                        &source_root,
+                        &bifrost_binary,
+                        options.include_unsupported,
+                        options.include_definition_lookups,
+                        options.scan_usages_max_duration_secs,
+                        options.case_id.as_deref(),
+                        semantic_pack.as_ref(),
+                        &unit_root,
+                        &unit_evidence,
+                    ) {
+                        Ok(document_run) => {
+                            timings.workspace_readiness_millis = timings
+                                .workspace_readiness_millis
+                                .saturating_add(document_run.workspace_readiness_millis);
+                            timings.analyzer_query_millis = timings
+                                .analyzer_query_millis
+                                .saturating_add(document_run.analyzer_query_millis);
+                            document_run.cases
+                        }
+                        Err(error) => {
+                            cleanup_uncertain = is_cleanup_error(&error);
+                            let kind = if is_snapshot_not_ready_error(&error) {
+                                "workspace_snapshot_not_ready"
+                            } else {
+                                "document_runner_failed"
+                            };
+                            document_failure_cases(
+                                document,
+                                options.include_unsupported,
+                                options.case_id.as_deref(),
+                                kind,
+                                &format!("run benchmark cases {}: {error:#}", case_file.display()),
+                            )
+                        }
+                    };
+                    (cases, semantic_pack)
+                }
+                Err(error) => (
+                    document_failure_cases(
+                        document,
+                        options.include_unsupported,
+                        options.case_id.as_deref(),
+                        "semantic_pack_setup_failed",
+                        &format!(
+                            "prepare semantic packs for {}: {error:#}",
+                            case_file.display()
+                        ),
+                    ),
+                    None,
+                ),
+            };
+            report.documents.push(DocumentRunReport {
+                case_file: report_case_path(case_file, &repo_root),
+                language: document.language.clone(),
+                source_root: display_path(&source_root),
+                corpus_partition: document.corpus.partition,
+                corpus_selection: document.corpus.selection,
+                ground_truth_status: document.ground_truth.status,
+                reference_policy: document.reference_policy,
+                cases,
+            });
+            if let Some(semantic_pack) = semantic_pack.as_mut() {
+                semantic_pack
+                    ._run_root
+                    .disable_cleanup(cleanup_uncertain || options.keep_worktrees);
+                semantic_pack.evidence.analyzer_visible_model_destinations =
+                    cases_model_destinations(
+                        report.documents.last().expect("document was just appended"),
+                    );
+                semantic_pack.evidence.activation_state =
+                    if semantic_pack.evidence.analyzer_visible_model_destinations > 0 {
+                        "analyzer_visible".to_string()
+                    } else {
+                        "empty".to_string()
+                    };
+                report
+                    .semantic_pack_runs
+                    .push(semantic_pack.evidence.clone());
+            }
+            report
+                .case_files
+                .push(report_case_path(case_file, &repo_root));
+            report.finished_at_unix_seconds = unix_seconds_now()?;
+            timings.refresh_total();
+            report.timings = timings.clone();
+            report.totals = compute_totals(&report.documents);
+            // Save and validate compact evidence before removing any bulky state.
+            write_json_atomic(
+                &unit_evidence.join("result.json"),
+                report.documents.last().unwrap(),
+            )?;
+            completed_documents = report.documents.len();
+            if let Some(output) = &output {
+                write_report_atomic(&partial_report_path(output), &report)?;
+            }
+            // A failed shutdown can leave a descendant using this root. Keep
+            // its state and stop after preserving the error as a scored result.
+            if cleanup_uncertain {
+                bail!(
+                    "analyzer shutdown could not be confirmed; retain potentially active unit {}",
+                    unit_root.display()
+                );
+            }
+            drop(semantic_pack);
+            let checkpoint_sample = disk.record(
+                "checkpointed",
+                &case_name,
+                &[("unit", &unit_root), ("source", &source_root)],
+            )?;
+            let has_later_consumer = benchmark_documents
+                .iter()
+                .enumerate()
+                .skip(index + 1)
+                .filter(|(_, (_, later))| {
+                    options
+                        .language
+                        .as_ref()
+                        .is_none_or(|language| &later.language == language)
+                })
+                .any(|(later_index, (_, later))| {
+                    source_unit_id(later_index, later, &benchmark_documents) == unit_id
+                });
+            let reclaim = !has_later_consumer && !options.keep_worktrees;
+            if reclaim {
+                // unit_root is a freshly created direct child of this invocation.
+                // No shared/external source or cache path is ever passed here.
+                fs::remove_dir_all(&unit_root)
+                    .or_else(|error| {
+                        if error.kind() == std::io::ErrorKind::NotFound {
+                            Ok(())
+                        } else {
+                            Err(error)
+                        }
+                    })
+                    .with_context(|| format!("reclaim completed unit {}", unit_root.display()))?;
+            }
+            write_json_atomic(
+                &unit_evidence.join("cleanup.json"),
+                &json!({
+                    "reclaimed": reclaim,
+                    "retainedForLaterConsumer": has_later_consumer,
+                    "keepWorktrees": options.keep_worktrees,
+                    "removedPath": if reclaim { Some(&unit_root) } else { None },
+                    "reclaimedLogicalBytes": if reclaim { checkpoint_sample.relevant_paths[0].logical_bytes } else { 0 },
+                    "reclaimedAllocatedBytes": if reclaim { checkpoint_sample.relevant_paths[0].allocated_bytes } else { Some(0) },
+                }),
+            )?;
+            disk.record(
+                "reclaimed",
+                &case_name,
+                &[("run", run_root.path()), ("work", &work_dir)],
+            )?;
+        }
+        report.completed = true;
+        timings.refresh_total();
+        report.timings = timings.clone();
+        if let Some(output) = &output {
+            write_report_atomic(output, &report)?;
+        }
+        Ok(report)
+    })();
+    drop(reporting_reserve);
+    match execution {
+        Ok(report) => Ok(report),
+        Err(error) => {
+            if cleanup_uncertain {
+                run_root.disable_cleanup(true);
+            }
+            let retained_root = cleanup_uncertain.then(|| run_root.path().to_path_buf());
+            write_json_atomic(
+                &evidence_root.join("infrastructure-stop.json"),
+                &json!({
+                    "kind": "infrastructure_stop",
+                    "completed": false,
+                    "message": format!("{error:#}"),
+                    "completedDocuments": completed_documents,
+                    "requestedTotals": stop_totals,
+                    "retainedPotentiallyActiveRoot": retained_root,
+                }),
+            )
+            .context("persist infrastructure stop (last valid checkpoint remains intact)")?;
+            Err(error).context(format!(
+                "incomplete execution; evidence {}",
+                evidence_root.display()
+            ))
+        }
     }
-
-    report.completed = true;
-    timings.refresh_total();
-    report.timings = timings;
-    if let Some(output) = &output {
-        write_report_atomic(output, &report)?;
-    }
-
-    Ok(report)
 }
 
 fn apply_expected_failures(
@@ -704,22 +895,51 @@ fn partial_report_path(output: &Path) -> PathBuf {
     output.with_extension("partial.json")
 }
 
+fn reporting_reserve(parent: &Path) -> Result<NamedTempFile> {
+    let mut reserve =
+        NamedTempFile::new_in(parent).context("create emergency reporting reserve")?;
+    let block = [0_u8; 64 * 1024];
+    for _ in 0..16 {
+        reserve
+            .write_all(&block)
+            .context("allocate emergency reporting reserve")?;
+    }
+    reserve
+        .as_file()
+        .sync_all()
+        .context("sync emergency reporting reserve")?;
+    Ok(reserve)
+}
+
 fn write_report_atomic(output: &Path, report: &BifrostRunReport) -> Result<()> {
+    write_json_atomic(output, report)
+}
+
+fn write_json_atomic(output: &Path, value: &impl Serialize) -> Result<()> {
+    publish_json_atomic(output, |file| {
+        serde_json::to_writer_pretty(&mut *file, value).context("serialize report checkpoint")?;
+        file.write_all(b"\n").context("finish report checkpoint")?;
+        Ok(())
+    })
+}
+
+fn publish_json_atomic(
+    output: &Path,
+    write: impl FnOnce(&mut fs::File) -> Result<()>,
+) -> Result<()> {
     let parent = output
         .parent()
         .with_context(|| format!("report output {} has no parent", output.display()))?;
     let mut temporary = NamedTempFile::new_in(parent)
         .with_context(|| format!("create temporary report in {}", parent.display()))?;
-    serde_json::to_writer_pretty(temporary.as_file_mut(), report)
-        .context("serialize report checkpoint")?;
-    temporary
-        .as_file_mut()
-        .write_all(b"\n")
-        .context("finish report checkpoint")?;
+    write(temporary.as_file_mut())?;
     temporary
         .as_file_mut()
         .sync_all()
         .context("sync report checkpoint")?;
+    // Validate what reached the file before publishing or reclaiming sources.
+    serde_json::from_reader::<_, Value>(fs::File::open(temporary.path())?)
+        .context("validate persisted report checkpoint")?;
     temporary
         .persist(output)
         .map_err(|error| error.error)
@@ -762,6 +982,12 @@ fn request_budget_env(scan_usages_max_duration_secs: u64) -> Option<(&'static st
     })
 }
 
+fn configured_cache_override(name: &str) -> Option<PathBuf> {
+    env::var_os(name)
+        .filter(|value| !value.is_empty())
+        .map(PathBuf::from)
+}
+
 fn run_document_cases(
     document: &BenchmarkDocument,
     source_root: &Path,
@@ -771,6 +997,8 @@ fn run_document_cases(
     scan_usages_max_duration_secs: u64,
     case_id: Option<&str>,
     semantic_pack: Option<&PreparedSemanticPacks>,
+    unit_root: &Path,
+    evidence_root: &Path,
 ) -> Result<TimedDocumentRun> {
     let workspace_models = document
         .cases
@@ -820,48 +1048,74 @@ fn run_document_cases(
                 &semantic_pack.evidence_json,
             );
     }
-    let readiness_started = Instant::now();
-    let mut session = McpSession::start(&mut command, "Bifrost")?;
-    session.initialize()?;
-    let scan_budget =
-        scan_budget_policy(&session.tool_descriptors()?, scan_usages_max_duration_secs)?;
-    let initialization_duration = readiness_started.elapsed();
-    let query_started = Instant::now();
-    if let Some(requirement) = document.semantic_packs.as_ref() {
-        verify_semantic_pack_probes(requirement, &mut session)?;
-    }
-
-    let mut reports = Vec::new();
-    for case in document
-        .cases
-        .iter()
-        .filter(|case| case_id.is_none_or(|case_id| case.id == case_id))
+    // Keep an explicitly supplied cache override warm and externally owned.
+    // Otherwise analyzer stores belong to this source unit, including fixtures.
+    if configured_cache_override("BIFROST_CACHE_DIR").is_none()
+        && configured_cache_override("BIFROST_CACHE_ROOT").is_none()
     {
-        reports.push(run_case_with_scan_duration(
-            case,
-            document.position_encoding,
-            document.reference_policy,
-            Some((&document.language, source_root)),
-            &mut session,
-            include_unsupported,
-            include_definition_lookups,
-            scan_budget,
-        ));
-        if let Some(error) = session.take_snapshot_not_ready_error() {
-            return Err(error).context("Bifrost workspace readiness retries were exhausted");
-        }
+        command.env("BIFROST_CACHE_DIR", unit_root.join("analyzer-store"));
     }
-    let query_duration = query_started.elapsed();
-    let retry_readiness_duration = session.take_workspace_readiness_duration();
-    Ok(TimedDocumentRun {
-        cases: reports,
-        workspace_readiness_millis: duration_millis(
-            initialization_duration.saturating_add(retry_readiness_duration),
-        ),
-        analyzer_query_millis: duration_millis(
-            query_duration.saturating_sub(retry_readiness_duration),
-        ),
-    })
+    let temporary_root = unit_root.join("tmp");
+    fs::create_dir_all(&temporary_root)?;
+    command
+        .env("TMPDIR", &temporary_root)
+        .env("TMP", &temporary_root)
+        .env("TEMP", &temporary_root);
+    let readiness_started = Instant::now();
+    let mut session = McpSession::start_with_evidence(
+        &mut command,
+        "Bifrost",
+        &evidence_root.join("analyzer.stderr.log"),
+    )?;
+    let result = (|| -> Result<TimedDocumentRun> {
+        session.initialize()?;
+        let scan_budget =
+            scan_budget_policy(&session.tool_descriptors()?, scan_usages_max_duration_secs)?;
+        let initialization_duration = readiness_started.elapsed();
+        let query_started = Instant::now();
+        if let Some(requirement) = document.semantic_packs.as_ref() {
+            verify_semantic_pack_probes(requirement, &mut session)?;
+        }
+
+        let mut reports = Vec::new();
+        for case in document
+            .cases
+            .iter()
+            .filter(|case| case_id.is_none_or(|case_id| case.id == case_id))
+        {
+            reports.push(run_case_with_scan_duration(
+                case,
+                document.position_encoding,
+                document.reference_policy,
+                Some((&document.language, source_root)),
+                &mut session,
+                include_unsupported,
+                include_definition_lookups,
+                scan_budget,
+            ));
+            if let Some(error) = session.take_snapshot_not_ready_error() {
+                return Err(error).context("Bifrost workspace readiness retries were exhausted");
+            }
+        }
+        let query_duration = query_started.elapsed();
+        let retry_readiness_duration = session.take_workspace_readiness_duration();
+        Ok(TimedDocumentRun {
+            cases: reports,
+            workspace_readiness_millis: duration_millis(
+                initialization_duration.saturating_add(retry_readiness_duration),
+            ),
+            analyzer_query_millis: duration_millis(
+                query_duration.saturating_sub(retry_readiness_duration),
+            ),
+        })
+    })();
+    // Even analyzer/setup errors stop and reap the child before the caller can
+    // checkpoint and reclaim the unit. Keep the original diagnostic as context.
+    session.finish().with_context(|| match &result {
+        Err(error) => format!("stop analyzer after document failure: {error:#}"),
+        Ok(_) => "stop analyzer after document queries".to_string(),
+    })?;
+    result
 }
 
 fn verify_semantic_pack_probes(
@@ -3031,23 +3285,23 @@ fn join_pipe_reader(
         .map_err(|error| anyhow!("read command {stream_name}: {error}"))
 }
 
-struct CleanupGuard {
-    path: PathBuf,
-    enabled: bool,
-}
-
-impl CleanupGuard {
-    fn new(path: PathBuf, enabled: bool) -> Self {
-        Self { path, enabled }
+// Evaluation archives were always freshly extracted for each document. Keep
+// that cold boundary; ordinary Git/fixture documents retain same-source reuse.
+fn source_unit_id(
+    index: usize,
+    document: &BenchmarkDocument,
+    documents: &[(PathBuf, BenchmarkDocument)],
+) -> usize {
+    if document.corpus.partition == crate::CorpusPartition::Evaluation {
+        return index;
     }
-}
-
-impl Drop for CleanupGuard {
-    fn drop(&mut self) {
-        if self.enabled && self.path.is_dir() {
-            let _ = fs::remove_dir_all(&self.path);
-        }
-    }
+    documents[..=index]
+        .iter()
+        .position(|(_, earlier)| {
+            earlier.corpus.partition != crate::CorpusPartition::Evaluation
+                && earlier.source == document.source
+        })
+        .expect("the current document matches itself")
 }
 
 fn unix_seconds_now() -> Result<u64> {
@@ -3470,6 +3724,152 @@ for line in sys.stdin:
         assert_eq!(checkpoint.totals, report.totals);
     }
 
+    // #206: multi-document runs retained completed state until ENOSPC and
+    // teardown could remove sources belonging to another invocation.
+    #[cfg(unix)]
+    #[test]
+    fn corpus_lifecycle_bounds_retention_preserves_reuse_and_failure_evidence() {
+        use std::os::unix::fs::PermissionsExt;
+        fs::create_dir_all("target").unwrap();
+        let temporary = tempfile::Builder::new()
+            .prefix("disk-lifecycle-")
+            .tempdir_in("target")
+            .unwrap();
+        let root = env::current_dir().unwrap().join(temporary.path());
+        let cases = root.join("cases");
+        fs::create_dir(&cases).unwrap();
+        for (name, fixture) in [
+            ("01", "rust-baseline"),
+            ("02", "cpp-lsp-parity"),
+            ("03", "rust-baseline"),
+            ("04", "python-baseline"),
+        ] {
+            fs::copy(
+                format!("benchmarks/cases/{fixture}.yaml"),
+                cases.join(format!("{name}.yaml")),
+            )
+            .unwrap();
+        }
+        let work = root.join("work");
+        fs::create_dir_all(work.join("sources/unrelated")).unwrap();
+        fs::write(work.join("sources/unrelated/keep"), b"another job").unwrap();
+        fs::create_dir_all(work.join("run-active")).unwrap();
+        fs::write(work.join("run-active/keep"), b"active invocation").unwrap();
+        let executable = root.join("fake-bifrost.py");
+        fs::write(&executable, r#"#!/usr/bin/env python3
+import json, os, pathlib, sys
+unit = pathlib.Path(os.environ['TMPDIR']).parent
+run = unit.parent
+units = list(run.glob('unit-*'))
+# Simulate a 20 MiB disposable-state budget. A repeated source must keep its
+# warmed 8 MiB store; completed other sources must disappear before unit 3.
+retained = sum(p.stat().st_size for p in run.rglob('bulk'))
+assert retained <= 16 * 1024 * 1024, retained
+marker = unit / 'warm'
+warm = marker.exists()
+marker.write_text('warm')
+with (unit / 'bulk').open('wb') as stream:
+    stream.truncate(8 * 1024 * 1024)
+if unit.name == 'unit-3':
+    assert not (run / 'unit-0').exists()
+    assert not (run / 'unit-1').exists()
+print('preserved analyzer diagnostic; warm=' + str(warm), file=sys.stderr, flush=True)
+for line in sys.stdin:
+    request = json.loads(line)
+    if 'id' not in request:
+        continue
+    if request['method'] == 'initialize':
+        result = {}
+    elif request['method'] == 'tools/list':
+        result = {'tools': [{'name': 'scan_usages_by_location', 'inputSchema': {'properties': {}}}]}
+    else:
+        response = {'jsonrpc': '2.0', 'id': request['id'], 'error': {'code': -32603, 'message': 'deliberate analyzer failure'}}
+        print(json.dumps(response), flush=True)
+        continue
+    print(json.dumps({'jsonrpc': '2.0', 'id': request['id'], 'result': result}), flush=True)
+"#).unwrap();
+        fs::set_permissions(&executable, fs::Permissions::from_mode(0o755)).unwrap();
+        let output = root.join("report.json");
+        let mut options = RunBifrostOptions::with_defaults(cases.clone());
+        options.bifrost_binary = Some(executable);
+        options.bifrost_resolved_commit = Some("a".repeat(40));
+        options.work_dir = work.clone();
+        options.output = Some(output.clone());
+        options.minimum_free_bytes = 1;
+        options.minimum_free_inodes = 1;
+        let report = run_bifrost(options.clone()).unwrap();
+        assert!(report.completed);
+        assert_eq!(report.documents.len(), 4);
+        assert!(report.totals.errors > 0);
+        assert!(report
+            .documents
+            .iter()
+            .flat_map(|d| &d.cases)
+            .flat_map(|c| &c.diagnostics)
+            .any(|d| d.message.contains("deliberate analyzer failure")));
+        assert_eq!(
+            fs::read(work.join("sources/unrelated/keep")).unwrap(),
+            b"another job"
+        );
+        assert_eq!(
+            fs::read(work.join("run-active/keep")).unwrap(),
+            b"active invocation"
+        );
+        assert_eq!(
+            fs::read_dir(&work)
+                .unwrap()
+                .filter(|entry| entry.as_ref().unwrap().file_type().unwrap().is_dir())
+                .count(),
+            2
+        );
+        let evidence = fs::read_dir(output.with_extension("evidence"))
+            .unwrap()
+            .next()
+            .unwrap()
+            .unwrap()
+            .path();
+        let first_stderr =
+            fs::read_to_string(evidence.join("document-0/analyzer.stderr.log")).unwrap();
+        let warm_stderr =
+            fs::read_to_string(evidence.join("document-2/analyzer.stderr.log")).unwrap();
+        assert!(first_stderr.contains("warm=False"));
+        assert!(warm_stderr.contains("warm=True"));
+        for index in 0..4 {
+            let result: DocumentRunReport = serde_json::from_slice(
+                &fs::read(evidence.join(format!("document-{index}/result.json"))).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(result, report.documents[index]);
+        }
+        assert!(fs::read_to_string(evidence.join("disk.jsonl"))
+            .unwrap()
+            .contains("reclaimed"));
+
+        // A reserve larger than the filesystem refuses admission with the full
+        // original denominator and leaves analyzer errors from the prior run.
+        options.minimum_free_bytes = u64::MAX;
+        let error = run_bifrost(options).unwrap_err();
+        assert!(format!("{error:#}").contains("headroom"));
+        let checkpoint: BifrostRunReport =
+            serde_json::from_slice(&fs::read(partial_report_path(&output)).unwrap()).unwrap();
+        assert!(!checkpoint.completed);
+        assert_eq!(checkpoint.requested_totals.documents, 4);
+        assert_eq!(checkpoint.documents.len(), 0);
+        let evidence_roots = fs::read_dir(output.with_extension("evidence"))
+            .unwrap()
+            .map(|e| e.unwrap().path())
+            .collect::<Vec<_>>();
+        assert_eq!(evidence_roots.len(), 2);
+        assert_eq!(
+            evidence_roots
+                .iter()
+                .filter(|p| p.join("infrastructure-stop.json").is_file())
+                .count(),
+            1
+        );
+        assert!(evidence.join("document-2/result.json").is_file());
+    }
+
     #[test]
     fn serializes_report_with_stable_camel_case_fields() {
         let report = BifrostRunReport {
@@ -3655,6 +4055,26 @@ for line in sys.stdin:
         let checkpoint_report: BifrostRunReport =
             serde_json::from_slice(&fs::read(&checkpoint).unwrap()).unwrap();
         assert_eq!(checkpoint_report, expected_checkpoint);
+        // #206: an ENOSPC midway through serialization must not destroy the
+        // last readable incomplete checkpoint or publish a truncated report.
+        let previous_bytes = fs::read(&checkpoint).unwrap();
+        let error = publish_json_atomic(&checkpoint, |file| {
+            file.write_all(b"{\"completed\":false,")?;
+            Err(std::io::Error::from_raw_os_error(28).into())
+        })
+        .unwrap_err();
+        assert!(error.to_string().contains("space") || error.to_string().contains("28"));
+        assert_eq!(fs::read(&checkpoint).unwrap(), previous_bytes);
+        let still_valid: BifrostRunReport = serde_json::from_slice(&previous_bytes).unwrap();
+        assert!(!still_valid.completed);
+        assert!(still_valid.ensure_complete().is_err());
+        assert!(publish_json_atomic(&checkpoint, |file| {
+            file.write_all(b"{")?;
+            Ok(())
+        })
+        .is_err());
+        assert_eq!(fs::read(&checkpoint).unwrap(), previous_bytes);
+
         assert!(checkpoint_report.ensure_complete().is_err());
         assert_eq!(checkpoint, tempdir.path().join("run.partial.json"));
 

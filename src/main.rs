@@ -188,7 +188,16 @@ enum Command {
         /// Per-scan wall-clock budget for Bifrost usage lookup (maximum 300 seconds).
         #[arg(long, default_value_t = DEFAULT_SCAN_USAGES_MAX_DURATION_SECS)]
         scan_usages_max_duration_secs: u64,
-        /// Keep temporary git source checkouts after the run.
+        /// Parent directory for durable stderr, reproduction inputs and disk telemetry.
+        #[arg(long)]
+        evidence_dir: Option<PathBuf>,
+        /// Minimum free disk bytes before starting another corpus unit.
+        #[arg(long, default_value_t = 512 * 1024 * 1024)]
+        minimum_free_bytes: u64,
+        /// Minimum free inodes before starting another corpus unit (where available).
+        #[arg(long, default_value_t = 1024)]
+        minimum_free_inodes: u64,
+        /// Keep this invocation's disposable state after the run.
         #[arg(long)]
         keep_worktrees: bool,
         /// Run only the matching case ID.
@@ -458,6 +467,9 @@ fn main() -> Result<()> {
             include_definition_lookups: _,
             scan_usages_max_duration_secs,
             keep_worktrees,
+            evidence_dir,
+            minimum_free_bytes,
+            minimum_free_inodes,
             case_id,
             language,
             expected_failures,
@@ -474,6 +486,9 @@ fn main() -> Result<()> {
             options.include_unsupported = include_unsupported;
             options.scan_usages_max_duration_secs = scan_usages_max_duration_secs;
             options.keep_worktrees = keep_worktrees;
+            options.evidence_dir = evidence_dir;
+            options.minimum_free_bytes = minimum_free_bytes;
+            options.minimum_free_inodes = minimum_free_inodes;
             options.case_id = case_id;
             options.language = language;
             options.expected_failures = expected_failures;
