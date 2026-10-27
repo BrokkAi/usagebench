@@ -551,6 +551,11 @@ mod windows_platform {
             volume_path_name: *mut u16,
             buffer_length: u32,
         ) -> i32;
+        fn GetVolumeNameForVolumeMountPointW(
+            volume_mount_point: *const u16,
+            volume_name: *mut u16,
+            buffer_length: u32,
+        ) -> i32;
         fn CreateFileW(
             file_name: *const u16,
             desired_access: u32,
@@ -584,11 +589,24 @@ mod windows_platform {
             return Err(std::io::Error::last_os_error())
                 .context("resolve disk volume containing relevant path");
         }
-        let volume_end = volume_path
+        // A volume may have several mounted-folder paths. The mount manager's
+        // canonical GUID, not a particular mount path, identifies the volume.
+        let mut volume_guid = [0_u16; 50];
+        let identity_ok = unsafe {
+            GetVolumeNameForVolumeMountPointW(
+                volume_path.as_ptr(),
+                volume_guid.as_mut_ptr(),
+                volume_guid.len() as u32,
+            )
+        };
+        if identity_ok == 0 {
+            return Err(std::io::Error::last_os_error())
+                .context("resolve canonical disk volume identity");
+        }
+        let guid_end = volume_guid
             .iter()
             .position(|value| *value == 0)
-            .unwrap_or(volume_path.len());
-        let volume = &volume_path[..volume_end];
+            .expect("successful volume GUID lookup is null-terminated");
 
         let mut free_available = 0_u64;
         let mut total_bytes = 0_u64;
@@ -607,7 +625,7 @@ mod windows_platform {
         }
 
         Ok(FileSystemStats {
-            identity: String::from_utf16_lossy(volume).to_lowercase(),
+            identity: String::from_utf16_lossy(&volume_guid[..guid_end]).to_lowercase(),
             free_bytes: free_available,
             free_inodes: None,
             used_bytes: total_bytes.saturating_sub(total_free_bytes),
