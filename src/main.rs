@@ -96,6 +96,18 @@ enum Command {
         #[arg(long)]
         output_diff: Option<PathBuf>,
     },
+    /// Merge reports from disjoint shards of one run into a single report.
+    MergeReports {
+        /// Case file or directory the merged report must cover.
+        #[arg(long)]
+        cases: PathBuf,
+        /// Write the merged report JSON to this path.
+        #[arg(long)]
+        output: PathBuf,
+        /// Shard report files (final or `.partial.json` checkpoints).
+        #[arg(required = true)]
+        reports: Vec<PathBuf>,
+    },
     /// Validate selected candidate reports and write an immutable snapshot manifest.
     FreezeManifest {
         /// Development evidence is explicitly labeled; evaluation requires promoted corpus metadata.
@@ -355,6 +367,59 @@ fn main() -> Result<()> {
                     );
                 }
                 bail!("reports differ in {} semantic field(s)", differences.len());
+            }
+        }
+        Command::MergeReports {
+            cases,
+            output,
+            reports,
+        } => {
+            let reports = reports.iter().map(PathBuf::as_path).collect::<Vec<_>>();
+            let report =
+                usagebench::runners::report_merge::merge_report_files(&cases, &reports, &output)?;
+            println!(
+                "merged {} shard report(s): {}/{} document(s), {} planned case(s): {} passed, {} near miss(es), {} position-unverified, {} improved, {} failed, {} expected failure(s), {} not planned, {} unsupported, {} skipped, {} error(s)",
+                reports.len(),
+                report.totals.documents,
+                report.requested_totals.documents,
+                report.totals.cases,
+                report.totals.passed,
+                report.totals.near_misses,
+                report.totals.position_unverified,
+                report.totals.improved,
+                report.totals.failed,
+                report.totals.expected_failures,
+                report.totals.not_planned,
+                report.totals.unsupported,
+                report.totals.skipped,
+                report.totals.errors
+            );
+            if !report.completed {
+                let unprocessed = report
+                    .requested_case_files
+                    .iter()
+                    .filter(|case_file| !report.case_files.contains(case_file))
+                    .map(String::as_str)
+                    .collect::<Vec<_>>();
+                bail!(
+                    "merged report is incomplete: {}/{} document(s) processed; unprocessed: {}",
+                    report.totals.documents,
+                    report.requested_totals.documents,
+                    unprocessed.join(", ")
+                );
+            }
+            // Same exit contract as run-bifrost, so CI can treat the merged
+            // step outcome like the former single-run step outcome.
+            if report.totals.failed > 0
+                || report.totals.position_unverified > 0
+                || report.totals.errors > 0
+            {
+                bail!(
+                    "merged benchmark run was not exact: {} failed, {} position-unverified, {} error(s)",
+                    report.totals.failed,
+                    report.totals.position_unverified,
+                    report.totals.errors
+                );
             }
         }
         Command::FreezeManifest {

@@ -331,11 +331,14 @@ regression signal rather than a one-time comparison.
 The workflow:
 
 * validates `benchmarks/cases`
-* checks out `BrokkAi/bifrost`
-* builds `usagebench`
-* runs `usagebench run-bifrost benchmarks/cases` with the versioned current
-  expected-pass overlay
-* uploads the JSON report from `benchmark-output`
+* checks out `BrokkAi/bifrost`, then builds Bifrost and a release `usagebench`
+  once
+* runs `usagebench run-bifrost benchmarks/cases --language <language>` as one
+  parallel shard per corpus language, all against that same Bifrost binary via
+  `--bifrost-binary`, with the versioned current expected-pass overlay
+* merges the shard reports with `usagebench merge-reports`, which fails the
+  report as incomplete when the shards miss any case file
+* uploads the merged JSON report, and each shard's report and evidence
 * publishes a GitHub step summary
 * optionally posts a payload to Slack
 
