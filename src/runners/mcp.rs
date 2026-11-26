@@ -37,6 +37,17 @@ const SNAPSHOT_NOT_READY_RETRY_DELAYS: [Duration; 3] = [
     Duration::from_secs(2),
     Duration::from_secs(4),
 ];
+// Bifrost answers a cold-workspace call at once with an incomplete tool result
+// instead of holding the request open, so the client polls until the logical
+// call deadline. Short early polls keep warm fixtures fast.
+const WORKSPACE_PREPARING_POLL_DELAYS: [Duration; 4] = [
+    Duration::from_millis(250),
+    Duration::from_millis(500),
+    Duration::from_secs(1),
+    Duration::from_secs(2),
+];
+const WORKSPACE_PREPARING_FINAL_POLL_RESERVE: Duration = Duration::from_millis(100);
+const BIFROST_INCOMPLETE_META_KEY: &str = "io.bifrost/incomplete";
 const MCP_STDERR_TAIL_BYTES: u64 = 64 * 1024;
 const MCP_STDOUT_READER_JOIN_TIMEOUT: Duration = Duration::from_secs(1);
 const MCP_STDOUT_READER_JOIN_POLL_INTERVAL: Duration = Duration::from_millis(10);
@@ -104,17 +115,101 @@ impl fmt::Display for McpCleanupFailure {
 
 impl StdError for McpCleanupFailure {}
 
+/// Bifrost's incomplete tool result for a call that arrived while workspace
+/// preparation was still running. The preparation keeps going server side, so
+/// the same call can be retried.
+#[derive(Debug, Clone)]
+struct McpWorkspacePreparing {
+    label: String,
+    tool: String,
+    message: String,
+    incomplete: Value,
+}
+
+impl McpWorkspacePreparing {
+    fn from_tool_result(label: &str, tool: &str, result: &Value, message: &str) -> Option<Self> {
+        let incomplete = result.get("_meta")?.get(BIFROST_INCOMPLETE_META_KEY)?;
+        if incomplete
+            .get("workspace_preparation")
+            .and_then(Value::as_str)
+            != Some("continues")
+        {
+            return None;
+        }
+        Some(Self {
+            label: label.to_string(),
+            tool: tool.to_string(),
+            message: message.to_string(),
+            incomplete: incomplete.clone(),
+        })
+    }
+}
+
+impl fmt::Display for McpWorkspacePreparing {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            formatter,
+            "{} tool `{}` failed: {}; incomplete: {}",
+            self.label, self.tool, self.message, self.incomplete
+        )
+    }
+}
+
+impl StdError for McpWorkspacePreparing {}
+
+/// A readiness failure that ended a call and is replayed for the rest of the
+/// session, so later cases fail fast instead of each waiting out a deadline.
+#[derive(Debug, Clone)]
+enum WorkspaceNotReady {
+    Snapshot(McpResponseError),
+    Preparing(McpWorkspacePreparing),
+}
+
+impl WorkspaceNotReady {
+    fn find(error: &anyhow::Error) -> Option<Self> {
+        error.chain().find_map(|cause| {
+            if let Some(error) = cause
+                .downcast_ref::<McpResponseError>()
+                .filter(|error| error.is_snapshot_not_ready())
+            {
+                return Some(Self::Snapshot(error.clone()));
+            }
+            cause
+                .downcast_ref::<McpWorkspacePreparing>()
+                .map(|error| Self::Preparing(error.clone()))
+        })
+    }
+}
+
+impl From<WorkspaceNotReady> for anyhow::Error {
+    fn from(error: WorkspaceNotReady) -> Self {
+        match error {
+            WorkspaceNotReady::Snapshot(error) => error.into(),
+            WorkspaceNotReady::Preparing(error) => error.into(),
+        }
+    }
+}
+
+fn is_workspace_preparing_error(error: &anyhow::Error) -> bool {
+    error
+        .chain()
+        .any(|cause| cause.downcast_ref::<McpWorkspacePreparing>().is_some())
+}
+
 pub(crate) fn is_cleanup_error(error: &anyhow::Error) -> bool {
     error
         .chain()
         .any(|cause| cause.downcast_ref::<McpCleanupFailure>().is_some())
 }
 
+/// Whether a call failed because the analyzer workspace was not ready, either
+/// through the legacy snapshot error or Bifrost's incomplete readiness result.
 pub(crate) fn is_snapshot_not_ready_error(error: &anyhow::Error) -> bool {
     error.chain().any(|cause| {
         cause
             .downcast_ref::<McpResponseError>()
             .is_some_and(McpResponseError::is_snapshot_not_ready)
+            || cause.downcast_ref::<McpWorkspacePreparing>().is_some()
     })
 }
 
@@ -140,7 +235,7 @@ pub(crate) struct McpSession {
     finished: bool,
     cleanup_failure: Option<String>,
     next_id: u64,
-    snapshot_not_ready: Option<McpResponseError>,
+    snapshot_not_ready: Option<WorkspaceNotReady>,
     workspace_readiness_duration: Duration,
 }
 
@@ -523,12 +618,7 @@ impl ToolClient for McpSession {
         );
         self.workspace_readiness_duration += readiness_duration;
         if let Err(error) = &result {
-            self.snapshot_not_ready = error.chain().find_map(|cause| {
-                cause
-                    .downcast_ref::<McpResponseError>()
-                    .filter(|error| error.is_snapshot_not_ready())
-                    .cloned()
-            });
+            self.snapshot_not_ready = WorkspaceNotReady::find(error);
         }
         result
     }
@@ -588,6 +678,11 @@ impl McpSession {
                 .and_then(|item| item.get("text"))
                 .and_then(Value::as_str)
                 .unwrap_or("tool returned isError without text");
+            if let Some(preparing) =
+                McpWorkspacePreparing::from_tool_result(&self.label, name, result, message)
+            {
+                return Err(preparing.into());
+            }
             bail!("{} tool `{name}` failed: {message}", self.label);
         }
         result.get("structuredContent").cloned().with_context(|| {
@@ -636,42 +731,70 @@ fn retry_snapshot_not_ready_until<T>(
 ) -> Result<T> {
     let deadline = Instant::now() + timeout;
     let mut attempted = false;
-    for delay in SNAPSHOT_NOT_READY_RETRY_DELAYS {
+    let mut snapshot_retries = 0;
+    let mut preparing_polls = 0;
+    let mut final_preparing_poll = false;
+    loop {
         let remaining = deadline.saturating_duration_since(Instant::now());
         if attempted && remaining.is_zero() {
             return Err(timeout_error());
         }
         attempted = true;
         let attempt_started = Instant::now();
-        match operation(remaining) {
+        let (error, delay) = match operation(remaining) {
+            Err(error) if is_workspace_preparing_error(&error) => {
+                let delay = WORKSPACE_PREPARING_POLL_DELAYS
+                    [preparing_polls.min(WORKSPACE_PREPARING_POLL_DELAYS.len() - 1)];
+                preparing_polls += 1;
+                (error, delay)
+            }
             Err(error) if is_snapshot_not_ready_error(&error) => {
-                let attempt_duration = attempt_started.elapsed();
-                let remaining = deadline.saturating_duration_since(Instant::now());
-                if remaining.is_zero() {
-                    return Err(timeout_error());
-                }
-                let bounded_delay = delay.min(remaining);
-                sleep(bounded_delay);
-                record_readiness(attempt_duration.saturating_add(bounded_delay));
-                if bounded_delay < delay {
-                    return Err(timeout_error());
-                }
+                let Some(&delay) = SNAPSHOT_NOT_READY_RETRY_DELAYS.get(snapshot_retries) else {
+                    return Err(error).with_context(|| {
+                        format!(
+                            "workspace readiness retries exhausted after {} attempts",
+                            SNAPSHOT_NOT_READY_RETRY_DELAYS.len() + 1
+                        )
+                    });
+                };
+                snapshot_retries += 1;
+                (error, delay)
             }
             result => return result,
+        };
+        let attempt_duration = attempt_started.elapsed();
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if !is_workspace_preparing_error(&error) {
+            if remaining.is_zero() {
+                return Err(timeout_error());
+            }
+            let bounded_delay = delay.min(remaining);
+            sleep(bounded_delay);
+            record_readiness(attempt_duration.saturating_add(bounded_delay));
+            if bounded_delay < delay {
+                return Err(timeout_error());
+            }
+            continue;
         }
-    }
-    let remaining = deadline.saturating_duration_since(Instant::now());
-    if remaining.is_zero() {
-        return Err(timeout_error());
-    }
-    match operation(remaining) {
-        Err(error) if is_snapshot_not_ready_error(&error) => Err(error).with_context(|| {
-            format!(
-                "workspace readiness retries exhausted after {} attempts",
-                SNAPSHOT_NOT_READY_RETRY_DELAYS.len() + 1
-            )
-        }),
-        result => result,
+        if final_preparing_poll || remaining <= WORKSPACE_PREPARING_FINAL_POLL_RESERVE {
+            // Keep the typed readiness error so the session stops retrying it
+            // and the report names the real cause.
+            record_readiness(attempt_duration);
+            return Err(error).with_context(|| {
+                format!(
+                    "workspace preparation did not finish within {} seconds ({} polls)",
+                    timeout.as_secs(),
+                    preparing_polls
+                )
+            });
+        }
+        // When less than a full poll interval is left, wait out the window
+        // but keep a reserve so one last poll still runs before the deadline.
+        let window = remaining - WORKSPACE_PREPARING_FINAL_POLL_RESERVE;
+        final_preparing_poll = window <= delay;
+        let bounded_delay = delay.min(window);
+        sleep(bounded_delay);
+        record_readiness(attempt_duration.saturating_add(bounded_delay));
     }
 }
 
@@ -975,6 +1098,167 @@ mod tests {
             assert!(result.is_err());
             assert_eq!(attempts, 1);
         }
+    }
+
+    #[cfg(unix)]
+    fn session_with_responses(responses: &[String]) -> McpSession {
+        let mut child = Command::new("sh")
+            .arg("-c")
+            .arg("cat >/dev/null")
+            .stdin(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let stdin = child.stdin.take().unwrap();
+        let (sender, receiver) = mpsc::channel();
+        for response in responses {
+            sender.send(Ok(response.clone())).unwrap();
+        }
+        McpSession {
+            label: "Bifrost".to_string(),
+            child,
+            stdin,
+            stdout_lines: receiver,
+            stdout_reader: None,
+            stderr_path: PathBuf::new(),
+            finished: false,
+            cleanup_failure: None,
+            next_id: 1,
+            snapshot_not_ready: None,
+            workspace_readiness_duration: Duration::ZERO,
+        }
+    }
+
+    /// The tool result Bifrost returns when a call arrives before the
+    /// workspace analyzer is ready (rmcp_host `workspace_not_ready_result`).
+    fn workspace_not_ready_response(id: u64) -> String {
+        json!({
+            "jsonrpc": "2.0",
+            "id": id,
+            "result": {
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": "workspace not ready at workspace_readiness while preparing workspace analyzer; workspace preparation continues; check get_active_workspace or retry"
+                }],
+                "_meta": {
+                    "io.bifrost/incomplete": {
+                        "status": "inconclusive",
+                        "completion": {"type": "inconclusive", "reasons": ["workspace_not_ready"]},
+                        "stage": "workspace_readiness",
+                        "phase": "preparing workspace analyzer",
+                        "partial": false,
+                        "workspace_preparation": "continues"
+                    }
+                }
+            }
+        })
+        .to_string()
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn polls_workspace_not_ready_result_until_ready() {
+        let mut session = session_with_responses(&[
+            workspace_not_ready_response(1),
+            workspace_not_ready_response(2),
+            r#"{"jsonrpc":"2.0","id":3,"result":{"structuredContent":{"ready":true}}}"#.to_string(),
+        ]);
+
+        let result = session.call_tool("search_symbols", json!({})).unwrap();
+
+        assert_eq!(result["ready"], true);
+        assert_eq!(session.next_id, 4);
+        assert!(session.snapshot_not_ready.is_none());
+        assert!(session.take_workspace_readiness_duration() > Duration::ZERO);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn workspace_still_preparing_at_deadline_latches_typed_error() {
+        let responses: Vec<String> = (1..=20).map(workspace_not_ready_response).collect();
+        let mut session = session_with_responses(&responses);
+
+        let error = session
+            .call_tool_with_timeout("search_symbols", json!({}), Duration::from_millis(400))
+            .unwrap_err();
+
+        assert!(is_snapshot_not_ready_error(&error));
+        assert!(format!("{error:#}").contains("workspace preparation did not finish"));
+        let attempts = session.next_id;
+        let replayed = session
+            .call_tool("get_definitions_by_location", json!({}))
+            .unwrap_err();
+        assert!(is_snapshot_not_ready_error(&replayed));
+        assert_eq!(session.next_id, attempts, "latched error must not re-query");
+        assert!(session.take_snapshot_not_ready_error().is_some());
+    }
+
+    #[test]
+    fn polls_once_more_when_less_than_a_poll_interval_remains() {
+        let preparing = || -> anyhow::Error {
+            McpWorkspacePreparing {
+                label: "Bifrost".to_string(),
+                tool: "search_symbols".to_string(),
+                message: "workspace not ready".to_string(),
+                incomplete: json!({"workspace_preparation": "continues"}),
+            }
+            .into()
+        };
+        let mut attempts = 0;
+        let mut delays = Vec::new();
+
+        // 400 ms leaves room for the 250 ms first poll delay but not the
+        // 500 ms second one; the shortened tail must still end in a poll.
+        let value = retry_snapshot_not_ready_until(
+            Duration::from_millis(400),
+            |_| {
+                attempts += 1;
+                if attempts < 3 {
+                    Err(preparing())
+                } else {
+                    Ok("ready")
+                }
+            },
+            |delay| {
+                delays.push(delay);
+                thread::sleep(delay);
+            },
+            |_| {},
+            || anyhow!("timed out"),
+        )
+        .unwrap();
+
+        assert_eq!(value, "ready");
+        assert_eq!(attempts, 3);
+        assert_eq!(delays[0], WORKSPACE_PREPARING_POLL_DELAYS[0]);
+        assert!(delays[1] < WORKSPACE_PREPARING_POLL_DELAYS[1]);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn does_not_retry_tool_errors_without_workspace_preparation() {
+        let mut session = session_with_responses(&[json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": {
+                "isError": true,
+                "content": [{"type": "text", "text": "request deadline exceeded at execution"}],
+                "_meta": {
+                    "io.bifrost/incomplete": {
+                        "status": "inconclusive",
+                        "stage": "execution",
+                        "partial": false
+                    }
+                }
+            }
+        })
+        .to_string()]);
+
+        let error = session.call_tool("search_symbols", json!({})).unwrap_err();
+
+        assert!(!is_snapshot_not_ready_error(&error));
+        assert_eq!(session.next_id, 2);
+        assert!(session.snapshot_not_ready.is_none());
     }
 
     #[cfg(unix)]
