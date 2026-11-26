@@ -19,6 +19,7 @@ pub mod lsp;
 mod lsp_protocol;
 mod mcp;
 pub mod report_compare;
+pub mod report_merge;
 
 /// Version of the machine-readable analyzer-run report contract.
 pub const RUN_REPORT_SCHEMA_VERSION: u32 = 1;

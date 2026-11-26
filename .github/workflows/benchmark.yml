@@ -28,17 +28,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  benchmark:
+  # The full corpus does not fit in one job step: real-project documents alone
+  # take well over the step budget. Build the analyzer once, run one shard per
+  # corpus language in parallel against that exact binary, then merge the
+  # shard reports into the single report the summary and Slack gates read.
+  prepare:
+    name: build Bifrost
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    # Keep an explicit overall ceiling while reserving 130 minutes around the
-    # benchmark step for cold checkout/build work and post-timeout artifact
-    # publication.
-    timeout-minutes: 300
+    timeout-minutes: 60
     outputs:
-      slack_payload: ${{ steps.slack_payload.outputs.payload }}
+      bifrost_resolved_commit: ${{ steps.bifrost.outputs.resolved_commit }}
     env:
       BIFROST_REF: ${{ inputs.bifrost_ref || 'master' }}
 
@@ -79,40 +81,205 @@ jobs:
       - name: Cache cargo + target
         uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
+      # Release build: every shard hashes the large debug Bifrost binary for
+      # provenance, which is slow in an unoptimized usagebench.
       - name: Build usagebench
-        run: cargo build --locked --bin usagebench
+        run: cargo build --locked --release --bin usagebench
 
       - name: Validate benchmark cases
-        run: ./target/debug/usagebench validate benchmarks/cases
+        run: ./target/release/usagebench validate benchmarks/cases
 
-      - name: Run Bifrost usage benchmark
+      # Mirrors the build `run-bifrost` performs for a Bifrost checkout, so the
+      # shards run the same debug executables via --bifrost-binary.
+      - name: Build Bifrost
+        id: bifrost
+        shell: bash
+        working-directory: .bifrost
+        run: |
+          set -euo pipefail
+          cargo build --bin bifrost
+          if [ -f crates/bifrost-semantic-packs/Cargo.toml ]; then
+            cargo build -p brokk-bifrost-semantic-packs --features release-tooling --bin bifrost-semantic-pack
+          fi
+          echo "resolved_commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Package executables
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ci-bin
+          cp target/release/usagebench .bifrost/target/debug/bifrost ci-bin/
+          if [ -f .bifrost/target/debug/bifrost-semantic-pack ]; then
+            cp .bifrost/target/debug/bifrost-semantic-pack ci-bin/
+          fi
+          # A tarball keeps the executable bits that artifact zips drop.
+          tar -cf benchmark-executables.tar -C ci-bin .
+
+      - name: Upload executables
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: benchmark-executables-${{ github.run_id }}
+          path: benchmark-executables.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  shard:
+    name: run ${{ matrix.language }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # The benchmark step budget plus checkout, download and artifact upload.
+    timeout-minutes: 200
+    strategy:
+      fail-fast: false
+      # One shard per corpus language. `merge-reports` checks that the shards
+      # cover every case file, so a language missing here yields an
+      # INCOMPLETE report rather than a silently smaller corpus.
+      matrix:
+        language:
+          - cpp
+          - csharp
+          - go
+          - java
+          - javascript
+          - php
+          - python
+          - ruby
+          - rust
+          - scala
+          - typescript
+
+    steps:
+      - name: Checkout usagebench
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      # Reports record the toolchain versions next to the analyzer binary.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: stable
+
+      - name: Download executables
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: benchmark-executables-${{ github.run_id }}
+          path: target/ci-bin
+
+      - name: Unpack executables
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -xf target/ci-bin/benchmark-executables.tar -C target/ci-bin
+          rm target/ci-bin/benchmark-executables.tar
+
+      - name: Run Bifrost usage benchmark shard
         id: run_usagebench
         continue-on-error: true
-        # Expire well before the job so checkpoint discovery, artifact upload,
-        # and summaries still run after a slow benchmark is terminated.
+        # Expire well before the job so the checkpoint still uploads after a
+        # slow shard is terminated.
         timeout-minutes: 170
         shell: bash
         env:
+          LANGUAGE: ${{ matrix.language }}
+          BIFROST_RESOLVED_COMMIT: ${{ needs.prepare.outputs.bifrost_resolved_commit }}
           INCLUDE_UNSUPPORTED: ${{ inputs.include_unsupported || false }}
         run: |
           set -euo pipefail
-          mkdir -p benchmark-output
           args=(
             run-bifrost
             benchmarks/cases
+            --language "$LANGUAGE"
             --bifrost-repo .bifrost
-            --bifrost-commit "$BIFROST_REF"
-            --bifrost-working-tree
+            --bifrost-binary target/ci-bin/bifrost
+            --bifrost-resolved-commit "$BIFROST_RESOLVED_COMMIT"
             --work-dir target/usagebench
             --scan-usages-max-duration-secs 300
             --expected-failures benchmarks/expectations/bifrost-expected-failures.yaml
             --expected-passes benchmarks/expectations/bifrost-expected-passes.yaml
-            --output "benchmark-output/run-${GITHUB_RUN_ID}.json"
+            --output "benchmark-output/shard-${LANGUAGE}/report.json"
           )
           if [ "$INCLUDE_UNSUPPORTED" = "true" ]; then
             args+=(--include-unsupported)
           fi
-          ./target/debug/usagebench "${args[@]}"
+          ./target/ci-bin/usagebench "${args[@]}"
+
+      - name: Upload shard output
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: usagebench-shard-${{ matrix.language }}-${{ github.run_id }}
+          path: benchmark-output
+          if-no-files-found: warn
+          retention-days: 14
+
+  benchmark:
+    name: merge report
+    needs: [prepare, shard]
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    outputs:
+      slack_payload: ${{ steps.slack_payload.outputs.payload }}
+    env:
+      BIFROST_REF: ${{ inputs.bifrost_ref || 'master' }}
+
+    steps:
+      - name: Checkout usagebench
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Download executables
+        continue-on-error: true
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: benchmark-executables-${{ github.run_id }}
+          path: target/ci-bin
+
+      - name: Download shard outputs
+        continue-on-error: true
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: usagebench-shard-*-${{ github.run_id }}
+          path: benchmark-output/shards
+          merge-multiple: true
+
+      - name: Merge shard reports
+        id: run_usagebench
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -xf target/ci-bin/benchmark-executables.tar -C target/ci-bin ./usagebench
+          # A shard that timed out leaves only its interruption-safe checkpoint.
+          reports=()
+          shopt -s nullglob
+          for shard in benchmark-output/shards/shard-*/; do
+            if [ -f "${shard}report.json" ]; then
+              reports+=("${shard}report.json")
+            elif [ -f "${shard}report.partial.json" ]; then
+              reports+=("${shard}report.partial.json")
+            else
+              echo "no report from ${shard}" >&2
+            fi
+          done
+          if [ "${#reports[@]}" -eq 0 ]; then
+            echo "no shard wrote a report" >&2
+            exit 1
+          fi
+          ./target/ci-bin/usagebench merge-reports \
+            --cases benchmarks/cases \
+            --output "benchmark-output/run-${GITHUB_RUN_ID}.json" \
+            "${reports[@]}"
 
       - name: Resolve benchmark paths
         id: paths
@@ -121,16 +288,11 @@ jobs:
         run: |
           set -euo pipefail
           report_path="benchmark-output/run-${GITHUB_RUN_ID}.json"
-          report_complete="true"
-          partial_path="benchmark-output/run-${GITHUB_RUN_ID}.partial.json"
+          report_complete="false"
           if [ -f "$report_path" ]; then
             report_complete="$(jq -r 'if has("completed") then .completed else true end' "$report_path")"
-          elif [ -f "$partial_path" ] && jq -e '.completed == false' "$partial_path" >/dev/null; then
-            report_path="$partial_path"
-            report_complete="false"
-          elif [ ! -f "$report_path" ]; then
+          else
             report_path=""
-            report_complete="false"
           fi
           {
             echo "report_path=${report_path}"
@@ -173,7 +335,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: usagebench-${{ steps.usagebench_provenance.outputs.artifact_label }}-${{ github.run_id }}
-          path: benchmark-output
+          path: |
+            benchmark-output/run-*.json
+            benchmark-output/shards/shard-*/report*.json
           if-no-files-found: warn
           retention-days: 14
 
@@ -182,6 +346,7 @@ jobs:
         shell: bash
         env:
           RUN_OUTCOME: ${{ steps.run_usagebench.outcome }}
+          SHARDS_RESULT: ${{ needs.shard.result }}
           USAGEBENCH_REVISION: ${{ steps.usagebench_provenance.outputs.revision }}
           USAGEBENCH_RELEASE: ${{ steps.usagebench_provenance.outputs.release }}
           REPORT_PATH: ${{ steps.paths.outputs.report_path }}
@@ -191,7 +356,8 @@ jobs:
           {
             echo "# Usage Benchmark"
             echo
-            echo "- Run step: $RUN_OUTCOME"
+            echo "- Shards: $SHARDS_RESULT"
+            echo "- Merge step: $RUN_OUTCOME"
             echo "- UsageBench revision: \`$USAGEBENCH_REVISION\`"
             if [ -n "$USAGEBENCH_RELEASE" ]; then
               echo "- UsageBench release: \`$USAGEBENCH_RELEASE\`"

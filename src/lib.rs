@@ -360,22 +360,28 @@ pub fn validate_path(path: impl AsRef<Path>) -> Result<Vec<PathBuf>> {
     let compiled_schema = jsonschema::JSONSchema::compile(&schema)
         .map_err(|error| anyhow!("compile bundled benchmark schema: {error}"))?;
 
-    let mut files = Vec::new();
-    collect_case_files(path, &mut files)?;
-    files.sort();
-
-    if files.is_empty() {
-        bail!(
-            "no benchmark case YAML files found under {}",
-            path.display()
-        );
-    }
+    let files = list_case_files(path)?;
 
     let mut evaluation_cache = evaluation::EvaluationEvidenceCache::default();
     for file in &files {
         validate_file(file, &compiled_schema, &repo_root, &mut evaluation_cache)?;
     }
 
+    Ok(files)
+}
+
+/// Benchmark case files under `path`, in the order `validate_path` returns
+/// them, without validating their contents.
+pub(crate) fn list_case_files(path: &Path) -> Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    collect_case_files(path, &mut files)?;
+    files.sort();
+    if files.is_empty() {
+        bail!(
+            "no benchmark case YAML files found under {}",
+            path.display()
+        );
+    }
     Ok(files)
 }
 
